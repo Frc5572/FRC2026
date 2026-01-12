@@ -107,6 +107,7 @@ public final class RobotContainer {
                     } else {
                         activeHub = false;
                     }
+                    break;
                 default:
                     activeHub = false;
                     break;
