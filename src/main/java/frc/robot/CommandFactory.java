@@ -12,7 +12,8 @@ import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.vision.colorDetection.Color;
 
 public class CommandFactory {
-    public Command turnToFuel(Color color, Swerve swerve, CommandXboxController controller) {
+
+    public static Command turnToFuel(Color color, Swerve swerve, CommandXboxController controller) {
         final PIDController pidFuel = new PIDController(0, 0, 0);
         pidFuel.enableContinuousInput(-Math.PI, Math.PI);
         return swerve.driveUserRelative(TeleopControls.teleopControls(() -> controller.getRightY(),
