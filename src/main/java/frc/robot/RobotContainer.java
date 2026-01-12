@@ -45,7 +45,6 @@ public final class RobotContainer {
     private final SwerveSim sim;
     private final RobotViz viz;
 
-    private String gamedata;
 
     /**
      */
@@ -89,7 +88,7 @@ public final class RobotContainer {
                 SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
         }
         viz.periodic();
-        gamedata = DriverStation.getGameSpecificMessage();
+        var gamedata = DriverStation.getGameSpecificMessage();
         if (gamedata.length() > 0) {
             switch (gamedata.charAt(0)) {
                 case 'B':
