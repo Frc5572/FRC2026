@@ -4,6 +4,20 @@ plugins {
     id "com.peterabeles.gversion" version "1.10"
 }
 
+import org.gradle.internal.os.OperatingSystem
+
+switch (OperatingSystem.current()) {
+	case OperatingSystem.LINUX:
+		project.ext.joltNatives = "Linux64"
+		break
+	case OperatingSystem.MAC_OS:
+		project.ext.joltNatives = System.getProperty("os.arch").startsWith("aarch64") ? "MacOSX_ARM64" : "MacOSX64"
+		break
+	case OperatingSystem.WINDOWS:
+		project.ext.joltNatives = "Windows64"
+		break
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -93,6 +107,13 @@ dependencies {
 
     def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
+
+    /** Jolt stuff */
+    implementation 'com.github.stephengold:jolt-jni-Windows64:3.5.2'
+    implementation 'io.github.electrostat-lab:snaploader:1.1.1-stable'
+
+    simulationRelease "com.github.stephengold:jolt-jni-$joltNatives:3.5.2:DebugSp"
+    simulationRelease 'com.github.oshi:oshi-core:6.9.2'
 }
 
 test {
