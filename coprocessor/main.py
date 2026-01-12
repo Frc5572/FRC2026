@@ -46,8 +46,8 @@ KEY = "Yaw"
 
 inst = ntcore.NetworkTableInstance.getDefault()
 table = inst.getTable(TABLE)
-pub = table.getDoubleTopic("yaw").publish()
-
+pub_yaw = table.getDoubleTopic("yaw").publish()
+pub_sees_yellow = table.getBooleanTopic("seesYellow").publish()
 inst.startClient4("pi-color-client")
 inst.setServerTeam(TEAM)
 inst.startDSClient()
@@ -86,7 +86,9 @@ while True:
         nearest_y = colored_pixels[0][nearest_idx]
         nearest_distance = distances[nearest_idx]
         yaw = calculate_yaw(nearest_x, f_x)
-        pub.set(yaw)
+        if yaw is not None:
+            pub_sees_yellow.set(True)
+        pub_yaw.set(yaw)
 
     if cv2.waitKey(1) == ord("q"):
         break

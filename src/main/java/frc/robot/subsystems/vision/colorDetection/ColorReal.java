@@ -1,13 +1,17 @@
 package frc.robot.subsystems.vision.colorDetection;
 
 import static edu.wpi.first.units.Units.Radians;
+import edu.wpi.first.networktables.BooleanSubscriber;
+import edu.wpi.first.networktables.BooleanTopic;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 
 public class ColorReal implements ColorIO {
 
     private final DoubleSubscriber yaw;
+    private final BooleanSubscriber seesYellow;
     private final NetworkTableInstance inst;
 
     public ColorReal() {
@@ -16,8 +20,10 @@ public class ColorReal implements ColorIO {
         inst.startClient4("robot");
 
         DoubleTopic yawTopic = inst.getTable("datatable").getDoubleTopic("yaw");
+        BooleanTopic seesYellowTopic = inst.getTable("datatable").getBooleanTopic("seesYellow");
 
         yaw = yawTopic.subscribe(0.0);
+        seesYellow = seesYellowTopic.subscribe(false, PubSubOption.periodic(1));
     }
 
     public double getYaw() {
@@ -27,5 +33,6 @@ public class ColorReal implements ColorIO {
     @Override
     public void updateInputs(ColorInputs inputs) {
         inputs.yaw = Radians.of(getYaw());
+        inputs.seesYellow = seesYellow.get();
     }
 }

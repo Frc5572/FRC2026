@@ -9,6 +9,7 @@ public interface ColorIO {
     @AutoLog
     public class ColorInputs {
         Angle yaw = Radians.of(0.0);
+        Boolean seesYellow = false;
     }
 
     public void updateInputs(ColorInputs inputs);
