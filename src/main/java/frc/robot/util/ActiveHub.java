@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+/** Class for tracking which hub is active */
 public class ActiveHub {
 
     public static Trigger activeHub = new Trigger(() -> checkHub(activeHubAfterAuto()));
