@@ -12,32 +12,32 @@ public class ActiveHub {
 
     public ActiveHub() {}
 
-    private static hubState activeHubAfterAuto() {
+    private static HubState activeHubAfterAuto() {
         var gamedata = DriverStation.getGameSpecificMessage();
         if (gamedata.length() > 0) {
             switch (gamedata.charAt(0)) {
                 case 'B':
                     if (DriverStation.getAlliance().equals(Optional.of(Alliance.Blue))) {
-                        return hubState.active;
+                        return HubState.FIRST;
                     } else {
-                        return hubState.deactivated;
+                        return HubState.SECOND;
                     }
                 case 'R':
                     if (DriverStation.getAlliance().equals(Optional.of(Alliance.Red))) {
-                        return hubState.active;
+                        return HubState.FIRST;
                     } else {
-                        return hubState.deactivated;
+                        return HubState.SECOND;
                     }
                 default:
-                    return hubState.active;
+                    return HubState.FIRST;
             }
         } else {
-            return hubState.no_data;
+            return HubState.NODATA;
         }
     }
 
-    private static boolean checkHub(hubState state) {
-        if (state == hubState.active) {
+    private static boolean checkHub(HubState state) {
+        if (state == HubState.FIRST) {
             var time = Timer.getFPGATimestamp();
             if ((time <= 140.0) && (time >= 130.0)) {
                 return true;
@@ -50,7 +50,7 @@ public class ActiveHub {
             } else {
                 return false;
             }
-        } else if (state == hubState.deactivated) {
+        } else if (state == HubState.SECOND) {
             var time = Timer.getFPGATimestamp();
             if ((time <= 140.0) && (time >= 130.0)) {
                 return true;
@@ -63,14 +63,14 @@ public class ActiveHub {
             } else {
                 return false;
             }
-        } else if (state == hubState.no_data) {
+        } else if (state == HubState.NODATA) {
             return true;
         } else {
             return true;
         }
     }
 
-    private static enum hubState {
-        active, deactivated, no_data
+    private static enum HubState {
+        FIRST, SECOND, NODATA
     }
 }
