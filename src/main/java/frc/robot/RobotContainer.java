@@ -5,7 +5,6 @@ import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.subsystems.swerve.Swerve;
@@ -44,7 +43,6 @@ public final class RobotContainer {
 
     private final SwerveSim sim;
     private final RobotViz viz;
-
 
     /**
      */
@@ -88,18 +86,7 @@ public final class RobotContainer {
                 SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
         }
         viz.periodic();
-        var gamedata = DriverStation.getGameSpecificMessage();
-        if (gamedata.length() > 0) {
-            switch (gamedata.charAt(0)) {
-                case 'B':
-                    /** TODO */
-                    break;
-                case 'R':
-                    /** TODO */
-                    break;
-                default:
-                    break;
-            }
-        }
+
     }
+
 }
