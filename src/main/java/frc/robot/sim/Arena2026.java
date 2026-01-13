@@ -1,5 +1,7 @@
 package frc.robot.sim;
 
+import java.util.HashSet;
+import java.util.Set;
 import com.github.stephengold.joltjni.BroadPhaseLayerInterfaceTable;
 import com.github.stephengold.joltjni.JobSystem;
 import com.github.stephengold.joltjni.JobSystemThreadPool;
@@ -18,11 +20,18 @@ import electrostatic4j.snaploader.filesystem.DirectoryPath;
 import electrostatic4j.snaploader.platform.NativeDynamicLibrary;
 import electrostatic4j.snaploader.platform.util.PlatformPredicate;
 
+// I think we need to base it off of this test:
+// https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Vehicle/VehicleStressTest.cpp
+// or
+// https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Vehicle/VehicleSixDOFTest.cpp
+
 public class Arena2026 {
 
     private final TempAllocator tempAllocator;
     private final JobSystem jobSystem;
     private final PhysicsSystem physicsSystem;
+
+    private final Set<SwerveSimulation> swerveSimulations = new HashSet<>();
 
     private static final int numBpLayers = 1;
 
@@ -106,7 +115,9 @@ public class Arena2026 {
     }
 
     private void simulationSubTick(int subTickNum, double dt) {
-
+        for (SwerveSimulation sim : swerveSimulations) {
+            sim.simulationSubtick(dt);
+        }
     }
 
     public void simulationPeriodic() {
