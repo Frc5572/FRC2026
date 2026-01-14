@@ -216,4 +216,11 @@ public final class Constants {
         };
         // @formatter:on
     }
+
+    public static final class Turret {
+        public static final double gear1Gearing = 35 / 75;
+        public static final Rotation2d gear1Offset = Rotation2d.kZero;
+        public static final double gear2Gearing = 36 / 75;
+        public static final Rotation2d gear2Offset = Rotation2d.kZero;
+    }
 }

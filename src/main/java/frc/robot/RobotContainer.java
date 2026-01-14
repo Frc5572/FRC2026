@@ -16,6 +16,9 @@ import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIOEmpty;
+import frc.robot.subsystems.turret.TurretSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
@@ -40,6 +43,7 @@ public final class RobotContainer {
     /* Subsystems */
     private final Swerve swerve;
     private final Vision vision;
+    private final Turret turret;
 
     private final SwerveSim sim;
     private final RobotViz viz;
@@ -52,16 +56,19 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
+                turret = new Turret(new TurretIOEmpty());
                 break;
             case kSimulation:
                 sim = new SwerveSim(new Pose2d(2.0, 2.0, Rotation2d.kZero));
                 swerve = new Swerve(sim::simProvider, sim::gyroProvider, sim::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
+                turret = new Turret(new TurretSim());
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
+                turret = new Turret(new TurretIOEmpty());
         }
         viz = new RobotViz(sim, swerve);
 
