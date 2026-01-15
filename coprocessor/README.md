@@ -21,7 +21,7 @@ computes the yaw angle to the nearest detected pixel. Runs on [OPI zero 3](http:
  1. flash OPI zero 3 with [this image](https://drive.google.com/file/d/1PwQO2kPwfo2WdLOxZBkQHVTuooV64KH3/view?usp=drive_link)
  2. scp code onto OPI
     - `scp -r coprocessor orangepi@orangepi:/home/orangepi/`
- 3. create virtual enviroment `python3 -m venv .venv`
+ 3. create virtual environment `python3 -m venv .venv`
  3. install dependaces `pip install -r requirements.txt`
  4. move `coprocessor.service` to `/etc/systemd/system/` 
     - `mv coprocessor.service /etc/systemd/system/`
@@ -29,7 +29,7 @@ computes the yaw angle to the nearest detected pixel. Runs on [OPI zero 3](http:
     - `sudo systemctl daemon-reload`<br>
       `sudo systemctl enable coprocessor`<br>
       `sudo systemctl start coprocessor`
- 6. verfiy if running
+ 6. verify if running
     - `sudo systemctl status coprocessor`
 
 

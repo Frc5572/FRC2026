@@ -18,7 +18,7 @@ public interface ColorDetectionIO {
 
         @Override
         public void updateInputs(ColorInputs inputs) {
-            /* Intentionaly empty */
+            /* Intentionally empty */
         }
     }
 }
