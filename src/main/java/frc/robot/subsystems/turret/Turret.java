@@ -58,15 +58,17 @@ public class Turret extends SubsystemBase {
     private static Angle getTurretAngleFromGears(Rotation2d gear1, Rotation2d gear2) {
         Angle turretAngleLimited = getTurretAngleFromGearLimited(gear1,
             Constants.Turret.gear1Gearing, Constants.Turret.gear1Offset);
-        System.out.println("turretAngleLimited: " + turretAngleLimited.in(Degrees));
+        Logger.recordOutput("TurretCalcs/turretAngleLimited", turretAngleLimited.in(Degrees));
         Angle step = Rotations.of(Constants.Turret.gear1Gearing);
         do {
             turretAngleLimited = turretAngleLimited.minus(step);
         } while (turretAngleLimited.gt(Constants.Turret.minAngle));
         turretAngleLimited = turretAngleLimited.plus(step);
-        System.out.println("Target: (" + gear1.getDegrees() + ", " + gear2.getDegrees() + ")");
+        Logger.recordOutput("TurretCalcs/Target/Gear1", gear1.getDegrees());
+        Logger.recordOutput("TurretCalcs/Target/Gear2", gear2.getDegrees());
         double minScore = Double.MAX_VALUE;
         Angle currentBest = turretAngleLimited;
+        int count = 0;
         while (turretAngleLimited.lt(Constants.Turret.maxAngle)) {
             Rotation2d gear1Guess = getGearAnglesFromTurret(turretAngleLimited,
                 Constants.Turret.gear1Gearing, Constants.Turret.gear1Offset);
@@ -74,13 +76,19 @@ public class Turret extends SubsystemBase {
                 Constants.Turret.gear2Gearing, Constants.Turret.gear2Offset);
             double score = normalize(gear2.minus(gear2Guess)).getRadians();
             score = score * score;
-            System.out.println("this step: " + turretAngleLimited.in(Degrees) + " -> ("
-                + gear1Guess.getDegrees() + ", " + gear2Guess.getDegrees() + ") score: " + score);
+            Logger.recordOutput("TurretCalcs/Step" + count + "/TurretAngle",
+                turretAngleLimited.in(Degrees));
+            Logger.recordOutput("TurretCalcs/Step" + count + "/Gear1Guess",
+                gear1Guess.getDegrees());
+            Logger.recordOutput("TurretCalcs/Step" + count + "/Gear2Guess",
+                gear2Guess.getDegrees());
+            Logger.recordOutput("TurretCalcs/Step" + count + "/score", score);
             if (score < minScore) {
                 minScore = score;
                 currentBest = turretAngleLimited;
             }
             turretAngleLimited = turretAngleLimited.plus(step);
+            count++;
         }
         return currentBest;
     }
