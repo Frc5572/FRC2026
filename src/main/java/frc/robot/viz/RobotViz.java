@@ -42,7 +42,7 @@ import frc.robot.subsystems.vision.CameraConstants;
 @NullMarked
 public class RobotViz {
 
-    private final @Nullable Supplier<Pose3d> robotPoseSupplier;
+    private final Supplier<Pose3d> robotPoseSupplier;
     private final Supplier<Pose3d> estPoseSupplier;
 
     /**
@@ -55,7 +55,7 @@ public class RobotViz {
     public RobotViz(@Nullable SwerveSim sim, Swerve swerve) {
         estPoseSupplier = () -> new Pose3d(swerve.state.getGlobalPoseEstimate());
         if (sim != null) {
-            robotPoseSupplier = () -> new Pose3d(sim.mapleSim.getSimulatedDriveTrainPose());
+            robotPoseSupplier = () -> new Pose3d(sim.getPose());
         } else {
             robotPoseSupplier = estPoseSupplier;
         }

@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
@@ -118,6 +119,10 @@ public class SwerveState {
         return rotationBuffer.getSample(timestampSeconds);
     }
 
+    private SwerveModulePosition[] lastWheelPositions =
+        new SwerveModulePosition[] {new SwerveModulePosition(), new SwerveModulePosition(),
+            new SwerveModulePosition(), new SwerveModulePosition()};
+
     /**
      * Updates odometry and pose estimates using swerve module encoders and an optional gyro
      * measurement.
@@ -128,8 +133,18 @@ public class SwerveState {
      */
     public void addOdometryObservation(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw,
         double timestamp) {
-        rotationBuffer.addSample(timestamp, gyroYaw);
-        visionAdjustedOdometry.update(gyroYaw, wheelPositions);
+        if (gyroYaw != null) {
+            rotationBuffer.addSample(timestamp, gyroYaw);
+            visionAdjustedOdometry.update(gyroYaw, wheelPositions);
+        } else {
+            var odometryPose = visionAdjustedOdometry.getEstimatedPosition();
+            Twist2d twist =
+                Constants.Swerve.swerveKinematics.toTwist2d(lastWheelPositions, wheelPositions);
+            odometryPose = odometryPose.exp(twist);
+            rotationBuffer.addSample(timestamp, odometryPose.getRotation());
+            visionAdjustedOdometry.resetPose(odometryPose);
+        }
+        lastWheelPositions = wheelPositions;
     }
 
     private ChassisSpeeds currentSpeeds;
@@ -243,6 +258,9 @@ public class SwerveState {
                 return true;
             } else if (rotationSpeed < Units.degreesToRadians(3)) {
                 // Single Tag
+                if (!pipelineResult.hasTargets()) {
+                    return false;
+                }
                 PhotonTrackedTarget target = pipelineResult.getBestTarget();
                 if (target == null) {
                     return false;

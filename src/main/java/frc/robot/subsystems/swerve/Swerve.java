@@ -139,16 +139,13 @@ public final class Swerve extends SubsystemBase {
         ChassisSpeeds currentSpeeds =
             Constants.Swerve.swerveKinematics.toChassisSpeeds(wheelStates);
         double[] sampleTimestamps = this.inputs.timestamps;
-        double gyroPerSample = currentSpeeds.omegaRadiansPerSecond / sampleTimestamps.length;
         SwerveModulePosition[] wheelPositions = new SwerveModulePosition[modules.length];
         for (int i = 0; i < sampleTimestamps.length; i++) {
             for (int j = 0; j < modules.length; j++) {
                 wheelPositions[j] = modules[j].getOdometryPosition(i);
             }
             state.addOdometryObservation(wheelPositions,
-                gyroInputs.connected ? Rotation2d.fromRadians(gyroInputs.yawRads[i])
-                    : state.getGlobalPoseEstimate().getRotation()
-                        .plus(Rotation2d.fromRadians((gyroPerSample + 1) * i)),
+                gyroInputs.connected ? Rotation2d.fromRadians(gyroInputs.yawRads[i]) : null,
                 sampleTimestamps[i]);
         }
         limiter.update(currentSpeeds);

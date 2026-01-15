@@ -1,10 +1,10 @@
 package frc.robot;
 
-import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
-import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.subsystems.swerve.Swerve;
@@ -21,6 +21,7 @@ import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.VisionSim;
 import frc.robot.util.DeviceDebug;
+import frc.robot.viz.BallSim;
 import frc.robot.viz.RobotViz;
 
 
@@ -42,6 +43,7 @@ public final class RobotContainer {
     private final Vision vision;
 
     private final SwerveSim sim;
+    private final BallSim ballSim;
     private final RobotViz viz;
 
     /**
@@ -50,16 +52,19 @@ public final class RobotContainer {
         switch (runtimeType) {
             case kReal:
                 sim = null;
+                ballSim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 break;
             case kSimulation:
                 sim = new SwerveSim(new Pose2d(2.0, 2.0, Rotation2d.kZero));
+                ballSim = new BallSim();
                 swerve = new Swerve(sim::simProvider, sim::gyroProvider, sim::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
                 break;
             default:
                 sim = null;
+                ballSim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
         }
@@ -72,21 +77,23 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
+        driver.a().onTrue(Commands.runOnce(() -> {
+            if (ballSim != null) {
+                ballSim.spawnBall(
+                    new Translation3d(swerve.state.getGlobalPoseEstimate().getTranslation())
+                        .plus(new Translation3d(0, 0, 1)),
+                    new Translation3d(5, 0, 5));
+            }
+        }));
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
-        if (sim != null) {
-            SimulatedArena.getInstance().simulationPeriodic();
-            Logger.recordOutput("FieldSimulation/Algae",
-                SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-            Logger.recordOutput("FieldSimulation/Coral",
-                SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+        if (ballSim != null) {
+            ballSim.periodic();
         }
         viz.periodic();
-
     }
 
 }

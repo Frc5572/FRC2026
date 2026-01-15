@@ -2,7 +2,6 @@ package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Milliseconds;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.jspecify.annotations.NullMarked;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -14,12 +13,12 @@ import frc.robot.subsystems.swerve.SwerveSim;
 @NullMarked
 public class VisionSim extends VisionReal {
 
-    private final SwerveDriveSimulation sim;
+    private final SwerveSim sim;
     private final VisionSystemSim visionSim;
 
     /** Simulation of vision using built-in PhotonVision simulator. */
     public VisionSim(SwerveSim sim) {
-        this.sim = sim.mapleSim;
+        this.sim = sim;
         this.visionSim = new VisionSystemSim("main");
 
         visionSim.addAprilTags(Constants.Vision.fieldLayout);
@@ -41,7 +40,7 @@ public class VisionSim extends VisionReal {
 
     @Override
     public void updateInputs(CameraInputs[] inputs) {
-        visionSim.update(sim.getSimulatedDriveTrainPose());
+        visionSim.update(sim.getPose());
         super.updateInputs(inputs);
     }
 

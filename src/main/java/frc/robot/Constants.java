@@ -147,7 +147,7 @@ public final class Constants {
         public static final double odometryFrequency = 100.0;
 
         /* Teleop limits */
-        public static final double forwardLimit = 10.0;
+        public static final double forwardLimit = 1000.0;
         public static final double forwardTiltLimit = 1000.0;
         public static final double leftTiltLimit = 1000.0;
         public static final double rightTiltLimit = 1000.0;

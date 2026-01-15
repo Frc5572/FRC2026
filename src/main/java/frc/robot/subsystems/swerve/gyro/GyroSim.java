@@ -1,26 +1,21 @@
 package frc.robot.subsystems.swerve.gyro;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import org.ironmaple.simulation.drivesims.GyroSimulation;
-import org.jspecify.annotations.NullMarked;
+import frc.robot.subsystems.swerve.SwerveSim;
 
-/** Simulation implementation for gyro */
-@NullMarked
 public class GyroSim implements GyroIO {
 
-    private final GyroSimulation gyro;
+    private final SwerveSim sim;
 
-    /** Simulation implementation for gyro */
-    public GyroSim(GyroSimulation gyro) {
-        this.gyro = gyro;
+    public GyroSim(SwerveSim sim) {
+        this.sim = sim;
     }
 
     @Override
     public void updateInputs(GyroInputs inputs) {
-        inputs.yaw = gyro.getGyroReading();
-        inputs.yawVelocityRadPerSec = gyro.getMeasuredAngularVelocity().in(RadiansPerSecond);
-        inputs.yawRads = new double[] {inputs.yaw.getRadians()};
         inputs.connected = true;
+        inputs.yaw = sim.getPose().getRotation();
+        inputs.yawRads = new double[] {inputs.yaw.getRadians()};
+        inputs.yawVelocityRadPerSec = 0.0;
     }
 
 }
