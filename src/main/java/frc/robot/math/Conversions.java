@@ -1,4 +1,4 @@
-package frc.lib.math;
+package frc.robot.math;
 
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Rotations;

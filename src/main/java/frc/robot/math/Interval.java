@@ -1,4 +1,4 @@
-package frc.lib.math;
+package frc.robot.math;
 
 /** A one-dimensional range. */
 public class Interval {
