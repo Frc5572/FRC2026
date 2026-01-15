@@ -17,9 +17,9 @@ public class CommandFactory {
     /**
      * Orents robot to point at fuel
      * 
-     * @param color
-     * @param swerve
-     * @param controller
+     * @param color color detection subsystem to get yaw to turn to
+     * @param swerve swerve drive
+     * @param controller controller inputs
      * @return robot orented at fuel
      */
     public static Command turnToFuel(ColorDetection color, Swerve swerve,

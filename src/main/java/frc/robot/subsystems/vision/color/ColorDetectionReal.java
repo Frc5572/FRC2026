@@ -15,6 +15,7 @@ public class ColorDetectionReal implements ColorDetectionIO {
     private final BooleanSubscriber seesYellow;
     private final NetworkTableInstance inst;
 
+    /** class constructor */
     public ColorDetectionReal() {
         inst = NetworkTableInstance.getDefault();
 
