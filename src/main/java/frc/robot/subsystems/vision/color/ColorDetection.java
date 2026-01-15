@@ -1,10 +1,11 @@
-package frc.robot.subsystems.vision.colorDetection;
+package frc.robot.subsystems.vision.color;
 
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/** Color detector subsystem */
 public class ColorDetection extends SubsystemBase {
     private ColorDetectionIO io;
     private ColorInputsAutoLogged inputs = new ColorInputsAutoLogged();

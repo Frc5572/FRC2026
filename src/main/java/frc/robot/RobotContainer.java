@@ -20,9 +20,9 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.VisionSim;
-import frc.robot.subsystems.vision.colorDetection.ColorDetection;
-import frc.robot.subsystems.vision.colorDetection.ColorDetectionIO;
-import frc.robot.subsystems.vision.colorDetection.ColorDetectionReal;
+import frc.robot.subsystems.vision.color.ColorDetection;
+import frc.robot.subsystems.vision.color.ColorDetectionIO;
+import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 

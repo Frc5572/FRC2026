@@ -9,10 +9,19 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.TeleopControls;
-import frc.robot.subsystems.vision.colorDetection.ColorDetection;
+import frc.robot.subsystems.vision.color.ColorDetection;
 
+/** Command Factory */
 public class CommandFactory {
 
+    /**
+     * Orents robot to point at fuel
+     * 
+     * @param color
+     * @param swerve
+     * @param controller
+     * @return robot orented at fuel
+     */
     public static Command turnToFuel(ColorDetection color, Swerve swerve,
         CommandXboxController controller) {
         final PIDController pidFuel = new PIDController(0, 0, 0);

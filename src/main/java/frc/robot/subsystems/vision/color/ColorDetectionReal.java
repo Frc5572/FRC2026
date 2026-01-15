@@ -1,4 +1,4 @@
-package frc.robot.subsystems.vision.colorDetection;
+package frc.robot.subsystems.vision.color;
 
 import static edu.wpi.first.units.Units.Radians;
 import edu.wpi.first.networktables.BooleanSubscriber;
@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 
+/** Color detector hardware layer */
 public class ColorDetectionReal implements ColorDetectionIO {
 
     private final DoubleSubscriber yaw;
