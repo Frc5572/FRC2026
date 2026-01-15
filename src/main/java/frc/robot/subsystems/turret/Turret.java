@@ -126,7 +126,7 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * Normalizes a rotation to the range (-π, π].
+     * Normalizes a rotation to the range (-pi, pi].
      *
      * @param rot Rotation to normalize
      * @return Normalized rotation
