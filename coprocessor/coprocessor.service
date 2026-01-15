@@ -1,0 +1,16 @@
+[Unit]
+Description=Runs Color Detection
+After=network.target
+
+[Service]
+Type=simple
+User=orangepi
+WorkingDirectory=/home/orangepi/coprocessor
+ExecStart=/usr/bin/python3 /home/orangepi/coprocessor/main.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
