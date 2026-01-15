@@ -9,11 +9,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.TeleopControls;
-import frc.robot.subsystems.vision.colorDetection.Color;
+import frc.robot.subsystems.vision.colorDetection.ColorDetection;
 
 public class CommandFactory {
 
-    public static Command turnToFuel(Color color, Swerve swerve, CommandXboxController controller) {
+    public static Command turnToFuel(ColorDetection color, Swerve swerve,
+        CommandXboxController controller) {
         final PIDController pidFuel = new PIDController(0, 0, 0);
         pidFuel.enableContinuousInput(-Math.PI, Math.PI);
         return swerve.driveUserRelative(TeleopControls.teleopControls(() -> controller.getRightY(),

@@ -5,12 +5,12 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Color extends SubsystemBase {
-    private ColorIO io;
+public class ColorDetection extends SubsystemBase {
+    private ColorDetectionIO io;
     private ColorInputsAutoLogged inputs = new ColorInputsAutoLogged();
     private double lastSeenYellow;
 
-    public void color(ColorIO io) {
+    public ColorDetection(ColorDetectionIO io) {
         this.io = io;
         io.updateInputs(inputs);
     }

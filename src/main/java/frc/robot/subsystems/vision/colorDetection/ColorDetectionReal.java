@@ -8,13 +8,13 @@ import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 
-public class ColorReal implements ColorIO {
+public class ColorDetectionReal implements ColorDetectionIO {
 
     private final DoubleSubscriber yaw;
     private final BooleanSubscriber seesYellow;
     private final NetworkTableInstance inst;
 
-    public ColorReal() {
+    public ColorDetectionReal() {
         inst = NetworkTableInstance.getDefault();
 
         inst.startClient4("robot");
