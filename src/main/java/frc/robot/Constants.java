@@ -219,6 +219,7 @@ public final class Constants {
         // @formatter:on
     }
 
+    /** Turret subsystem */
     public static final class Turret {
         public static final double gear1Gearing = 35.0 / 75.0;
         public static final Rotation2d gear1Offset = Rotation2d.kZero;
