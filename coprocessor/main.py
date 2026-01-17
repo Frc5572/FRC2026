@@ -41,12 +41,12 @@ principal_point = (camera_matrix[0, 2], camera_matrix[1, 2])
 f_x = camera_matrix[0, 0]
 
 TEAM = 5572
-TABLE = "SmartDashboard"
-KEY = "Yaw"
+TABLE = "ColorPI"
+KEY = "yaw"
 
 inst = ntcore.NetworkTableInstance.getDefault()
 table = inst.getTable(TABLE)
-pub_yaw = table.getDoubleTopic("yaw").publish()
+pub_yaw = table.getDoubleTopic(KEY).publish()
 pub_sees_yellow = table.getBooleanTopic("seesYellow").publish()
 inst.startClient4("pi-color-client")
 inst.setServerTeam(TEAM)
