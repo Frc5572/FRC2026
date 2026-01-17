@@ -24,13 +24,10 @@ import frc.robot.subsystems.vision.CameraConstants;
  * that can be rendered together in a unified visualization view.
  *
  * <p>
- * This class supports both real and simulated operation:
+ * This class supports real operation:
  * <ul>
- * <li>When a {@link SwerveSim} instance is provided, visualization data is sourced from the
- * simulator's ground-truth drivetrain pose.</li>
- * <li>Otherwise, certain entries with keys indicating ground truth use estimates instead, often
- * duplicating other entries (e.g. {@code ActualPose} will be equivalent to
- * {@code GlobalEstPose}).</li>
+ * <li>Certain entries with keys indicating ground truth use estimates, often duplicating other
+ * entries (e.g. {@code ActualPose} will be equivalent to {@code GlobalEstPose}).</li>
  * </ul>
  *
  * <p>
