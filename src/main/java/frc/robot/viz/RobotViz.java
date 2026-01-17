@@ -46,9 +46,7 @@ public class RobotViz {
 
     /**
      * Creates a new visualization helper.
-     *
-     * @param sim optional swerve simulator; when provided, simulated ground-truth drivetrain pose
-     *        is used for visualization
+     * 
      * @param swerve live swerve subsystem providing pose estimates when not simulating
      */
     public RobotViz(Swerve swerve) {
