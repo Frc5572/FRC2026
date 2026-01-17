@@ -19,8 +19,6 @@ public class ColorDetectionReal implements ColorDetectionIO {
     public ColorDetectionReal() {
         inst = NetworkTableInstance.getDefault();
 
-        inst.startClient4("robot");
-
         DoubleTopic yawTopic = inst.getTable("ColorPI").getDoubleTopic("yaw");
         BooleanTopic seesYellowTopic = inst.getTable("ColorPI").getBooleanTopic("seesYellow");
 
