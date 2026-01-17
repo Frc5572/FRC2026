@@ -91,6 +91,7 @@ public final class Constants {
          * <p>
          * No need to ever change this unless you are not doing a traditional rectangular/square 4
          * module swerve.
+         * <p>
          */
         public static final SwerveDriveKinematics swerveKinematics =
             new SwerveDriveKinematics(swerveTranslations);
