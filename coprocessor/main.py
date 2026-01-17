@@ -11,9 +11,13 @@ def calculate_yaw(
     x,
     f_x,
 ):
-    x /= 2
-    x -= 720
-    return math.atan(x / f_x)
+    try:
+        x /= 2
+        x -= 720
+        return math.atan(x / f_x)
+    except (ZeroDivisionError, TypeError) as e:
+        print(f"Error in calculate_yaw: {e}")
+        return None
 
 
 print("camera matrix")
@@ -44,54 +48,74 @@ TEAM = 5572
 TABLE = "ColorPI"
 KEY = "yaw"
 
-inst = ntcore.NetworkTableInstance.getDefault()
-table = inst.getTable(TABLE)
-pub_yaw = table.getDoubleTopic(KEY).publish()
-pub_sees_yellow = table.getBooleanTopic("seesYellow").publish()
-inst.startClient4("pi-color-client")
-inst.setServerTeam(TEAM)
-inst.startDSClient()
+try:
+    inst = ntcore.NetworkTableInstance.getDefault()
+    table = inst.getTable(TABLE)
+    pub_yaw = table.getDoubleTopic(KEY).publish()
+    pub_sees_yellow = table.getBooleanTopic("seesYellow").publish()
+    inst.startClient4("pi-color-client")
+    inst.setServerTeam(TEAM)
+    inst.startDSClient()
+except Exception as e:
+    print(f"Error initializing NetworkTables: {e}")
+    exit(1)
 
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 print("video start")
 if not cap.isOpened():
     print("Cannot open camera")
-    exit()
+    exit(1)
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-print("set w/h")
-while True:
-    ret, frame = cap.read()
+try:
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    print("set w/h")
+    while True:
+        ret, frame = cap.read()
 
-    if not ret:
-        print("Can't receive frame (stream end?). Exiting ...")
-        break
+        if not ret:
+            print("Can't receive frame (stream end?). Exiting ...")
+            break
 
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    mask1 = cv2.inRange(hsv, (17, 45, 144), (19, 184, 245))
-    height, width = frame.shape[:2]
-    start_x, start_y = 0, height - 1
-    output = cv2.bitwise_and(frame, frame, mask=mask1)
-    colored_pixels = np.where(output > 0)
+        try:
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            mask1 = cv2.inRange(hsv, (17, 45, 144), (19, 184, 245))
+            height, width = frame.shape[:2]
+            start_x, start_y = 0, height - 1
+            output = cv2.bitwise_and(frame, frame, mask=mask1)
+            colored_pixels = np.where(output > 0)
 
-    if len(colored_pixels[0]) > 0:
-        distances = np.sqrt(
-            (colored_pixels[1] - start_x) ** 2 + (colored_pixels[0] - start_y) ** 2
-        )
+            if len(colored_pixels[0]) > 0:
+                distances = np.sqrt(
+                    (colored_pixels[1] - start_x) ** 2
+                    + (colored_pixels[0] - start_y) ** 2
+                )
 
-        nearest_idx = np.argmin(distances)
-        nearest_x = colored_pixels[1][nearest_idx]
-        nearest_y = colored_pixels[0][nearest_idx]
-        nearest_distance = distances[nearest_idx]
-        yaw = calculate_yaw(nearest_x, f_x)
-        if yaw is not None:
-            pub_sees_yellow.set(True)
-        pub_yaw.set(yaw)
+                nearest_idx = np.argmin(distances)
+                nearest_x = colored_pixels[1][nearest_idx]
+                nearest_y = colored_pixels[0][nearest_idx]
+                nearest_distance = distances[nearest_idx]
+                yaw = calculate_yaw(nearest_x, f_x)
+                if yaw is not None:
+                    pub_sees_yellow.set(True)
+                    pub_yaw.set(yaw)
+                else:
+                    pub_sees_yellow.set(False)
+            else:
+                pub_sees_yellow.set(False)
 
-    if cv2.waitKey(1) == ord("q"):
-        break
+        except Exception as e:
+            print(f"Error processing frame: {e}")
+            continue
 
-cap.release()
-cv2.destroyAllWindows()
+        if cv2.waitKey(1) == ord("q"):
+            break
+
+except KeyboardInterrupt:
+    print("Interrupted by user")
+except Exception as e:
+    print(f"Unexpected error in main loop: {e}")
+finally:
+    cap.release()
+    cv2.destroyAllWindows()
