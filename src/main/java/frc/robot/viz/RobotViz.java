@@ -8,7 +8,6 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.swerve.SwerveSim;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -52,13 +51,10 @@ public class RobotViz {
      *        is used for visualization
      * @param swerve live swerve subsystem providing pose estimates when not simulating
      */
-    public RobotViz(@Nullable SwerveSim sim, Swerve swerve) {
+    public RobotViz(Swerve swerve) {
         estPoseSupplier = () -> new Pose3d(swerve.state.getGlobalPoseEstimate());
-        if (sim != null) {
-            robotPoseSupplier = () -> new Pose3d(sim.mapleSim.getSimulatedDriveTrainPose());
-        } else {
-            robotPoseSupplier = estPoseSupplier;
-        }
+        robotPoseSupplier = estPoseSupplier;
+
     }
 
     /**
