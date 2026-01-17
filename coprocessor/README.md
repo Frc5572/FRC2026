@@ -18,7 +18,7 @@ computes the yaw angle to the nearest detected pixel. Runs on [OPI zero 3](http:
 
 ## How to use
 
- 1. flash OPI zero 3 with [this image](https://drive.google.com/file/d/1PwQO2kPwfo2WdLOxZBkQHVTuooV64KH3/view?usp=drive_link)
+ 1. flash OPI zero 3 with [this image](https://drive.google.com/file/d/1FUmNojVQV_43UR_V6u-P9UFfAMIZdyGV/view?usp=drive_link)
  2. scp code onto OPI
     - `scp -r coprocessor orangepi@orangepi:/home/orangepi/`
  3. create virtual environment `python3 -m venv .venv`
