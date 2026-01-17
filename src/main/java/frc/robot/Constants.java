@@ -88,8 +88,8 @@ public final class Constants {
 
         /**
          * Swerve Drive Kinematics Object for Rectangular/square 4 Module Swerve
-         * <p>
          * 
+         * <p>
          * No need to ever change this unless you are not doing a traditional rectangular/square 4
          * module swerve.
          */
