@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import math
+import sys
 import time
 
 import cv2
@@ -7,10 +8,7 @@ import ntcore
 import numpy as np
 
 
-def calculate_yaw(
-    x,
-    f_x,
-):
+def calculate_yaw(x, f_x):
     try:
         x /= 2
         x -= 720
@@ -53,19 +51,21 @@ try:
     table = inst.getTable(TABLE)
     pub_yaw = table.getDoubleTopic(KEY).publish()
     pub_sees_yellow = table.getBooleanTopic("seesYellow").publish()
+    pub_error = table.getStringTopic("error").publish()
     inst.startClient4("pi-color-client")
     inst.setServerTeam(TEAM)
     inst.startDSClient()
 except Exception as e:
     print(f"Error initializing NetworkTables: {e}")
-    exit(1)
+    sys.exit(1)
 
 
 cap = cv2.VideoCapture(0)
 print("video start")
 if not cap.isOpened():
     print("Cannot open camera")
-    exit(1)
+    pub_error.set("Cannot open camera")
+    sys.exit(1)
 
 try:
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -75,8 +75,8 @@ try:
         ret, frame = cap.read()
 
         if not ret:
-            print("Can't receive frame (stream end?). Exiting ...")
-            break
+            print("Failed to read frame")
+            continue
 
         try:
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -107,15 +107,15 @@ try:
 
         except Exception as e:
             print(f"Error processing frame: {e}")
+            pub_error.set(str(e))
             continue
-
-        if cv2.waitKey(1) == ord("q"):
-            break
 
 except KeyboardInterrupt:
     print("Interrupted by user")
 except Exception as e:
     print(f"Unexpected error in main loop: {e}")
+    pub_error.set(str(e))
+    sys.exit(1)
 finally:
     cap.release()
     cv2.destroyAllWindows()
