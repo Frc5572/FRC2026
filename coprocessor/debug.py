@@ -10,20 +10,20 @@ import numpy as np
 print("camera matrix")
 camera_matrix = np.array(
     [
-        [940.7360710926395, 0, 615.5884770322365],
-        [0, 939.9932393907364, 328.53938300868],
+        [1057.3980959579437, 0, 656.8556544891763],
+        [0, 1058.2448544114698, 375.100928453989],
         [0, 0, 1],
-    ],
+    ]
 )
 
 print("dist coeffs")
 dist_coeffs = np.array(
     [
-        0.054834081023049625,
-        -0.15994111706817074,
-        -0.0017587106009926158,
-        -0.0014671022483263552,
-        0.049742166267499596,
+        0.03932968718495995,
+        -0.05757208162810665,
+        -0.0016503334944551454,
+        -0.000619417970035607,
+        -0.016908101094226472,
     ]
 )
 
@@ -67,8 +67,8 @@ if not cap.isOpened():
     sys.exit(1)
 
 try:
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     print("set w/h")
     while True:
         ret, frame = cap.read()
@@ -84,6 +84,9 @@ try:
             start_x, start_y = 0, height - 1
             output = cv2.bitwise_and(frame, frame, mask=mask1)
             colored_pixels = np.where(output > 0)
+            cv2.imshow("frame", frame)
+            cv2.imshow("hsv", hsv)
+            cv2.imshow("res", output)
             print("mask")
             if len(colored_pixels[0]) > 0:
                 distances = np.sqrt(
@@ -97,6 +100,7 @@ try:
                 nearest_x = colored_pixels[1][nearest_idx]
                 nearest_y = colored_pixels[0][nearest_idx]
                 nearest_distance = distances[nearest_idx]
+                cv2.imshow("Result", eroded)
 
                 yaw = calculate_yaw(nearest_x, f_x)
                 if yaw is not None:
