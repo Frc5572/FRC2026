@@ -5,6 +5,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import org.jspecify.annotations.NullMarked;
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -65,7 +66,7 @@ public class SwerveModuleReal implements SwerveModuleIO {
     public SwerveModuleReal(int index, PhoenixOdometryThread odometryThread) {
         boolean isCanivore = Constants.Swerve.isCanviore;
 
-        String loop = isCanivore ? "*" : "";
+        CANBus loop = isCanivore ? new CANBus("*") : CANBus.roboRIO();
         driveMotor = new TalonFX(Constants.Swerve.modulesConstants[index].driveMotorId, loop);
         angleMotor = new TalonFX(Constants.Swerve.modulesConstants[index].angleMotorId, loop);
         absoluteEncoder = new CANcoder(Constants.Swerve.modulesConstants[index].canCoderId, loop);
