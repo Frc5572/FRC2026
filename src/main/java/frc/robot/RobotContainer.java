@@ -1,8 +1,13 @@
 package frc.robot;
 
+import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
+import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -14,6 +19,7 @@ import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
+import frc.robot.subsystems.vision.VisionSim;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
@@ -36,16 +42,26 @@ public final class RobotContainer {
     private final Vision vision;
 
     private final RobotViz viz;
+    private final SimulatedRobotState sim;
 
     /**
      */
     public RobotContainer(RobotRunType runtimeType) {
         switch (runtimeType) {
             case kReal:
+                sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 break;
+            case kSimulation:
+
+                sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
+                swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
+                    sim.swerveDrive::moduleProvider);
+                vision = new Vision(swerve.state, new VisionSim(sim));
+                break;
             default:
+                sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
         }
@@ -64,8 +80,12 @@ public final class RobotContainer {
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
+        if (sim != null) {
+            SimulatedArena.getInstance().simulationPeriodic();
+            Logger.recordOutput("FieldSimulation/Fuel",
+                SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        }
         viz.periodic();
-
     }
 
 }
