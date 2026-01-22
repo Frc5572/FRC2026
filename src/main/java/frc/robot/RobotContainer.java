@@ -7,10 +7,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
+import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
-import frc.robot.subsystems.swerve.SwerveSim;
 import frc.robot.subsystems.swerve.gyro.GyroIOEmpty;
 import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
@@ -41,8 +41,8 @@ public final class RobotContainer {
     private final Swerve swerve;
     private final Vision vision;
 
-    private final SwerveSim sim;
     private final RobotViz viz;
+    private final SimulatedRobotState sim;
 
     /**
      */
@@ -54,8 +54,10 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionReal());
                 break;
             case kSimulation:
-                sim = new SwerveSim(new Pose2d(2.0, 2.0, Rotation2d.kZero));
-                swerve = new Swerve(sim::simProvider, sim::gyroProvider, sim::moduleProvider);
+                SimulatedArena.getInstance().resetFieldForAuto();
+                sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
+                swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
+                    sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
                 break;
             default:
@@ -80,13 +82,10 @@ public final class RobotContainer {
     public void periodic() {
         if (sim != null) {
             SimulatedArena.getInstance().simulationPeriodic();
-            Logger.recordOutput("FieldSimulation/Algae",
-                SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-            Logger.recordOutput("FieldSimulation/Coral",
-                SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+            Logger.recordOutput("FieldSimulation/Fuel",
+                SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
         viz.periodic();
-
     }
 
 }
