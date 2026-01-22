@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.Constants;
+import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.vision.CameraConstants;
 
@@ -38,7 +39,7 @@ import frc.robot.subsystems.vision.CameraConstants;
 @NullMarked
 public class RobotViz {
 
-    private final @Nullable Supplier<Pose3d> robotPoseSupplier;
+    private final Supplier<Pose3d> robotPoseSupplier;
     private final Supplier<Pose3d> estPoseSupplier;
 
     /**
@@ -46,10 +47,14 @@ public class RobotViz {
      * 
      * @param swerve live swerve subsystem providing pose estimates when not simulating
      */
-    public RobotViz(Swerve swerve) {
+    public RobotViz(@Nullable SimulatedRobotState sim, Swerve swerve) {
         estPoseSupplier = () -> new Pose3d(swerve.state.getGlobalPoseEstimate());
-        robotPoseSupplier = estPoseSupplier;
-
+        if (sim == null) {
+            robotPoseSupplier = estPoseSupplier;
+        } else {
+            robotPoseSupplier =
+                () -> new Pose3d(sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose());
+        }
     }
 
     /**

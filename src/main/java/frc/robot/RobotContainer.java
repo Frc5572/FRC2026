@@ -54,7 +54,7 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionReal());
                 break;
             case kSimulation:
-
+                SimulatedArena.getInstance().resetFieldForAuto();
                 sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
@@ -65,7 +65,7 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
         }
-        viz = new RobotViz(swerve);
+        viz = new RobotViz(sim, swerve);
 
         DeviceDebug.initialize();
 
