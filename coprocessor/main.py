@@ -72,7 +72,6 @@ try:
     print("set w/h")
     while True:
         ret, frame = cap.read()
-        print("read")
         if not ret:
             print("Failed to read frame")
             continue
@@ -84,7 +83,6 @@ try:
             start_x, start_y = 0, height - 1
             output = cv2.bitwise_and(frame, frame, mask=mask1)
             colored_pixels = np.where(output > 0)
-            print("mask")
             if len(colored_pixels[0]) > 0:
                 distances = np.sqrt(
                     (colored_pixels[1] - start_x) ** 2
