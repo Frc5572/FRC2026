@@ -29,6 +29,7 @@ public final class Constants {
     public static class DriverControls {
         /** Driverstation controller Index */
         public static final int controllerId = 0;
+        public static final int testControllerId = 0;
         /** Stick axis controls less than this amount are treated as 0. */
         public static final double stickDeadband = 0.1;
 
@@ -37,7 +38,12 @@ public final class Constants {
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
     }
-
+    public static class Indexer {
+        public static final int indexerID = 26;
+        public static final int spinMotorID = 27;
+        public static final int indexerSpeed = 0;
+        public static final int spinMotorSpeed = 0;
+    }
     /**
      * MoveToPos constants.
      */
