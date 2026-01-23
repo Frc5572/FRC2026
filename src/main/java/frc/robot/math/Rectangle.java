@@ -79,7 +79,7 @@ public class Rectangle implements ConvexShape {
     /**
      * sees if a rectangle is inside another
      * 
-     * @param rect
+     * @param rect outside rectangle
      * @return boolean true if inside
      */
     public boolean isInside(Rectangle rect) {
