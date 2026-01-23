@@ -2,8 +2,6 @@ package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.math.Penetration;
 import frc.robot.math.Rectangle;
 
 public class SegmentedFeild {
@@ -21,8 +19,4 @@ public class SegmentedFeild {
         new Rectangle("Red Alliacne", new Pose2d(14.5, 4.05, Rotation2d.kZero), 4, 8.1);
     final public Rectangle redAllianceClimber =
         new Rectangle("Red Alliacne Climber", new Pose2d(15.87, 3.75, Rotation2d.kZero), 1.2, 1.1);
-
-    private Penetration penetration = new Penetration("Dropper Penetration");
-
-    public Trigger underDropper = new Trigger(() -> (penetration.getDepth() != null);
 }
