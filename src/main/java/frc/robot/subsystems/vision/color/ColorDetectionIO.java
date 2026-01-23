@@ -12,6 +12,7 @@ public interface ColorDetectionIO {
     public class ColorInputs {
         Angle yaw = Radians.of(0.0);
         boolean seesYellow = false;
+        String error = "";
     }
 
     public void updateInputs(ColorInputs inputs);

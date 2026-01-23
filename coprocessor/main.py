@@ -27,7 +27,6 @@ dist_coeffs = np.array(
     ]
 )
 
-principal_point = (camera_matrix[0, 2], camera_matrix[1, 2])
 
 f_x = camera_matrix[0, 0]
 
@@ -50,16 +49,17 @@ except Exception as e:
 
 def calculate_yaw(x, f_x):
     try:
-        x /= 2
-        x -= 1280
-        return math.atan(x / f_x)
+        center_x = 720 / 2
+        return math.atan((x - center_x) / f_x)
     except (ZeroDivisionError, TypeError) as e:
         print(f"Error in calculate_yaw: {e}")
         pub_error.set(e)
         return None
 
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(
+    "/dev/v4l/by-path/platform-5200000.usb-usbv2-0:1:1.0-video-index0"
+)
 print("video start")
 if not cap.isOpened():
     print("Cannot open camera")
