@@ -70,10 +70,10 @@ public class Rectangle implements ConvexShape {
     }
 
     private boolean isPointInside(Translation2d point, Rectangle rect) {
-        Translation2d realtive =
+        Translation2d relative =
             point.minus(rect.getCenter()).rotateBy(rect.pose.getRotation().unaryMinus());
-        return Math.abs(realtive.getX()) <= rect.length / 2.0
-            && Math.abs(realtive.getY()) <= rect.width / 2.0;
+        return Math.abs(relative.getX()) <= rect.length / 2.0
+            && Math.abs(relative.getY()) <= rect.width / 2.0;
     }
 
     private boolean pointInside(Translation2d point, Rectangle rect) {

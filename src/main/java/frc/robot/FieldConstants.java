@@ -24,7 +24,7 @@ public class FieldConstants {
     final static public Rectangle blueDropper =
         new Rectangle("Blue Dropper", new Pose2d(5.7, 4.05, Rotation2d.kZero), 1.0, 1.7);
     final static public Rectangle neutralZone =
-        new Rectangle("Netural Zone", new Pose2d(8.25, 4.05, Rotation2d.kZero), 6.1, 8.1);
+        new Rectangle("Neutral Zone", new Pose2d(8.25, 4.05, Rotation2d.kZero), 6.1, 8.1);
     final static public Rectangle redDropper =
         new Rectangle("Red Dropper", new Pose2d(10.8, 4.05, Rotation2d.kZero), 1.0, 1.7);
     final public static Rectangle redAlliance =
