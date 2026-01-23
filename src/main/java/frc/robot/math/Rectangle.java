@@ -69,13 +69,6 @@ public class Rectangle implements ConvexShape {
         return corners;
     }
 
-    private boolean isPointInside(Translation2d point, Rectangle rect) {
-        Translation2d relative =
-            point.minus(rect.getCenter()).rotateBy(rect.pose.getRotation().unaryMinus());
-        return Math.abs(relative.getX()) <= rect.length / 2.0
-            && Math.abs(relative.getY()) <= rect.width / 2.0;
-    }
-
     private boolean pointInside(Translation2d point, Rectangle rect) {
         Translation2d relative =
             point.minus(rect.getCenter()).rotateBy(rect.pose.getRotation().unaryMinus());
