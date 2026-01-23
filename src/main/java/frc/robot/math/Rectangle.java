@@ -62,13 +62,6 @@ public class Rectangle implements ConvexShape {
         this.pose = pose;
     }
 
-    private Translation2d[] getCorners(Rectangle rect) {
-        rect.updateVertices();
-        Translation2d[] corners = new Translation2d[4];
-        System.arraycopy(rect.vertices, 0, corners, 0, 4);
-        return corners;
-    }
-
     private boolean pointInside(Translation2d point, Rectangle rect) {
         Translation2d relative =
             point.minus(rect.getCenter()).rotateBy(rect.pose.getRotation().unaryMinus());
@@ -83,6 +76,12 @@ public class Rectangle implements ConvexShape {
         return corners;
     }
 
+    /**
+     * sees if a rectangle is inside another
+     * 
+     * @param rect
+     * @return boolean true if inside
+     */
     public boolean isInside(Rectangle rect) {
         Translation2d[] corners = getCorners();
 
