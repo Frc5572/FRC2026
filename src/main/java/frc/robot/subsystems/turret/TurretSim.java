@@ -5,6 +5,7 @@ import java.util.Random;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
 /**
@@ -33,6 +34,8 @@ public class TurretSim implements TurretIO {
 
     private final Random random = new Random();
 
+    private Voltage currentVoltage;
+
     @Override
     public void updateInputs(TurretInputs inputs) {
         double noise1 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
@@ -44,6 +47,12 @@ public class TurretSim implements TurretIO {
             Turret.getGearAnglesFromTurret(turretRotation, Constants.Turret.gear2Gearing,
                 Constants.Turret.gear2Offset).plus(Rotation2d.fromDegrees(noise2));
     }
+
+    @Override
+    public void setTurretVoltage(Voltage volts) {
+        currentVoltage = volts;
+    }
+
 
     @Override
     public void setTargetAngle(Angle angle) {

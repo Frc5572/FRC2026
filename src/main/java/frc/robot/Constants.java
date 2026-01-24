@@ -227,5 +227,22 @@ public final class Constants {
         public static final Rotation2d gear2Offset = Rotation2d.kZero;
         public static final Angle minAngle = Degrees.of(-360);
         public static final Angle maxAngle = Degrees.of(360);
+
+        public static final int TurretMotorID = 20;
+        public static final int TurretCANcoderID1 = 21;
+        public static final int TurretCANcoderID2 = 22;
+
+        public static final double KP = 0.0;
+        public static final double KI = 0.0;
+        public static final double KD = 0.0;
+        public static final double KS = 0.0;
+        public static final double KV = 0.0;
+        public static final double KA = 0.0;
+
+        public static final double MMCVelocity = 0.0;
+        public static final double MMAcceleration = 0.0;
+        public static final double MMJerk = 0.0;
+
+
     }
 }
