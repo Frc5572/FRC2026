@@ -1,29 +1,26 @@
 package frc.robot.subsystems.intake;
 
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import edu.wpi.first.units.measure.Angle;
+import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 public class IntakeReal implements IntakeIO {
-    private TalonFX arm = new TalonFX(0);
+    private SparkFlex arm = new SparkFlex(0, null);
     private SparkFlex intakeMotor = new SparkFlex(0, MotorType.kBrushless);
-    private TalonFXConfiguration config = new TalonFXConfiguration();
-    private StatusSignal<Angle> armPosition = arm.getPosition();
+    private RelativeEncoder armEncoder = arm.getEncoder();
+    private SparkBaseConfig armConfig;
 
     public IntakeReal() {
 
     }
 
     public void configure() {
-        config.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
-        config.Slot0.kP = 0;
-        config.Slot0.kI = 0;
-        config.Slot0.kD = 0;
-        arm.getConfigurator().apply(config);
+        armConfig.idleMode(IdleMode.kBrake);
+        arm.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     }
 
@@ -35,12 +32,12 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        inputs.armAngle = armPosition.getValue().times(360);
+        inputs.armAngle = armEncoder.getPosition() * 360;
     }
 
     @Override
     public void setEncoderPosition(double position) {
-        arm.getConfigurator().setPosition(position);
+        arm.getEncoder().setPosition(position);
     }
 
     @Override

@@ -1,13 +1,11 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Degrees;
 import org.littletonrobotics.junction.AutoLog;
-import edu.wpi.first.units.measure.Angle;
 
 public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
-        Angle armAngle = Degrees.of(0);
+        double armAngle;
         double intakeVelocity;
     }
 

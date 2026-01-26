@@ -1,6 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -15,7 +14,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.swerve.mod.ModuleConstants;
 import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
@@ -43,7 +41,7 @@ public final class Constants {
     public static class IntakeConstants {
         public static final int armID = 31;
         public static final int intakeID = 32;
-        public static final Angle intakeAngle = Angle.ofBaseUnits(0, Degrees);
+        public static final double intakeAngle = 0;
         public static final double intakeSpeed = 0;
     }
 

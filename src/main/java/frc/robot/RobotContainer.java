@@ -89,7 +89,7 @@ public final class RobotContainer {
         testController.leftTrigger()
             .whileTrue(intake.useIntakeCommand(Constants.IntakeConstants.intakeSpeed,
                 Constants.IntakeConstants.intakeSpeed,
-                () -> intake.getArmPosition().lte(Constants.IntakeConstants.intakeAngle)));
+                () -> intake.getArmAngle() <= Constants.IntakeConstants.intakeAngle));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
