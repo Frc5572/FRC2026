@@ -18,7 +18,10 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
+import frc.robot.math.Rectangle;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.GyroInputsAutoLogged;
 import frc.robot.subsystems.swerve.mod.SwerveModule;
@@ -75,6 +78,22 @@ public final class Swerve extends SubsystemBase {
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
     public final SwerveState state;
+
+    public Rectangle robtoRect = new Rectangle("Robot Rectangle", new Pose2d(),
+        Constants.bumperLenghtWidth, Constants.bumperLenghtWidth);
+    public Trigger inBlueAlliance =
+        new Trigger(() -> robtoRect.isInside(FieldConstants.blueAlliance));
+    public Trigger inBlueAllianceClimb =
+        new Trigger(() -> robtoRect.isInside(FieldConstants.blueAllianceClimber));
+    public Trigger inBlueAllianceDropper =
+        new Trigger((() -> robtoRect.isInside(FieldConstants.blueDropper)));
+    public Trigger inNeutral = new Trigger(() -> robtoRect.isInside(FieldConstants.neutralZone));
+    public Trigger inRedAllianceDropper =
+        new Trigger(() -> robtoRect.isInside(FieldConstants.redDropper));
+    public Trigger inRedAllianceClimb =
+        new Trigger(() -> robtoRect.isInside(FieldConstants.redAllianceClimber));
+    public Trigger inRedAlliance =
+        new Trigger(() -> robtoRect.isInside(FieldConstants.redAlliance));
 
     /**
      * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
@@ -155,6 +174,7 @@ public final class Swerve extends SubsystemBase {
         state.updateSpeeds(currentSpeeds);
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
+        robtoRect.setPose(state.getGlobalPoseEstimate());
     }
 
     /**

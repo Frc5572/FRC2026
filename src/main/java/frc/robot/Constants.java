@@ -25,6 +25,8 @@ import frc.robot.subsystems.vision.CameraConstantsBuilder;
  */
 public final class Constants {
 
+    public static final double bumperLenghtWidth = 0.6858;
+
     /** Constants for driver controls */
     public static class DriverControls {
         /** Driverstation controller Index */

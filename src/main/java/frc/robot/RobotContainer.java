@@ -6,9 +6,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
-import frc.robot.math.Rectangle;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
@@ -45,22 +43,6 @@ public final class RobotContainer {
 
     private final RobotViz viz;
     private final SimulatedRobotState sim;
-
-    /* Triggers */
-    public Rectangle robtoRect = new Rectangle("Robot Rectangle", new Pose2d(), 0.6858, 0.6858);
-    public Trigger inBlueAlliance =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.blueAlliance));
-    public Trigger inBlueAllianceClimb =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.blueAllianceClimber));
-    public Trigger inBlueAllianceDropper =
-        new Trigger((() -> robtoRect.isInside(FieldConstants.blueDropper)));
-    public Trigger inNeutral = new Trigger(() -> robtoRect.isInside(FieldConstants.neutralZone));
-    public Trigger inRedAllianceDropper =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.redDropper));
-    public Trigger inRedAllianceClimb =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.redAllianceClimber));
-    public Trigger inRedAlliance =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.redAlliance));
 
     /**
      */

@@ -19,7 +19,7 @@ public class FieldConstants {
 
     public static final Rectangle blueAlliance =
         new Rectangle("Blue Alliacne", new Pose2d(2, 4.05, Rotation2d.kZero), 4.0, 8.1);
-    static final Rectangle blueAllianceClimber = new Rectangle("Blue Alliacne Climber",
+    public static final Rectangle blueAllianceClimber = new Rectangle("Blue Alliacne Climber",
         new Pose2d(0.6281201839447021, 3.75, Rotation2d.kZero), 1.2, 1.1);
     public static final Rectangle blueDropper =
         new Rectangle("Blue Dropper", new Pose2d(5.7, 4.05, Rotation2d.kZero), 1.0, 1.7);
