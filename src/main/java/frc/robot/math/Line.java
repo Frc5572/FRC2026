@@ -1,6 +1,5 @@
 package frc.robot.math;
 
-import static edu.wpi.first.units.Units.Meters;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.FieldConstants;
 
@@ -21,9 +20,9 @@ public class Line {
     }
 
     private static final double minX = -20.0;
-    private static final double maxX = FieldConstants.fieldLength.in(Meters) + 20.0;
+    private static final double maxX = FieldConstants.fieldLength + 20.0;
     private static final double minY = -20.0;
-    private static final double maxY = FieldConstants.fieldWidth.in(Meters) + 20.0;
+    private static final double maxY = FieldConstants.fieldWidth + 20.0;
 
 
     /** Get intersection of two lines. Returns null if lines are parallel. */
