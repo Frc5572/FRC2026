@@ -15,28 +15,35 @@ import lombok.RequiredArgsConstructor;
 /**
  * Field geometry and reference points for path planning, vision, and alignment.
  *
- * Coordinate system: - All constants are expressed in the WPILib field coordinate system. - Values
- * are defined from the perspective of the BLUE alliance wall. (That is, you should use WPILib's
- * standard field coordinates where +X increases away from the blue wall and +Y increases to the
- * left when looking from the blue alliance station toward the field.)
+ * <p>
+ * Coordinate system:
  *
- * Source of truth: - Field size and AprilTag poses are loaded from an {@link AprilTagFieldLayout}
- * JSON in the deploy directory (or from source when HAL is disabled).
+ * <ul>
+ * <li>All constants are expressed in the WPILib field coordinate system.</li>
+ * <li>Values are defined from the perspective of the BLUE alliance wall.</li>
+ * </ul>
+ *
+ * <p>
+ * Source of truth:
+ *
+ * <ul>
+ * <li>Field size and AprilTag poses are loaded from an {@link AprilTagFieldLayout} JSON.</li>
+ * </ul>
  */
 public class FieldConstants {
     /**
      * Which physical field variant the geometry files correspond to.
      *
+     * <p>
      * This value affects which deploy subfolder is used when loading AprilTag layouts (see
      * {@link FieldType#getJsonFolder()}).
      */
     public static final FieldType fieldType = FieldType.WELDED;
 
-    // AprilTag related constants
-
     /**
      * Number of AprilTags in the currently selected official layout.
      *
+     * <p>
      * This is computed from {@link AprilTagLayoutType#OFFICIAL}.
      */
     public static final int aprilTagCount =
@@ -44,41 +51,33 @@ public class FieldConstants {
 
     /**
      * Physical width of an AprilTag (edge length) in meters.
-     *
-     * Units: meters.
      */
     public static final double aprilTagWidth = Units.inchesToMeters(6.5);
 
     /**
      * Default AprilTag layout to use for most robot code.
      *
-     * Note: other layouts (such as {@link AprilTagLayoutType#NONE}) can exist for
-     * simulation/testing.
+     * <p>
+     * Other layouts (such as {@link AprilTagLayoutType#NONE}) can exist for simulation/testing.
      */
     public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
 
-    // Field dimensions
-
     /**
      * Field length in meters as defined by the official AprilTag layout.
-     *
-     * Units: meters.
      */
     public static final double fieldLength =
         AprilTagLayoutType.OFFICIAL.getLayout().getFieldLength();
 
     /**
      * Field width in meters as defined by the official AprilTag layout.
-     *
-     * Units: meters.
      */
     public static final double fieldWidth = AprilTagLayoutType.OFFICIAL.getLayout().getFieldWidth();
 
     /**
      * Convenient X positions for important vertical (field-lengthwise) lines.
      *
-     * Vertical lines are represented as X offsets in field coordinates. Many are derived from
-     * AprilTag X positions for robustness to year/layout.
+     * <p>
+     * Vertical lines are represented as X offsets in field coordinates.
      */
     public static class LinesVertical {
         /** Field centerline X (half the field length). */
@@ -87,6 +86,7 @@ public class FieldConstants {
         /**
          * Starting line X on the alliance side, derived from the hub/tag system.
          *
+         * <p>
          * Note: This uses the X of tag 26 in the official layout.
          */
         public static final double starting =
@@ -98,6 +98,7 @@ public class FieldConstants {
         /**
          * Hub center X on the alliance side.
          *
+         * <p>
          * Computed as tag 26 X plus half the hub width.
          */
         public static final double hubCenter =
@@ -112,6 +113,7 @@ public class FieldConstants {
         /**
          * Hub center X on the opposing side.
          *
+         * <p>
          * Computed as tag 4 X plus half the hub width.
          */
         public static final double oppHubCenter =
@@ -120,6 +122,7 @@ public class FieldConstants {
         /**
          * Opposing alliance zone boundary line X (near the far wall).
          *
+         * <p>
          * Note: This uses the X of tag 10 in the official layout.
          */
         public static final double oppAllianceZone =
@@ -129,16 +132,16 @@ public class FieldConstants {
     /**
      * Convenient Y positions for important horizontal (field-widthwise) lines.
      *
+     * <p>
      * Horizontal lines are represented as Y offsets in field coordinates.
      *
-     * Convention: - "Start" and "End" are left-to-right from the perspective of the alliance
-     * station (blue).
+     * <p>
+     * Convention: "Start" and "End" are left-to-right from the perspective of the BLUE alliance
+     * station.
      */
     public static class LinesHorizontal {
         /** Field centerline Y (half the field width). */
         public static final double center = fieldWidth / 2.0;
-
-        // Right of hub (toward lower Y in WPILib field coordinates)
 
         /** Y at the near edge of the right bump (closest to hub). */
         public static final double rightBumpStart = Hub.nearRightCorner.getY();
@@ -149,14 +152,13 @@ public class FieldConstants {
         /**
          * Y at the start of the open area adjacent to the right trench.
          *
+         * <p>
          * Includes a small spacing from the bump.
          */
         public static final double rightTrenchOpenStart = rightBumpEnd - Units.inchesToMeters(12.0);
 
         /** Y at the end of the right trench open segment (field boundary). */
         public static final double rightTrenchOpenEnd = 0;
-
-        // Left of hub (toward higher Y in WPILib field coordinates)
 
         /** Y at the near edge of the left bump (closest to hub). */
         public static final double leftBumpEnd = Hub.nearLeftCorner.getY();
@@ -167,6 +169,7 @@ public class FieldConstants {
         /**
          * Y at the end of the open area adjacent to the left trench.
          *
+         * <p>
          * Includes a small spacing from the bump.
          */
         public static final double leftTrenchOpenEnd = leftBumpStart + Units.inchesToMeters(12.0);
@@ -178,19 +181,15 @@ public class FieldConstants {
     /**
      * Hub geometry and reference points (center, corners, and faces).
      *
+     * <p>
      * Many points are defined using the AprilTag poses to remain consistent with the official field
      * layout.
      */
     public static class Hub {
-
-        // Dimensions
-
         /** Outer hub diameter/width in meters. */
         public static final double width = Units.inchesToMeters(47.0);
 
-        /**
-         * Outer hub height in meters (includes the catcher/top feature).
-         */
+        /** Outer hub height in meters (includes the catcher/top feature). */
         public static final double height = Units.inchesToMeters(72.0);
 
         /** Inner opening diameter/width in meters. */
@@ -199,12 +198,8 @@ public class FieldConstants {
         /** Inner opening height in meters. */
         public static final double innerHeight = Units.inchesToMeters(56.5);
 
-        // Relevant reference points on alliance side
-
         /**
          * Center point of the top of the hub on the alliance side.
-         *
-         * Units: meters.
          */
         public static final Translation3d topCenterPoint = new Translation3d(
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + width / 2.0,
@@ -212,8 +207,6 @@ public class FieldConstants {
 
         /**
          * Center point of the inner opening on the alliance side.
-         *
-         * Units: meters.
          */
         public static final Translation3d innerCenterPoint = new Translation3d(
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + width / 2.0,
@@ -235,11 +228,7 @@ public class FieldConstants {
         public static final Translation2d farRightCorner =
             new Translation2d(topCenterPoint.getX() + width / 2.0, fieldWidth / 2.0 - width / 2.0);
 
-        // Relevant reference points on the opposite side
-
-        /**
-         * Center point of the top of the hub on the opposing side.
-         */
+        /** Center point of the top of the hub on the opposing side. */
         public static final Translation3d oppTopCenterPoint = new Translation3d(
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() + width / 2.0,
             fieldWidth / 2.0, height);
@@ -260,11 +249,10 @@ public class FieldConstants {
         public static final Translation2d oppFarRightCorner = new Translation2d(
             oppTopCenterPoint.getX() + width / 2.0, fieldWidth / 2.0 - width / 2.0);
 
-        // Hub faces
-
         /**
          * Pose of the hub "near" face (alliance side).
          *
+         * <p>
          * Derived from AprilTag 26 pose.
          */
         public static final Pose2d nearFace =
@@ -273,6 +261,7 @@ public class FieldConstants {
         /**
          * Pose of the hub "far" face (toward opposing side).
          *
+         * <p>
          * Derived from AprilTag 20 pose.
          */
         public static final Pose2d farFace =
@@ -281,6 +270,7 @@ public class FieldConstants {
         /**
          * Pose of the hub right face (lower Y direction).
          *
+         * <p>
          * Derived from AprilTag 18 pose.
          */
         public static final Pose2d rightFace =
@@ -289,6 +279,7 @@ public class FieldConstants {
         /**
          * Pose of the hub left face (higher Y direction).
          *
+         * <p>
          * Derived from AprilTag 21 pose.
          */
         public static final Pose2d leftFace =
@@ -298,10 +289,10 @@ public class FieldConstants {
     /**
      * Geometry for the left bump and common reference points.
      *
-     * "Left" is defined from the perspective of the blue alliance station.
+     * <p>
+     * "Left" is defined from the perspective of the BLUE alliance station.
      */
     public static class LeftBump {
-
         /** Left bump width along the field Y axis (meters). */
         public static final double width = Units.inchesToMeters(73.0);
 
@@ -310,8 +301,6 @@ public class FieldConstants {
 
         /** Left bump depth along the field X axis (meters). */
         public static final double depth = Units.inchesToMeters(44.4);
-
-        // Relevant reference points on alliance side
 
         /** Alliance-side left bump near-left corner point. */
         public static final Translation2d nearLeftCorner =
@@ -326,8 +315,6 @@ public class FieldConstants {
 
         /** Alliance-side left bump far-right corner point (shared with hub). */
         public static final Translation2d farRightCorner = Hub.farLeftCorner;
-
-        // Relevant reference points on opposing side
 
         /** Opposing-side left bump near-left corner point. */
         public static final Translation2d oppNearLeftCorner =
@@ -347,7 +334,8 @@ public class FieldConstants {
     /**
      * Geometry for the right bump and common reference points.
      *
-     * "Right" is defined from the perspective of the blue alliance station.
+     * <p>
+     * "Right" is defined from the perspective of the BLUE alliance station.
      */
     public static class RightBump {
         /** Right bump width along the field Y axis (meters). */
@@ -358,8 +346,6 @@ public class FieldConstants {
 
         /** Right bump depth along the field X axis (meters). */
         public static final double depth = Units.inchesToMeters(44.4);
-
-        // Relevant reference points on alliance side
 
         /** Alliance-side right bump near-left corner point. */
         public static final Translation2d nearLeftCorner =
@@ -374,8 +360,6 @@ public class FieldConstants {
 
         /** Alliance-side right bump far-right corner point (shared with hub). */
         public static final Translation2d farRightCorner = Hub.farLeftCorner;
-
-        // Relevant reference points on opposing side
 
         /** Opposing-side right bump near-left corner point. */
         public static final Translation2d oppNearLeftCorner =
@@ -395,6 +379,7 @@ public class FieldConstants {
     /**
      * Left trench geometry and key opening reference points.
      *
+     * <p>
      * This primarily provides 3D points useful for vision targeting to the trench opening.
      */
     public static class LeftTrench {
@@ -413,8 +398,6 @@ public class FieldConstants {
         /** Height of the trench opening (meters). */
         public static final double openingHeight = Units.inchesToMeters(22.25);
 
-        // Relevant reference points on alliance side
-
         /** Alliance-side opening top-left corner point (3D). */
         public static final Translation3d openingTopLeft =
             new Translation3d(LinesVertical.hubCenter, fieldWidth, openingHeight);
@@ -422,8 +405,6 @@ public class FieldConstants {
         /** Alliance-side opening top-right corner point (3D). */
         public static final Translation3d openingTopRight =
             new Translation3d(LinesVertical.hubCenter, fieldWidth - openingWidth, openingHeight);
-
-        // Relevant reference points on opposing side
 
         /** Opposing-side opening top-left corner point (3D). */
         public static final Translation3d oppOpeningTopLeft =
@@ -437,6 +418,7 @@ public class FieldConstants {
     /**
      * Right trench geometry and key opening reference points.
      *
+     * <p>
      * This primarily provides 3D points useful for vision targeting to the trench opening.
      */
     public static class RightTrench {
@@ -455,8 +437,6 @@ public class FieldConstants {
         /** Height of the trench opening (meters). */
         public static final double openingHeight = Units.inchesToMeters(22.25);
 
-        // Relevant reference points on alliance side
-
         /** Alliance-side opening top-left corner point (3D). */
         public static final Translation3d openingTopLeft =
             new Translation3d(LinesVertical.hubCenter, openingWidth, openingHeight);
@@ -464,8 +444,6 @@ public class FieldConstants {
         /** Alliance-side opening top-right corner point (3D). */
         public static final Translation3d openingTopRight =
             new Translation3d(LinesVertical.hubCenter, 0, openingHeight);
-
-        // Relevant reference points on opposing side
 
         /** Opposing-side opening top-left corner point (3D). */
         public static final Translation3d oppOpeningTopLeft =
@@ -479,6 +457,7 @@ public class FieldConstants {
     /**
      * Tower geometry and reference points (center and uprights).
      *
+     * <p>
      * Useful for alignment targets and autonomous placement.
      */
     public static class Tower {
@@ -494,15 +473,11 @@ public class FieldConstants {
         /** Width of the inner opening (meters). */
         public static final double innerOpeningWidth = Units.inchesToMeters(32.250);
 
-        /**
-         * X coordinate of the tower front face in field coordinates (meters).
-         */
+        /** X coordinate of the tower front face (meters). */
         public static final double frontFaceX = Units.inchesToMeters(43.51);
 
         /** Height of the uprights (meters). */
         public static final double uprightHeight = Units.inchesToMeters(72.1);
-
-        // Rung heights from the floor
 
         /** Low rung height above carpet (meters). */
         public static final double lowRungHeight = Units.inchesToMeters(27.0);
@@ -513,11 +488,10 @@ public class FieldConstants {
         /** High rung height above carpet (meters). */
         public static final double highRungHeight = Units.inchesToMeters(63.0);
 
-        // Relevant reference points on alliance side
-
         /**
          * Tower center point on the alliance side (2D).
          *
+         * <p>
          * Y is derived from AprilTag 31.
          */
         public static final Translation2d centerPoint = new Translation2d(frontFaceX,
@@ -526,26 +500,27 @@ public class FieldConstants {
         /**
          * Left upright position on the alliance side (2D).
          *
+         * <p>
          * The extra 0.75 inch accounts for physical offset/clearance.
          */
         public static final Translation2d leftUpright = new Translation2d(frontFaceX,
-            (AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(31).get().getY())
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(31).get().getY()
                 + innerOpeningWidth / 2 + Units.inchesToMeters(0.75));
 
         /**
          * Right upright position on the alliance side (2D).
          *
+         * <p>
          * The extra 0.75 inch accounts for physical offset/clearance.
          */
         public static final Translation2d rightUpright = new Translation2d(frontFaceX,
-            (AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(31).get().getY())
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(31).get().getY()
                 - innerOpeningWidth / 2 - Units.inchesToMeters(0.75));
-
-        // Relevant reference points on opposing side
 
         /**
          * Tower center point on the opposing side (2D).
          *
+         * <p>
          * X is mirrored about the field length. Y is derived from AprilTag 15.
          */
         public static final Translation2d oppCenterPoint =
@@ -555,13 +530,13 @@ public class FieldConstants {
         /** Left upright position on the opposing side (2D). */
         public static final Translation2d oppLeftUpright =
             new Translation2d(fieldLength - frontFaceX,
-                (AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(15).get().getY())
+                AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(15).get().getY()
                     + innerOpeningWidth / 2 + Units.inchesToMeters(0.75));
 
         /** Right upright position on the opposing side (2D). */
         public static final Translation2d oppRightUpright =
             new Translation2d(fieldLength - frontFaceX,
-                (AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(15).get().getY())
+                AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(15).get().getY()
                     - innerOpeningWidth / 2 - Units.inchesToMeters(0.75));
     }
 
@@ -578,22 +553,20 @@ public class FieldConstants {
         /** Depot height (meters). */
         public static final double height = Units.inchesToMeters(1.125);
 
-        /** Lateral Y distance from the field centerline to the depot center. */
+        /** Lateral distance from field centerline to the depot center (meters). */
         public static final double distanceFromCenterY = Units.inchesToMeters(75.93);
-
-        // Relevant reference points on alliance side
 
         /** Depot center point (3D). */
         public static final Translation3d depotCenter =
-            new Translation3d(depth, (fieldWidth / 2) + distanceFromCenterY, height);
+            new Translation3d(depth, fieldWidth / 2 + distanceFromCenterY, height);
 
         /** Depot left corner point (3D). */
         public static final Translation3d leftCorner =
-            new Translation3d(depth, (fieldWidth / 2) + distanceFromCenterY + (width / 2), height);
+            new Translation3d(depth, fieldWidth / 2 + distanceFromCenterY + width / 2, height);
 
         /** Depot right corner point (3D). */
         public static final Translation3d rightCorner =
-            new Translation3d(depth, (fieldWidth / 2) + distanceFromCenterY - (width / 2), height);
+            new Translation3d(depth, fieldWidth / 2 + distanceFromCenterY - width / 2, height);
     }
 
     /**
@@ -609,12 +582,11 @@ public class FieldConstants {
         /** Outpost height (meters). */
         public static final double height = Units.inchesToMeters(7.0);
 
-        // Relevant reference points on alliance side
-
         /**
          * Outpost center point (2D).
          *
-         * Y is derived from AprilTag 29. X is at the field wall.
+         * <p>
+         * Y is derived from AprilTag 29. X is at the field wall (x = 0).
          */
         public static final Translation2d centerPoint = new Translation2d(0,
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
@@ -623,6 +595,7 @@ public class FieldConstants {
     /**
      * Identifies which set of field-measurement JSONs to load.
      *
+     * <p>
      * The {@link #jsonFolder} maps to a subdirectory under deploy/apriltags/.
      */
     @RequiredArgsConstructor
@@ -632,9 +605,7 @@ public class FieldConstants {
         /** Field built from welded elements. */
         WELDED("welded");
 
-        /**
-         * Deploy folder name containing JSON layouts for this field type.
-         */
+        /** Deploy folder name containing JSON layouts for this field type. */
         @Getter
         private final String jsonFolder;
     }
@@ -642,6 +613,7 @@ public class FieldConstants {
     /**
      * Available AprilTag layouts for this project.
      *
+     * <p>
      * Layouts are loaded lazily from JSON on first access and cached for subsequent calls.
      */
     public enum AprilTagLayoutType {
@@ -650,19 +622,8 @@ public class FieldConstants {
         /** Empty layout intended for tests/simulation without tags. */
         NONE("2026-none");
 
-        /** Base filename (without .json). */
         private final String name;
-
-        /**
-         * Cached layout instance.
-         *
-         * Marked volatile to support safe double-checked locking initialization.
-         */
         private volatile AprilTagFieldLayout layout;
-
-        /**
-         * Cached JSON string of the loaded layout, useful for logging/dashboard.
-         */
         private volatile String layoutString;
 
         AprilTagLayoutType(String name) {
@@ -672,10 +633,16 @@ public class FieldConstants {
         /**
          * Loads (if needed) and returns the {@link AprilTagFieldLayout} for this layout type.
          *
-         * Loading behavior: - If {@code Constants.disableHAL} is true, loads from the project
-         * source deploy path (useful in unit tests). - Otherwise loads from the robot deploy
-         * directory.
+         * <p>
+         * Loading behavior:
          *
+         * <ul>
+         * <li>If {@code Constants.disableHAL} is true, loads from the project source deploy path
+         * (useful in unit tests).</li>
+         * <li>Otherwise loads from the robot deploy directory.</li>
+         * </ul>
+         *
+         * <p>
          * The loaded layout is cached after the first call.
          *
          * @return the loaded {@link AprilTagFieldLayout}
@@ -705,6 +672,7 @@ public class FieldConstants {
         /**
          * Returns a JSON string representation of the loaded layout.
          *
+         * <p>
          * If the layout has not been loaded yet, this method will load it first.
          *
          * @return JSON string for the layout
