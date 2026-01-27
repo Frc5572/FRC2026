@@ -80,7 +80,7 @@ public final class Swerve extends SubsystemBase {
     public final SwerveState state;
 
     public Rectangle robotRect = new Rectangle("Robot Rectangle", new Pose2d(),
-        Constants.bumperLenghtWidth, Constants.bumperLenghtWidth);
+        Constants.Swerve.trackWidth, Constants.Swerve.trackWidth);
     public Trigger inBlueAlliance =
         new Trigger(() -> robotRect.isInside(FieldConstants.blueAlliance));
     public Trigger inBlueAllianceClimb =

@@ -25,8 +25,6 @@ import frc.robot.subsystems.vision.CameraConstantsBuilder;
  */
 public final class Constants {
 
-    public static final double bumperLenghtWidth = 0.6858;
-
     /** Constants for driver controls */
     public static class DriverControls {
         /** Driverstation controller Index */
@@ -67,7 +65,7 @@ public final class Constants {
 
         /* Drivetrain Constants */
         /** Distance between right and left wheels on robot */
-        public static final double trackWidth = Units.inchesToMeters(24.229);
+        public static final double trackWidth = Units.inchesToMeters(18.048);
         /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(24.229);
         /** Distance from the center of the wheel to the ground */
