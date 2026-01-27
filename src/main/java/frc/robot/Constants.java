@@ -241,4 +241,10 @@ public final class Constants {
         };
         // @formatter:on
     }
+
+    public static boolean disableHAL = false;
+
+    public static void disableHAP() {
+        disableHAL = true;
+    }
 }
