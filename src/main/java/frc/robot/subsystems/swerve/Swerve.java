@@ -79,21 +79,21 @@ public final class Swerve extends SubsystemBase {
 
     public final SwerveState state;
 
-    public Rectangle robtoRect = new Rectangle("Robot Rectangle", new Pose2d(),
+    public Rectangle robotRect = new Rectangle("Robot Rectangle", new Pose2d(),
         Constants.bumperLenghtWidth, Constants.bumperLenghtWidth);
     public Trigger inBlueAlliance =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.blueAlliance));
+        new Trigger(() -> robotRect.isInside(FieldConstants.blueAlliance));
     public Trigger inBlueAllianceClimb =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.blueAllianceClimber));
+        new Trigger(() -> robotRect.isInside(FieldConstants.blueAllianceClimber));
     public Trigger inBlueAllianceDropper =
-        new Trigger((() -> robtoRect.isInside(FieldConstants.blueDropper)));
-    public Trigger inNeutral = new Trigger(() -> robtoRect.isInside(FieldConstants.neutralZone));
+        new Trigger((() -> robotRect.isInside(FieldConstants.blueDropper)));
+    public Trigger inNeutral = new Trigger(() -> robotRect.isInside(FieldConstants.neutralZone));
     public Trigger inRedAllianceDropper =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.redDropper));
+        new Trigger(() -> robotRect.isInside(FieldConstants.redDropper));
     public Trigger inRedAllianceClimb =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.redAllianceClimber));
+        new Trigger(() -> robotRect.isInside(FieldConstants.redAllianceClimber));
     public Trigger inRedAlliance =
-        new Trigger(() -> robtoRect.isInside(FieldConstants.redAlliance));
+        new Trigger(() -> robotRect.isInside(FieldConstants.redAlliance));
 
     /**
      * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
@@ -174,7 +174,7 @@ public final class Swerve extends SubsystemBase {
         state.updateSpeeds(currentSpeeds);
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
-        robtoRect.setPose(state.getGlobalPoseEstimate());
+        robotRect.setPose(state.getGlobalPoseEstimate());
     }
 
     /**
