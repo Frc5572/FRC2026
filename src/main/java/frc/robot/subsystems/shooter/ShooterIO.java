@@ -4,10 +4,13 @@ import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.util.GenerateEmptyIO;
 
+/**
+ * Shooter IO Interface
+ */
 @GenerateEmptyIO
 public interface ShooterIO {
-    @AutoLog
 
+    @AutoLog
     public static class ShooterIOInputs {
         public AngularVelocity shootingRPM1;
         public AngularVelocity shootingRPM2;

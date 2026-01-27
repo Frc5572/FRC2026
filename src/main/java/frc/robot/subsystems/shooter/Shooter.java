@@ -5,11 +5,18 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
-
+/**
+ * Shooter Subsystem
+ */
 public final class Shooter extends SubsystemBase {
     private ShooterIO io;
     private ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
 
+    /**
+     * Shooter Subsystem Contructor
+     * 
+     * @param io Shooter IO implementation
+     */
     public Shooter(ShooterIO io) {
         this.io = io;
     }
@@ -20,7 +27,6 @@ public final class Shooter extends SubsystemBase {
 
     public void periodic() {
         io.updateInputs(inputs);
-        // You can log inputs here if needed
     }
 
     public Command runShooter() {
