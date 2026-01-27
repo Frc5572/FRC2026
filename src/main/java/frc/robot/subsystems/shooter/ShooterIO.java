@@ -10,6 +10,7 @@ import frc.robot.util.GenerateEmptyIO;
 @GenerateEmptyIO
 public interface ShooterIO {
 
+    /** Shooter IO Inputs Class */
     @AutoLog
     public static class ShooterIOInputs {
         public AngularVelocity shootingRPM1;

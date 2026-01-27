@@ -13,7 +13,7 @@ public final class Shooter extends SubsystemBase {
     private ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
 
     /**
-     * Shooter Subsystem Contructor
+     * Shooter Subsystem Constructor
      * 
      * @param io Shooter IO implementation
      */
