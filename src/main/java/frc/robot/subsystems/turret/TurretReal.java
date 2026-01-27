@@ -29,18 +29,18 @@ public class TurretReal implements TurretIO {
     private StatusSignal<Voltage> turretVoltage = turretMotor.getMotorVoltage();
     private StatusSignal<Current> turretCurrent = turretMotor.getStatorCurrent();
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
+    private StatusSignal<Angle> CANcoder1Pos = turretCANcoder1.getPosition();
+    private StatusSignal<Angle> CANcoder2Pos = turretCANcoder2.getPosition();
 
     public TurretReal() {
         configTurret();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent);
+        BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
+            CANcoder1Pos, CANcoder2Pos);
 
     }
 
     private void configTurret() {
-        turretMotor.getConfigurator().apply(turretConfig);
-        turretCANcoder1.getConfigurator().apply(CANcoder1Config);
-        turretCANcoder2.getConfigurator().apply(CANcoder2Config);
 
         // PID and feedforward
 
@@ -53,6 +53,10 @@ public class TurretReal implements TurretIO {
         turretConfig.MotionMagic.MotionMagicCruiseVelocity = Constants.Turret.MMCVelocity;
         turretConfig.MotionMagic.MotionMagicAcceleration = Constants.Turret.MMAcceleration;
         turretConfig.MotionMagic.MotionMagicJerk = Constants.Turret.MMJerk;
+
+        turretMotor.getConfigurator().apply(turretConfig);
+        turretCANcoder1.getConfigurator().apply(CANcoder1Config);
+        turretCANcoder2.getConfigurator().apply(CANcoder2Config);
     }
 
     private final VoltageOut voltage = new VoltageOut(0.0);
@@ -65,17 +69,17 @@ public class TurretReal implements TurretIO {
     @Override
     public void updateInputs(TurretInputs inputs) {
         BaseStatusSignal.refreshAll(turretPosition, turretVoltage, turretCurrent, turretVelocity,
-            turretCANcoder1.getAbsolutePosition(), turretCANcoder2.getAbsolutePosition());
+            CANcoder1Pos, CANcoder2Pos);
 
-        inputs.gear1AbsoluteAngle =
-            new Rotation2d(turretCANcoder1.getAbsolutePosition().getValue());
-        inputs.gear2AbsoluteAngle =
-            new Rotation2d(turretCANcoder2.getAbsolutePosition().getValue());
+        inputs.gear1AbsoluteAngle = new Rotation2d(CANcoder1Pos.getValue());
+        inputs.gear2AbsoluteAngle = new Rotation2d(CANcoder2Pos.getValue());
 
         inputs.relativeAngle = turretPosition.getValue();
         inputs.voltage = turretVoltage.getValue();
         inputs.current = turretCurrent.getValue();
         inputs.velocity = turretVelocity.getValue();
+
+        inputs.atPosition = Math.abs(turretPosition.getValueAsDouble() - mmVoltage.Position) < 0.01;
     }
 
     private final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
@@ -87,6 +91,6 @@ public class TurretReal implements TurretIO {
 
     @Override
     public void resetPosition(Angle angle) {
-        TurretIO.super.resetPosition(angle);
+        turretMotor.setPosition(angle);
     }
 }

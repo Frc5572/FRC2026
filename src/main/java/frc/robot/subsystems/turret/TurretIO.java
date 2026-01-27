@@ -22,7 +22,7 @@ public interface TurretIO {
      */
     @AutoLog
     public static class TurretInputs {
-        public Rotation2d gear1AbsoluteAngle = Rotation2d.kZero;
+        public Rotation2d gear1AbsoluteAngle;
         public Rotation2d gear2AbsoluteAngle = Rotation2d.kZero;
         public boolean atPosition;
         public Angle relativeAngle = Rotations.of(0);

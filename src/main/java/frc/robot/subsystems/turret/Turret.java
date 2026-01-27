@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -13,6 +14,7 @@ import frc.robot.Constants;
  */
 public class Turret extends SubsystemBase {
 
+    private boolean hasSynced = false;
     private final TurretIO io;
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
 
@@ -34,7 +36,11 @@ public class Turret extends SubsystemBase {
         Angle turretRotationEstimate =
             getTurretAngleFromGears(inputs.gear1AbsoluteAngle, inputs.gear2AbsoluteAngle);
         Logger.recordOutput("Turret/EstimatedTurretAngle", turretRotationEstimate);
-        Logger.recordOutput("Turret/EstimatedTurretAngleDeg", turretRotationEstimate.in(Degrees));
+
+        if (!hasSynced && inputs.gear1AbsoluteAngle != null) {
+            io.resetPosition(turretRotationEstimate);
+            hasSynced = true;
+        }
     }
 
     /**
@@ -135,4 +141,15 @@ public class Turret extends SubsystemBase {
         return new Rotation2d(rot.getCos(), rot.getSin());
     }
 
+    public void setGoal(Angle targetAngle) {
+        if (hasSynced) {
+            double clamped = Math.max(Constants.Turret.minAngle.in(Rotations),
+                Math.min(targetAngle.in(Rotations), Constants.Turret.maxAngle.in(Rotations)));
+            io.setTargetAngle(Rotations.of(clamped));
+        }
+    }
+
+    public Command goToAngle(double rotations) {
+        return run(() -> this.setGoal(Rotations.of(rotations)));
+    }
 }
