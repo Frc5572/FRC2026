@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  */
 public final class Shooter extends SubsystemBase {
     private ShooterIO io;
-    private ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
+    private ShooterIO.ShooterInputs inputs;
 
     /**
      * Shooter Subsystem Constructor
