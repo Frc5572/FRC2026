@@ -8,6 +8,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.SimulatedRobotState;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIOEmpty;
+import frc.robot.subsystems.shooter.ShooterReal;
+import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -40,6 +44,7 @@ public final class RobotContainer {
     /* Subsystems */
     private final Swerve swerve;
     private final Vision vision;
+    private final Shooter shooter;
 
     private final RobotViz viz;
     private final SimulatedRobotState sim;
@@ -52,6 +57,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
+                shooter = new Shooter(new ShooterReal());
                 break;
             case kSimulation:
                 SimulatedArena.getInstance().resetFieldForAuto();
@@ -59,11 +65,13 @@ public final class RobotContainer {
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
+                shooter = new Shooter(new ShooterSim());
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
+                shooter = new Shooter(new ShooterIOEmpty());
         }
         viz = new RobotViz(sim, swerve);
 
@@ -76,6 +84,8 @@ public final class RobotContainer {
 
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
+
+        driver.x().whileTrue(shooter.runShooter());
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */

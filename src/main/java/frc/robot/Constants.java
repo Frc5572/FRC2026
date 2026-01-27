@@ -241,4 +241,9 @@ public final class Constants {
         };
         // @formatter:on
     }
+
+    public static final class Shooter {
+        public static final int motor1ID = 36;
+        public static final int motor2ID = 37;
+    }
 }
