@@ -7,6 +7,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 
 public class IntakeReal implements IntakeIO {
@@ -16,6 +17,7 @@ public class IntakeReal implements IntakeIO {
     private TalonFXConfiguration rightConfiguration = new TalonFXConfiguration();
     private TalonFXConfiguration leftConfiguration = new TalonFXConfiguration();
     private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
+    private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
 
     public IntakeReal() {
         configure();
@@ -47,6 +49,7 @@ public class IntakeReal implements IntakeIO {
     public void updateInputs(IntakeIOInputs inputs) {
         inputs.hopperPositionMeters = hopperRightMotor.getPosition().getValueAsDouble()
             / Constants.IntakeConstants.distanceToRotations;
+        inputs.limitSwitch = limitSwitchMin.get();
 
     }
 

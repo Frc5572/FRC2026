@@ -7,6 +7,7 @@ public interface IntakeIO {
     public static class IntakeIOInputs {
         double hopperPositionMeters;
         double intakeVelocity;
+        boolean limitSwitch;
     }
 
     public void updateInputs(IntakeIOInputs inputs);
