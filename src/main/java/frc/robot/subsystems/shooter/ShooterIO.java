@@ -1,5 +1,8 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -16,16 +19,16 @@ public interface ShooterIO {
     /** Shooter Inputs Class */
     @AutoLog
     public static class ShooterInputs {
-        public AngularVelocity shooterAngularVelocity1;
-        public AngularVelocity shooterAngularVelocity2;
-        public Voltage shooterVoltage1;
-        public Voltage shooterVoltage2;
-        public Current shooterCurrent1;
-        public Current shooterCurrent2;
+        public AngularVelocity shooterAngularVelocity1 = RadiansPerSecond.zero();
+        public AngularVelocity shooterAngularVelocity2 = RadiansPerSecond.zero();
+        public Voltage shooterVoltage1 = Volts.zero();
+        public Voltage shooterVoltage2 = Volts.zero();
+        public Current shooterCurrent1 = Amps.zero();
+        public Current shooterCurrent2 = Amps.zero();
     }
 
     public void updateInputs(ShooterInputs inputs);
 
-    public void runShooterVelocity(double velocityRPM);
+    public void runShooterVelocity(double velocity);
 
 }

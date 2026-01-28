@@ -10,7 +10,7 @@ public class ShooterSim implements ShooterIO {
     }
 
     @Override
-    public void runShooterVelocity(double velocityRadPerSec) {
+    public void runShooterVelocity(double velocity) {
 
     }
 

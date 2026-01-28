@@ -10,9 +10,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.Shooter;
 
-/**
- * Shooter Real Implementation
- */
+/** Shooter Real Implementation */
 public final class ShooterReal implements ShooterIO {
     private TalonFX shooterMotor1;
     private TalonFX shooterMotor2;
@@ -41,9 +39,9 @@ public final class ShooterReal implements ShooterIO {
     }
 
     private void configMotors() {
-        motor1Config.MotorOutput.Inverted = Shooter.shooterMotorInvert;
+        motor1Config.MotorOutput.Inverted = Shooter.shooterMotor1Invert;
         motor1Config.MotorOutput.NeutralMode = Shooter.shooterNeutralMode;
-        motor2Config.MotorOutput.Inverted = Shooter.shooterMotorInvert;
+        motor2Config.MotorOutput.Inverted = Shooter.shooterMotor2Invert;
         motor2Config.MotorOutput.NeutralMode = Shooter.shooterNeutralMode;
 
         motor1Config.Slot0.kP = Shooter.shooterKP;
@@ -65,11 +63,11 @@ public final class ShooterReal implements ShooterIO {
     private final VelocityVoltage shooterVelocityVoltage = new VelocityVoltage(0.0);
 
     @Override
-    public void runShooterVelocity(double velocityRPM) {
+    public void runShooterVelocity(double velocity) {
         shooterMotor1
-            .setControl(shooterVelocityVoltage.withVelocity(velocityRPM).withFeedForward(0.1));
+            .setControl(shooterVelocityVoltage.withVelocity(velocity).withFeedForward(0.1));
         shooterMotor2
-            .setControl(shooterVelocityVoltage.withVelocity(velocityRPM).withFeedForward(0.1));
+            .setControl(shooterVelocityVoltage.withVelocity(velocity).withFeedForward(0.1));
     }
 
     @Override

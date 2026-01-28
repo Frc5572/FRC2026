@@ -249,7 +249,8 @@ public final class Constants {
         /** ID for Shooter Motor 1 */
         public static final int motor2ID = 37;
 
-        public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
+        public static final InvertedValue shooterMotor1Invert = InvertedValue.Clockwise_Positive;
+        public static final InvertedValue shooterMotor2Invert = InvertedValue.Clockwise_Positive;
         public static final NeutralModeValue shooterNeutralMode = NeutralModeValue.Brake;
 
         public static final double shooterKS = 0.1;
