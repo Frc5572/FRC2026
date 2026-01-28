@@ -142,9 +142,8 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * Gets goal angle
      * 
-     * @param targetAngle
+     * @param targetAngle gets the goal angle
      */
     public void setGoal(Angle targetAngle) {
         if (hasSynced) {
