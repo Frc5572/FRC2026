@@ -5,7 +5,7 @@ import org.littletonrobotics.junction.AutoLog;
 public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
-        double hopperPosition;
+        double hopperPositionMeters;
         double intakeVelocity;
     }
 

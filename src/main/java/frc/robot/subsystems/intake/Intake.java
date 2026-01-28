@@ -8,7 +8,7 @@ import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
     public IntakeIO io;
-    public IntakeIOInputsAutoLogged log = new IntakeIOInputsAutoLogged();
+    public IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
     public Intake(IntakeIO io) {
         this.io = io;
@@ -16,7 +16,7 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        io.updateInputs(null);
+        io.updateInputs(inputs);
     }
 
 
@@ -25,7 +25,7 @@ public class Intake extends SubsystemBase {
     }
 
     public void runHopperOnly(double setPointDistance) {
-        io.runHopperMotor(setPointDistance * Constants.IntakeConstants.distanceToRotations);
+        io.runHopperMotor(setPointDistance);
     }
 
     public Command useIntakeCommand(double intakeSpeed, double hopperDesiredPosition) {
@@ -36,7 +36,7 @@ public class Intake extends SubsystemBase {
     }
 
     public double getHopperPosition() {
-        return log.hopperPosition;
+        return inputs.hopperPositionMeters;
     }
 
 }

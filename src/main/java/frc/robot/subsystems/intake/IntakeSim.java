@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 public class IntakeSim implements IntakeIO {
 
+
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
         // TODO Auto-generated method stub

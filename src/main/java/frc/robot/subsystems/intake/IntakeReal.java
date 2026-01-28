@@ -1,31 +1,31 @@
 package frc.robot.subsystems.intake;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkClosedLoopController;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import frc.robot.Constants;
 
 public class IntakeReal implements IntakeIO {
-    private SparkFlex hopper = new SparkFlex(0, null);
+    private TalonFX hopper = new TalonFX(Integer.MIN_VALUE);
     private SparkFlex intakeMotor = new SparkFlex(0, MotorType.kBrushless);
-    private RelativeEncoder hopperEncoder = hopper.getEncoder();
-    private SparkBaseConfig hopperConfig;
-    private SparkClosedLoopController pid = hopper.getClosedLoopController();
+    private Slot0Configs configs = new Slot0Configs();
+    private TalonFXConfiguration configuration = new TalonFXConfiguration();
+    private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
 
     public IntakeReal() {
-
+        configure();
     }
 
     public void configure() {
-        hopperConfig.idleMode(IdleMode.kBrake);
-        hopperConfig.closedLoop.p(0).i(0).d(0);
-        hopper.configure(hopperConfig, ResetMode.kResetSafeParameters,
-            PersistMode.kPersistParameters);
+        configuration.Slot0.kP = Constants.IntakeConstants.KP;
+        configuration.Slot0.kI = Constants.IntakeConstants.KI;
+        configuration.Slot0.kD = Constants.IntakeConstants.KD;
+        configuration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        hopper.getConfigurator().apply(configs);
 
     }
 
@@ -37,17 +37,19 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        inputs.hopperPosition = hopperEncoder.getPosition();
+        inputs.hopperPositionMeters =
+            hopper.getPosition().getValueAsDouble() / Constants.IntakeConstants.distanceToRotations;
     }
 
     @Override
     public void setEncoderPosition(double position) {
-        hopper.getEncoder().setPosition(position);
+        hopper.getConfigurator().setPosition(position);
     }
 
     @Override
     public void runHopperMotor(double setPoint) {
-        pid.setSetpoint(setPoint, ControlType.kPosition);
+        hopper.setControl(
+            positionVoltage.withPosition(setPoint * Constants.IntakeConstants.distanceToRotations));
     }
 
 
