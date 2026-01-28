@@ -84,8 +84,6 @@ public final class RobotContainer {
 
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
-
-        driver.x().whileTrue(shooter.runShooter());
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */

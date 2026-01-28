@@ -10,7 +10,13 @@ public class ShooterSim implements ShooterIO {
     }
 
     @Override
-    public void setShootingSpeed(double speed) {
+    public void runShooterVelocity(double velocityRadPerSec, double feedforward) {
 
     }
+
+    @Override
+    public void setShooterPID(double kP, double kI, double kD, double kS, double kV, double kA) {
+
+    }
+
 }
