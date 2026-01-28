@@ -35,7 +35,7 @@ public class TurretReal implements TurretIO {
     private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getPosition();
     private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getPosition();
 
-    /** Real Turret Implementaiton */
+    /** Real Turret Implementation */
     public TurretReal() {
         configTurret();
 
