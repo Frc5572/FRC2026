@@ -24,6 +24,9 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.VisionSim;
+import frc.robot.subsystems.vision.color.ColorDetection;
+import frc.robot.subsystems.vision.color.ColorDetectionIO;
+import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
@@ -45,6 +48,7 @@ public final class RobotContainer {
     private final Swerve swerve;
     private final Vision vision;
     private final Shooter shooter;
+    private final ColorDetection colorDetection;
 
     private final RobotViz viz;
     private final SimulatedRobotState sim;
@@ -58,6 +62,7 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 shooter = new Shooter(new ShooterReal());
+                colorDetection = new ColorDetection(new ColorDetectionReal());
                 break;
             case kSimulation:
                 SimulatedArena.getInstance().resetFieldForAuto();
@@ -66,12 +71,14 @@ public final class RobotContainer {
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
                 shooter = new Shooter(new ShooterSim());
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
         }
         viz = new RobotViz(sim, swerve);
 
