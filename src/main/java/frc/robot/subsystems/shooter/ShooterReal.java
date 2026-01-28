@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -64,31 +65,17 @@ public final class ShooterReal implements ShooterIO {
     private final VelocityVoltage shooterVelocityVoltage = new VelocityVoltage(0.0);
 
     @Override
-    public void runShooterVelocity(double velocityRPM, double feedforward) {
-        shooterMotor1.setControl(
-            shooterVelocityVoltage.withVelocity(velocityRPM).withFeedForward(feedforward));
-    }
-
-    @Override
-    public void setShooterPID(double kP, double kI, double kD, double kS, double kV, double kA) {
-        motor1Config.Slot0.kP = kP;
-        motor1Config.Slot0.kI = kI;
-        motor1Config.Slot0.kD = kD;
-        motor1Config.Slot0.kS = kS;
-        motor1Config.Slot0.kV = kV;
-
-        motor2Config.Slot0.kP = kP;
-        motor2Config.Slot0.kI = kI;
-        motor2Config.Slot0.kD = kD;
-        motor2Config.Slot0.kS = kS;
-        motor2Config.Slot0.kV = kV;
-
-        shooterMotor1.getConfigurator().apply(motor1Config);
-        shooterMotor2.getConfigurator().apply(motor2Config);
+    public void runShooterVelocity(double velocityRPM) {
+        shooterMotor1
+            .setControl(shooterVelocityVoltage.withVelocity(velocityRPM).withFeedForward(0.1));
+        shooterMotor2
+            .setControl(shooterVelocityVoltage.withVelocity(velocityRPM).withFeedForward(0.1));
     }
 
     @Override
     public void updateInputs(ShooterInputs inputs) {
+        BaseStatusSignal.refreshAll(shooterVelocity1, shooterVelocity2, shooterVoltage1,
+            shooterVoltage2, shooterCurrent1, shooterCurrent2);
         inputs.shooterAngularVelocity1 = shooterVelocity1.getValue();
         inputs.shooterAngularVelocity2 = shooterVelocity2.getValue();
         inputs.shooterVoltage1 = shooterVoltage1.getValue();

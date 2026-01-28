@@ -26,8 +26,6 @@ public interface ShooterIO {
 
     public void updateInputs(ShooterInputs inputs);
 
-    public void runShooterVelocity(double velocityRadPerSec, double feedforward);
-
-    public void setShooterPID(double kP, double kI, double kD, double kS, double kV, double kA);
+    public void runShooterVelocity(double velocityRPM);
 
 }

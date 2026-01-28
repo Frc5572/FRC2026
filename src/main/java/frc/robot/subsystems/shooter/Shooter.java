@@ -24,7 +24,7 @@ public final class Shooter extends SubsystemBase {
         io.updateInputs(inputs);
     }
 
-    public Command runShooterVelocityCommand(double velocityRPM, double feedforward) {
-        return run(() -> io.runShooterVelocity(velocityRPM, feedforward));
+    public Command runShooterVelocityCommand(double velocityRPM) {
+        return run(() -> io.runShooterVelocity(velocityRPM));
     }
 }
