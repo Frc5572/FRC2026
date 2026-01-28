@@ -1,9 +1,9 @@
 package frc.robot;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.UncheckedIOException;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -703,7 +703,9 @@ public class FieldConstants {
         /** Field built from AndyMark elements. */
         ANDYMARK("andymark"),
         /** Field built from welded elements. */
-        WELDED("welded");
+        WELDED("welded"),
+        /** Field built at shop for testing */
+        ROSBOT("rosbot");
 
         /** Deploy folder name containing JSON layouts for this field type. */
         @Getter
@@ -751,18 +753,29 @@ public class FieldConstants {
         public AprilTagFieldLayout getLayout() {
             if (layout == null) {
                 synchronized (this) {
-                    if (layout == null) {
-                        try {
-                            Path p = Constants.disableHAL
-                                ? Path.of("src", "main", "deploy", "apriltags",
-                                    fieldType.getJsonFolder(), name + ".json")
-                                : Path.of(Filesystem.getDeployDirectory().getPath(), "apriltags",
-                                    fieldType.getJsonFolder(), name + ".json");
-                            layout = new AprilTagFieldLayout(p);
-                            layoutString = new ObjectMapper().writeValueAsString(layout);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                    switch (fieldType) {
+                        case ANDYMARK:
+                            layout =
+                                AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+                            break;
+                        case WELDED:
+                            layout =
+                                AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+                        case ROSBOT:
+                            try {
+                                AprilTagFieldLayout apriltags = AprilTagFieldLayout
+                                    .loadFromResource(Filesystem.getDeployDirectory()
+                                        + "/apriltags/rosbots-2026.json");
+                                // Copy layout because the layout's origin is mutable
+                                layout = new AprilTagFieldLayout(apriltags.getTags(),
+                                    apriltags.getFieldLength(), apriltags.getFieldWidth());
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(
+                                    "Could not load AprilTagFieldLayout from Custom Field Layout",
+                                    e);
+                            }
+                        default:
+                            break;
                     }
                 }
             }
