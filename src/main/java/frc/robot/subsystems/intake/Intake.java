@@ -24,8 +24,8 @@ public class Intake extends SubsystemBase {
         io.runIntakeMotor(speed);
     }
 
-    public void runHopperOnly(double setPointDistance) {
-        io.runHopperMotor(setPointDistance);
+    public void runHopperOnly(double setPointDistanceInMeters) {
+        io.runHopperMotor(setPointDistanceInMeters);
     }
 
     public Command useIntakeCommand(double intakeSpeed, double hopperDesiredPosition) {
