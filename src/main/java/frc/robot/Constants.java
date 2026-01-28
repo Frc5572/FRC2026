@@ -216,4 +216,18 @@ public final class Constants {
         };
         // @formatter:on
     }
+
+    public static final class AdjustableHood {
+        public static final int HoodMotorID = 41;
+        public static final int HoodCANCoderID = 42;
+
+        public static final double KP = 0.0;
+        public static final double KI = 0.0;
+        public static final double KD = 0.0;
+        public static final double KS = 0.0;
+        public static final double KV = 0.0;
+        public static final double KA = 0.0;
+        public static final double KG = 0.0;
+
+    }
 }
