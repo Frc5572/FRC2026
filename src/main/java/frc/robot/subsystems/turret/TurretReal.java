@@ -25,16 +25,17 @@ public class TurretReal implements TurretIO {
 
     private CANcoder turretCANcoder1 = new CANcoder(Constants.Turret.TurretCANcoderID2);
     private CANcoder turretCANcoder2 = new CANcoder(Constants.Turret.TurretCANcoderID1);
-    private CANcoderConfiguration CANcoder1Config = new CANcoderConfiguration();
-    private CANcoderConfiguration CANcoder2Config = new CANcoderConfiguration();
+    private CANcoderConfiguration canCoder1Config = new CANcoderConfiguration();
+    private CANcoderConfiguration canCoder2Config = new CANcoderConfiguration();
 
     private StatusSignal<Angle> turretPosition = turretMotor.getPosition();
     private StatusSignal<Voltage> turretVoltage = turretMotor.getMotorVoltage();
     private StatusSignal<Current> turretCurrent = turretMotor.getStatorCurrent();
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
-    private StatusSignal<Angle> CANcoder1Pos = turretCANcoder1.getPosition();
-    private StatusSignal<Angle> CANcoder2Pos = turretCANcoder2.getPosition();
+    private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getPosition();
+    private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getPosition();
 
+    /** Real Turret Implementaiton */
     public TurretReal() {
         configTurret();
 
@@ -42,7 +43,7 @@ public class TurretReal implements TurretIO {
 
 
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
-            CANcoder1Pos, CANcoder2Pos);
+            canCoder1Pos, canCoder2Pos);
 
     }
 
@@ -63,8 +64,8 @@ public class TurretReal implements TurretIO {
         turretConfig.MotionMagic.MotionMagicJerk = Constants.Turret.MMJerk;
 
         turretMotor.getConfigurator().apply(turretConfig);
-        turretCANcoder1.getConfigurator().apply(CANcoder1Config);
-        turretCANcoder2.getConfigurator().apply(CANcoder2Config);
+        turretCANcoder1.getConfigurator().apply(canCoder1Config);
+        turretCANcoder2.getConfigurator().apply(canCoder2Config);
 
         turretConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         turretConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
@@ -84,10 +85,10 @@ public class TurretReal implements TurretIO {
     @Override
     public void updateInputs(TurretInputs inputs) {
         BaseStatusSignal.refreshAll(turretPosition, turretVoltage, turretCurrent, turretVelocity,
-            CANcoder1Pos, CANcoder2Pos);
+            canCoder1Pos, canCoder2Pos);
 
-        inputs.gear1AbsoluteAngle = new Rotation2d(CANcoder1Pos.getValue());
-        inputs.gear2AbsoluteAngle = new Rotation2d(CANcoder2Pos.getValue());
+        inputs.gear1AbsoluteAngle = new Rotation2d(canCoder1Pos.getValue());
+        inputs.gear2AbsoluteAngle = new Rotation2d(canCoder2Pos.getValue());
 
         inputs.relativeAngle = turretPosition.getValue();
         inputs.voltage = turretVoltage.getValue();
