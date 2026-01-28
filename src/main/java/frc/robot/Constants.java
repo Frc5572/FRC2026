@@ -1,6 +1,10 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -14,6 +18,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.swerve.mod.ModuleConstants;
 import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
@@ -262,5 +268,42 @@ public final class Constants {
                 .finish(),
         };
         // @formatter:on
+    }
+
+    public static final class Climber {
+        public static final class Telescope {
+            public static final int RIGHT_ID = 0;
+            public static final int LEFT_ID = 0;
+
+            public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
+
+            // PID and feedforward
+            public static final double KP = 50.0;
+            public static final double KI = 0.0;
+            public static final double KD = 0.0;
+            public static final double KS = 0.9;
+            public static final double KV = 0.0;
+            public static final double KA = 0.0;
+            public static final double KG = 0.9375;
+            public static final double CVeleocity = 4.0;
+            public static final double FastVelocity = 9.0;
+            public static final double Acceleration = 10.0;
+            public static final double Jerk = 6000000.0;
+
+            public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(0.0);
+
+            // positions
+            public static final Distance HOME = Inches.of(2);
+            public static final Distance P0 = Inches.of(20.5);
+            public static final Distance P1 = Inches.of(27.45);
+            public static final Distance P2 = Inches.of(36.2);
+
+            public static final double gearRatio = 20.0 / 1.0;
+            public static final Distance INCHES_AT_TOP = Inches.of(72.0);
+            public static final Angle ROTATIONS_AT_TOP = Radians.of(220);
+            public static final double SensorToMechanismRatio =
+                Constants.Climber.Telescope.ROTATIONS_AT_TOP.in(Rotations)
+                    / Constants.Climber.Telescope.INCHES_AT_TOP.in(Meters);
+        }
     }
 }

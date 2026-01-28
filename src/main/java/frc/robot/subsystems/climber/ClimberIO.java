@@ -1,28 +1,38 @@
 package frc.robot.subsystems.climber;
 
 import org.littletonrobotics.junction.AutoLog;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Voltage;
+import frc.robot.util.GenerateEmptyIO;
 
+/**
+ * Elevator IO Class for Climber
+ */
+
+@GenerateEmptyIO
 public interface ClimberIO {
+
+    /**
+     * Inputs Class for Climber
+     */
+
     @AutoLog
-    public static class ClimberIOInputs {
-        public double angleMotorPosition;
-        public double rightMotorPosition;
-        public double leftMotorPosition;
+    public class ClimberInputs {
+        public boolean atPositon;
+        public Voltage outputVoltage;
+        public Distance position;
+        public AngularVelocity velocity;
+        public Current motorCurrent;
     }
 
-    public void updateInputs(ClimberIOInputs inputs);
+    public void updateInputs(ClimberInputs inputs);
 
-    public void runAngleMotor(double setPoint);
+    public void setVoltage(double volts);
 
-    public void runLeftMotor(double setPoint);
+    public void setPositon(double position);
 
-    public void runRightMotor(double setPoint);
-
-    public void setAngleMotorEncoderPosition(double position);
-
-    public void setLeftMotorEncoderPosition(double position);
-
-    public void setRightMotorEncoderPosition(double position);
-
+    public default void setPower(double power) {}
 
 }
