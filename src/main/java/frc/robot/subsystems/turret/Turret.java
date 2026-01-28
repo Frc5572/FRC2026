@@ -153,7 +153,7 @@ public class Turret extends SubsystemBase {
         }
     }
 
-    public Command goToAngle(double rotations) {
-        return run(() -> this.setGoal(Rotations.of(rotations)));
+    public Command goToAngle(Angle rotations) {
+        return run(() -> this.setGoal(rotations));
     }
 }

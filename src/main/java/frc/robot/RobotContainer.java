@@ -18,6 +18,7 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
+import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.turret.TurretSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
@@ -57,7 +58,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
-                turret = new Turret(new TurretIOEmpty());
+                turret = new Turret(new TurretReal());
                 break;
             case kSimulation:
                 sim = new SwerveSim(new Pose2d(2.0, 2.0, Rotation2d.kZero));
@@ -80,7 +81,7 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        tester.rightBumper().whileTrue(turret.goToAngle(.5));
+        tester.rightBumper().whileTrue(turret.goToAngle(Constants.Turret.testAngle));
 
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());

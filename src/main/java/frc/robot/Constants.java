@@ -244,6 +244,7 @@ public final class Constants {
         public static final double MMAcceleration = 0.0;
         public static final double MMJerk = 0.0;
 
+        public static final Angle testAngle = Degrees.of(30);
 
     }
 }

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 import org.littletonrobotics.junction.AutoLog;
@@ -22,13 +23,13 @@ public interface TurretIO {
      */
     @AutoLog
     public static class TurretInputs {
-        public Rotation2d gear1AbsoluteAngle;
+        public Rotation2d gear1AbsoluteAngle = Rotation2d.kZero;
         public Rotation2d gear2AbsoluteAngle = Rotation2d.kZero;
         public boolean atPosition;
         public Angle relativeAngle = Rotations.of(0);
         public Voltage voltage = Volts.of(0);
         public Current current = Amps.of(0);
-        public AngularVelocity velocity;
+        public AngularVelocity velocity = RadiansPerSecond.of(0);
     }
 
     public void setTurretVoltage(Voltage volts);
@@ -43,6 +44,6 @@ public interface TurretIO {
      */
     public void setTargetAngle(Angle angle);
 
-    public default void resetPosition(Angle angle) {}
+    public void resetPosition(Angle angle);
 
 }

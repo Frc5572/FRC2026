@@ -60,4 +60,10 @@ public class TurretSim implements TurretIO {
         Logger.recordOutput("Turret/GTAngle", angle);
     }
 
+    @Override
+    public void resetPosition(Angle angle) {
+        turretRotation = angle;
+        Logger.recordOutput("Turret/ResetAngle", angle);
+    }
+
 }
