@@ -593,38 +593,105 @@ public class FieldConstants {
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
     }
 
-    public static class rectangles {
+    /**
+     * Defines commonly used rectangular field regions.
+     *
+     * <p>
+     * All rectangles are defined in field coordinates using {@link Pose2d} for their center
+     * position and are intended to represent alliance zones, climber areas, droppers, and the
+     * neutral zone.
+     *
+     * <p>
+     * All dimensions are expressed in meters unless otherwise specified.
+     */
+    public static class Rectangles {
+
+        /**
+         * The Blue Alliance zone.
+         *
+         * <p>
+         * This rectangle spans the full field width and extends from the blue alliance wall to the
+         * hub center line.
+         */
         public static final Rectangle blueAlliance = new Rectangle(
             "Blue Alliance", new Pose2d(LinesVertical.starting + fieldWidth / 2,
                 LinesHorizontal.center, Rotation2d.kZero),
             LinesVertical.hubCenter - LinesVertical.starting, fieldWidth);
+
+        /**
+         * The Blue Alliance climber area.
+         *
+         * <p>
+         * Located near the blue alliance wall and centered horizontally on the field. Dimensions
+         * are based on official field measurements.
+         */
         public static final Rectangle blueAllianceClimber =
             new Rectangle("Blue Alliance Climber",
                 new Pose2d(LinesVertical.starting + Units.inchesToMeters(24.65),
                     LinesHorizontal.center, Rotation2d.kZero),
                 Units.inchesToMeters(47.25), Units.inchesToMeters(43.3));
+
+        /**
+         * The Blue Alliance dropper area.
+         *
+         * <p>
+         * Positioned adjacent to the hub on the blue alliance side, offset slightly from the hub
+         * edge.
+         */
         public static final Rectangle blueDropper = new Rectangle("Blue Dropper",
             new Pose2d(LinesVertical.hubCenter + Hub.width / 2 + Units.inchesToMeters(6),
                 LinesHorizontal.center, Rotation2d.kZero),
             Units.inchesToMeters(39.4), Units.inchesToMeters(67));
+
+        /**
+         * The neutral zone.
+         *
+         * <p>
+         * This rectangle represents the central field area between alliance zones, bounded
+         * vertically by the neutral zone lines and horizontally by the open trench boundaries.
+         */
         public static final Rectangle neutralZone = new Rectangle("Neutral Zone",
             new Pose2d(LinesVertical.center, LinesHorizontal.center, Rotation2d.kZero),
             LinesVertical.neutralZoneFar - LinesVertical.neutralZoneNear,
             LinesHorizontal.leftTrenchOpenStart - LinesHorizontal.rightTrenchOpenEnd);
+
+        /**
+         * The Red Alliance dropper area.
+         *
+         * <p>
+         * Mirrors the blue dropper area, positioned adjacent to the hub on the red alliance side.
+         */
         public static final Rectangle redDropper = new Rectangle("Red Dropper",
             new Pose2d(LinesVertical.oppHubCenter - Hub.width / 2 - Units.inchesToMeters(6),
                 LinesHorizontal.center, Rotation2d.kZero),
             Units.inchesToMeters(39.4), Units.inchesToMeters(67));
+
+        /**
+         * The Red Alliance zone.
+         *
+         * <p>
+         * This rectangle spans the full field width and extends from the red alliance wall to the
+         * hub center line.
+         */
         public static final Rectangle redAlliance = new Rectangle("Red Alliance",
             new Pose2d(
                 LinesVertical.oppAllianceZone - (fieldLength - LinesVertical.oppAllianceZone) / 2,
                 LinesHorizontal.center, Rotation2d.kZero),
             fieldLength - LinesVertical.oppAllianceZone - LinesVertical.hubCenter, fieldWidth);
+
+        /**
+         * The Red Alliance climber area.
+         *
+         * <p>
+         * Located near the red alliance wall and centered horizontally on the field. Dimensions
+         * mirror those of the blue alliance climber.
+         */
         public static final Rectangle redAllianceClimber = new Rectangle("Red Alliance Climber",
             new Pose2d(LinesVertical.oppAllianceZone - Units.inchesToMeters(24.65),
                 LinesHorizontal.center, Rotation2d.kZero),
             Units.inchesToMeters(47.25), Units.inchesToMeters(43.3));
     }
+
     /**
      * Identifies which set of field-measurement JSONs to load.
      *
