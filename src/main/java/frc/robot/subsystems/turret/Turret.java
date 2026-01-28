@@ -142,10 +142,10 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * Sets the goal angle
+     * Gets goal angle
      * 
+     * @param targetAngle
      */
-
     public void setGoal(Angle targetAngle) {
         if (hasSynced) {
             double clamped = Math.max(Constants.Turret.minAngle.in(Rotations),
