@@ -1,19 +1,20 @@
 package frc.robot.subsystems.intake;
 
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import frc.robot.Constants;
 
 public class IntakeReal implements IntakeIO {
-    private TalonFX hopper = new TalonFX(Integer.MIN_VALUE);
+    private TalonFX hopperRightMotor = new TalonFX(Constants.IntakeConstants.hopperRightID);
+    private TalonFX hopperLeftMotor = new TalonFX(Constants.IntakeConstants.hopperLeftID);
     private SparkFlex intakeMotor = new SparkFlex(0, MotorType.kBrushless);
-    private Slot0Configs configs = new Slot0Configs();
-    private TalonFXConfiguration configuration = new TalonFXConfiguration();
+    private TalonFXConfiguration rightConfiguration = new TalonFXConfiguration();
+    private TalonFXConfiguration leftConfiguration = new TalonFXConfiguration();
     private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
 
     public IntakeReal() {
@@ -21,11 +22,18 @@ public class IntakeReal implements IntakeIO {
     }
 
     public void configure() {
-        configuration.Slot0.kP = Constants.IntakeConstants.KP;
-        configuration.Slot0.kI = Constants.IntakeConstants.KI;
-        configuration.Slot0.kD = Constants.IntakeConstants.KD;
-        configuration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        hopper.getConfigurator().apply(configs);
+        rightConfiguration.Slot0.kP = Constants.IntakeConstants.KP;
+        rightConfiguration.Slot0.kI = Constants.IntakeConstants.KI;
+        rightConfiguration.Slot0.kD = Constants.IntakeConstants.KD;
+        rightConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rightConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        leftConfiguration.Slot0.kP = Constants.IntakeConstants.KP;
+        leftConfiguration.Slot0.kI = Constants.IntakeConstants.KI;
+        leftConfiguration.Slot0.kD = Constants.IntakeConstants.KD;
+        leftConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        leftConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        hopperLeftMotor.getConfigurator().apply(leftConfiguration);
+        hopperRightMotor.getConfigurator().apply(rightConfiguration);
 
     }
 
@@ -37,18 +45,22 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        inputs.hopperPositionMeters =
-            hopper.getPosition().getValueAsDouble() / Constants.IntakeConstants.distanceToRotations;
+        inputs.hopperPositionMeters = hopperRightMotor.getPosition().getValueAsDouble()
+            / Constants.IntakeConstants.distanceToRotations;
+
     }
 
     @Override
     public void setEncoderPosition(double position) {
-        hopper.getConfigurator().setPosition(position);
+        hopperRightMotor.getConfigurator().setPosition(position);
+        hopperLeftMotor.getConfigurator().setPosition(position);
     }
 
     @Override
     public void runHopperMotor(double setPoint) {
-        hopper.setControl(
+        hopperRightMotor.setControl(
+            positionVoltage.withPosition(setPoint * Constants.IntakeConstants.distanceToRotations));
+        hopperLeftMotor.setControl(
             positionVoltage.withPosition(setPoint * Constants.IntakeConstants.distanceToRotations));
     }
 

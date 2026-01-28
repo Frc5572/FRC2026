@@ -12,6 +12,7 @@ public class Intake extends SubsystemBase {
 
     public Intake(IntakeIO io) {
         this.io = io;
+        io.setEncoderPosition(0);
     }
 
     @Override
