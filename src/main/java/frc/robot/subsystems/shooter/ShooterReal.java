@@ -25,7 +25,7 @@ public final class ShooterReal implements ShooterIO {
     private StatusSignal<Current> shooterCurrent1;
     private StatusSignal<Current> shooterCurrent2;
 
-
+    /** Shooter Real Implementation Constructor */
     public ShooterReal() {
         shooterMotor1 = new TalonFX(Shooter.motor1ID);
         shooterMotor2 = new TalonFX(Shooter.motor2ID);
@@ -69,6 +69,7 @@ public final class ShooterReal implements ShooterIO {
             shooterVelocityVoltage.withVelocity(velocityRPM).withFeedForward(feedforward));
     }
 
+    @Override
     public void setShooterPID(double kP, double kI, double kD, double kS, double kV, double kA) {
         motor1Config.Slot0.kP = kP;
         motor1Config.Slot0.kI = kI;
