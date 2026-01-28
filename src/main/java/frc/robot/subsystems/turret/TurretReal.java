@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -8,12 +9,14 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+
 
 /** turret hardware */
 public class TurretReal implements TurretIO {
@@ -35,12 +38,17 @@ public class TurretReal implements TurretIO {
     public TurretReal() {
         configTurret();
 
+        turretMotor.setNeutralMode(NeutralModeValue.Brake);
+
+
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
             CANcoder1Pos, CANcoder2Pos);
 
     }
 
     private void configTurret() {
+
+        turretConfig.Feedback.SensorToMechanismRatio = Constants.Turret.motorGearing;
 
         // PID and feedforward
 
@@ -57,6 +65,13 @@ public class TurretReal implements TurretIO {
         turretMotor.getConfigurator().apply(turretConfig);
         turretCANcoder1.getConfigurator().apply(CANcoder1Config);
         turretCANcoder2.getConfigurator().apply(CANcoder2Config);
+
+        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+            Constants.Turret.maxAngle.in(Rotations);
+        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+            Constants.Turret.minAngle.in(Rotations);
     }
 
     private final VoltageOut voltage = new VoltageOut(0.0);

@@ -141,6 +141,12 @@ public class Turret extends SubsystemBase {
         return new Rotation2d(rot.getCos(), rot.getSin());
     }
 
+    /**
+     * Sets the goal angle
+     * 
+     * @param targetAngle
+     */
+
     public void setGoal(Angle targetAngle) {
         if (hasSynced) {
             double clamped = Math.max(Constants.Turret.minAngle.in(Rotations),
