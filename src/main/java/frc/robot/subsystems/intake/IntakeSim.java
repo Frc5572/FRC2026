@@ -4,27 +4,15 @@ public class IntakeSim implements IntakeIO {
 
 
     @Override
-    public void updateInputs(IntakeIOInputs inputs) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateInputs'");
-    }
+    public void updateInputs(IntakeIOInputs inputs) {}
 
     @Override
-    public void runIntakeMotor(double speed) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runIntakeMotor'");
-    }
+    public void runIntakeMotor(double speed) {}
 
     @Override
-    public void setEncoderPosition(double position) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setEncoderPosition'");
-    }
+    public void setEncoderPosition(double position) {}
 
     @Override
-    public void runHopperMotor(double speed) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runArmMotor'");
-    }
+    public void runHopperMotor(double speed) {}
 
 }
