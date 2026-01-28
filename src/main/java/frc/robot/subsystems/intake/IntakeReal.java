@@ -3,24 +3,29 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 public class IntakeReal implements IntakeIO {
-    private SparkFlex arm = new SparkFlex(0, null);
+    private SparkFlex hopper = new SparkFlex(0, null);
     private SparkFlex intakeMotor = new SparkFlex(0, MotorType.kBrushless);
-    private RelativeEncoder armEncoder = arm.getEncoder();
-    private SparkBaseConfig armConfig;
+    private RelativeEncoder hopperEncoder = hopper.getEncoder();
+    private SparkBaseConfig hopperConfig;
+    private SparkClosedLoopController pid = hopper.getClosedLoopController();
 
     public IntakeReal() {
 
     }
 
     public void configure() {
-        armConfig.idleMode(IdleMode.kBrake);
-        arm.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        hopperConfig.idleMode(IdleMode.kBrake);
+        hopperConfig.closedLoop.p(0).i(0).d(0);
+        hopper.configure(hopperConfig, ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters);
 
     }
 
@@ -32,17 +37,17 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        inputs.armAngle = armEncoder.getPosition() * 360;
+        inputs.hopperPosition = hopperEncoder.getPosition();
     }
 
     @Override
     public void setEncoderPosition(double position) {
-        arm.getEncoder().setPosition(position);
+        hopper.getEncoder().setPosition(position);
     }
 
     @Override
-    public void runArmMotor(double speed) {
-        arm.set(speed);
+    public void runHopperMotor(double setPoint) {
+        pid.setSetpoint(setPoint, ControlType.kPosition);
     }
 
 

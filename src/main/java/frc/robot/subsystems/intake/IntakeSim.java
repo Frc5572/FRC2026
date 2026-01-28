@@ -21,7 +21,7 @@ public class IntakeSim implements IntakeIO {
     }
 
     @Override
-    public void runArmMotor(double speed) {
+    public void runHopperMotor(double speed) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'runArmMotor'");
     }

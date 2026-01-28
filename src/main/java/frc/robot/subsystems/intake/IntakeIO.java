@@ -5,7 +5,7 @@ import org.littletonrobotics.junction.AutoLog;
 public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
-        double armAngle;
+        double hopperPosition;
         double intakeVelocity;
     }
 
@@ -15,7 +15,7 @@ public interface IntakeIO {
 
     public void setEncoderPosition(double position);
 
-    public void runArmMotor(double speed);
+    public void runHopperMotor(double setPoint);
 
     public static class Empty implements IntakeIO {
 
@@ -29,7 +29,7 @@ public interface IntakeIO {
         public void setEncoderPosition(double position) {}
 
         @Override
-        public void runArmMotor(double speed) {}
+        public void runHopperMotor(double speed) {}
 
     }
 

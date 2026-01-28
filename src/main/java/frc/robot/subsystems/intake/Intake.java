@@ -1,9 +1,10 @@
 package frc.robot.subsystems.intake;
 
-import java.util.function.BooleanSupplier;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
     public IntakeIO io;
@@ -18,28 +19,24 @@ public class Intake extends SubsystemBase {
         io.updateInputs(null);
     }
 
-    public void runIntake(double intakeSpeed, double armSpeed) {
-        io.runArmMotor(armSpeed);
-        io.runIntakeMotor(intakeSpeed);
-    }
 
     public void runIntakeOnly(double speed) {
         io.runIntakeMotor(speed);
     }
 
-    public void runArmOnly(double speed) {
-        io.runArmMotor(speed);
+    public void runHopperOnly(double setPointDistance) {
+        io.runHopperMotor(setPointDistance * Constants.IntakeConstants.distanceToRotations);
     }
 
-    public Command useIntakeCommand(double intakeSpeed, double armSpeed, BooleanSupplier angle) {
-        return Commands.runEnd(() -> runArmOnly(armSpeed), () -> runArmOnly(armSpeed), this)
-            .until(angle).unless(angle)
-            .alongWith(runEnd(() -> runIntakeOnly(intakeSpeed), () -> runIntakeOnly(intakeSpeed)))
-            .andThen(runEnd(() -> runIntakeOnly(intakeSpeed), () -> runIntakeOnly(intakeSpeed)));
+    public Command useIntakeCommand(double intakeSpeed, double hopperDesiredPosition) {
+        return Commands
+            .run(() -> runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,
+                hopperDesiredPosition, Constants.IntakeConstants.hopperMaxDistance)), this)
+            .alongWith(runEnd(() -> runIntakeOnly(intakeSpeed), () -> runIntakeOnly(intakeSpeed)));
     }
 
-    public double getArmAngle() {
-        return log.armAngle;
+    public double getHopperPosition() {
+        return log.hopperPosition;
     }
 
 }
