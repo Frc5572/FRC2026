@@ -5,10 +5,12 @@ import java.nio.file.Path;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.math.Rectangle;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -35,8 +37,7 @@ public class FieldConstants {
      * Which physical field variant the geometry files correspond to.
      *
      * <p>
-     * This value affects which deploy subfolder is used when loading AprilTag layouts (see
-     * {@link FieldType#getJsonFolder()}).
+     * This value affects which deploy subfolder is used when loading AprilTag layouts.
      */
     public static final FieldType fieldType = FieldType.WELDED;
 
@@ -592,6 +593,38 @@ public class FieldConstants {
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
     }
 
+    public static class rectangles {
+        public static final Rectangle blueAlliance = new Rectangle(
+            "Blue Alliance", new Pose2d(LinesVertical.starting + fieldWidth / 2,
+                LinesHorizontal.center, Rotation2d.kZero),
+            LinesVertical.hubCenter - LinesVertical.starting, fieldWidth);
+        public static final Rectangle blueAllianceClimber =
+            new Rectangle("Blue Alliance Climber",
+                new Pose2d(LinesVertical.starting + Units.inchesToMeters(24.65),
+                    LinesHorizontal.center, Rotation2d.kZero),
+                Units.inchesToMeters(47.25), Units.inchesToMeters(43.3));
+        public static final Rectangle blueDropper = new Rectangle("Blue Dropper",
+            new Pose2d(LinesVertical.hubCenter + Hub.width / 2 + Units.inchesToMeters(6),
+                LinesHorizontal.center, Rotation2d.kZero),
+            Units.inchesToMeters(39.4), Units.inchesToMeters(67));
+        public static final Rectangle neutralZone = new Rectangle("Neutral Zone",
+            new Pose2d(LinesVertical.center, LinesHorizontal.center, Rotation2d.kZero),
+            LinesVertical.neutralZoneFar - LinesVertical.neutralZoneNear,
+            LinesHorizontal.leftTrenchOpenStart - LinesHorizontal.rightTrenchOpenEnd);
+        public static final Rectangle redDropper = new Rectangle("Red Dropper",
+            new Pose2d(LinesVertical.oppHubCenter - Hub.width / 2 - Units.inchesToMeters(6),
+                LinesHorizontal.center, Rotation2d.kZero),
+            Units.inchesToMeters(39.4), Units.inchesToMeters(67));
+        public static final Rectangle redAlliance = new Rectangle("Red Alliance",
+            new Pose2d(
+                LinesVertical.oppAllianceZone - (fieldLength - LinesVertical.oppAllianceZone) / 2,
+                LinesHorizontal.center, Rotation2d.kZero),
+            fieldLength - LinesVertical.oppAllianceZone - LinesVertical.hubCenter, fieldWidth);
+        public static final Rectangle redAllianceClimber = new Rectangle("Red Alliance Climber",
+            new Pose2d(LinesVertical.oppAllianceZone - Units.inchesToMeters(24.65),
+                LinesHorizontal.center, Rotation2d.kZero),
+            Units.inchesToMeters(47.25), Units.inchesToMeters(43.3));
+    }
     /**
      * Identifies which set of field-measurement JSONs to load.
      *
