@@ -761,6 +761,7 @@ public class FieldConstants {
                         case WELDED:
                             layout =
                                 AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+                            break;
                         case ROSBOT:
                             try {
                                 AprilTagFieldLayout apriltags = AprilTagFieldLayout
@@ -774,6 +775,7 @@ public class FieldConstants {
                                     "Could not load AprilTagFieldLayout from Custom Field Layout",
                                     e);
                             }
+                            break;
                         default:
                             break;
                     }
