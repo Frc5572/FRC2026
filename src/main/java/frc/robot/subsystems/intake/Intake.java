@@ -40,11 +40,8 @@ public class Intake extends SubsystemBase {
 
     public Command useHopperCommand(double hopperDesiredPosition) {
         return Commands
-            .runEnd(
-                () -> runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,
-                    hopperDesiredPosition, Constants.IntakeConstants.hopperMaxDistance)),
-                () -> runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,
-                    hopperDesiredPosition, Constants.IntakeConstants.hopperMaxDistance)))
+            .run(() -> runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,
+                hopperDesiredPosition, Constants.IntakeConstants.hopperMaxDistance)), this)
             .until(limitSwitchTouched);
     }
 
