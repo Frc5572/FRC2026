@@ -18,7 +18,7 @@ public interface AdjustableHoodIO {
         public Voltage voltage = Volts.of(0);
         public Current current = Amps.of(0);
         public AngularVelocity velocity = RadiansPerSecond.of(0);
-        public boolean atPosition;
+        public double hoodLocation = 0.0;
     }
 
     public void setAdjustableHoodVoltage(Voltage volts);

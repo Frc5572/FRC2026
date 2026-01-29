@@ -84,7 +84,7 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
         inputs.current = hoodCurrent.getValue();
         inputs.velocity = hoodVelocity.getValue();
 
-        inputs.atPosition = Math.abs(hoodAngle.getValueAsDouble() - mmVoltage.Position) < 0.01;
+        inputs.hoodLocation = hoodAngle.getValueAsDouble();
     }
 
     @Override

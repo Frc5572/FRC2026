@@ -10,9 +10,16 @@ import frc.robot.Constants;
 
 public class AdjustableHood extends SubsystemBase {
 
-    private final AdjustableHood io;
+    private boolean atAngle = false;
+    private double targetHoodRotation = 0.0;
+    private final AdjustableHoodIO io;
     private final AdjustableHoodInputsAutoLogged inputs = new AdjustableHoodInputsAutoLogged();
 
+    /**
+     * Creates a new Adjustable Hood subsystem.
+     * 
+     * @param io Hardware abstraction
+     */
     public AdjustableHood(AdjustableHoodIO io) {
         super("Adjustable Hood");
         this.io = io;
@@ -22,16 +29,19 @@ public class AdjustableHood extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Adjustable Hood", inputs);
+
+        atAngle = Math
+            .abs(inputs.hoodLocation - targetHoodRotation) < Constants.AdjustableHood.hoodTolerence;
     }
 
     public void setGoal(Angle targetAngle) {
-        double clamped = Math.max(Constants.AdjustableHood.minAngle.in(Rotations),
+        double targetHoodRotation = Math.max(Constants.AdjustableHood.minAngle.in(Rotations),
             Math.min(targetAngle.in(Rotations), Constants.AdjustableHood.maxAngle.in(Rotations)));
-        io.setTargetAngle(Degrees.of(clamped));
+        io.setTargetAngle(Degrees.of(targetHoodRotation));
     }
 
     public Command goToAngle(Angle angle) {
-        return run(() -> this.setGoal(angle));
+        return run(() -> this.setGoal(angle)).until(() -> atAngle);
     }
 
 
