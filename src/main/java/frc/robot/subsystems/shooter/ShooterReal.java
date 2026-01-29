@@ -16,6 +16,7 @@ public final class ShooterReal implements ShooterIO {
     private TalonFX shooterMotor1;
     private TalonFX shooterMotor2;
     private TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+    private final VelocityVoltage shooterVelocityVoltage = new VelocityVoltage(0.0);
 
     private StatusSignal<AngularVelocity> shooterVelocity1;
     private StatusSignal<AngularVelocity> shooterVelocity2;
@@ -52,9 +53,8 @@ public final class ShooterReal implements ShooterIO {
         motorConfig.Slot0.kV = Shooter.shooterKV;
 
         shooterMotor1.getConfigurator().apply(motorConfig);
+        shooterMotor2.getConfigurator().apply(motorConfig);
     }
-
-    private final VelocityVoltage shooterVelocityVoltage = new VelocityVoltage(0.0);
 
     @Override
     public void runShooterVelocity(double velocity) {
