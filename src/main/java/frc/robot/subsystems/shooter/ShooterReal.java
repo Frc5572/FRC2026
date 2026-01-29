@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -14,8 +15,7 @@ import frc.robot.Constants.Shooter;
 public final class ShooterReal implements ShooterIO {
     private TalonFX shooterMotor1;
     private TalonFX shooterMotor2;
-    private TalonFXConfiguration motor1Config = new TalonFXConfiguration();
-    private TalonFXConfiguration motor2Config = new TalonFXConfiguration();
+    private TalonFXConfiguration motorConfig = new TalonFXConfiguration();
 
     private StatusSignal<AngularVelocity> shooterVelocity1;
     private StatusSignal<AngularVelocity> shooterVelocity2;
@@ -39,25 +39,19 @@ public final class ShooterReal implements ShooterIO {
     }
 
     private void configMotors() {
-        motor1Config.MotorOutput.Inverted = Shooter.shooterMotor1Invert;
-        motor1Config.MotorOutput.NeutralMode = Shooter.shooterNeutralMode;
-        motor2Config.MotorOutput.Inverted = Shooter.shooterMotor2Invert;
-        motor2Config.MotorOutput.NeutralMode = Shooter.shooterNeutralMode;
+        shooterMotor1
+            .setControl(new Follower(shooterMotor2.getDeviceID(), Shooter.shooterMotorAlignment));
 
-        motor1Config.Slot0.kP = Shooter.shooterKP;
-        motor1Config.Slot0.kI = Shooter.shooterKI;
-        motor1Config.Slot0.kD = Shooter.shooterKD;
-        motor1Config.Slot0.kS = Shooter.shooterKS;
-        motor1Config.Slot0.kV = Shooter.shooterKV;
+        motorConfig.MotorOutput.Inverted = Shooter.shooterMotorInvert;
+        motorConfig.MotorOutput.NeutralMode = Shooter.shooterNeutralMode;
 
-        motor2Config.Slot0.kP = Shooter.shooterKP;
-        motor2Config.Slot0.kI = Shooter.shooterKI;
-        motor2Config.Slot0.kD = Shooter.shooterKD;
-        motor2Config.Slot0.kS = Shooter.shooterKS;
-        motor2Config.Slot0.kV = Shooter.shooterKV;
+        motorConfig.Slot0.kP = Shooter.shooterKP;
+        motorConfig.Slot0.kI = Shooter.shooterKI;
+        motorConfig.Slot0.kD = Shooter.shooterKD;
+        motorConfig.Slot0.kS = Shooter.shooterKS;
+        motorConfig.Slot0.kV = Shooter.shooterKV;
 
-        shooterMotor1.getConfigurator().apply(motor1Config);
-        shooterMotor2.getConfigurator().apply(motor2Config);
+        shooterMotor1.getConfigurator().apply(motorConfig);
     }
 
     private final VelocityVoltage shooterVelocityVoltage = new VelocityVoltage(0.0);
@@ -65,8 +59,6 @@ public final class ShooterReal implements ShooterIO {
     @Override
     public void runShooterVelocity(double velocity) {
         shooterMotor1
-            .setControl(shooterVelocityVoltage.withVelocity(velocity).withFeedForward(0.1));
-        shooterMotor2
             .setControl(shooterVelocityVoltage.withVelocity(velocity).withFeedForward(0.1));
     }
 
