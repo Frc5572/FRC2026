@@ -246,5 +246,16 @@ public final class Constants {
 
         public static final Angle testAngle = Degrees.of(30);
 
+        public static final double turretTolerence = 0.01;
+
+        public static final SensorDirectionValue canCoder1Invert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final SensorDirectionValue canCoder2Invert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final double canCoder1Discontinuity = 0.0;
+        public static final double cancoder2Discontinuity = 0.0;
+
+
+
     }
 }

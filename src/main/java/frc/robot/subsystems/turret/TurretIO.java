@@ -25,7 +25,7 @@ public interface TurretIO {
     public static class TurretInputs {
         public Rotation2d gear1AbsoluteAngle = Rotation2d.kZero;
         public Rotation2d gear2AbsoluteAngle = Rotation2d.kZero;
-        public boolean atPosition;
+        public double positionValue = 0.0;
         public Angle relativeAngle = Rotations.of(0);
         public Voltage voltage = Volts.of(0);
         public Current current = Amps.of(0);

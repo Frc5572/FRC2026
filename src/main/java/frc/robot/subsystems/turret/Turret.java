@@ -14,6 +14,8 @@ import frc.robot.Constants;
  */
 public class Turret extends SubsystemBase {
 
+    private boolean atPosition = false;
+    private double targetRotations = 0.0;
     private boolean hasSynced = false;
     private final TurretIO io;
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
@@ -32,6 +34,9 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
+
+        atPosition =
+            Math.abs(inputs.positionValue - targetRotations) < Constants.Turret.turretTolerence;
 
         Angle turretRotationEstimate =
             getTurretAngleFromGears(inputs.gear1AbsoluteAngle, inputs.gear2AbsoluteAngle);
@@ -147,13 +152,13 @@ public class Turret extends SubsystemBase {
      */
     public void setGoal(Angle targetAngle) {
         if (hasSynced) {
-            double clamped = Math.max(Constants.Turret.minAngle.in(Rotations),
+            targetRotations = Math.max(Constants.Turret.minAngle.in(Rotations),
                 Math.min(targetAngle.in(Rotations), Constants.Turret.maxAngle.in(Rotations)));
-            io.setTargetAngle(Rotations.of(clamped));
+            io.setTargetAngle(Rotations.of(targetRotations));
         }
     }
 
     public Command goToAngle(Angle rotations) {
-        return run(() -> this.setGoal(rotations));
+        return run(() -> this.setGoal(rotations)).until(() -> atPosition);
     }
 }

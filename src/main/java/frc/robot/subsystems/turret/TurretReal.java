@@ -32,8 +32,11 @@ public class TurretReal implements TurretIO {
     private StatusSignal<Voltage> turretVoltage = turretMotor.getMotorVoltage();
     private StatusSignal<Current> turretCurrent = turretMotor.getStatorCurrent();
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
-    private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getPosition();
-    private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getPosition();
+    private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getAbsolutePosition();
+    private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getAbsolutePosition();
+
+    public final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
+    private final VoltageOut voltage = new VoltageOut(0.0);
 
     /** Real Turret Implementation */
     public TurretReal() {
@@ -63,19 +66,24 @@ public class TurretReal implements TurretIO {
         turretConfig.MotionMagic.MotionMagicAcceleration = Constants.Turret.MMAcceleration;
         turretConfig.MotionMagic.MotionMagicJerk = Constants.Turret.MMJerk;
 
-        turretMotor.getConfigurator().apply(turretConfig);
-        turretCANcoder1.getConfigurator().apply(canCoder1Config);
-        turretCANcoder2.getConfigurator().apply(canCoder2Config);
-
         turretConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         turretConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
             Constants.Turret.maxAngle.in(Rotations);
         turretConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         turretConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
             Constants.Turret.minAngle.in(Rotations);
-    }
 
-    private final VoltageOut voltage = new VoltageOut(0.0);
+        canCoder1Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder1Invert;
+        canCoder1Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
+            Constants.Turret.canCoder1Discontinuity;
+        canCoder2Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder2Invert;
+        canCoder2Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
+            Constants.Turret.cancoder2Discontinuity;
+
+        turretMotor.getConfigurator().apply(turretConfig);
+        turretCANcoder1.getConfigurator().apply(canCoder1Config);
+        turretCANcoder2.getConfigurator().apply(canCoder2Config);
+    }
 
     @Override
     public void setTurretVoltage(Voltage volts) {
@@ -95,10 +103,8 @@ public class TurretReal implements TurretIO {
         inputs.current = turretCurrent.getValue();
         inputs.velocity = turretVelocity.getValue();
 
-        inputs.atPosition = Math.abs(turretPosition.getValueAsDouble() - mmVoltage.Position) < 0.01;
+        inputs.positionValue = turretPosition.getValueAsDouble();
     }
-
-    private final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
 
     @Override
     public void setTargetAngle(Angle angle) {
