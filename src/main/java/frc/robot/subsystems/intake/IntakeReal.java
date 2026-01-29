@@ -1,0 +1,68 @@
+package frc.robot.subsystems.intake;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import edu.wpi.first.wpilibj.DigitalInput;
+import frc.robot.Constants;
+
+public class IntakeReal implements IntakeIO {
+    private TalonFX hopperRightMotor = new TalonFX(Constants.IntakeConstants.hopperRightID);
+    private TalonFX hopperLeftMotor = new TalonFX(Constants.IntakeConstants.hopperLeftID);
+    private SparkFlex intakeMotor = new SparkFlex(0, MotorType.kBrushless);
+    private TalonFXConfiguration config = new TalonFXConfiguration();
+    private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
+    private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
+
+    public IntakeReal() {
+        configure();
+    }
+
+    public void configure() {
+        config.Slot0.kP = Constants.IntakeConstants.KP;
+        config.Slot0.kI = Constants.IntakeConstants.KI;
+        config.Slot0.kD = Constants.IntakeConstants.KD;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+        hopperRightMotor.getConfigurator().apply(config);
+        hopperLeftMotor
+            .setControl(new Follower(hopperRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+
+
+    }
+
+
+    @Override
+    public void runIntakeMotor(double speed) {
+        intakeMotor.set(speed);
+    }
+
+    @Override
+    public void updateInputs(IntakeIOInputs inputs) {
+        inputs.hopperPositionMeters = hopperRightMotor.getPosition().getValueAsDouble()
+            / Constants.IntakeConstants.distanceToRotations;
+        inputs.limitSwitch = limitSwitchMin.get();
+
+    }
+
+    @Override
+    public void setEncoderPosition(double position) {
+        hopperRightMotor.getConfigurator().setPosition(position);
+        hopperLeftMotor.getConfigurator().setPosition(position);
+    }
+
+    @Override
+    public void runHopperMotor(double setPoint) {
+        hopperRightMotor.setControl(
+            positionVoltage.withPosition(setPoint * Constants.IntakeConstants.distanceToRotations));
+    }
+
+
+}

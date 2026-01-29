@@ -38,6 +38,28 @@ public final class Constants {
         public static final double driverRotationalMaxSpeed = 4.0;
     }
 
+    public static class IntakeConstants {
+        public static final int hopperLeftID = 31;
+        public static final int hopperRightID = 32;
+        public static final int intakeID = 33;
+        public static final double hopperMaxDistance = 0;
+        public static final double intakeSpeed = 0;
+        public static final double hopperMinDistance = 0;
+        public static final double hopperOutDistance = 0;
+        public static final double hopperTuckedDistance = 0;
+        public static final double KP = 0;
+        public static final double KI = 0;
+        public static final double KD = 0;
+        public static final int limitSwitchID = 34;
+
+        // 19 teeth in 20 out,
+        // 20 teeth in 40 out,
+        // 1 rotation in, .1
+        // meters out
+        public static final double distanceToRotations = .1 / 1 * 40 / 1 * 20 / 1 * 19 / 1;
+
+    }
+
     /**
      * MoveToPos constants.
      */
