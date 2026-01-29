@@ -1,7 +1,7 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -276,6 +276,12 @@ public final class Constants {
             public static final int LEFT_ID = 0;
 
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
+        }
+
+        public static final class Pivot {
+            public static final int ID = 0;
+
+            public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
 
             // PID and feedforward
             public static final double KP = 50.0;
@@ -299,11 +305,11 @@ public final class Constants {
             public static final Distance P2 = Inches.of(36.2);
 
             public static final double gearRatio = 20.0 / 1.0;
-            public static final Distance INCHES_AT_TOP = Inches.of(72.0);
+            public static final Angle Degrees_AT_TOP = Degrees.of(72.0);
             public static final Angle ROTATIONS_AT_TOP = Radians.of(220);
             public static final double SensorToMechanismRatio =
-                Constants.Climber.Telescope.ROTATIONS_AT_TOP.in(Rotations)
-                    / Constants.Climber.Telescope.INCHES_AT_TOP.in(Meters);
+                Constants.Climber.Pivot.ROTATIONS_AT_TOP.in(Rotations)
+                    / Constants.Climber.Pivot.Degrees_AT_TOP.in(Degrees);
         }
     }
 }

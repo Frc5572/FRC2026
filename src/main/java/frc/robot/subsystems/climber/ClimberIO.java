@@ -1,9 +1,9 @@
 package frc.robot.subsystems.climber;
 
 import org.littletonrobotics.junction.AutoLog;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.GenerateEmptyIO;
 
@@ -21,18 +21,24 @@ public interface ClimberIO {
     @AutoLog
     public class ClimberInputs {
         public boolean atPositon;
-        public Voltage outputVoltage;
-        public Distance position;
-        public AngularVelocity velocity;
-        public Current motorCurrent;
+        public Voltage outputVoltageTelescope;
+        public AngularVelocity velocityTelescope;
+        public Current motorCurrentTelescope;
+        public AngularVelocity velocityPivot;
+        public Current motorCurrentPivot;
+        public Voltage outputVoltagePivot;
+        public Angle positionPivot;
     }
 
     public void updateInputs(ClimberInputs inputs);
 
-    public void setVoltage(double volts);
+    public void setVoltageTelescope(double volts);
 
-    public void setPositon(double position);
+    public void setPowerTelescope(double power);
 
-    public default void setPower(double power) {}
+    public void setVoltagePivot(double volts);
 
+    public void setPowerPivot(double power);
+
+    public void setAnglePivot(Angle angle);
 }
