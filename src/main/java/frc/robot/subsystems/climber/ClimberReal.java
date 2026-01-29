@@ -1,6 +1,7 @@
 package frc.robot.subsystems.climber;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -26,6 +27,7 @@ public class ClimberReal implements ClimberIO {
     private StatusSignal<Voltage> pivotVoltage = pivotMotor.getMotorVoltage();
     private StatusSignal<AngularVelocity> pivotVelocity = pivotMotor.getVelocity();
     private StatusSignal<Current> pivotCurrent = pivotMotor.getStatorCurrent();
+    private StatusSignal<Angle> telescopePosition = telecopeMotorLeft.getPosition();
     private StatusSignal<Voltage> telescopeVoltage = telecopeMotorLeft.getMotorVoltage();
     private StatusSignal<AngularVelocity> telescopeVelocity = telecopeMotorLeft.getVelocity();
     private StatusSignal<Current> telescopeCurrent = telecopeMotorLeft.getStatorCurrent();
@@ -88,11 +90,12 @@ public class ClimberReal implements ClimberIO {
     @Override
     public void updateInputs(ClimberInputs inputs) {
         BaseStatusSignal.refreshAll(pivotPosition, pivotCurrent, pivotPosition, pivotVelocity,
-            pivotVoltage, telescopeVelocity, telescopeVoltage, telescopeCurrent);
+            pivotVoltage, telescopeVelocity, telescopeVoltage, telescopeCurrent, telescopePosition);
         inputs.positionPivot = Degrees.of(pivotPosition.getValue().in(Rotations));
         inputs.velocityPivot = pivotVelocity.getValue();
         inputs.outputVoltagePivot = pivotVoltage.getValue();
         inputs.motorCurrentPivot = pivotCurrent.getValue();
+        inputs.positionTelescope = Meters.of(telescopePosition.getValue().in(Rotations));
         inputs.velocityTelescope = telescopeVelocity.getValue();
         inputs.outputVoltageTelescope = telescopeVoltage.getValue();
         inputs.motorCurrentTelescope = telescopeCurrent.getValue();
