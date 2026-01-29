@@ -66,7 +66,7 @@ public final class Constants {
 
         /* Drivetrain Constants */
         /** Distance between right and left wheels on robot */
-        public static final double trackWidth = Units.inchesToMeters(24.229);
+        public static final double trackWidth = Units.inchesToMeters(18.048);
         /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(24.229);
         /** Distance from the center of the wheel to the ground */
@@ -259,6 +259,11 @@ public final class Constants {
         public static final double shooterKP = 0.11;
         public static final double shooterKI = 0.0;
         public static final double shooterKD = 0.0;
+    }
 
+    public static boolean disableHAL = false;
+
+    public static void disableHAP() {
+        disableHAL = true;
     }
 }
