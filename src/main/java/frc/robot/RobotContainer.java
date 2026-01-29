@@ -24,6 +24,9 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.VisionSim;
+import frc.robot.subsystems.vision.color.ColorDetection;
+import frc.robot.subsystems.vision.color.ColorDetectionIO;
+import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
@@ -46,6 +49,7 @@ public final class RobotContainer {
     private final Swerve swerve;
     private final Vision vision;
     private final Intake intake;
+    private final ColorDetection colorDetection;
 
     private final RobotViz viz;
     private final SimulatedRobotState sim;
@@ -59,6 +63,7 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 intake = new Intake(new IntakeReal());
+                colorDetection = new ColorDetection(new ColorDetectionReal());
                 break;
             case kSimulation:
                 SimulatedArena.getInstance().resetFieldForAuto();
@@ -68,12 +73,14 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionSim(sim));
                 intake = new Intake(new IntakeSim());
 
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
         }
         viz = new RobotViz(sim, swerve);
 
@@ -83,6 +90,7 @@ public final class RobotContainer {
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
+
 
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
