@@ -252,10 +252,6 @@ public final class Constants {
             SensorDirectionValue.Clockwise_Positive;
         public static final SensorDirectionValue canCoder2Invert =
             SensorDirectionValue.Clockwise_Positive;
-        public static final double canCoder1Discontinuity = 0.0;
-        public static final double cancoder2Discontinuity = 0.0;
-
-
-
+        public static final double turretCANCoderDiscontinuity = 0.5;
     }
 }

@@ -81,8 +81,6 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        tester.rightBumper().whileTrue(turret.goToAngle(Constants.Turret.testAngle));
-
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }

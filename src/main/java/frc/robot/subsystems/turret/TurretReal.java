@@ -75,10 +75,10 @@ public class TurretReal implements TurretIO {
 
         canCoder1Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder1Invert;
         canCoder1Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
-            Constants.Turret.canCoder1Discontinuity;
+            Constants.Turret.turretCANCoderDiscontinuity;
         canCoder2Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder2Invert;
         canCoder2Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
-            Constants.Turret.cancoder2Discontinuity;
+            Constants.Turret.turretCANCoderDiscontinuity;
 
         turretMotor.getConfigurator().apply(turretConfig);
         turretCANcoder1.getConfigurator().apply(canCoder1Config);
