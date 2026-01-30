@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.swerve.mod.ModuleConstants;
 import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
@@ -243,6 +245,43 @@ public final class Constants {
         // @formatter:on
     }
 
+    /** Turret subsystem */
+    public static final class Turret {
+        public static final double motorGearing = 53.934;
+        public static final double gear1Gearing = 35.0 / 75.0;
+        public static final Rotation2d gear1Offset = Rotation2d.kZero;
+        public static final double gear2Gearing = 36.0 / 75.0;
+        public static final Rotation2d gear2Offset = Rotation2d.kZero;
+        public static final Angle minAngle = Degrees.of(-360);
+        public static final Angle maxAngle = Degrees.of(360);
+
+        public static final int TurretMotorID = 20;
+        public static final int TurretCANcoderID1 = 21;
+        public static final int TurretCANcoderID2 = 22;
+
+        public static final double KP = 0.0;
+        public static final double KI = 0.0;
+        public static final double KD = 0.0;
+        public static final double KS = 0.0;
+        public static final double KV = 0.0;
+        public static final double KA = 0.0;
+
+        public static final double MMCVelocity = 0.0;
+        public static final double MMAcceleration = 0.0;
+        public static final double MMJerk = 0.0;
+
+        public static final Angle testAngle = Degrees.of(30);
+
+        public static final double turretTolerence = 0.01;
+
+        public static final SensorDirectionValue canCoder1Invert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final SensorDirectionValue canCoder2Invert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final double turretCANCoderDiscontinuity = 0.5;
+
+    }
+
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */
@@ -270,3 +309,4 @@ public final class Constants {
         disableHAL = true;
     }
 }
+
