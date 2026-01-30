@@ -9,6 +9,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.units.measure.Angle;
@@ -77,6 +78,7 @@ public class ClimberReal implements ClimberIO {
         pivotConfig.Slot0.kV = Constants.Climber.Pivot.KV;
         pivotConfig.Slot0.kA = Constants.Climber.Pivot.KA;
         pivotConfig.Slot0.kG = Constants.Climber.Pivot.KG;
+        pivotConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         pivotConfig.MotionMagic.MotionMagicCruiseVelocity = Constants.Climber.Pivot.C_VELOCITY;
         pivotConfig.MotionMagic.MotionMagicAcceleration = Constants.Climber.Pivot.ACCELERATION;
         pivotConfig.MotionMagic.MotionMagicJerk = Constants.Climber.Pivot.JERK;

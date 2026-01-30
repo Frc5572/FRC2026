@@ -267,10 +267,10 @@ public final class Constants {
         public static final class Telescope {
 
             /** CAN ID for the right telescope motor. */
-            public static final int RIGHT_ID = 0;
+            public static final int RIGHT_ID = 47;
 
             /** CAN ID for the left telescope motor. */
-            public static final int LEFT_ID = 0;
+            public static final int LEFT_ID = 48;
 
             /** Neutral mode for telescope motors (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
@@ -286,7 +286,7 @@ public final class Constants {
         public static final class Pivot {
 
             /** CAN ID for the pivot motor. */
-            public static final int ID = 0;
+            public static final int ID = 46;
 
             /** Neutral mode for the pivot motor (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
