@@ -27,6 +27,7 @@ public class CameraConstants {
     public final double translationError;
     public final double rotationError;
     public final double singleTagError;
+    public final boolean isTurret;
 
     /** Constants for a camera */
     @TypeStateBuilder("CameraConstantsBuilder")
@@ -43,7 +44,7 @@ public class CameraConstants {
         @RequiredField double calibrationErrorMean, @RequiredField double calibrationErrorStdDev,
         @RequiredField Transform3d robotToCamera, @OptionalField("0.3") double translationError,
         @OptionalField("edu.wpi.first.math.util.Units.degreesToRadians(3)") double rotationError,
-        @OptionalField("0.2") double singleTagError) {
+        @OptionalField("0.2") double singleTagError, @OptionalField("false") boolean isTurret) {
         this.name = name;
         this.height = height;
         this.width = width;
@@ -57,6 +58,7 @@ public class CameraConstants {
         this.translationError = translationError;
         this.rotationError = rotationError;
         this.singleTagError = singleTagError;
+        this.isTurret = isTurret;
     }
 
 

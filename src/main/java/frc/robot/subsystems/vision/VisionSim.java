@@ -2,27 +2,29 @@ package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Milliseconds;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.jspecify.annotations.NullMarked;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import frc.robot.Constants;
-import frc.robot.subsystems.swerve.SwerveSim;
+import frc.robot.sim.SimulatedRobotState;
 
 /** Simulation of vision using built-in PhotonVision simulator. */
 @NullMarked
 public class VisionSim extends VisionReal {
 
-    private final SwerveDriveSimulation sim;
+    private final SimulatedRobotState sim;
     private final VisionSystemSim visionSim;
+    private final VisionSystemSim turretVisionSim;
 
     /** Simulation of vision using built-in PhotonVision simulator. */
-    public VisionSim(SwerveSim sim) {
-        this.sim = sim.mapleSim;
+    public VisionSim(SimulatedRobotState sim) {
+        this.sim = sim;
         this.visionSim = new VisionSystemSim("main");
+        this.turretVisionSim = new VisionSystemSim("turret");
 
         visionSim.addAprilTags(Constants.Vision.fieldLayout);
+        turretVisionSim.addAprilTags(Constants.Vision.fieldLayout);
 
         var constants = Constants.Vision.cameraConstants;
         for (int i = 0; i < constants.length; i++) {
@@ -35,13 +37,16 @@ public class VisionSim extends VisionReal {
             props.setAvgLatencyMs(constants[i].simLatency.in(Milliseconds));
             props.setLatencyStdDevMs(constants[i].simLatencyStdDev.in(Milliseconds));
             PhotonCameraSim cameraSim = new PhotonCameraSim(this.cameras[i], props);
-            visionSim.addCamera(cameraSim, constants[i].robotToCamera);
+            (constants[i].isTurret ? turretVisionSim : visionSim).addCamera(cameraSim,
+                constants[i].robotToCamera);
         }
     }
 
     @Override
     public void updateInputs(CameraInputs[] inputs) {
-        visionSim.update(sim.getSimulatedDriveTrainPose());
+        visionSim.update(sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose());
+        // In the future, should update based on turret state.
+        turretVisionSim.update(sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose());
         super.updateInputs(inputs);
     }
 
