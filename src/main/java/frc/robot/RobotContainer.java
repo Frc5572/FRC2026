@@ -95,5 +95,7 @@ public final class RobotContainer {
                 SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
         }
         viz.periodic();
+
     }
+
 }
