@@ -279,9 +279,6 @@ public final class Constants {
      * preset positions.
      */
     public static final class Climber {
-        private Climber() {
-            throw new UnsupportedOperationException("Climber is a utility class");
-        }
 
         /**
          * Telescope extension mechanism constants.
@@ -290,9 +287,6 @@ public final class Constants {
          * Defines motor IDs and neutral mode for the left and right telescope motors.
          */
         public static final class Telescope {
-            private Telescope() {
-                throw new UnsupportedOperationException("Telescope is a utility class");
-            }
 
             /** CAN ID for the right telescope motor. */
             public static final int RIGHT_ID = 0;
@@ -312,9 +306,6 @@ public final class Constants {
          * constraints, and preset angle positions.
          */
         public static final class Pivot {
-            private Pivot() {
-                throw new UnsupportedOperationException("Pivot is a utility class");
-            }
 
             /** CAN ID for the pivot motor. */
             public static final int ID = 0;
@@ -322,7 +313,6 @@ public final class Constants {
             /** Neutral mode for the pivot motor (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
 
-            // PID and feedforward gains
             /** Proportional gain for pivot position control. */
             public static final double KP = 50.0;
 
