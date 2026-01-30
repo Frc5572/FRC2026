@@ -279,6 +279,10 @@ public final class Constants {
      * preset positions.
      */
     public static final class Climber {
+        private Climber() {
+            throw new UnsupportedOperationException("Climber is a utility class");
+        }
+
         /**
          * Telescope extension mechanism constants.
          *
@@ -286,6 +290,10 @@ public final class Constants {
          * Defines motor IDs and neutral mode for the left and right telescope motors.
          */
         public static final class Telescope {
+            private Telescope() {
+                throw new UnsupportedOperationException("Telescope is a utility class");
+            }
+
             /** CAN ID for the right telescope motor. */
             public static final int RIGHT_ID = 0;
 
@@ -304,6 +312,10 @@ public final class Constants {
          * constraints, and preset angle positions.
          */
         public static final class Pivot {
+            private Pivot() {
+                throw new UnsupportedOperationException("Pivot is a utility class");
+            }
+
             /** CAN ID for the pivot motor. */
             public static final int ID = 0;
 
@@ -333,38 +345,22 @@ public final class Constants {
             public static final double KG = 0.9375;
 
             /** Motion magic cruise velocity, in rotations per second. */
-            public static final double CVeleocity = 4.0;
-
-            /** Fast motion magic velocity, in rotations per second. */
-            public static final double FastVelocity = 9.0;
+            public static final double C_VELOCITY = 4.0;
 
             /** Motion magic acceleration, in rotations per second squared. */
-            public static final double Acceleration = 10.0;
+            public static final double ACCELERATION = 10.0;
 
             /** Motion magic jerk limit. */
-            public static final double Jerk = 6000000.0;
+            public static final double JERK = 6000000.0;
 
             /** Maximum pivot velocity. */
             public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(0.0);
 
-            // Preset positions
-            /** Home position for the pivot. */
-            public static final Distance HOME = Inches.of(2);
-
-            /** Preset position 0. */
-            public static final Distance P0 = Inches.of(20.5);
-
-            /** Preset position 1. */
-            public static final Distance P1 = Inches.of(27.45);
-
-            /** Preset position 2. */
-            public static final Distance P2 = Inches.of(36.2);
-
             /** Gear ratio for the pivot mechanism. */
-            public static final double gearRatio = 20.0 / 1.0;
+            public static final double GEAR_RATIO = 20.0 / 1.0;
 
             /** Pivot angle at the top position, in degrees. */
-            public static final Angle Degrees_AT_TOP = Degrees.of(72.0);
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
 
             /** Pivot angle at the top position, in radians. */
             public static final Angle ROTATIONS_AT_TOP = Radians.of(220);
@@ -372,9 +368,8 @@ public final class Constants {
             /**
              * Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
              */
-            public static final double SensorToMechanismRatio =
-                Constants.Climber.Pivot.ROTATIONS_AT_TOP.in(Rotations)
-                    / Constants.Climber.Pivot.Degrees_AT_TOP.in(Degrees);
+            public static final double SENSOR_TO_MECHANISM_RATIO =
+                ROTATIONS_AT_TOP.in(Rotations) / DEGREES_AT_TOP.in(Degrees);
         }
     }
 

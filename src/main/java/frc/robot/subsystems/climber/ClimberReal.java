@@ -68,7 +68,7 @@ public class ClimberReal implements ClimberIO {
         // Pivot
         pivotConfig.MotorOutput.NeutralMode = Constants.Climber.Pivot.BREAK;
         pivotConfig.Feedback.SensorToMechanismRatio =
-            Constants.Climber.Pivot.SensorToMechanismRatio;
+            Constants.Climber.Pivot.SENSOR_TO_MECHANISM_RATIO;
         pivotConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         pivotConfig.Slot0.kP = Constants.Climber.Pivot.KP;
         pivotConfig.Slot0.kI = Constants.Climber.Pivot.KI;
@@ -77,9 +77,9 @@ public class ClimberReal implements ClimberIO {
         pivotConfig.Slot0.kV = Constants.Climber.Pivot.KV;
         pivotConfig.Slot0.kA = Constants.Climber.Pivot.KA;
         pivotConfig.Slot0.kG = Constants.Climber.Pivot.KG;
-        pivotConfig.MotionMagic.MotionMagicCruiseVelocity = Constants.Climber.Pivot.CVeleocity;
-        pivotConfig.MotionMagic.MotionMagicAcceleration = Constants.Climber.Pivot.Acceleration;
-        pivotConfig.MotionMagic.MotionMagicJerk = Constants.Climber.Pivot.Jerk;
+        pivotConfig.MotionMagic.MotionMagicCruiseVelocity = Constants.Climber.Pivot.C_VELOCITY;
+        pivotConfig.MotionMagic.MotionMagicAcceleration = Constants.Climber.Pivot.ACCELERATION;
+        pivotConfig.MotionMagic.MotionMagicJerk = Constants.Climber.Pivot.JERK;
 
         pivotMotor.getConfigurator().apply(pivotConfig);
         telecopeMotorLeft.getConfigurator().apply(telescopeConfig);
