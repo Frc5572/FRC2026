@@ -279,6 +279,9 @@ public final class Constants {
         public static final SensorDirectionValue canCoder2Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
+
+    }
+
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */
@@ -306,3 +309,4 @@ public final class Constants {
         disableHAL = true;
     }
 }
+
