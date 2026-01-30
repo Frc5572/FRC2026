@@ -54,15 +54,20 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
         hoodConfig.MotionMagic.MotionMagicAcceleration = Constants.AdjustableHood.MMAcceleration;
         hoodConfig.MotionMagic.MotionMagicJerk = Constants.AdjustableHood.MMJerk;
 
-        hoodMotor.getConfigurator().apply(hoodConfig);
-        hoodCANcoder.getConfigurator().apply(hoodCANcoderConfig);
-
         hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
             Constants.AdjustableHood.maxAngle.in(Rotations);
         hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
             Constants.AdjustableHood.minAngle.in(Rotations);
+
+        hoodCANcoderConfig.MagnetSensor.SensorDirection =
+            Constants.AdjustableHood.hoodCANCoderInvert;
+        hoodCANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
+            Constants.AdjustableHood.hoodCANcoderDiscontinuity;
+
+        hoodMotor.getConfigurator().apply(hoodConfig);
+        hoodCANcoder.getConfigurator().apply(hoodCANcoderConfig);
     }
 
     private final VoltageOut voltage = new VoltageOut(0.0);

@@ -1,6 +1,5 @@
 package frc.robot.subsystems.adjustableHood;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.units.measure.Angle;
@@ -35,9 +34,9 @@ public class AdjustableHood extends SubsystemBase {
     }
 
     public void setGoal(Angle targetAngle) {
-        double targetHoodRotation = Math.max(Constants.AdjustableHood.minAngle.in(Rotations),
+        targetHoodRotation = Math.max(Constants.AdjustableHood.minAngle.in(Rotations),
             Math.min(targetAngle.in(Rotations), Constants.AdjustableHood.maxAngle.in(Rotations)));
-        io.setTargetAngle(Degrees.of(targetHoodRotation));
+        io.setTargetAngle(Rotations.of(targetHoodRotation));
     }
 
     public Command goToAngle(Angle angle) {
