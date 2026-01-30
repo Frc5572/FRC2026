@@ -47,11 +47,9 @@ public interface ClimberIO {
 
     public void setVoltageTelescope(double volts);
 
-    public void setPowerTelescope(double power);
-
     public void setVoltagePivot(double volts);
 
-    public void setPowerPivot(double power);
-
     public void setAnglePivot(Angle angle);
+
+    public void setHeightTelescope(Distance height);
 }

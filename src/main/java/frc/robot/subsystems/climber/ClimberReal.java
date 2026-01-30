@@ -7,6 +7,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -14,6 +15,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
@@ -42,23 +44,12 @@ public class ClimberReal implements ClimberIO {
     private StatusSignal<AngularVelocity> telescopeVelocity = telecopeMotorLeft.getVelocity();
     private StatusSignal<Current> telescopeCurrent = telecopeMotorLeft.getStatorCurrent();
     private final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
+    private final PositionVoltage telescopeController = new PositionVoltage(0);
 
     /**
      * Constructs a new ClimberReal instance and configures all motors and sensors.
      */
     public ClimberReal() {
-        config();
-    }
-
-    /**
-     * Configures all TalonFX motors with their respective settings.
-     *
-     * <p>
-     * Configures the telescope motors as followers with opposed alignment, and the pivot motor with
-     * motion magic control parameters including PID gains, feedforward constants, and motion
-     * constraints.
-     */
-    private void config() {
         // Telescope
         telescopeMotorRight
             .setControl(new Follower(telecopeMotorLeft.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -66,7 +57,16 @@ public class ClimberReal implements ClimberIO {
         telescopeConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         telescopeConfig.Feedback.SensorToMechanismRatio =
             Constants.Climber.Telescope.SENSOR_TO_MECHANISM_RATIO;
-
+        telescopeConfig.Slot0.kP = Constants.Climber.Telescope.KP;
+        telescopeConfig.Slot0.kI = Constants.Climber.Telescope.KI;
+        telescopeConfig.Slot0.kD = Constants.Climber.Telescope.KD;
+        telescopeConfig.Slot0.kS = Constants.Climber.Telescope.KS;
+        telescopeConfig.Slot0.kV = Constants.Climber.Telescope.KV;
+        telescopeConfig.Slot0.kA = Constants.Climber.Telescope.KA;
+        telescopeConfig.Slot0.kG = Constants.Climber.Telescope.KG;
+        telescopeConfig.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+        telescopeConfig.MotorOutput.PeakForwardDutyCycle = 0.80;
+        telescopeConfig.MotorOutput.PeakReverseDutyCycle = -0.80;
         // Pivot
         pivotConfig.MotorOutput.NeutralMode = Constants.Climber.Pivot.BREAK;
         pivotConfig.Feedback.SensorToMechanismRatio =
@@ -100,13 +100,13 @@ public class ClimberReal implements ClimberIO {
     }
 
     /**
-     * Sets the power output for the telescope motor.
-     *
-     * @param power the power output, typically in the range [-1.0, 1.0]
+     * Sets the target height for the telescope mechanism using pid
+     * 
+     * @param height the desired height in any distance unit
      */
     @Override
-    public void setPowerTelescope(double power) {
-        telecopeMotorLeft.set(power);
+    public void setHeightTelescope(Distance height) {
+        telecopeMotorLeft.setControl(telescopeController.withPosition(height.in(Meters)));
     }
 
     /**
@@ -117,16 +117,6 @@ public class ClimberReal implements ClimberIO {
     @Override
     public void setVoltagePivot(double volts) {
         pivotMotor.setVoltage(volts);
-    }
-
-    /**
-     * Sets the power output for the pivot motor.
-     *
-     * @param power the power output, typically in the range [-1.0, 1.0]
-     */
-    @Override
-    public void setPowerPivot(double power) {
-        pivotMotor.set(power);
     }
 
     /**

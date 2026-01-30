@@ -289,6 +289,28 @@ public final class Constants {
              */
             public static final double SENSOR_TO_MECHANISM_RATIO =
                 ROTATIONS_AT_TOP.in(Meters) / DEGREES_AT_TOP.in(Degrees);
+
+            /** Proportional gain for pivot position control. */
+            public static final double KP = 50.0;
+
+            /** Integral gain for pivot position control. */
+            public static final double KI = 0.0;
+
+            /** Derivative gain for pivot position control. */
+            public static final double KD = 0.0;
+
+            /** Static feedforward constant for overcoming friction. */
+            public static final double KS = 0.9;
+
+            /** Velocity feedforward constant. */
+            public static final double KV = 0.0;
+
+            /** Acceleration feedforward constant. */
+            public static final double KA = 0.0;
+
+            /** Gravity feedforward constant for maintaining pivot angle. */
+            public static final double KG = 0.9375;
+
         }
 
         /**
