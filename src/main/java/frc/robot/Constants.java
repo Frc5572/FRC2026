@@ -44,28 +44,6 @@ public final class Constants {
         public static final double driverRotationalMaxSpeed = 4.0;
     }
 
-    public static class ClimberConstants {
-
-        public static class AngleMotor {
-            public static final int CAN_ID = 46;
-            public static final int KP = 0;
-            public static final int KI = 0;
-            public static final int KD = 0;
-        }
-        public static class leftMotor {
-            public static final int CAN_ID = 47;
-            public static final int KP = 0;
-            public static final int KI = 0;
-            public static final int KD = 0;
-        }
-        public static class rightMotor {
-            public static final int CAN_ID = 48;
-            public static final int KP = 0;
-            public static final int KI = 0;
-            public static final int KD = 0;
-        }
-    }
-
     /**
      * MoveToPos constants.
      */
