@@ -13,29 +13,20 @@ import frc.robot.Constants.Shooter;
 
 /** Shooter Real Implementation */
 public final class ShooterReal implements ShooterIO {
-    private TalonFX shooterMotor1;
-    private TalonFX shooterMotor2;
+    private TalonFX shooterMotor1 = new TalonFX(Shooter.motor1ID);
+    private TalonFX shooterMotor2 = new TalonFX(Shooter.motor2ID);
     private TalonFXConfiguration motorConfig = new TalonFXConfiguration();
     private final VelocityVoltage shooterVelocityVoltage = new VelocityVoltage(0.0);
 
-    private StatusSignal<AngularVelocity> shooterVelocity1;
-    private StatusSignal<AngularVelocity> shooterVelocity2;
-    private StatusSignal<Voltage> shooterVoltage1;
-    private StatusSignal<Voltage> shooterVoltage2;
-    private StatusSignal<Current> shooterCurrent1;
-    private StatusSignal<Current> shooterCurrent2;
+    private StatusSignal<AngularVelocity> shooterVelocity1 = shooterMotor1.getVelocity();
+    private StatusSignal<AngularVelocity> shooterVelocity2 = shooterMotor2.getVelocity();
+    private StatusSignal<Voltage> shooterVoltage1 = shooterMotor1.getMotorVoltage();
+    private StatusSignal<Voltage> shooterVoltage2 = shooterMotor2.getMotorVoltage();
+    private StatusSignal<Current> shooterCurrent1 = shooterMotor1.getStatorCurrent();
+    private StatusSignal<Current> shooterCurrent2 = shooterMotor2.getStatorCurrent();
 
     /** Shooter Real Implementation Constructor */
     public ShooterReal() {
-        shooterMotor1 = new TalonFX(Shooter.motor1ID);
-        shooterMotor2 = new TalonFX(Shooter.motor2ID);
-        shooterVelocity1 = shooterMotor1.getVelocity();
-        shooterVelocity2 = shooterMotor2.getVelocity();
-        shooterVoltage1 = shooterMotor1.getMotorVoltage();
-        shooterVoltage2 = shooterMotor2.getMotorVoltage();
-        shooterCurrent1 = shooterMotor1.getSupplyCurrent();
-        shooterCurrent2 = shooterMotor2.getSupplyCurrent();
-
         configMotors();
     }
 
