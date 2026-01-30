@@ -376,6 +376,8 @@ public final class Constants {
                 Constants.Climber.Pivot.ROTATIONS_AT_TOP.in(Rotations)
                     / Constants.Climber.Pivot.Degrees_AT_TOP.in(Degrees);
         }
+    }
+
     public static boolean disableHAL = false;
 
     public static void disableHAP() {
