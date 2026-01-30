@@ -17,6 +17,16 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
+/**
+ * Real hardware implementation of the climber subsystem.
+ *
+ * <p>
+ * This class interfaces with actual TalonFX motor controllers for both the telescope extension and
+ * pivot rotation mechanisms. It configures motors with Phoenix 6 features including motion magic
+ * control for the pivot and voltage control for the telescope.
+ *
+ * @see ClimberIO
+ */
 public class ClimberReal implements ClimberIO {
     private final TalonFX pivotMotor = new TalonFX(Constants.Climber.Pivot.ID);
     private final TalonFX telecopeMotorLeft = new TalonFX(Constants.Climber.Telescope.LEFT_ID);
@@ -33,17 +43,27 @@ public class ClimberReal implements ClimberIO {
     private StatusSignal<Current> telescopeCurrent = telecopeMotorLeft.getStatorCurrent();
     private final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
 
+    /**
+     * Constructs a new ClimberReal instance and configures all motors and sensors.
+     */
     public ClimberReal() {
         config();
     }
 
+    /**
+     * Configures all TalonFX motors with their respective settings.
+     *
+     * <p>
+     * Configures the telescope motors as followers with opposed alignment, and the pivot motor with
+     * motion magic control parameters including PID gains, feedforward constants, and motion
+     * constraints.
+     */
     private void config() {
         // Telescope
         telescopeMotorRight
             .setControl(new Follower(telecopeMotorLeft.getDeviceID(), MotorAlignmentValue.Opposed));
         telescopeConfig.MotorOutput.NeutralMode = Constants.Climber.Telescope.BREAK;
         telescopeConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
 
         // Pivot
         pivotConfig.MotorOutput.NeutralMode = Constants.Climber.Pivot.BREAK;
@@ -61,32 +81,70 @@ public class ClimberReal implements ClimberIO {
         pivotConfig.MotionMagic.MotionMagicAcceleration = Constants.Climber.Pivot.Acceleration;
         pivotConfig.MotionMagic.MotionMagicJerk = Constants.Climber.Pivot.Jerk;
 
-
         pivotMotor.getConfigurator().apply(pivotConfig);
         telecopeMotorLeft.getConfigurator().apply(telescopeConfig);
         telescopeMotorRight.getConfigurator().apply(telescopeConfig);
     }
 
+    /**
+     * Sets the voltage for the telescope motor.
+     *
+     * @param volts the voltage to apply to the telescope motor
+     */
+    @Override
     public void setVoltageTelescope(double volts) {
         telecopeMotorLeft.setVoltage(volts);
     }
 
+    /**
+     * Sets the power output for the telescope motor.
+     *
+     * @param power the power output, typically in the range [-1.0, 1.0]
+     */
+    @Override
     public void setPowerTelescope(double power) {
         telecopeMotorLeft.set(power);
     }
 
+    /**
+     * Sets the voltage for the pivot motor.
+     *
+     * @param volts the voltage to apply to the pivot motor
+     */
+    @Override
     public void setVoltagePivot(double volts) {
         pivotMotor.setVoltage(volts);
     }
 
+    /**
+     * Sets the power output for the pivot motor.
+     *
+     * @param power the power output, typically in the range [-1.0, 1.0]
+     */
+    @Override
     public void setPowerPivot(double power) {
         pivotMotor.set(power);
     }
 
+    /**
+     * Sets the target angle for the pivot mechanism using motion magic control.
+     *
+     * @param angle the desired pivot angle in any angle unit
+     */
+    @Override
     public void setAnglePivot(Angle angle) {
         pivotMotor.setControl(m_request.withPosition(angle));
     }
 
+    /**
+     * Updates the input container with current sensor readings from all motors.
+     *
+     * <p>
+     * Refreshes all status signals and updates the input object with current positions, velocities,
+     * voltages, and currents for both mechanisms.
+     *
+     * @param inputs the input container to populate with current hardware state
+     */
     @Override
     public void updateInputs(ClimberInputs inputs) {
         BaseStatusSignal.refreshAll(pivotPosition, pivotCurrent, pivotPosition, pivotVelocity,

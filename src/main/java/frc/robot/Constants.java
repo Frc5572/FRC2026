@@ -270,43 +270,108 @@ public final class Constants {
         // @formatter:on
     }
 
+    /**
+     * Climber subsystem constants.
+     *
+     * <p>
+     * Contains all configuration values for the climber's telescope extension and pivot rotation
+     * mechanisms, including motor IDs, PID gains, feedforward constants, motion constraints, and
+     * preset positions.
+     */
     public static final class Climber {
+        /**
+         * Telescope extension mechanism constants.
+         *
+         * <p>
+         * Defines motor IDs and neutral mode for the left and right telescope motors.
+         */
         public static final class Telescope {
+            /** CAN ID for the right telescope motor. */
             public static final int RIGHT_ID = 0;
+
+            /** CAN ID for the left telescope motor. */
             public static final int LEFT_ID = 0;
 
+            /** Neutral mode for telescope motors (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
         }
 
+        /**
+         * Pivot rotation mechanism constants.
+         *
+         * <p>
+         * Includes motor configuration, PID and feedforward gains for motion magic control, motion
+         * constraints, and preset angle positions.
+         */
         public static final class Pivot {
+            /** CAN ID for the pivot motor. */
             public static final int ID = 0;
 
+            /** Neutral mode for the pivot motor (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
 
-            // PID and feedforward
+            // PID and feedforward gains
+            /** Proportional gain for pivot position control. */
             public static final double KP = 50.0;
+
+            /** Integral gain for pivot position control. */
             public static final double KI = 0.0;
+
+            /** Derivative gain for pivot position control. */
             public static final double KD = 0.0;
+
+            /** Static feedforward constant for overcoming friction. */
             public static final double KS = 0.9;
+
+            /** Velocity feedforward constant. */
             public static final double KV = 0.0;
+
+            /** Acceleration feedforward constant. */
             public static final double KA = 0.0;
+
+            /** Gravity feedforward constant for maintaining pivot angle. */
             public static final double KG = 0.9375;
+
+            /** Motion magic cruise velocity, in rotations per second. */
             public static final double CVeleocity = 4.0;
+
+            /** Fast motion magic velocity, in rotations per second. */
             public static final double FastVelocity = 9.0;
+
+            /** Motion magic acceleration, in rotations per second squared. */
             public static final double Acceleration = 10.0;
+
+            /** Motion magic jerk limit. */
             public static final double Jerk = 6000000.0;
 
+            /** Maximum pivot velocity. */
             public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(0.0);
 
-            // positions
+            // Preset positions
+            /** Home position for the pivot. */
             public static final Distance HOME = Inches.of(2);
+
+            /** Preset position 0. */
             public static final Distance P0 = Inches.of(20.5);
+
+            /** Preset position 1. */
             public static final Distance P1 = Inches.of(27.45);
+
+            /** Preset position 2. */
             public static final Distance P2 = Inches.of(36.2);
 
+            /** Gear ratio for the pivot mechanism. */
             public static final double gearRatio = 20.0 / 1.0;
+
+            /** Pivot angle at the top position, in degrees. */
             public static final Angle Degrees_AT_TOP = Degrees.of(72.0);
+
+            /** Pivot angle at the top position, in radians. */
             public static final Angle ROTATIONS_AT_TOP = Radians.of(220);
+
+            /**
+             * Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
+             */
             public static final double SensorToMechanismRatio =
                 Constants.Climber.Pivot.ROTATIONS_AT_TOP.in(Rotations)
                     / Constants.Climber.Pivot.Degrees_AT_TOP.in(Degrees);
