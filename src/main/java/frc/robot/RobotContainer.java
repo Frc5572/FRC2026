@@ -11,19 +11,30 @@ import frc.robot.subsystems.adjustableHood.AdjustableHood;
 import frc.robot.subsystems.adjustableHood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustableHood.AdjustableHoodReal;
 import frc.robot.subsystems.adjustableHood.AdjustableHoodSim;
+import frc.robot.sim.SimulatedRobotState;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIOEmpty;
+import frc.robot.subsystems.shooter.ShooterReal;
+import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
-import frc.robot.subsystems.swerve.SwerveSim;
 import frc.robot.subsystems.swerve.gyro.GyroIOEmpty;
 import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIOEmpty;
+import frc.robot.subsystems.turret.TurretReal;
+import frc.robot.subsystems.turret.TurretSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.VisionSim;
+import frc.robot.subsystems.vision.color.ColorDetection;
+import frc.robot.subsystems.vision.color.ColorDetectionIO;
+import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
@@ -40,14 +51,18 @@ public final class RobotContainer {
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
+    public final CommandXboxController tester = new CommandXboxController(1);
 
     /* Subsystems */
     private final Swerve swerve;
     private final Vision vision;
     private final AdjustableHood adjustableHood;
+    private final Turret turret;
+    private final Shooter shooter;
+    private final ColorDetection colorDetection;
 
-    private final SwerveSim sim;
     private final RobotViz viz;
+    private final SimulatedRobotState sim;
 
     /**
      */
@@ -58,18 +73,29 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
+                turret = new Turret(new TurretReal());
+                shooter = new Shooter(new ShooterReal());
+                colorDetection = new ColorDetection(new ColorDetectionReal());
                 break;
             case kSimulation:
-                sim = new SwerveSim(new Pose2d(2.0, 2.0, Rotation2d.kZero));
-                swerve = new Swerve(sim::simProvider, sim::gyroProvider, sim::moduleProvider);
+                SimulatedArena.getInstance().resetFieldForAuto();
+                sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
+                swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
+                    sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
                 adjustableHood = new AdjustableHood(new AdjustableHoodSim());
+                turret = new Turret(new TurretSim());
+                shooter = new Shooter(new ShooterSim());
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
+                turret = new Turret(new TurretIOEmpty());
+                shooter = new Shooter(new ShooterIOEmpty());
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
         }
         viz = new RobotViz(sim, swerve);
 
@@ -80,6 +106,7 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
+
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }
@@ -88,13 +115,10 @@ public final class RobotContainer {
     public void periodic() {
         if (sim != null) {
             SimulatedArena.getInstance().simulationPeriodic();
-            Logger.recordOutput("FieldSimulation/Algae",
-                SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-            Logger.recordOutput("FieldSimulation/Coral",
-                SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+            Logger.recordOutput("FieldSimulation/Fuel",
+                SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
         viz.periodic();
-
     }
 
 }

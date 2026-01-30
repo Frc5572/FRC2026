@@ -1,0 +1,37 @@
+# HSV Target Yaw Publisher (FRC)
+
+This program captures video from a camera, detects a specific HSV color range,
+computes the yaw angle to the nearest detected pixel. Runs on [OPI zero 3](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-3.html) 
+
+---
+
+## What This Program Does
+
+1. Opens a camera feed (1280×720)
+2. Converts frames to HSV
+3. Thresholds for a fixed HSV color range
+4. Finds the nearest detected pixel to the bottom-left of the image
+5. Computes yaw using the camera focal length
+6. Publishes the yaw and if a color is detected to NetworkTables
+
+---
+
+## How to use
+
+ 1. flash OPI zero 3 with [this image](https://drive.google.com/file/d/1FUmNojVQV_43UR_V6u-P9UFfAMIZdyGV/view?usp=drive_link)
+ 2. scp code onto OPI
+    - `scp -r coprocessor orangepi@orangepi:/home/orangepi/`
+ 3. create virtual environment `python3 -m venv .venv`
+ 4. source venv 
+    - `source .venv/bin/activate`
+ 5. install dependaces `pip install -r requirements.txt`
+ 6. move `coprocessor.service` to `/etc/systemd/system/` 
+    - `mv coprocessor.service /etc/systemd/system/`
+ 7. enable service<
+    - `sudo systemctl daemon-reload`<br>
+      `sudo systemctl enable coprocessor`<br>
+      `sudo systemctl start coprocessor`
+ 8. verify if running
+    - `sudo systemctl status coprocessor`
+
+
