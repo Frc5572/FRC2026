@@ -340,6 +340,8 @@ public final class Constants {
             public static final double SENSOR_TO_MECHANISM_RATIO =
                 ROTATIONS_AT_TOP.in(Rotations) / DEGREES_AT_TOP.in(Degrees);
         }
+    }
+
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */
