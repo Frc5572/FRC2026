@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -275,6 +276,19 @@ public final class Constants {
 
             /** Neutral mode for telescope motors (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
+
+
+            /** Telescope length at the top position, in degrees. */
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
+
+            /** Telescope length at the top position, in Meters. */
+            public static final Distance ROTATIONS_AT_TOP = Meters.of(220);
+
+            /**
+             * S Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
+             */
+            public static final double SENSOR_TO_MECHANISM_RATIO =
+                ROTATIONS_AT_TOP.in(Meters) / DEGREES_AT_TOP.in(Degrees);
         }
 
         /**

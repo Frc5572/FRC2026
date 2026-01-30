@@ -1,6 +1,5 @@
 package frc.robot.subsystems.climber;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -65,6 +64,8 @@ public class ClimberReal implements ClimberIO {
             .setControl(new Follower(telecopeMotorLeft.getDeviceID(), MotorAlignmentValue.Opposed));
         telescopeConfig.MotorOutput.NeutralMode = Constants.Climber.Telescope.BREAK;
         telescopeConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        telescopeConfig.Feedback.SensorToMechanismRatio =
+            Constants.Climber.Telescope.SENSOR_TO_MECHANISM_RATIO;
 
         // Pivot
         pivotConfig.MotorOutput.NeutralMode = Constants.Climber.Pivot.BREAK;
@@ -151,7 +152,7 @@ public class ClimberReal implements ClimberIO {
     public void updateInputs(ClimberInputs inputs) {
         BaseStatusSignal.refreshAll(pivotPosition, pivotCurrent, pivotPosition, pivotVelocity,
             pivotVoltage, telescopeVelocity, telescopeVoltage, telescopeCurrent, telescopePosition);
-        inputs.positionPivot = Degrees.of(pivotPosition.getValue().in(Rotations));
+        inputs.positionPivot = pivotPosition.getValue();
         inputs.velocityPivot = pivotVelocity.getValue();
         inputs.outputVoltagePivot = pivotVoltage.getValue();
         inputs.motorCurrentPivot = pivotCurrent.getValue();
