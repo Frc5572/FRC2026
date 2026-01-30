@@ -7,8 +7,8 @@ import org.jspecify.annotations.Nullable;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.Constants;
+import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.swerve.SwerveSim;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -25,13 +25,10 @@ import frc.robot.subsystems.vision.CameraConstants;
  * that can be rendered together in a unified visualization view.
  *
  * <p>
- * This class supports both real and simulated operation:
+ * This class supports real operation:
  * <ul>
- * <li>When a {@link SwerveSim} instance is provided, visualization data is sourced from the
- * simulator's ground-truth drivetrain pose.</li>
- * <li>Otherwise, certain entries with keys indicating ground truth use estimates instead, often
- * duplicating other entries (e.g. {@code ActualPose} will be equivalent to
- * {@code GlobalEstPose}).</li>
+ * <li>Certain entries with keys indicating ground truth use estimates, often duplicating other
+ * entries (e.g. {@code ActualPose} will be equivalent to {@code GlobalEstPose}).</li>
  * </ul>
  *
  * <p>
@@ -42,22 +39,21 @@ import frc.robot.subsystems.vision.CameraConstants;
 @NullMarked
 public class RobotViz {
 
-    private final @Nullable Supplier<Pose3d> robotPoseSupplier;
+    private final Supplier<Pose3d> robotPoseSupplier;
     private final Supplier<Pose3d> estPoseSupplier;
 
     /**
      * Creates a new visualization helper.
-     *
-     * @param sim optional swerve simulator; when provided, simulated ground-truth drivetrain pose
-     *        is used for visualization
+     * 
      * @param swerve live swerve subsystem providing pose estimates when not simulating
      */
-    public RobotViz(@Nullable SwerveSim sim, Swerve swerve) {
+    public RobotViz(@Nullable SimulatedRobotState sim, Swerve swerve) {
         estPoseSupplier = () -> new Pose3d(swerve.state.getGlobalPoseEstimate());
-        if (sim != null) {
-            robotPoseSupplier = () -> new Pose3d(sim.mapleSim.getSimulatedDriveTrainPose());
-        } else {
+        if (sim == null) {
             robotPoseSupplier = estPoseSupplier;
+        } else {
+            robotPoseSupplier =
+                () -> new Pose3d(sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose());
         }
     }
 

@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
@@ -66,13 +67,20 @@ public final class Constants {
         public static final boolean invertGyro = true;
 
         /* Drivetrain Constants */
-        public static final double trackWidth = Units.inchesToMeters(24.229);
+        /** Distance between right and left wheels on robot */
+        public static final double trackWidth = Units.inchesToMeters(18.048);
+        /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(24.229);
+        /** Distance from the center of the wheel to the ground */
         public static final Distance wheelRadius = Inches.of(1.913);
+        /** Diameter of the wheels, twice the radius */
         public static final Distance wheelDiameter = wheelRadius.times(2);
+        /** Circumference of the wheels */
         public static final Distance wheelCircumference = wheelDiameter.times(Math.PI);
 
+        /** Bumper to bumper length of the robot */
         public static final Distance bumperFront = Inches.of(17.5);
+        /** Bumper to bumper back of the robot */
         public static final Distance bumperRight = Inches.of(17.5);
 
         public static final Translation2d[] swerveTranslations =
@@ -81,15 +89,20 @@ public final class Constants {
                 new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
                 new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0)};
 
-        /*
-         * Swerve Kinematics No need to ever change this unless you are not doing a traditional
-         * rectangular/square 4 module swerve
+        /**
+         * Swerve Drive Kinematics Object for Rectangular/square 4 Module Swerve
+         * 
+         * <p>
+         * No need to ever change this unless you are not doing a traditional rectangular/square 4
+         * module swerve.
          */
         public static final SwerveDriveKinematics swerveKinematics =
             new SwerveDriveKinematics(swerveTranslations);
 
         /* Module Gear Ratios */
+        /** Swerve Drive Motor Gear Ratio */
         public static final double driveGearRatio = (8.14 / 1.0); // MK4i L1
+        /** Swerve Angle Motor Gear Ratio */
         public static final double angleGearRatio = ((150.0 / 7.0) / 1.0); // (150 / 7) : 1
 
         /* Motor Inverts */
@@ -120,30 +133,43 @@ public final class Constants {
         public static final double closedLoopRamp = 0.0;
 
         /* Angle Motor PID Values */
+        /** Proportional Swerve Angle Motor PID Value */
         public static final double angleKP = 100.0;
+        /** Integral Swerve Angle Motor PID Value */
         public static final double angleKI = 0.0;
+        /** Derivative Swerve Angle Motor PID Value */
         public static final double angleKD = 0.0;
 
         /* Drive Motor PID Values */
+        /** Proportional Swerve Drive Motor PID Value */
         public static final double driveKP = 0.0012;
+        /** Integral Swerve Drive Motor PID Value */
         public static final double driveKI = 0.0;
+        /** Derivative Swerve Drive Motor PID Value */
         public static final double driveKD = 0.0;
+        /** Feedforward Swerve Drive Motor PID Value */
         public static final double driveKF = 0.0;
 
         /* Drive Motor Characterization Values From SYSID */
+        /** Static Swerve Drive Motor Characterization Value */
         public static final double driveKS = 0.185;
+        /** Velocity Swerve Drive Motor Characterization Value */
         public static final double driveKV = 1.004 / 6.536;
+        /** Acceleration Swerve Drive Motor Characterization Value */
         public static final double driveKA = 0.0;
 
         /* Swerve Profiling Values */
-        /** Meters per Second */
+        /** Max Speed in Meters per Second */
         public static final double maxSpeed = 3.0;
+        /** Max Speed for Auto in Meters per Second */
         public static final double autoMaxSpeed = 3.0;
-        /** Radians per Second */
+        /** Max Angular Velocity in Radians per Second */
         public static final double maxAngularVelocity = 4.0;
 
         /* Neutral Modes */
+        /** Angle Motor Neutral Mode */
         public static final NeutralModeValue angleNeutralMode = NeutralModeValue.Coast;
+        /** Drive Motor Neutral Mode */
         public static final NeutralModeValue driveNeutralMode = NeutralModeValue.Brake;
 
         public static final double odometryFrequency = 100.0;
@@ -253,5 +279,30 @@ public final class Constants {
         public static final SensorDirectionValue canCoder2Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
+    /** Shooter Constants */
+    public static final class Shooter {
+        /** ID for Shooter Motor 1 */
+        public static final int motor1ID = 36;
+        /** ID for Shooter Motor 2 */
+        public static final int motor2ID = 37;
+
+        /** Motor Invert for Shooter Motors */
+        public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
+        /** Motor Alignment for Shooter Motors */
+        public static final MotorAlignmentValue shooterMotorAlignment = MotorAlignmentValue.Opposed;
+        /** Neutral Mode for Shooter Motors */
+        public static final NeutralModeValue shooterNeutralMode = NeutralModeValue.Brake;
+
+        public static final double shooterKS = 0.1;
+        public static final double shooterKV = 0.12;
+        public static final double shooterKP = 0.11;
+        public static final double shooterKI = 0.0;
+        public static final double shooterKD = 0.0;
+    }
+
+    public static boolean disableHAL = false;
+
+    public static void disableHAP() {
+        disableHAL = true;
     }
 }
