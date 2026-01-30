@@ -42,6 +42,4 @@ public class AdjustableHood extends SubsystemBase {
     public Command goToAngle(Angle angle) {
         return run(() -> this.setGoal(angle)).until(() -> atAngle);
     }
-
-
 }

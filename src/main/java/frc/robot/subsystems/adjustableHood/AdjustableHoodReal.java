@@ -30,6 +30,11 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
     private StatusSignal<AngularVelocity> hoodVelocity = hoodMotor.getVelocity();
     private StatusSignal<Angle> hoodCANcoderAngle = hoodCANcoder.getPosition();
 
+    private final VoltageOut voltage = new VoltageOut(0.0);
+
+    private final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
+
+
     public AdjustableHoodReal() {
         configAdjustableHood();
 
@@ -70,14 +75,10 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
         hoodCANcoder.getConfigurator().apply(hoodCANcoderConfig);
     }
 
-    private final VoltageOut voltage = new VoltageOut(0.0);
-
     @Override
     public void setAdjustableHoodVoltage(Voltage volts) {
         hoodMotor.setControl(voltage.withOutput(volts));
     }
-
-    private final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
 
     @Override
     public void updateInputs(AdjustableHoodInputs inputs) {

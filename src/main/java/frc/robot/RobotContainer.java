@@ -7,6 +7,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
+import frc.robot.subsystems.adjustableHood.AdjustableHood;
+import frc.robot.subsystems.adjustableHood.AdjustableHoodIOEmpty;
+import frc.robot.subsystems.adjustableHood.AdjustableHoodReal;
+import frc.robot.subsystems.adjustableHood.AdjustableHoodSim;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -40,6 +44,7 @@ public final class RobotContainer {
     /* Subsystems */
     private final Swerve swerve;
     private final Vision vision;
+    private final AdjustableHood adjustableHood;
 
     private final SwerveSim sim;
     private final RobotViz viz;
@@ -52,16 +57,19 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 break;
             case kSimulation:
                 sim = new SwerveSim(new Pose2d(2.0, 2.0, Rotation2d.kZero));
                 swerve = new Swerve(sim::simProvider, sim::gyroProvider, sim::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
+                adjustableHood = new AdjustableHood(new AdjustableHoodSim());
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
         }
         viz = new RobotViz(sim, swerve);
 
