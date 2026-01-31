@@ -10,8 +10,8 @@ import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIO.Empty;
+import frc.robot.subsystems.indexer.IndexerReal;
 import frc.robot.subsystems.indexer.IndexerSim;
-import frc.robot.subsystems.indexer.IndexerVortex;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -58,7 +58,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
-                indexer = new Indexer(new IndexerVortex());
+                indexer = new Indexer(new IndexerReal());
                 break;
             case kSimulation:
                 SimulatedArena.getInstance().resetFieldForAuto();
