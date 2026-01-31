@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -245,7 +246,19 @@ public final class Constants {
     /** Vision Constants */
     public static final class Vision {
         public static final AprilTagFieldLayout fieldLayout =
-            AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
+            AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark); // This should
+                                                                                  // refernce ur
+                                                                                  // field
+                                                                                  // constants, so
+                                                                                  // they dont
+                                                                                  // become
+                                                                                  // different
+        public static final Pose3d turretCenter =
+            new Pose3d(Inches.of(13.50), Inches.of(6.99), Inches.of(0.00), Rotation3d.kZero);
+        public static final Pose3d turretLeft =
+            new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
+        public static final Pose3d turretRight =
+            new Pose3d(Inches.of(19.093), Inches.of(7.681), Inches.of(0.0), Rotation3d.kZero);
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -262,6 +275,35 @@ public final class Constants {
                 .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(11),
                     -Units.inchesToMeters(12), Units.inchesToMeters(10)),
                     new Rotation3d(Math.PI, 0, 0)))
+                .translationError(0.02)
+                .finish(),
+        };
+
+        public static CameraConstants[] turretCameraConstants = new CameraConstants[] {
+            new CameraConstantsBuilder()
+                .name("cam1")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(new Transform3d(turretCenter, turretLeft))
+                .translationError(0.02)
+                .finish(),
+            new CameraConstantsBuilder()
+                .name("cam1")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(new Transform3d(turretCenter, turretRight))
                 .translationError(0.02)
                 .finish(),
         };

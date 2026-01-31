@@ -24,6 +24,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.vision.CameraConstants;
@@ -57,6 +58,8 @@ public class SwerveState {
 
     private final TimeInterpolatableBuffer<Rotation2d> rotationBuffer =
         TimeInterpolatableBuffer.createBuffer(1.5);
+
+    private Angle currentTurretAngle;
 
     /**
      * Creates a new swerve state estimator.
@@ -193,6 +196,20 @@ public class SwerveState {
         Logger.recordOutput("State/VisionRobotPose", robotPose);
     }
 
+    private Transform3d getRobotToCamera(CameraConstants constants) {
+        if (constants.isTurret) {
+            Transform3d pose = constants.robotToCamera;
+            return new Transform3d(pose.getTranslation(), pose.getRotation()
+                .rotateBy(new Rotation3d(Degrees.of(0.0), Degrees.of(0.0), currentTurretAngle)));
+        } else {
+            return constants.robotToCamera;
+        }
+    }
+
+    public void setTurretAngle(Angle angle) {
+        currentTurretAngle = angle;
+    }
+
     /**
      * Adds a vision measurement from PhotonVision.
      *
@@ -211,7 +228,7 @@ public class SwerveState {
                 Transform3d best = multiTag_.estimatedPose.best;
                 Pose3d cameraPose =
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
-                Pose3d robotPose = cameraPose.plus(camera.robotToCamera.inverse());
+                Pose3d robotPose = cameraPose.plus(getRobotToCamera(camera).inverse());
                 visionAdjustedOdometry.resetPose(robotPose.toPose2d());
                 initted = true;
             });
@@ -260,10 +277,10 @@ public class SwerveState {
                 double distance = target.getBestCameraToTarget().getTranslation().getNorm();
                 Rotation3d targetInCameraFrame = new Rotation3d(Radians.of(0.0),
                     Degrees.of(-target.getPitch()), Degrees.of(-target.getYaw()));
-                Rotation3d cameraRotationInWorldFrame =
-                    camera.robotToCamera.getRotation().rotateBy(new Rotation3d(yawSample.get()));
-                Translation3d debugTranslation =
-                    new Pose3d(getGlobalPoseEstimate()).plus(camera.robotToCamera).getTranslation();
+                Rotation3d cameraRotationInWorldFrame = getRobotToCamera(camera).getRotation()
+                    .rotateBy(new Rotation3d(yawSample.get()));
+                Translation3d debugTranslation = new Pose3d(getGlobalPoseEstimate())
+                    .plus(getRobotToCamera(camera)).getTranslation();
                 Logger.recordOutput("State/singleTagCameraRotationInWorldFrame",
                     new Pose3d(debugTranslation, cameraRotationInWorldFrame));
                 Rotation3d targetRotationInWorldFrame =
@@ -277,7 +294,7 @@ public class SwerveState {
                 Translation2d cameraPosition = maybePose.get().getTranslation()
                     .minus(cameraToTargetInWorldFrame).toTranslation2d();
                 Pose3d cameraPose = new Pose3d(cameraPosition.getX(), cameraPosition.getY(),
-                    camera.robotToCamera.getZ(), cameraRotationInWorldFrame);
+                    getRobotToCamera(camera).getZ(), cameraRotationInWorldFrame);
                 Logger.recordOutput("State/singleTagCameraPose", cameraPose);
                 double stdDevMultiplier = stdDevMultiplier(pipelineResult.targets, cameraPose);
                 double translationStdDev =

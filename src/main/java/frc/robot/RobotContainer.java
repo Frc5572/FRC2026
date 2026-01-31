@@ -82,7 +82,7 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
-                turret = new Turret(new TurretReal());
+                turret = new Turret(new TurretReal(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 colorDetection = new ColorDetection(new ColorDetectionReal());
@@ -95,7 +95,7 @@ public final class RobotContainer {
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
                 adjustableHood = new AdjustableHood(new AdjustableHoodSim());
-                turret = new Turret(new TurretSim());
+                turret = new Turret(new TurretSim(), swerve.state);
                 shooter = new Shooter(new ShooterSim());
                 intake = new Intake(new IntakeSim());
 
@@ -107,7 +107,7 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
-                turret = new Turret(new TurretIOEmpty());
+                turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
