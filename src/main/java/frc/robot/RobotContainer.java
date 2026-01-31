@@ -8,6 +8,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.SimulatedRobotState;
+import frc.robot.subsystems.adjustablehood.AdjustableHood;
+import frc.robot.subsystems.adjustablehood.AdjustableHoodIOEmpty;
+import frc.robot.subsystems.adjustablehood.AdjustableHoodReal;
+import frc.robot.subsystems.adjustablehood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIOEmpty;
 import frc.robot.subsystems.climber.ClimberReal;
@@ -56,6 +60,7 @@ public final class RobotContainer {
     /* Subsystems */
     private final Swerve swerve;
     private final Vision vision;
+    private final AdjustableHood adjustableHood;
     private final Turret turret;
     private final Shooter shooter;
     private final ColorDetection colorDetection;
@@ -72,6 +77,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal());
                 shooter = new Shooter(new ShooterReal());
                 colorDetection = new ColorDetection(new ColorDetectionReal());
@@ -83,6 +89,7 @@ public final class RobotContainer {
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
+                adjustableHood = new AdjustableHood(new AdjustableHoodSim());
                 turret = new Turret(new TurretSim());
                 shooter = new Shooter(new ShooterSim());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
@@ -92,6 +99,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
@@ -121,4 +129,7 @@ public final class RobotContainer {
         viz.periodic();
     }
 
+
 }
+
+
