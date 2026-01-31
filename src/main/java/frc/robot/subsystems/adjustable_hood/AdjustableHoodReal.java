@@ -1,4 +1,4 @@
-package frc.robot.subsystems.adjustableHood;
+package frc.robot.subsystems.adjustable_hood;
 
 import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;

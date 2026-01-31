@@ -1,4 +1,4 @@
-package frc.robot.subsystems.adjustableHood;
+package frc.robot.subsystems.adjustable_hood;
 
 import static edu.wpi.first.units.Units.Rotations;
 import org.littletonrobotics.junction.Logger;
@@ -6,6 +6,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.adjustableHood.AdjustableHoodInputsAutoLogged;
 
 /**
  * Adjustable Hood Subsystem
