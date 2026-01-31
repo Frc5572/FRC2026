@@ -16,6 +16,10 @@ import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIOEmpty;
 import frc.robot.subsystems.climber.ClimberReal;
 import frc.robot.subsystems.climber.ClimberSim;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.IndexerIOEmpty;
+import frc.robot.subsystems.indexer.IndexerReal;
+import frc.robot.subsystems.indexer.IndexerSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOEmpty;
 import frc.robot.subsystems.intake.IntakeReal;
@@ -69,7 +73,7 @@ public final class RobotContainer {
     private final Intake intake;
     private final ColorDetection colorDetection;
     private final Climber climber;
-
+    private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
 
@@ -87,6 +91,7 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeReal());
                 colorDetection = new ColorDetection(new ColorDetectionReal());
                 climber = new Climber(new ClimberReal());
+                indexer = new Indexer(new IndexerReal());
                 break;
             case kSimulation:
                 SimulatedArena.getInstance().resetFieldForAuto();
@@ -101,6 +106,7 @@ public final class RobotContainer {
 
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 climber = new Climber(new ClimberIOEmpty());
+                indexer = new Indexer(new IndexerSim());
                 break;
             default:
                 sim = null;
@@ -112,6 +118,7 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeIOEmpty());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 climber = new Climber(new ClimberSim());
+                indexer = new Indexer(new IndexerIOEmpty());
         }
         viz = new RobotViz(sim, swerve);
 
@@ -131,6 +138,8 @@ public final class RobotContainer {
         tester.povUp().onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperOutDistance));
         tester.povDown()
             .onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperTuckedDistance));
+        tester.rightTrigger().whileTrue(indexer.setSpeedCommand(Constants.Indexer.indexerSpeed,
+            Constants.Indexer.spinMotorSpeed));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
@@ -141,9 +150,8 @@ public final class RobotContainer {
                 SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
         viz.periodic();
+
     }
-
-
 }
 
 
