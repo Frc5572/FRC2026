@@ -2,6 +2,10 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -17,6 +21,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.swerve.mod.ModuleConstants;
 import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
@@ -271,6 +276,134 @@ public final class Constants {
         public static final double hoodCANcoderDiscontinuity = 0.5;
     }
 
+    /**
+     * Climber subsystem constants.
+     *
+     * <p>
+     * Contains all configuration values for the climber's telescope extension and pivot rotation
+     * mechanisms, including motor IDs, PID gains, feedforward constants, motion constraints, and
+     * preset positions.
+     */
+    public static final class Climber {
+
+        /**
+         * Telescope extension mechanism constants.
+         *
+         * <p>
+         * Defines motor IDs and neutral mode for the left and right telescope motors.
+         */
+        public static final class Telescope {
+
+            /** CAN ID for the right telescope motor. */
+            public static final int RIGHT_ID = 47;
+
+            /** CAN ID for the left telescope motor. */
+            public static final int LEFT_ID = 48;
+
+            /** Neutral mode for telescope motors (brake or coast). */
+            public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
+
+
+            /** Telescope length at the top position, in degrees. */
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
+
+            /** Telescope length at the top position, in Meters. */
+            public static final Distance ROTATIONS_AT_TOP = Meters.of(220);
+
+            /**
+             * S Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
+             */
+            public static final double SENSOR_TO_MECHANISM_RATIO =
+                ROTATIONS_AT_TOP.in(Meters) / DEGREES_AT_TOP.in(Degrees);
+
+            /** Proportional gain for pivot position control. */
+            public static final double KP = 50.0;
+
+            /** Integral gain for pivot position control. */
+            public static final double KI = 0.0;
+
+            /** Derivative gain for pivot position control. */
+            public static final double KD = 0.0;
+
+            /** Static feedforward constant for overcoming friction. */
+            public static final double KS = 0.9;
+
+            /** Velocity feedforward constant. */
+            public static final double KV = 0.0;
+
+            /** Acceleration feedforward constant. */
+            public static final double KA = 0.0;
+
+            /** Gravity feedforward constant for maintaining pivot angle. */
+            public static final double KG = 0.9375;
+
+        }
+
+        /**
+         * Pivot rotation mechanism constants.
+         *
+         * <p>
+         * Includes motor configuration, PID and feedforward gains for motion magic control, motion
+         * constraints, and preset angle positions.
+         */
+        public static final class Pivot {
+
+            /** CAN ID for the pivot motor. */
+            public static final int ID = 46;
+
+            /** Neutral mode for the pivot motor (brake or coast). */
+            public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
+
+            /** Proportional gain for pivot position control. */
+            public static final double KP = 50.0;
+
+            /** Integral gain for pivot position control. */
+            public static final double KI = 0.0;
+
+            /** Derivative gain for pivot position control. */
+            public static final double KD = 0.0;
+
+            /** Static feedforward constant for overcoming friction. */
+            public static final double KS = 0.9;
+
+            /** Velocity feedforward constant. */
+            public static final double KV = 0.0;
+
+            /** Acceleration feedforward constant. */
+            public static final double KA = 0.0;
+
+            /** Gravity feedforward constant for maintaining pivot angle. */
+            public static final double KG = 0.9375;
+
+            /** Motion magic cruise velocity, in rotations per second. */
+            public static final double C_VELOCITY = 4.0;
+
+            /** Motion magic acceleration, in rotations per second squared. */
+            public static final double ACCELERATION = 10.0;
+
+            /** Motion magic jerk limit. */
+            public static final double JERK = 6000000.0;
+
+            /** Maximum pivot velocity. */
+            public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(0.0);
+
+            /** Gear ratio for the pivot mechanism. */
+            public static final double GEAR_RATIO = 20.0 / 1.0;
+
+            /** Pivot angle at the top position, in degrees. */
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
+
+            /** Pivot angle at the top position, in radians. */
+            public static final Angle ROTATIONS_AT_TOP = Radians.of(220);
+
+            /**
+             * Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
+             */
+            public static final double SENSOR_TO_MECHANISM_RATIO =
+                ROTATIONS_AT_TOP.in(Rotations) / DEGREES_AT_TOP.in(Degrees);
+        }
+    }
+
     /** Turret subsystem */
     public static final class Turret {
         public static final double motorGearing = 53.934;
@@ -305,7 +438,6 @@ public final class Constants {
         public static final SensorDirectionValue canCoder2Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
-
     }
     /** Shooter Constants */
     public static final class Shooter {
