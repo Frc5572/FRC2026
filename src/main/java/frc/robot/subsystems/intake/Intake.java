@@ -45,8 +45,8 @@ public class Intake extends SubsystemBase {
     /**
      * run the hopper
      * 
-     * @param hopperDesiredPosition
-     * @return
+     * @param hopperDesiredPosition where the hopper will go in meters
+     * @return returns command
      */
     public Command useHopperCommand(double hopperDesiredPosition) {
         return Commands
