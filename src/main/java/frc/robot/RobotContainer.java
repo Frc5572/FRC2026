@@ -138,8 +138,8 @@ public final class RobotContainer {
         tester.povUp().onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperOutDistance));
         tester.povDown()
             .onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperTuckedDistance));
-        testController.rightTrigger().whileTrue(indexer
-            .setSpeedCommand(Constants.Indexer.indexerSpeed, Constants.Indexer.spinMotorSpeed));
+        tester.rightTrigger().whileTrue(indexer.setSpeedCommand(Constants.Indexer.indexerSpeed,
+            Constants.Indexer.spinMotorSpeed));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
