@@ -32,7 +32,9 @@ public interface AdjustableHoodIO {
     public void setAdjustableHoodVoltage(Voltage volts);
 
     /**
-     * Updates the provided {@link AdjustableHoodUpdates} structure with the latest sensor values.
+     * Updates the provided {@link AdjustableHoodInputs} structure with the latest sensor values.
+     * 
+     * @param inputs updates inputs
      */
     public void updateInputs(AdjustableHoodInputs inputs);
 
