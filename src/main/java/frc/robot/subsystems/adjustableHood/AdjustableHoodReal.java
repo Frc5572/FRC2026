@@ -61,10 +61,10 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
         hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-            Constants.AdjustableHood.maxAngle.in(Rotations);
+            Constants.AdjustableHood.hoodMaxAngle.in(Rotations);
         hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-            Constants.AdjustableHood.minAngle.in(Rotations);
+            Constants.AdjustableHood.hoodMinAngle.in(Rotations);
 
         hoodCANcoderConfig.MagnetSensor.SensorDirection =
             Constants.AdjustableHood.hoodCANCoderInvert;

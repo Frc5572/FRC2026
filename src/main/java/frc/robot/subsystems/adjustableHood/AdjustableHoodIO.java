@@ -25,7 +25,15 @@ public interface AdjustableHoodIO {
 
     public void setAdjustableHoodVoltage(Voltage volts);
 
+    /**
+     * Updates the provided {@link AdjustableHoodUpdates} structure with the latest sensor values.
+     */
     public void updateInputs(AdjustableHoodInputs inputs);
 
+    /**
+     * Commands the adjustable hood to move to a specific angle
+     * 
+     * @param angle - the wanted angle
+     */
     public void setTargetAngle(Angle angle);
 }

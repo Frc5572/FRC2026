@@ -34,8 +34,8 @@ public class AdjustableHood extends SubsystemBase {
     }
 
     public void setGoal(Angle targetAngle) {
-        targetHoodRotation = Math.max(Constants.AdjustableHood.minAngle.in(Rotations),
-            Math.min(targetAngle.in(Rotations), Constants.AdjustableHood.maxAngle.in(Rotations)));
+        targetHoodRotation = Math.max(Constants.AdjustableHood.hoodMinAngle.in(Rotations), Math
+            .min(targetAngle.in(Rotations), Constants.AdjustableHood.hoodMaxAngle.in(Rotations)));
         io.setTargetAngle(Rotations.of(targetHoodRotation));
     }
 

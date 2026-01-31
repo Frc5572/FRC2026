@@ -244,10 +244,33 @@ public final class Constants {
         };
         // @formatter:on
     }
-
+    /** Adjustable Hood Subsystem */
     public static final class AdjustableHood {
         public static final int HoodMotorID = 41;
         public static final int HoodCANCoderID = 42;
+
+        public static final double KP = 0.0;
+        public static final double KI = 0.0;
+        public static final double KD = 0.0;
+        public static final double KS = 0.0;
+        public static final double KV = 0.0;
+        public static final double KA = 0.0;
+        public static final double KG = 0.0;
+
+        public static final Angle hoodMaxAngle = Degrees.of(0.0);
+        public static final Angle hoodMinAngle = Degrees.of(0.0);
+
+        public static final double MMAcceleration = 0.0;
+        public static final double MMCVelocity = 0.0;
+        public static final double MMJerk = 0.0;
+
+        public static final double hoodTolerence = 0.05;
+
+        public static final SensorDirectionValue hoodCANCoderInvert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final double hoodCANcoderDiscontinuity = 0.5;
+    }
+
     /** Turret subsystem */
     public static final class Turret {
         public static final double motorGearing = 53.934;
@@ -268,20 +291,6 @@ public final class Constants {
         public static final double KS = 0.0;
         public static final double KV = 0.0;
         public static final double KA = 0.0;
-        public static final double KG = 0.0;
-
-        public static final Angle maxAngle = Degrees.of(0.0);
-        public static final Angle minAngle = Degrees.of(0.0);
-
-        public static final double MMAcceleration = 0.0;
-        public static final double MMCVelocity = 0.0;
-        public static final double MMJerk = 0.0;
-
-        public static final double hoodTolerence = 0.05;
-
-        public static final SensorDirectionValue hoodCANCoderInvert =
-            SensorDirectionValue.Clockwise_Positive;
-        public static final double hoodCANcoderDiscontinuity = 0.5;
 
         public static final double MMCVelocity = 0.0;
         public static final double MMAcceleration = 0.0;
@@ -298,7 +307,6 @@ public final class Constants {
         public static final double turretCANCoderDiscontinuity = 0.5;
 
     }
-
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */
@@ -326,4 +334,5 @@ public final class Constants {
         disableHAL = true;
     }
 }
+
 
