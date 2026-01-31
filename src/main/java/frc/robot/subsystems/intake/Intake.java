@@ -47,7 +47,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Distance getHopperPosition() {
-        return inputs.hopperPositionMeters;
+        return inputs.hopperPosition;
     }
 
 }

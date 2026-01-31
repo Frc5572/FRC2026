@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.util.GenerateEmptyIO;
@@ -8,9 +9,9 @@ import frc.robot.util.GenerateEmptyIO;
 public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
-        Distance hopperPositionMeters;
-        double intakeVelocity;
-        boolean limitSwitch;
+        Distance hopperPosition = Distance.ofBaseUnits(0, Meters);
+        double intakeVelocity = 0;
+        boolean limitSwitch = false;
     }
 
     public void updateInputs(IntakeIOInputs inputs);
