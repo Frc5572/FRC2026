@@ -14,13 +14,13 @@ public interface IntakeIO {
      * inputs class
      */
     @AutoLog
-    public static class IntakeIOInputs {
-        Distance hopperPosition = Distance.ofBaseUnits(0, Meters);
+    public static class IntakeInputs {
+        Distance hopperPosition = Meters.of(0);
         double intakeDutyCycle = 0;
         boolean limitSwitch = false;
     }
 
-    public void updateInputs(IntakeIOInputs inputs);
+    public void updateInputs(IntakeInputs inputs);
 
     public void runIntakeMotor(double speed);
 

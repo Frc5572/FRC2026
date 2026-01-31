@@ -14,7 +14,7 @@ import frc.robot.Constants;
  */
 public class Intake extends SubsystemBase {
     public IntakeIO io;
-    public IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
+    public IntakeInputsAutoLogged inputs = new IntakeInputsAutoLogged();
     private final Trigger limitSwitchTouched = new Trigger(() -> inputs.limitSwitch).debounce(0.25);
 
     public Intake(IntakeIO io) {
