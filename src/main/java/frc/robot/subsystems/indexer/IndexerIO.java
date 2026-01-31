@@ -3,8 +3,14 @@ package frc.robot.subsystems.indexer;
 import org.littletonrobotics.junction.AutoLog;
 import frc.robot.util.GenerateEmptyIO;
 
+/**
+ * indexer interface
+ */
 @GenerateEmptyIO
 public interface IndexerIO {
+    /**
+     * indexer inputs class
+     */
     @AutoLog
     public class IndexerInputs {
         double indexerFalconVelocity;

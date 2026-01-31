@@ -6,6 +6,9 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import frc.robot.Constants;
 
+/**
+ * real implementation of indexer
+ */
 public class IndexerReal implements IndexerIO {
     public SparkFlex indexer = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
     public TalonFX spinMotor = new TalonFX(Constants.Indexer.spinMotorID);

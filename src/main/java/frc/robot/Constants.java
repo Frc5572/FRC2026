@@ -38,12 +38,17 @@ public final class Constants {
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
     }
+
+    /**
+     * Indexer Constants
+     */
     public static class Indexer {
         public static final int indexerID = 26;
         public static final int spinMotorID = 27;
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
     }
+
     /**
      * MoveToPos constants.
      */

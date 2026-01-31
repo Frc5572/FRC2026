@@ -1,5 +1,8 @@
 package frc.robot.subsystems.indexer;
 
+/**
+ * Indexer simulation class
+ */
 public class IndexerSim implements IndexerIO {
 
     @Override
