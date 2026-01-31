@@ -24,6 +24,10 @@ import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIOEmpty;
+import frc.robot.subsystems.turret.TurretReal;
+import frc.robot.subsystems.turret.TurretSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
@@ -47,10 +51,12 @@ public final class RobotContainer {
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
+    public final CommandXboxController tester = new CommandXboxController(1);
 
     /* Subsystems */
     private final Swerve swerve;
     private final Vision vision;
+    private final Turret turret;
     private final Shooter shooter;
     private final ColorDetection colorDetection;
     private final Climber climber;
@@ -66,6 +72,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
+                turret = new Turret(new TurretReal());
                 shooter = new Shooter(new ShooterReal());
                 colorDetection = new ColorDetection(new ColorDetectionReal());
                 climber = new Climber(new ClimberReal());
@@ -76,6 +83,7 @@ public final class RobotContainer {
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
+                turret = new Turret(new TurretSim());
                 shooter = new Shooter(new ShooterSim());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 climber = new Climber(new ClimberIOEmpty());
@@ -84,6 +92,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
+                turret = new Turret(new TurretIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 climber = new Climber(new ClimberSim());
