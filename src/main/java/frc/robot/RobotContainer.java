@@ -8,14 +8,18 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.SimulatedRobotState;
-import frc.robot.subsystems.adjustablehood.AdjustableHood;
-import frc.robot.subsystems.adjustablehood.AdjustableHoodIOEmpty;
-import frc.robot.subsystems.adjustablehood.AdjustableHoodReal;
-import frc.robot.subsystems.adjustablehood.AdjustableHoodSim;
+import frc.robot.subsystems.adjustable_hood.AdjustableHood;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIOEmpty;
 import frc.robot.subsystems.climber.ClimberReal;
 import frc.robot.subsystems.climber.ClimberSim;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOEmpty;
+import frc.robot.subsystems.intake.IntakeReal;
+import frc.robot.subsystems.intake.IntakeSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOEmpty;
 import frc.robot.subsystems.shooter.ShooterReal;
@@ -42,7 +46,6 @@ import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
-
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -63,6 +66,7 @@ public final class RobotContainer {
     private final AdjustableHood adjustableHood;
     private final Turret turret;
     private final Shooter shooter;
+    private final Intake intake;
     private final ColorDetection colorDetection;
     private final Climber climber;
 
@@ -80,6 +84,7 @@ public final class RobotContainer {
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal());
                 shooter = new Shooter(new ShooterReal());
+                intake = new Intake(new IntakeReal());
                 colorDetection = new ColorDetection(new ColorDetectionReal());
                 climber = new Climber(new ClimberReal());
                 break;
@@ -92,6 +97,8 @@ public final class RobotContainer {
                 adjustableHood = new AdjustableHood(new AdjustableHoodSim());
                 turret = new Turret(new TurretSim());
                 shooter = new Shooter(new ShooterSim());
+                intake = new Intake(new IntakeSim());
+
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 climber = new Climber(new ClimberIOEmpty());
                 break;
@@ -102,6 +109,7 @@ public final class RobotContainer {
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
+                intake = new Intake(new IntakeIOEmpty());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 climber = new Climber(new ClimberSim());
         }
@@ -115,8 +123,14 @@ public final class RobotContainer {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
 
+
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
+        tester.leftTrigger()
+            .whileTrue(intake.useIntakeCommand(Constants.IntakeConstants.intakeSpeed));
+        tester.povUp().onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperOutDistance));
+        tester.povDown()
+            .onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperTuckedDistance));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */

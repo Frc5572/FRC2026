@@ -1,4 +1,4 @@
-package frc.robot.subsystems.adjustablehood;
+package frc.robot.subsystems.adjustable_hood;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RadiansPerSecond;

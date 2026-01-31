@@ -47,6 +47,24 @@ public final class Constants {
     }
 
     /**
+     * Constants file
+     */
+    public static class IntakeConstants { // change all variables before testing
+        public static final int hopperLeftID = 31;
+        public static final int hopperRightID = 32;
+        public static final int intakeID = 33;
+        public static final double hopperMaxDistance = 0;
+        public static final double intakeSpeed = 0;
+        public static final double hopperMinDistance = 0;
+        public static final double hopperOutDistance = 0;
+        public static final double hopperTuckedDistance = 0;
+        public static final double KP = 0;
+        public static final double KI = 0;
+        public static final double KD = 0;
+        public static final int limitSwitchID = 34;
+    }
+
+    /**
      * MoveToPos constants.
      */
     public static class SwerveTransformPID {

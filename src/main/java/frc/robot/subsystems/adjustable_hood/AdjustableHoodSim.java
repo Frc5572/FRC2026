@@ -1,4 +1,4 @@
-package frc.robot.subsystems.adjustablehood;
+package frc.robot.subsystems.adjustable_hood;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
