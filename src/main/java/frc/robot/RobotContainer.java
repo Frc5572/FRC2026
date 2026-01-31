@@ -12,6 +12,10 @@ import frc.robot.subsystems.adjustablehood.AdjustableHood;
 import frc.robot.subsystems.adjustablehood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustablehood.AdjustableHoodReal;
 import frc.robot.subsystems.adjustablehood.AdjustableHoodSim;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIOEmpty;
+import frc.robot.subsystems.climber.ClimberReal;
+import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOEmpty;
 import frc.robot.subsystems.shooter.ShooterReal;
@@ -60,6 +64,7 @@ public final class RobotContainer {
     private final Turret turret;
     private final Shooter shooter;
     private final ColorDetection colorDetection;
+    private final Climber climber;
 
     private final RobotViz viz;
     private final SimulatedRobotState sim;
@@ -76,6 +81,7 @@ public final class RobotContainer {
                 turret = new Turret(new TurretReal());
                 shooter = new Shooter(new ShooterReal());
                 colorDetection = new ColorDetection(new ColorDetectionReal());
+                climber = new Climber(new ClimberReal());
                 break;
             case kSimulation:
                 SimulatedArena.getInstance().resetFieldForAuto();
@@ -87,6 +93,7 @@ public final class RobotContainer {
                 turret = new Turret(new TurretSim());
                 shooter = new Shooter(new ShooterSim());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
+                climber = new Climber(new ClimberIOEmpty());
                 break;
             default:
                 sim = null;
@@ -96,6 +103,7 @@ public final class RobotContainer {
                 turret = new Turret(new TurretIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
+                climber = new Climber(new ClimberSim());
         }
         viz = new RobotViz(sim, swerve);
 
