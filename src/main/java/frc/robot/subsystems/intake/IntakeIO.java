@@ -10,7 +10,7 @@ public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
         Distance hopperPosition = Distance.ofBaseUnits(0, Meters);
-        double intakeVelocity = 0;
+        double intakeDutyCycle = 0;
         boolean limitSwitch = false;
     }
 

@@ -57,6 +57,7 @@ public class IntakeReal implements IntakeIO {
         BaseStatusSignal.refreshAll(rightMotorPosition);
         inputs.hopperPosition = Meters.of(rightMotorPosition.getValue().in(Rotations));
         inputs.limitSwitch = limitSwitchMin.get();
+        inputs.intakeDutyCycle = intakeMotor.get();
 
     }
 
