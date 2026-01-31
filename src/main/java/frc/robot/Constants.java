@@ -244,6 +244,7 @@ public final class Constants {
         };
         // @formatter:on
     }
+
     /** Adjustable Hood Subsystem */
     public static final class AdjustableHood {
         public static final int HoodMotorID = 41;
@@ -307,6 +308,7 @@ public final class Constants {
         public static final double turretCANCoderDiscontinuity = 0.5;
 
     }
+
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */

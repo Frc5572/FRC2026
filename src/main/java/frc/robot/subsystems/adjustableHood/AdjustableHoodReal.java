@@ -1,4 +1,4 @@
-package frc.robot.subsystems.adjustableHood;
+package frc.robot.subsystems.adjustablehood;
 
 import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -16,6 +16,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
+/** adjustable hood hardware */
 public class AdjustableHoodReal implements AdjustableHoodIO {
 
     private final TalonFX hoodMotor = new TalonFX(Constants.AdjustableHood.HoodMotorID);
@@ -34,7 +35,7 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
     private final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
 
-
+    /** Real AdjustableHood Implementation */
     public AdjustableHoodReal() {
         configAdjustableHood();
 
