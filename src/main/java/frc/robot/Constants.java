@@ -1,7 +1,13 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
@@ -14,6 +20,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.swerve.mod.ModuleConstants;
 import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
@@ -37,6 +45,24 @@ public final class Constants {
         public static final double driverTranslationalMaxSpeed = 3.0;
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
+    }
+
+    /**
+     * Constants file
+     */
+    public static class IntakeConstants { // change all variables before testing
+        public static final int hopperLeftID = 31;
+        public static final int hopperRightID = 32;
+        public static final int intakeID = 33;
+        public static final double hopperMaxDistance = 0;
+        public static final double intakeSpeed = 0;
+        public static final double hopperMinDistance = 0;
+        public static final double hopperOutDistance = 0;
+        public static final double hopperTuckedDistance = 0;
+        public static final double KP = 0;
+        public static final double KI = 0;
+        public static final double KD = 0;
+        public static final int limitSwitchID = 34;
     }
 
     /**
@@ -76,7 +102,7 @@ public final class Constants {
 
         /* Drivetrain Constants */
         /** Distance between right and left wheels on robot */
-        public static final double trackWidth = Units.inchesToMeters(24.229);
+        public static final double trackWidth = Units.inchesToMeters(18.048);
         /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(24.229);
         /** Distance from the center of the wheel to the ground */
@@ -252,4 +278,224 @@ public final class Constants {
         };
         // @formatter:on
     }
+
+    /** Adjustable Hood Subsystem */
+    public static final class AdjustableHood {
+        public static final int HoodMotorID = 41;
+        public static final int HoodCANCoderID = 42;
+
+        public static final double KP = 0.0;
+        public static final double KI = 0.0;
+        public static final double KD = 0.0;
+        public static final double KS = 0.0;
+        public static final double KV = 0.0;
+        public static final double KA = 0.0;
+        public static final double KG = 0.0;
+
+        public static final Angle hoodMaxAngle = Degrees.of(0.0);
+        public static final Angle hoodMinAngle = Degrees.of(0.0);
+
+        public static final double MMAcceleration = 0.0;
+        public static final double MMCVelocity = 0.0;
+        public static final double MMJerk = 0.0;
+
+        public static final double hoodTolerence = 0.05;
+
+        public static final SensorDirectionValue hoodCANCoderInvert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final double hoodCANcoderDiscontinuity = 0.5;
+    }
+
+    /**
+     * Climber subsystem constants.
+     *
+     * <p>
+     * Contains all configuration values for the climber's telescope extension and pivot rotation
+     * mechanisms, including motor IDs, PID gains, feedforward constants, motion constraints, and
+     * preset positions.
+     */
+    public static final class Climber {
+
+        /**
+         * Telescope extension mechanism constants.
+         *
+         * <p>
+         * Defines motor IDs and neutral mode for the left and right telescope motors.
+         */
+        public static final class Telescope {
+
+            /** CAN ID for the right telescope motor. */
+            public static final int RIGHT_ID = 47;
+
+            /** CAN ID for the left telescope motor. */
+            public static final int LEFT_ID = 48;
+
+            /** Neutral mode for telescope motors (brake or coast). */
+            public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
+
+
+            /** Telescope length at the top position, in degrees. */
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
+
+            /** Telescope length at the top position, in Meters. */
+            public static final Distance ROTATIONS_AT_TOP = Meters.of(220);
+
+            /**
+             * S Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
+             */
+            public static final double SENSOR_TO_MECHANISM_RATIO =
+                ROTATIONS_AT_TOP.in(Meters) / DEGREES_AT_TOP.in(Degrees);
+
+            /** Proportional gain for pivot position control. */
+            public static final double KP = 50.0;
+
+            /** Integral gain for pivot position control. */
+            public static final double KI = 0.0;
+
+            /** Derivative gain for pivot position control. */
+            public static final double KD = 0.0;
+
+            /** Static feedforward constant for overcoming friction. */
+            public static final double KS = 0.9;
+
+            /** Velocity feedforward constant. */
+            public static final double KV = 0.0;
+
+            /** Acceleration feedforward constant. */
+            public static final double KA = 0.0;
+
+            /** Gravity feedforward constant for maintaining pivot angle. */
+            public static final double KG = 0.9375;
+
+        }
+
+        /**
+         * Pivot rotation mechanism constants.
+         *
+         * <p>
+         * Includes motor configuration, PID and feedforward gains for motion magic control, motion
+         * constraints, and preset angle positions.
+         */
+        public static final class Pivot {
+
+            /** CAN ID for the pivot motor. */
+            public static final int ID = 46;
+
+            /** Neutral mode for the pivot motor (brake or coast). */
+            public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
+
+            /** Proportional gain for pivot position control. */
+            public static final double KP = 50.0;
+
+            /** Integral gain for pivot position control. */
+            public static final double KI = 0.0;
+
+            /** Derivative gain for pivot position control. */
+            public static final double KD = 0.0;
+
+            /** Static feedforward constant for overcoming friction. */
+            public static final double KS = 0.9;
+
+            /** Velocity feedforward constant. */
+            public static final double KV = 0.0;
+
+            /** Acceleration feedforward constant. */
+            public static final double KA = 0.0;
+
+            /** Gravity feedforward constant for maintaining pivot angle. */
+            public static final double KG = 0.9375;
+
+            /** Motion magic cruise velocity, in rotations per second. */
+            public static final double C_VELOCITY = 4.0;
+
+            /** Motion magic acceleration, in rotations per second squared. */
+            public static final double ACCELERATION = 10.0;
+
+            /** Motion magic jerk limit. */
+            public static final double JERK = 6000000.0;
+
+            /** Maximum pivot velocity. */
+            public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(0.0);
+
+            /** Gear ratio for the pivot mechanism. */
+            public static final double GEAR_RATIO = 20.0 / 1.0;
+
+            /** Pivot angle at the top position, in degrees. */
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
+
+            /** Pivot angle at the top position, in radians. */
+            public static final Angle ROTATIONS_AT_TOP = Radians.of(220);
+
+            /**
+             * Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
+             */
+            public static final double SENSOR_TO_MECHANISM_RATIO =
+                ROTATIONS_AT_TOP.in(Rotations) / DEGREES_AT_TOP.in(Degrees);
+        }
+    }
+
+    /** Turret subsystem */
+    public static final class Turret {
+        public static final double motorGearing = 53.934;
+        public static final double gear1Gearing = 35.0 / 75.0;
+        public static final Rotation2d gear1Offset = Rotation2d.kZero;
+        public static final double gear2Gearing = 36.0 / 75.0;
+        public static final Rotation2d gear2Offset = Rotation2d.kZero;
+        public static final Angle minAngle = Degrees.of(-360);
+        public static final Angle maxAngle = Degrees.of(360);
+
+        public static final int TurretMotorID = 20;
+        public static final int TurretCANcoderID1 = 21;
+        public static final int TurretCANcoderID2 = 22;
+
+        public static final double KP = 0.0;
+        public static final double KI = 0.0;
+        public static final double KD = 0.0;
+        public static final double KS = 0.0;
+        public static final double KV = 0.0;
+        public static final double KA = 0.0;
+
+        public static final double MMCVelocity = 0.0;
+        public static final double MMAcceleration = 0.0;
+        public static final double MMJerk = 0.0;
+
+        public static final Angle testAngle = Degrees.of(30);
+
+        public static final double turretTolerence = 0.01;
+
+        public static final SensorDirectionValue canCoder1Invert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final SensorDirectionValue canCoder2Invert =
+            SensorDirectionValue.Clockwise_Positive;
+        public static final double turretCANCoderDiscontinuity = 0.5;
+    }
+
+    /** Shooter Constants */
+    public static final class Shooter {
+        /** ID for Shooter Motor 1 */
+        public static final int motor1ID = 36;
+        /** ID for Shooter Motor 2 */
+        public static final int motor2ID = 37;
+
+        /** Motor Invert for Shooter Motors */
+        public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
+        /** Motor Alignment for Shooter Motors */
+        public static final MotorAlignmentValue shooterMotorAlignment = MotorAlignmentValue.Opposed;
+        /** Neutral Mode for Shooter Motors */
+        public static final NeutralModeValue shooterNeutralMode = NeutralModeValue.Brake;
+
+        public static final double shooterKS = 0.1;
+        public static final double shooterKV = 0.12;
+        public static final double shooterKP = 0.11;
+        public static final double shooterKI = 0.0;
+        public static final double shooterKD = 0.0;
+    }
+
+    public static boolean disableHAL = false;
+
+    public static void disableHAP() {
+        disableHAL = true;
+    }
 }
+
+

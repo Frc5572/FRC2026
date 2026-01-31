@@ -1,0 +1,69 @@
+package frc.robot.subsystems.turret;
+
+import static edu.wpi.first.units.Units.Degrees;
+import java.util.Random;
+import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
+
+/**
+ * Simulation implementation of {@link TurretIO}.
+ *
+ * <p>
+ * This class provides a lightweight software model of the turret hardware for use in simulation,
+ * unit testing, and log replay. It maintains an internal turret angle state and generates synthetic
+ * absolute encoder readings based on the configured gear ratios and offsets.
+ * </p>
+ *
+ * <p>
+ * To better approximate real sensor behavior, small amounts of random noise are added to each
+ * simulated encoder measurement. This helps exercise the turret angle estimation and filtering
+ * logic under non-ideal conditions.
+ * </p>
+ *
+ * <p>
+ * This simulation does not model turret dynamics such as inertia, acceleration limits, or
+ * closed-loop control behavior. Target angles are applied instantaneously.
+ * </p>
+ */
+public class TurretSim implements TurretIO {
+
+    private Angle turretRotation = Degrees.of(15.6);
+
+    private final Random random = new Random();
+
+    private Voltage currentVoltage;
+
+    @Override
+    public void updateInputs(TurretInputs inputs) {
+        double noise1 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
+        inputs.gear1AbsoluteAngle =
+            Turret.getGearAnglesFromTurret(turretRotation, Constants.Turret.gear1Gearing,
+                Constants.Turret.gear1Offset).plus(Rotation2d.fromDegrees(noise1));
+        double noise2 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
+        inputs.gear2AbsoluteAngle =
+            Turret.getGearAnglesFromTurret(turretRotation, Constants.Turret.gear2Gearing,
+                Constants.Turret.gear2Offset).plus(Rotation2d.fromDegrees(noise2));
+    }
+
+    @Override
+    public void setTurretVoltage(Voltage volts) {
+        currentVoltage = volts;
+    }
+
+
+    @Override
+    public void setTargetAngle(Angle angle) {
+        turretRotation = angle;
+        Logger.recordOutput("Turret/GTAngle", angle);
+    }
+
+    @Override
+    public void resetPosition(Angle angle) {
+        turretRotation = angle;
+        Logger.recordOutput("Turret/ResetAngle", angle);
+    }
+
+}

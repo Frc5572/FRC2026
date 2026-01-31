@@ -8,10 +8,26 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.SimulatedRobotState;
+import frc.robot.subsystems.adjustable_hood.AdjustableHood;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIOEmpty;
+import frc.robot.subsystems.climber.ClimberReal;
+import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIOEmpty;
 import frc.robot.subsystems.indexer.IndexerReal;
 import frc.robot.subsystems.indexer.IndexerSim;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOEmpty;
+import frc.robot.subsystems.intake.IntakeReal;
+import frc.robot.subsystems.intake.IntakeSim;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIOEmpty;
+import frc.robot.subsystems.shooter.ShooterReal;
+import frc.robot.subsystems.shooter.ShooterSim;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -20,13 +36,19 @@ import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIOEmpty;
+import frc.robot.subsystems.turret.TurretReal;
+import frc.robot.subsystems.turret.TurretSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.VisionSim;
+import frc.robot.subsystems.vision.color.ColorDetection;
+import frc.robot.subsystems.vision.color.ColorDetectionIO;
+import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
-
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -40,12 +62,17 @@ public final class RobotContainer {
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
-    public final CommandXboxController testController =
-        new CommandXboxController(Constants.DriverControls.testControllerId);
+    public final CommandXboxController tester = new CommandXboxController(1);
 
     /* Subsystems */
     private final Swerve swerve;
     private final Vision vision;
+    private final AdjustableHood adjustableHood;
+    private final Turret turret;
+    private final Shooter shooter;
+    private final Intake intake;
+    private final ColorDetection colorDetection;
+    private final Climber climber;
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
@@ -58,6 +85,12 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
+                turret = new Turret(new TurretReal());
+                shooter = new Shooter(new ShooterReal());
+                intake = new Intake(new IntakeReal());
+                colorDetection = new ColorDetection(new ColorDetectionReal());
+                climber = new Climber(new ClimberReal());
                 indexer = new Indexer(new IndexerReal());
                 break;
             case kSimulation:
@@ -66,12 +99,25 @@ public final class RobotContainer {
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, new VisionSim(sim));
+                adjustableHood = new AdjustableHood(new AdjustableHoodSim());
+                turret = new Turret(new TurretSim());
+                shooter = new Shooter(new ShooterSim());
+                intake = new Intake(new IntakeSim());
+
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
+                climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerSim());
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
+                turret = new Turret(new TurretIOEmpty());
+                shooter = new Shooter(new ShooterIOEmpty());
+                intake = new Intake(new IntakeIOEmpty());
+                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
+                climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
         }
         viz = new RobotViz(sim, swerve);
@@ -83,8 +129,15 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
+
+
         driver.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         driver.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
+        tester.leftTrigger()
+            .whileTrue(intake.useIntakeCommand(Constants.IntakeConstants.intakeSpeed));
+        tester.povUp().onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperOutDistance));
+        tester.povDown()
+            .onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperTuckedDistance));
         testController.rightTrigger().whileTrue(indexer
             .setSpeedCommand(Constants.Indexer.indexerSpeed, Constants.Indexer.spinMotorSpeed));
     }
@@ -100,3 +153,5 @@ public final class RobotContainer {
 
     }
 }
+
+
