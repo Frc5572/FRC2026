@@ -1,5 +1,8 @@
 package frc.robot.subsystems.intake;
 
+/**
+ * sim class
+ */
 public class IntakeSim implements IntakeIO {
 
 

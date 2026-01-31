@@ -9,6 +9,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 
+/**
+ * Intake subsystem
+ */
 public class Intake extends SubsystemBase {
     public IntakeIO io;
     public IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
@@ -39,6 +42,12 @@ public class Intake extends SubsystemBase {
             this);
     }
 
+    /**
+     * run the hopper
+     * 
+     * @param hopperDesiredPosition
+     * @return
+     */
     public Command useHopperCommand(double hopperDesiredPosition) {
         return Commands
             .run(() -> runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,

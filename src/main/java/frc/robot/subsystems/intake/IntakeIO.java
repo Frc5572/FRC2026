@@ -6,8 +6,14 @@ import edu.wpi.first.units.measure.Distance;
 import frc.robot.util.GenerateEmptyIO;
 
 @GenerateEmptyIO
+/**
+ * intake IO interface
+ */
 public interface IntakeIO {
     @AutoLog
+    /**
+     * inputs class
+     */
     public static class IntakeIOInputs {
         Distance hopperPosition = Distance.ofBaseUnits(0, Meters);
         double intakeDutyCycle = 0;

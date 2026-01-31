@@ -17,6 +17,9 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 
+/**
+ * intake real implementation
+ */
 public class IntakeReal implements IntakeIO {
     private TalonFX hopperRightMotor = new TalonFX(Constants.IntakeConstants.hopperRightID);
     private TalonFX hopperLeftMotor = new TalonFX(Constants.IntakeConstants.hopperLeftID);
@@ -30,20 +33,19 @@ public class IntakeReal implements IntakeIO {
         configure();
     }
 
+    /**
+     * configure
+     */
     public void configure() {
         config.Feedback.SensorToMechanismRatio = 1; // change for testing
         config.Slot0.kP = Constants.IntakeConstants.KP; // change for testing
         config.Slot0.kI = Constants.IntakeConstants.KI; // change for testing
-        config.Slot0.kD = Constants.IntakeConstants.KD;// change for testing
+        config.Slot0.kD = Constants.IntakeConstants.KD; // change for testing
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         hopperRightMotor.getConfigurator().apply(config);
         hopperLeftMotor
             .setControl(new Follower(hopperRightMotor.getDeviceID(), MotorAlignmentValue.Opposed)); // check
-                                                                                                    // before
-                                                                                                    // testing
-
-
     }
 
 
