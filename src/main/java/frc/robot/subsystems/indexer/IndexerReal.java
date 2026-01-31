@@ -31,9 +31,7 @@ public class IndexerReal implements IndexerIO {
     public void updateInputs(IndexerInputs inputs) {
         BaseStatusSignal.refreshAll(spinMotorVelocity);
         inputs.spindexerVelocity = spinMotorVelocity.getValue();
-        inputs.magazineVelocity =
-            AngularVelocity.ofBaseUnits(encoder.getVelocity(), RotationsPerSecond);
-
+        inputs.magazineVelocity = RotationsPerSecond.of(encoder.getVelocity());
     }
 
     @Override
