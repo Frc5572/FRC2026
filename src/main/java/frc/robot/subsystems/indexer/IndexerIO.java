@@ -1,6 +1,8 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.littletonrobotics.junction.AutoLog;
+import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.util.GenerateEmptyIO;
 
 /**
@@ -13,15 +15,14 @@ public interface IndexerIO {
      */
     @AutoLog
     public class IndexerInputs {
-        double indexerFalconVelocity;
-        double spinMotorVelocity;
-        double indexerVortexVelocity;
+        AngularVelocity magazineVelocity = RotationsPerSecond.of(0);
+        AngularVelocity spindexerVelocity = RotationsPerSecond.of(0);
     }
 
     public void updateInputs(IndexerInputs inputs);
 
-    public void setIndexerDutyCycle(double dutyCycle);
+    public void setMagazineDutyCycle(double dutyCycle);
 
-    public void setSpinMotorDutyCycle(double dutyCycle);
+    public void setSpindexerMotorDutyCycle(double dutyCycle);
 
 }

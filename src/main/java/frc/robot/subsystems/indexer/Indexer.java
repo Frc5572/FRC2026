@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  * Indexer class
  */
 public class Indexer extends SubsystemBase {
-    IndexerIO io;
-    IndexerInputsAutoLogged inputs = new IndexerInputsAutoLogged();
+    private final IndexerIO io;
+    private final IndexerInputsAutoLogged inputs = new IndexerInputsAutoLogged();
 
     public Indexer(IndexerIO io) {
         this.io = io;
@@ -22,27 +22,27 @@ public class Indexer extends SubsystemBase {
         Logger.processInputs("Indexer", inputs);
     }
 
-    private void setIndexerDutyCycle(double dutyCycle) {
-        io.setIndexerDutyCycle(dutyCycle);
-        Logger.recordOutput("Indexer/IndexerDutyCycle", dutyCycle);
+    private void setMagazineDutyCycle(double dutyCycle) {
+        io.setMagazineDutyCycle(dutyCycle);
+        Logger.recordOutput("Indexer/MagazineDutyCycle", dutyCycle);
     }
 
-    private void setSpinMotorDutyCycle(double dutyCycle) {
-        io.setSpinMotorDutyCycle(dutyCycle);
-        Logger.recordOutput("Indexer/SpinMotorDutyCycle", dutyCycle);
+    private void setSpindexerDutyCycle(double dutyCycle) {
+        io.setSpindexerMotorDutyCycle(dutyCycle);
+        Logger.recordOutput("Indexer/SpindexerDutyCycle", dutyCycle);
     }
 
     /**
      * 
-     * @param indexerDutyCycle power value from (-1) to 1
-     * @param spinMotorDutyCycle power value from (-1) to 1
+     * @param magazineDutyCycle power value from (-1) to 1
+     * @param spindexerDutyCycle power value from (-1) to 1
      * @return command to set speed of indexer and spinner
      */
-    public Command setSpeedCommand(double indexerDutyCycle, double spinMotorDutyCycle) {
+    public Command setSpeedCommand(double magazineDutyCycle, double spindexerDutyCycle) {
         return Commands
-            .runEnd(() -> setSpinMotorDutyCycle(spinMotorDutyCycle), () -> setSpinMotorDutyCycle(0),
+            .runEnd(() -> setSpindexerDutyCycle(spindexerDutyCycle), () -> setSpindexerDutyCycle(0),
                 this)
-            .alongWith(
-                runEnd(() -> setIndexerDutyCycle(indexerDutyCycle), () -> setIndexerDutyCycle(0)));
+            .alongWith(runEnd(() -> setMagazineDutyCycle(magazineDutyCycle),
+                () -> setMagazineDutyCycle(0)));
     }
 }

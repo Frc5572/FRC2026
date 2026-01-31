@@ -9,9 +9,9 @@ public class IndexerSim implements IndexerIO {
     public void updateInputs(IndexerInputs inputs) {}
 
     @Override
-    public void setIndexerDutyCycle(double speed) {}
+    public void setSpindexerMotorDutyCycle(double dutyCycle) {}
 
     @Override
-    public void setSpinMotorDutyCycle(double speed) {}
+    public void setMagazineDutyCycle(double dutyCycle) {}
 
 }
