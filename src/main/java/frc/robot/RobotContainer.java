@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.indexer.IndexerIO.Empty;
+import frc.robot.subsystems.indexer.IndexerIOEmpty;
 import frc.robot.subsystems.indexer.IndexerReal;
 import frc.robot.subsystems.indexer.IndexerSim;
 import frc.robot.subsystems.swerve.Swerve;
@@ -72,7 +72,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
-                indexer = new Indexer(new Empty());
+                indexer = new Indexer(new IndexerIOEmpty());
         }
         viz = new RobotViz(sim, swerve);
 

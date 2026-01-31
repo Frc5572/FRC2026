@@ -1,31 +1,21 @@
 package frc.robot.subsystems.indexer;
 
 import org.littletonrobotics.junction.AutoLog;
+import frc.robot.util.GenerateEmptyIO;
 
+@GenerateEmptyIO
 public interface IndexerIO {
     @AutoLog
-    public class IndexerIOInputs {
+    public class IndexerInputs {
         double indexerFalconVelocity;
         double spinMotorVelocity;
         double indexerVortexVelocity;
     }
 
-    public void updateInputs(IndexerIOInputs inputs);
+    public void updateInputs(IndexerInputs inputs);
 
-    public void setIndexerSpeed(double speed);
+    public void setIndexerDutyCycle(double dutyCycle);
 
-    public void setSpinMotorSpeed(double speed);
+    public void setSpinMotorDutyCycle(double dutyCycle);
 
-    public static class Empty implements IndexerIO {
-
-        @Override
-        public void updateInputs(IndexerIOInputs inputs) {}
-
-        @Override
-        public void setIndexerSpeed(double speed) {}
-
-        @Override
-        public void setSpinMotorSpeed(double speed) {}
-
-    }
 }

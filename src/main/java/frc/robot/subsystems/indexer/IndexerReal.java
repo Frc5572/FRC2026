@@ -12,19 +12,19 @@ public class IndexerReal implements IndexerIO {
     public RelativeEncoder encoder = indexer.getEncoder();
 
     @Override
-    public void updateInputs(IndexerIOInputs inputs) {
+    public void updateInputs(IndexerInputs inputs) {
         inputs.spinMotorVelocity = spinMotor.getVelocity().getValueAsDouble();
         inputs.indexerVortexVelocity = encoder.getVelocity();
 
     }
 
     @Override
-    public void setIndexerSpeed(double power) {
-        indexer.set(power);
+    public void setIndexerDutyCycle(double dutyCycle) {
+        indexer.set(dutyCycle);
     }
 
     @Override
-    public void setSpinMotorSpeed(double power) {
-        spinMotor.set(power);
+    public void setSpinMotorDutyCycle(double dutyCycle) {
+        spinMotor.set(dutyCycle);
     }
 }
