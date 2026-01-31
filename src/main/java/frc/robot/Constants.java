@@ -45,6 +45,7 @@ public final class Constants {
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
     }
+
     /**
      * Constants file
      */
