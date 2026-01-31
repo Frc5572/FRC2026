@@ -8,8 +8,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.SimulatedRobotState;
-import frc.robot.subsystems.adjustableHood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.Climber;
@@ -45,7 +45,6 @@ import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
-
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a

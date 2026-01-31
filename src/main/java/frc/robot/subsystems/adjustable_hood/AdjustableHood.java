@@ -6,7 +6,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.adjustableHood.AdjustableHoodInputsAutoLogged;
 
 /**
  * Adjustable Hood Subsystem
