@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -45,7 +46,7 @@ public class Intake extends SubsystemBase {
             .until(limitSwitchTouched);
     }
 
-    public double getHopperPosition() {
+    public Distance getHopperPosition() {
         return inputs.hopperPositionMeters;
     }
 

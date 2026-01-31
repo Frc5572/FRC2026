@@ -1,5 +1,9 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Rotations;
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -9,6 +13,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 
@@ -19,21 +24,24 @@ public class IntakeReal implements IntakeIO {
     private TalonFXConfiguration config = new TalonFXConfiguration();
     private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
+    private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
 
     public IntakeReal() {
         configure();
     }
 
     public void configure() {
-        config.Slot0.kP = Constants.IntakeConstants.KP;
-        config.Slot0.kI = Constants.IntakeConstants.KI;
-        config.Slot0.kD = Constants.IntakeConstants.KD;
+        config.Feedback.SensorToMechanismRatio = 1; // change for testing
+        config.Slot0.kP = Constants.IntakeConstants.KP; // change for testing
+        config.Slot0.kI = Constants.IntakeConstants.KI; // change for testing
+        config.Slot0.kD = Constants.IntakeConstants.KD;// change for testing
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
         hopperRightMotor.getConfigurator().apply(config);
         hopperLeftMotor
-            .setControl(new Follower(hopperRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+            .setControl(new Follower(hopperRightMotor.getDeviceID(), MotorAlignmentValue.Opposed)); // check
+                                                                                                    // before
+                                                                                                    // testing
 
 
     }
@@ -46,8 +54,8 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        inputs.hopperPositionMeters = hopperRightMotor.getPosition().getValueAsDouble()
-            / Constants.IntakeConstants.distanceToRotations;
+        BaseStatusSignal.refreshAll(rightMotorPosition);
+        inputs.hopperPositionMeters = Meters.of(rightMotorPosition.getValue().in(Rotations));
         inputs.limitSwitch = limitSwitchMin.get();
 
     }
@@ -60,8 +68,7 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void runHopperMotor(double setPoint) {
-        hopperRightMotor.setControl(
-            positionVoltage.withPosition(setPoint * Constants.IntakeConstants.distanceToRotations));
+        hopperRightMotor.setControl(positionVoltage.withPosition(setPoint));
     }
 
 
