@@ -34,15 +34,15 @@ public class Indexer extends SubsystemBase {
 
     /**
      * 
-     * @param IndexerDutyCycle power value from (-1) to 1
-     * @param SpinMotorDutyCycle power value from (-1) to 1
+     * @param indexerDutyCycle power value from (-1) to 1
+     * @param spinMotorDutyCycle power value from (-1) to 1
      * @return command to set speed of indexer and spinner
      */
-    public Command setSpeedCommand(double IndexerDutyCycle, double SpinMotorDutyCycle) {
+    public Command setSpeedCommand(double indexerDutyCycle, double spinMotorDutyCycle) {
         return Commands
-            .runEnd(() -> setSpinMotorDutyCycle(SpinMotorDutyCycle), () -> setSpinMotorDutyCycle(0),
+            .runEnd(() -> setSpinMotorDutyCycle(spinMotorDutyCycle), () -> setSpinMotorDutyCycle(0),
                 this)
             .alongWith(
-                runEnd(() -> setIndexerDutyCycle(IndexerDutyCycle), () -> setIndexerDutyCycle(0)));
+                runEnd(() -> setIndexerDutyCycle(indexerDutyCycle), () -> setIndexerDutyCycle(0)));
     }
 }
