@@ -383,8 +383,8 @@ public class FuelSim {
      *
      * @param width from left to right (y-axis)
      * @param length from front to back (x-axis)
-     * @param bumperHeight
-     * @param poseSupplier
+     * @param bumperHeight bumper height in meters (z-axis)
+     * @param poseSupplier robot pose
      * @param fieldSpeedsSupplier field-relative `ChassisSpeeds` supplier
      */
     public void registerRobot(double width, double length, double bumperHeight,
@@ -441,8 +441,9 @@ public class FuelSim {
         Translation2d relativePos = new Pose2d(fuel.pos.toTranslation2d(), Rotation2d.kZero)
             .relativeTo(robot).getTranslation();
 
-        if (fuel.pos.getZ() > bumperHeight)
+        if (fuel.pos.getZ() > bumperHeight) {
             return; // above bumpers
+        }
         double distanceToBottom = -FUEL_RADIUS - robotLength / 2 - relativePos.getX();
         double distanceToTop = -FUEL_RADIUS - robotLength / 2 + relativePos.getX();
         double distanceToRight = -FUEL_RADIUS - robotWidth / 2 - relativePos.getY();
