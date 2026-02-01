@@ -4,11 +4,13 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
-import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
+import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
@@ -91,8 +93,20 @@ public final class RobotContainer {
                 colorDetection = new ColorDetection(new ColorDetectionReal());
                 break;
             case kSimulation:
-                SimulatedArena.getInstance().resetFieldForAuto();
+                FuelSim.getInstance().spawnStartingFuel();
                 sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
+                FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
+                    Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
+                    () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),
+                    () -> sim.swerveDrive.mapleSim
+                        .getDriveTrainSimulatedChassisSpeedsFieldRelative());
+                FuelSim.getInstance().registerIntake(Constants.Swerve.bumperFront.in(Meters),
+                    Constants.Swerve.bumperFront.in(Meters) + Units.inchesToMeters(7),
+                    -Constants.Swerve.bumperRight.in(Meters),
+                    Constants.Swerve.bumperRight.in(Meters), () -> sim.intake.isIntaking, () -> {
+                        sim.indexer.addFuel();
+                    });
+                FuelSim.getInstance().start();
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, sim.visionSim);
@@ -126,7 +140,7 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
-        driver.y().onTrue(swerve.setFieldRelativeOffset());
+        // driver.y().onTrue(swerve.setFieldRelativeOffset());
 
         driver.povLeft().onTrue(turret.goToAngle(Degrees.of(-90)))
             .onFalse(turret.goToAngle(Degrees.of(0)));
@@ -134,20 +148,22 @@ public final class RobotContainer {
             .onFalse(turret.goToAngle(Degrees.of(0)));
         driver.a().onTrue(adjustableHood.goToAngle(Degrees.of(45)))
             .onFalse(adjustableHood.goToAngle(Degrees.of(0)));
-        driver.b().onTrue(intake.useHopperCommand(Constants.IntakeConstants.hopperOutDistance))
-            .onFalse(intake.useHopperCommand(Meters.of(0)));
+        driver.b().onTrue(intake.intake(Constants.IntakeConstants.hopperOutDistance, 20.0))
+            .onFalse(intake.intake(Meters.of(0), 0.0));
         driver.leftBumper()
             .onTrue(climber.moveTo(() -> new Tuples.Tuple2<>(Degrees.of(0), Meters.of(0.5))));
         driver.rightBumper()
             .onTrue(climber.moveTo(() -> new Tuples.Tuple2<>(Degrees.of(0), Meters.of(0))));
+
+        driver.y().whileTrue(shooter.runShooterVelocityCommand(20.0)
+            .alongWith(Commands.waitSeconds(1.0).andThen(indexer.setSpeedCommand(2, 2))));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
         if (sim != null) {
             SimulatedArena.getInstance().simulationPeriodic();
-            Logger.recordOutput("FieldSimulation/Fuel",
-                SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+            FuelSim.getInstance().updateSim();
             sim.update();
         }
         viz.periodic();

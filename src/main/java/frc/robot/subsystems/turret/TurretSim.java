@@ -31,10 +31,14 @@ import frc.robot.sim.SimPosition;
  */
 public class TurretSim implements TurretIO {
 
-    private final Random random = new Random();
+    private final Random random;
 
     public final SimPosition turrentAngle = new SimPosition(0.8, 4.0, 60.0);
     private double turretTarget = 0.0;
+
+    public TurretSim(Random random) {
+        this.random = random;
+    }
 
     @Override
     public void updateInputs(TurretInputs inputs) {

@@ -38,22 +38,19 @@ public class Intake extends SubsystemBase {
         io.runHopperMotor(setPointDistanceInMeters);
     }
 
-    public Command useIntakeCommand(double intakeSpeed) {
-        return Commands.runEnd(() -> runIntakeOnly(intakeSpeed), () -> runIntakeOnly(intakeSpeed),
-            this);
-    }
-
     /**
      * run the hopper
      *
      * @param distance where the hopper will go
+     * @param intakeSpeed how fast the intake will run
      * @return returns command
      */
-    public Command useHopperCommand(Distance distance) {
-        return Commands
-            .run(() -> runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,
-                distance.in(Meters), Constants.IntakeConstants.hopperMaxDistance)), this)
-            .until(limitSwitchTouched);
+    public Command intake(Distance distance, double intakeSpeed) {
+        return Commands.run(() -> {
+            runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,
+                distance.in(Meters), Constants.IntakeConstants.hopperMaxDistance));
+            runIntakeOnly(intakeSpeed);
+        }, this).until(limitSwitchTouched);
     }
 
 }

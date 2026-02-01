@@ -1,8 +1,14 @@
 package frc.robot.sim;
 
 import static edu.wpi.first.units.Units.Radians;
+import java.util.Random;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.TimedRobot;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.IndexerSim;
@@ -14,6 +20,10 @@ import frc.robot.subsystems.vision.VisionSim;
 
 /** Simulated state of the robot */
 public class SimulatedRobotState {
+
+    private static final double avgBallsPerSecond = 4.0;
+
+    private final Random random;
 
     /** Swerve state */
     public final SwerveSim swerveDrive;
@@ -28,8 +38,9 @@ public class SimulatedRobotState {
 
     /** Create new robot simulation */
     public SimulatedRobotState(Pose2d initialPose) {
+        this.random = new Random(5572);
         this.swerveDrive = new SwerveSim(initialPose);
-        this.turret = new TurretSim();
+        this.turret = new TurretSim(random);
         this.adjustableHood = new AdjustableHoodSim();
         this.shooter = new ShooterSim();
         this.intake = new IntakeSim();
@@ -44,6 +55,35 @@ public class SimulatedRobotState {
 
     public void update() {
         visionSim.updateState(getGroundTruthPose(), Radians.of(turret.turrentAngle.position));
+
+        double avgBallsPerTick = avgBallsPerSecond * TimedRobot.kDefaultPeriod;
+
+        Logger.recordOutput("FuelSim/indexerIsFeeding", this.indexer.isFeeding);
+        if (this.indexer.isFeeding && this.indexer.numFuel > 0) {
+            double p = random.nextDouble();
+            if (p < avgBallsPerTick) {
+                double speedMetersPerSecond =
+                    (shooter.flywheel.position + 0.02 * random.nextFloat() - 0.01) * 0.4;
+                Logger.recordOutput("FuelSim/speedMetersPerSecond", speedMetersPerSecond);
+                shooter.shootOne();
+                double effectiveHoodAngle =
+                    adjustableHood.hood.position + 0.02 * random.nextFloat() - 0.01;
+                double effectiveTurretAngle = this.swerveDrive.mapleSim.getSimulatedDriveTrainPose()
+                    .getRotation().getRadians() + turret.turrentAngle.position
+                    + 0.02 * random.nextFloat() - 0.01;
+                double vert = Math.cos(effectiveHoodAngle) * speedMetersPerSecond;
+                double horiz = Math.sin(effectiveHoodAngle) * speedMetersPerSecond;
+                double x = Math.cos(effectiveTurretAngle) * horiz;
+                double y = Math.sin(effectiveTurretAngle) * horiz;
+                Translation3d initial =
+                    new Pose3d(swerveDrive.mapleSim.getSimulatedDriveTrainPose())
+                        .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
+                        .getTranslation();
+                Translation3d velocity = new Translation3d(x, y, vert);
+                FuelSim.getInstance().spawnFuel(initial, velocity);
+                this.indexer.numFuel--;
+            }
+        }
     }
 
 }

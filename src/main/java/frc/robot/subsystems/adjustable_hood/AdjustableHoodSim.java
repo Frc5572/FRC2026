@@ -10,7 +10,7 @@ import frc.robot.sim.SimPosition;
  */
 public class AdjustableHoodSim implements AdjustableHoodIO {
 
-    private final SimPosition hood = new SimPosition(0.8, 4.0, 60.0);
+    public final SimPosition hood = new SimPosition(0.8, 4.0, 60.0);
     private double hoodTarget = 0.0;
 
     @Override

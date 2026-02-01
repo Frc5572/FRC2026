@@ -8,7 +8,7 @@ import frc.robot.sim.SimPosition;
  */
 public class ShooterSim implements ShooterIO {
 
-    private final SimPosition flywheel = new SimPosition(0.5, 2.0, 400.0);
+    public final SimPosition flywheel = new SimPosition(20.0, 40.0, 400.0);
     private double flywheelTarget = 0.0;
 
     @Override
@@ -24,8 +24,8 @@ public class ShooterSim implements ShooterIO {
     }
 
     public void shootOne() {
-        flywheel.position *= 0.6;
-        flywheel.velocity = 0.0;
+        flywheel.position *= 0.9;
+        flywheel.velocity *= 0.9;
     }
 
 }
