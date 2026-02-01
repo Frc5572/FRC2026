@@ -49,10 +49,13 @@ public class SimulatedRobotState {
         this.visionSim = new VisionSim();
     }
 
+
+    /** Get the drivetrain pose. */
     public Pose3d getGroundTruthPose() {
         return new Pose3d(this.swerveDrive.mapleSim.getSimulatedDriveTrainPose());
     }
 
+    /** Update the simulation. Must be called once per iteration. */
     public void update() {
         visionSim.updateState(getGroundTruthPose(), Radians.of(turret.turrentAngle.position));
 
