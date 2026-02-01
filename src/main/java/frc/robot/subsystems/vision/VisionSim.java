@@ -6,20 +6,22 @@ import org.jspecify.annotations.NullMarked;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.units.measure.Angle;
 import frc.robot.Constants;
-import frc.robot.sim.SimulatedRobotState;
 
 /** Simulation of vision using built-in PhotonVision simulator. */
 @NullMarked
 public class VisionSim extends VisionReal {
 
-    private final SimulatedRobotState sim;
     private final VisionSystemSim visionSim;
     private final VisionSystemSim turretVisionSim;
 
     /** Simulation of vision using built-in PhotonVision simulator. */
-    public VisionSim(SimulatedRobotState sim) {
-        this.sim = sim;
+    public VisionSim() {
         this.visionSim = new VisionSystemSim("main");
         this.turretVisionSim = new VisionSystemSim("turret");
 
@@ -42,12 +44,11 @@ public class VisionSim extends VisionReal {
         }
     }
 
-    @Override
-    public void updateInputs(CameraInputs[] inputs) {
-        visionSim.update(sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose());
+    public void updateState(Pose3d robotPose, Angle turretAngle) {
+        visionSim.update(robotPose);
         // In the future, should update based on turret state.
-        turretVisionSim.update(sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose());
-        super.updateInputs(inputs);
+        turretVisionSim.update(robotPose
+            .plus(new Transform3d(-1.651, 0, 0, new Rotation3d(new Rotation2d(turretAngle)))));
     }
 
 }

@@ -5,6 +5,8 @@ package frc.robot.subsystems.indexer;
  */
 public class IndexerSim implements IndexerIO {
 
+    public boolean isFeeding = false;
+
     @Override
     public void updateInputs(IndexerInputs inputs) {}
 
@@ -12,6 +14,8 @@ public class IndexerSim implements IndexerIO {
     public void setSpindexerMotorDutyCycle(double dutyCycle) {}
 
     @Override
-    public void setMagazineDutyCycle(double dutyCycle) {}
+    public void setMagazineDutyCycle(double dutyCycle) {
+        isFeeding = dutyCycle > 0.1;
+    }
 
 }

@@ -1,12 +1,13 @@
 package frc.robot.subsystems.turret;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import java.util.Random;
-import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.sim.SimPosition;
 
 /**
  * Simulation implementation of {@link TurretIO}.
@@ -30,40 +31,38 @@ import frc.robot.Constants;
  */
 public class TurretSim implements TurretIO {
 
-    private Angle turretRotation = Degrees.of(15.6);
-
     private final Random random = new Random();
 
-    private Voltage currentVoltage;
+    public final SimPosition turrentAngle = new SimPosition(0.8, 4.0, 60.0);
+    private double turretTarget = 0.0;
 
     @Override
     public void updateInputs(TurretInputs inputs) {
+        turrentAngle.update(turretTarget);
+
+        inputs.relativeAngle = Radians.of(turrentAngle.position);
+        inputs.velocity = RadiansPerSecond.of(turrentAngle.velocity);
+
         double noise1 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
         inputs.gear1AbsoluteAngle =
-            Turret.getGearAnglesFromTurret(turretRotation, Constants.Turret.gear1Gearing,
+            Turret.getGearAnglesFromTurret(inputs.relativeAngle, Constants.Turret.gear1Gearing,
                 Constants.Turret.gear1Offset).plus(Rotation2d.fromDegrees(noise1));
         double noise2 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
         inputs.gear2AbsoluteAngle =
-            Turret.getGearAnglesFromTurret(turretRotation, Constants.Turret.gear2Gearing,
+            Turret.getGearAnglesFromTurret(inputs.relativeAngle, Constants.Turret.gear2Gearing,
                 Constants.Turret.gear2Offset).plus(Rotation2d.fromDegrees(noise2));
     }
 
     @Override
-    public void setTurretVoltage(Voltage volts) {
-        currentVoltage = volts;
-    }
+    public void setTurretVoltage(Voltage volts) {}
 
 
     @Override
     public void setTargetAngle(Angle angle) {
-        turretRotation = angle;
-        Logger.recordOutput("Turret/GTAngle", angle);
+        turretTarget = angle.in(Radians);
     }
 
     @Override
-    public void resetPosition(Angle angle) {
-        turretRotation = angle;
-        Logger.recordOutput("Turret/ResetAngle", angle);
-    }
+    public void resetPosition(Angle angle) {}
 
 }

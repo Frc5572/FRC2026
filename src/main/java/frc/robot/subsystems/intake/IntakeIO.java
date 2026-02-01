@@ -15,9 +15,9 @@ public interface IntakeIO {
      */
     @AutoLog
     public static class IntakeInputs {
-        Distance hopperPosition = Meters.of(0);
-        double intakeDutyCycle = 0;
-        boolean limitSwitch = false;
+        public Distance hopperPosition = Meters.of(0);
+        public double intakeDutyCycle = 0;
+        public boolean limitSwitch = false;
     }
 
     public void updateInputs(IntakeInputs inputs);

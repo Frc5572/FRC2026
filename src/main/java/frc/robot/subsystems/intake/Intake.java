@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Distance;
@@ -13,8 +14,8 @@ import frc.robot.Constants;
  * Intake subsystem
  */
 public class Intake extends SubsystemBase {
-    public IntakeIO io;
-    public IntakeInputsAutoLogged inputs = new IntakeInputsAutoLogged();
+    private final IntakeIO io;
+    public final IntakeInputsAutoLogged inputs = new IntakeInputsAutoLogged();
     private final Trigger limitSwitchTouched = new Trigger(() -> inputs.limitSwitch).debounce(0.25);
 
     public Intake(IntakeIO io) {
@@ -44,19 +45,15 @@ public class Intake extends SubsystemBase {
 
     /**
      * run the hopper
-     * 
+     *
      * @param hopperDesiredPosition where the hopper will go in meters
      * @return returns command
      */
-    public Command useHopperCommand(double hopperDesiredPosition) {
+    public Command useHopperCommand(Distance distance) {
         return Commands
             .run(() -> runHopperOnly(MathUtil.clamp(Constants.IntakeConstants.hopperMinDistance,
-                hopperDesiredPosition, Constants.IntakeConstants.hopperMaxDistance)), this)
+                distance.in(Meters), Constants.IntakeConstants.hopperMaxDistance)), this)
             .until(limitSwitchTouched);
-    }
-
-    public Distance getHopperPosition() {
-        return inputs.hopperPosition;
     }
 
 }
