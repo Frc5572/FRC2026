@@ -15,11 +15,9 @@ import frc.robot.subsystems.swerve.util.SwerveState;
  */
 public class Turret extends SubsystemBase {
 
-    private boolean atPosition = false;
-    private double targetRotations = 0.0;
     private boolean hasSynced = false;
     private final TurretIO io;
-    private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
+    public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final SwerveState state;
 
     /**
@@ -38,12 +36,10 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
 
-        atPosition =
-            Math.abs(inputs.positionValue - targetRotations) < Constants.Turret.turretTolerence;
-
         Angle turretRotationEstimate =
             getTurretAngleFromGears(inputs.gear1AbsoluteAngle, inputs.gear2AbsoluteAngle);
         Logger.recordOutput("Turret/EstimatedTurretAngle", turretRotationEstimate);
+        Logger.recordOutput("Turret/Synced", hasSynced);
 
         if (!hasSynced && inputs.gear1AbsoluteAngle != null) {
             io.resetPosition(turretRotationEstimate);
@@ -151,18 +147,16 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * 
+     *
      * @param targetAngle gets the goal angle
      */
     public void setGoal(Angle targetAngle) {
         if (hasSynced) {
-            targetRotations = Math.max(Constants.Turret.minAngle.in(Rotations),
-                Math.min(targetAngle.in(Rotations), Constants.Turret.maxAngle.in(Rotations)));
-            io.setTargetAngle(Rotations.of(targetRotations));
+            io.setTargetAngle(targetAngle);
         }
     }
 
     public Command goToAngle(Angle rotations) {
-        return run(() -> this.setGoal(rotations)).until(() -> atPosition);
+        return run(() -> this.setGoal(rotations));
     }
 }
