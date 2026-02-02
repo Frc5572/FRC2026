@@ -201,9 +201,8 @@ public class SwerveState {
             Transform3d pose = constants.robotToCamera;
             return new Transform3d(pose.getTranslation(), pose.getRotation()
                 .rotateBy(new Rotation3d(Degrees.of(0.0), Degrees.of(0.0), currentTurretAngle)));
-        } else {
-            return constants.robotToCamera;
         }
+        return constants.robotToCamera;
     }
 
     public void setTurretAngle(Angle angle) {

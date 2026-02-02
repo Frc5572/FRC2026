@@ -12,7 +12,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -115,7 +114,7 @@ public final class Constants {
 
         /**
          * Swerve Drive Kinematics Object for Rectangular/square 4 Module Swerve
-         * 
+         *
          * <p>
          * No need to ever change this unless you are not doing a traditional rectangular/square 4
          * module swerve.
@@ -246,13 +245,14 @@ public final class Constants {
     /** Vision Constants */
     public static final class Vision {
         public static final AprilTagFieldLayout fieldLayout =
-            AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark); // This should
-                                                                                  // refernce ur
-                                                                                  // field
-                                                                                  // constants, so
-                                                                                  // they dont
-                                                                                  // become
-                                                                                  // different
+            FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout(); // This
+        // should
+        // refernce ur
+        // field
+        // constants, so
+        // they dont
+        // become
+        // different
         public static final Pose3d turretCenter =
             new Pose3d(Inches.of(13.50), Inches.of(6.99), Inches.of(0.00), Rotation3d.kZero);
         public static final Pose3d turretLeft =
