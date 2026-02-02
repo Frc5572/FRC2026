@@ -33,15 +33,14 @@ public class Indexer extends SubsystemBase {
     }
 
     /**
-     * 
+     *
      * @param magazineDutyCycle power value from (-1) to 1
      * @param spindexerDutyCycle power value from (-1) to 1
      * @return command to set speed of indexer and spinner
      */
     public Command setSpeedCommand(double magazineDutyCycle, double spindexerDutyCycle) {
         return Commands
-            .runEnd(() -> setSpindexerDutyCycle(spindexerDutyCycle), () -> setSpindexerDutyCycle(0),
-                this)
+            .runEnd(() -> setSpindexerDutyCycle(spindexerDutyCycle), () -> setSpindexerDutyCycle(0))
             .alongWith(runEnd(() -> setMagazineDutyCycle(magazineDutyCycle),
                 () -> setMagazineDutyCycle(0)));
     }

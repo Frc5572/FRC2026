@@ -1,7 +1,11 @@
 package frc.robot.subsystems.climber;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import frc.robot.Constants;
+import frc.robot.sim.SimPosition;
 
 /**
  * Simulation implementation of the climber subsystem.
@@ -14,6 +18,17 @@ import edu.wpi.first.units.measure.Distance;
  */
 public class ClimberSim implements ClimberIO {
 
+    private final SimPosition arm = new SimPosition(0.8, 0.4, 2.0);
+    private final SimPosition hooks = new SimPosition(1.0, 0.2, 3.0);
+
+    private double armTarget = Constants.Climber.Pivot.startingAngle.in(Radians);
+    private double hookTarget = 0.5;
+
+    public ClimberSim() {
+        arm.position = armTarget;
+        hooks.position = hookTarget;
+    }
+
     /**
      * Updates the climber input values for simulation.
      *
@@ -24,7 +39,13 @@ public class ClimberSim implements ClimberIO {
      * @param inputs the input container to update with current climber state
      */
     @Override
-    public void updateInputs(ClimberInputs inputs) {}
+    public void updateInputs(ClimberInputs inputs) {
+        arm.update(armTarget);
+        hooks.update(hookTarget);
+
+        inputs.positionPivot = Radians.of(arm.position);
+        inputs.positionTelescope = Meters.of(hooks.position);
+    }
 
     /**
      * Sets the voltage for the telescope motor.
@@ -48,14 +69,18 @@ public class ClimberSim implements ClimberIO {
      * @param angle the desired pivot angle
      */
     @Override
-    public void setAnglePivot(Angle angle) {}
+    public void setAnglePivot(Angle angle) {
+        armTarget = angle.in(Radians);
+    }
 
 
     /**
      * Sets the height for the telescope mechanism
-     * 
+     *
      * @param height the desired height
      */
     @Override
-    public void setHeightTelescope(Distance height) {}
+    public void setHeightTelescope(Distance height) {
+        hookTarget = height.in(Meters);
+    }
 }

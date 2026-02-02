@@ -15,7 +15,7 @@ public class SwerveModule {
 
     private final String inputsName;
     private final SwerveModuleIO io;
-    private final SwerveModuleInputsAutoLogged inputs = new SwerveModuleInputsAutoLogged();
+    public final SwerveModuleInputsAutoLogged inputs = new SwerveModuleInputsAutoLogged();
 
     /**
      * Swerve Module
