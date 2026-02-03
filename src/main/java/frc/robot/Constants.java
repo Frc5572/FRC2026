@@ -37,6 +37,7 @@ public final class Constants {
     public static class DriverControls {
         /** Driverstation controller Index */
         public static final int controllerId = 0;
+        public static final int testControllerId = 0;
         /** Stick axis controls less than this amount are treated as 0. */
         public static final double stickDeadband = 0.1;
 
@@ -44,6 +45,34 @@ public final class Constants {
         public static final double driverTranslationalMaxSpeed = 3.0;
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
+    }
+
+    /**
+     * Constants file
+     */
+    public static class IntakeConstants { // change all variables before testing
+        public static final int hopperLeftID = 31;
+        public static final int hopperRightID = 32;
+        public static final int intakeID = 33;
+        public static final double hopperMaxDistance = 0;
+        public static final double intakeSpeed = 0;
+        public static final double hopperMinDistance = 0;
+        public static final Distance hopperOutDistance = Meters.of(0.283027);
+        public static final double hopperTuckedDistance = 0;
+        public static final double KP = 0;
+        public static final double KI = 0;
+        public static final double KD = 0;
+        public static final int limitSwitchID = 34;
+    }
+
+    /**
+     * Indexer Constants
+     */
+    public static class Indexer {
+        public static final int indexerID = 26;
+        public static final int spinMotorID = 27;
+        public static final int indexerSpeed = 0;
+        public static final int spinMotorSpeed = 0;
     }
 
     /**
@@ -73,9 +102,9 @@ public final class Constants {
 
         /* Drivetrain Constants */
         /** Distance between right and left wheels on robot */
-        public static final double trackWidth = Units.inchesToMeters(18.048);
+        public static final double trackWidth = Units.inchesToMeters(21.7);
         /** Distance between front and back wheels on robot */
-        public static final double wheelBase = Units.inchesToMeters(24.229);
+        public static final double wheelBase = Units.inchesToMeters(21.8);
         /** Distance from the center of the wheel to the ground */
         public static final Distance wheelRadius = Inches.of(1.913);
         /** Diameter of the wheels, twice the radius */
@@ -96,7 +125,7 @@ public final class Constants {
 
         /**
          * Swerve Drive Kinematics Object for Rectangular/square 4 Module Swerve
-         * 
+         *
          * <p>
          * No need to ever change this unless you are not doing a traditional rectangular/square 4
          * module swerve.
@@ -399,6 +428,9 @@ public final class Constants {
 
             /** Pivot angle at the top position, in radians. */
             public static final Angle ROTATIONS_AT_TOP = Radians.of(220);
+
+            /** Angle of the climber in starting configuration */
+            public static final Angle startingAngle = Degrees.of(68.0);
 
             /**
              * Sensor to mechanism ratio for converting encoder rotations to mechanism angle.

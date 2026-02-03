@@ -71,7 +71,7 @@ public final class Swerve extends SubsystemBase {
 
     private final Lock odometryLock = new ReentrantLock();
     private final PhoenixOdometryThread odometryThread;
-    private final SwerveModule[] modules;
+    public final SwerveModule[] modules;
     private final GyroIO gyro;
     private final GyroInputsAutoLogged gyroInputs = new GyroInputsAutoLogged();
     private final SwerveIO io;
