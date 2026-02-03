@@ -32,7 +32,6 @@ import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
 import frc.robot.subsystems.swerve.util.SwerveState;
 import frc.robot.subsystems.swerve.util.TuningCommands;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
 
 /**
@@ -449,71 +448,4 @@ public final class Swerve extends SubsystemBase {
 
         return distance < thresholdMeters;
     }
-
-    /**
-     * Position the robot needs to be in to go through the trench
-     * 
-     * @return robot position and direction
-     */
-    public Pose2d trenchPose2d() {
-        Rotation2d trenchRobotDirection = new Rotation2d();
-
-        if (closestTrench() == FieldConstants.RightTrench.openingCenterRight
-            || closestTrench() == FieldConstants.LeftTrench.openingCenterLeft) {
-            trenchRobotDirection = new Rotation2d(Math.toRadians(0));
-        } else if (closestTrench() == FieldConstants.RightTrench.oppOpeningCenterRight
-            || closestTrench() == FieldConstants.LeftTrench.oppOpeningCenterLeft) {
-            trenchRobotDirection = new Rotation2d(Math.toRadians(180));
-        }
-
-        Pose2d botTrenchPose2d = new Pose2d(closestTrench(), trenchRobotDirection);
-        return botTrenchPose2d;
-    }
-
-    /**
-     * Determins the final position of the robot
-     * 
-     * @return the end point for the robot
-     */
-    public Translation2d finalTrenchBotPosition() {
-        if (closestTrench() == FieldConstants.RightTrench.openingCenterRight) {
-            return FieldConstants.RightTrench.exitCenterRight;
-        } else if (closestTrench() == FieldConstants.RightTrench.oppOpeningCenterRight) {
-            return FieldConstants.RightTrench.oppExitCenterRight;
-        } else if (closestTrench() == FieldConstants.LeftTrench.openingCenterLeft) {
-            return FieldConstants.LeftTrench.exitCenterLeft;
-        } else if (closestTrench() == FieldConstants.LeftTrench.oppOpeningCenterLeft) {
-            return FieldConstants.LeftTrench.oppExitCenterLeft;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Makes the robot align with the trench and then go through the trench
-     * 
-     * @param vision allows the robot to use the april tags
-     * @return Returns a command that moves the robot through the trench
-     */
-    public Command moveToNearestTrench(Vision vision) {
-
-        return run(() -> {
-            Pose2d targetPosition = trenchPose2d();
-            Pose2d currentPose = state.getGlobalPoseEstimate();
-
-            double forwardSpeed = 2.0;
-
-            if (vision.seesTrenchTags() || isNearTrench()) {
-                double rotationSpeed =
-                    trenchRotationPID.calculate(currentPose.getRotation().getRadians(),
-                        targetPosition.getRotation().getRadians());
-
-                ChassisSpeeds totalSpeed = new ChassisSpeeds(forwardSpeed, 0.0, rotationSpeed);
-                setModuleStates(totalSpeed);
-            } else {
-                setModuleStates(new ChassisSpeeds());
-            }
-        }).until(() -> state.getGlobalPoseEstimate().getTranslation() == finalTrenchBotPosition());
-    }
-
 }

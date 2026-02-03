@@ -133,14 +133,22 @@ public class Vision extends SubsystemBase {
      * @return returns a boolean value based on whether or not the robot sees the correct april tags
      */
     public boolean seesTrenchTags() {
+        List<Integer> trenchTags = new ArrayList<>();
+        trenchTags.add(1);
+        trenchTags.add(12);
+        trenchTags.add(7);
+        trenchTags.add(6);
+        trenchTags.add(17);
+        trenchTags.add(28);
+        trenchTags.add(22);
+        trenchTags.add(23);
         boolean seesTags = false;
         for (var input : cameraInputs) {
             for (var results : input.results) {
                 var result = camera.getLatestResult();
                 if (results.hasTargets()) {
                     int tagID = result.getBestTarget().getFiducialId();
-                    if (tagID == 1 || tagID == 12 || tagID == 7 || tagID == 6 || tagID == 17
-                        || tagID == 28 || tagID == 22 || tagID == 23) {
+                    if (trenchTags.contains(tagID)) {
                         seesTags = true;
 
                     }
