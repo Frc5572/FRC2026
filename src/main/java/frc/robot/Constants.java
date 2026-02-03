@@ -252,7 +252,7 @@ public final class Constants {
         };
         // @formatter:on
 
-        /** Approching Trench */
+        /** Approaching Trench */
         public static final double trenchThresholdMeters = 2.0; // needs to be changed
     }
 

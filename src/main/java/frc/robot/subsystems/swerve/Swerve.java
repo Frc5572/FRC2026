@@ -450,6 +450,11 @@ public final class Swerve extends SubsystemBase {
         return distance < thresholdMeters;
     }
 
+    /**
+     * Position the robot needs to be in to go through the trench
+     * 
+     * @return robot position and direction
+     */
     public Pose2d trenchPose2d() {
         Rotation2d trenchRobotDirection = new Rotation2d();
 
@@ -465,6 +470,11 @@ public final class Swerve extends SubsystemBase {
         return botTrenchPose2d;
     }
 
+    /**
+     * Determins the final position of the robot
+     * 
+     * @return the end point for the robot
+     */
     public Translation2d finalTrenchBotPosition() {
         if (closestTrench() == FieldConstants.RightTrench.openingCenterRight) {
             return FieldConstants.RightTrench.exitCenterRight;
@@ -479,6 +489,12 @@ public final class Swerve extends SubsystemBase {
         }
     }
 
+    /**
+     * Makes the robot align with the trench and then go through the trench
+     * 
+     * @param vision allows the robot to use the april tags
+     * @return Returns a command that moves the robot through the trench
+     */
     public Command moveToNearestTrench(Vision vision) {
 
         return run(() -> {

@@ -128,6 +128,10 @@ public class Vision extends SubsystemBase {
         return res;
     }
 
+    /**
+     * 
+     * @return returns a boolean value based on whether or not the robot sees the correct april tags
+     */
     public boolean seesTrenchTags() {
         boolean seesTags = false;
         for (var input : cameraInputs) {
