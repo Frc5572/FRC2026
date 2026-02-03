@@ -131,6 +131,7 @@ public class Vision extends SubsystemBase {
     /**
      * 
      * @return returns a boolean value based on whether or not the robot sees the correct april tags
+     *         (when the robot is close to the trench)
      */
     public boolean seesTrenchTags() {
         List<Integer> trenchTags = new ArrayList<>();
