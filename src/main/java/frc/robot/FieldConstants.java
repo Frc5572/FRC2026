@@ -414,6 +414,18 @@ public class FieldConstants {
         /** Opposing-side opening top-right corner point (3D). */
         public static final Translation3d oppOpeningTopRight =
             new Translation3d(LinesVertical.oppHubCenter, fieldWidth - openingWidth, openingHeight);
+
+        public static final Translation2d openingCenterLeft =
+            new Translation2d(LinesVertical.hubCenter, openingWidth / 2);
+
+        public static final Translation2d exitCenterLeft =
+            new Translation2d(LinesVertical.hubCenter + 0.5, openingWidth / 2);
+
+        public static final Translation2d oppOpeningCenterLeft =
+            new Translation2d(LinesVertical.oppHubCenter, openingWidth / 2);
+
+        public static final Translation2d oppExitCenterLeft =
+            new Translation2d(LinesVertical.oppHubCenter - 0.5, openingWidth / 2);
     }
 
     /**
@@ -453,6 +465,20 @@ public class FieldConstants {
         /** Opposing-side opening top-right corner point (3D). */
         public static final Translation3d oppOpeningTopRight =
             new Translation3d(LinesVertical.oppHubCenter, 0, openingHeight);
+
+        /** Alliance-side center of the trench (2D). */
+        public static final Translation2d openingCenterRight =
+            new Translation2d(LinesVertical.hubCenter, openingWidth / 2);
+
+        public static final Translation2d exitCenterRight =
+            new Translation2d(LinesVertical.hubCenter + 0.5, openingWidth / 2);
+
+        /** Opposing-side center of the trench (2D). */
+        public static final Translation2d oppOpeningCenterRight =
+            new Translation2d(LinesVertical.oppHubCenter, openingWidth / 2);
+
+        public static final Translation2d oppExitCenterRight =
+            new Translation2d(LinesVertical.oppHubCenter - 0.5, openingWidth / 2);
     }
 
     /**

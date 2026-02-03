@@ -1,6 +1,7 @@
 package frc.robot.subsystems.swerve;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
@@ -9,8 +10,10 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -19,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.GyroInputsAutoLogged;
 import frc.robot.subsystems.swerve.mod.SwerveModule;
@@ -28,6 +32,7 @@ import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
 import frc.robot.subsystems.swerve.util.SwerveState;
 import frc.robot.subsystems.swerve.util.TuningCommands;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
 
 /**
@@ -72,6 +77,7 @@ public final class Swerve extends SubsystemBase {
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
 
+    private final PIDController trenchRotationPID = new PIDController(1.5, 0.0, 0.0);
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
     public final SwerveState state;
@@ -110,6 +116,8 @@ public final class Swerve extends SubsystemBase {
             this.odometryLock.unlock();
         }
         this.state = new SwerveState(initPositions, this.gyroInputs.yaw);
+
+        trenchRotationPID.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     @Override
@@ -415,4 +423,81 @@ public final class Swerve extends SubsystemBase {
             modules[i].setDesiredState(desiredStates[i]);
         }
     }
+
+    /** Identifies Closest Trench */
+    public Translation2d closestTrench() {
+        List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.openingCenterLeft,
+            FieldConstants.LeftTrench.oppOpeningCenterLeft,
+            FieldConstants.RightTrench.openingCenterRight,
+            FieldConstants.RightTrench.oppOpeningCenterRight);
+        Pose2d botPosition = state.getGlobalPoseEstimate();
+        Translation2d botLocation = botPosition.getTranslation();
+
+        return trenchLocations.stream().min(
+            (x, y) -> Double.compare((botLocation.getDistance(x)), (botLocation.getDistance(y))))
+            .orElse(null);
+
+    }
+
+    /** Returns true if the robot is approaching the Trench zone. */
+    public boolean isNearTrench() {
+        Translation2d target = closestTrench();
+        double thresholdMeters = Constants.Swerve.trenchThresholdMeters;
+        double distance = state.getGlobalPoseEstimate().getTranslation().getDistance(target);
+
+        Logger.recordOutput("Swerve/DistanceToTrench", distance);
+
+        return distance < thresholdMeters;
+    }
+
+    public Pose2d trenchPose2d() {
+        Rotation2d trenchRobotDirection = new Rotation2d();
+
+        if (closestTrench() == FieldConstants.RightTrench.openingCenterRight
+            || closestTrench() == FieldConstants.LeftTrench.openingCenterLeft) {
+            trenchRobotDirection = new Rotation2d(Math.toRadians(0));
+        } else if (closestTrench() == FieldConstants.RightTrench.oppOpeningCenterRight
+            || closestTrench() == FieldConstants.LeftTrench.oppOpeningCenterLeft) {
+            trenchRobotDirection = new Rotation2d(Math.toRadians(180));
+        }
+
+        Pose2d botTrenchPose2d = new Pose2d(closestTrench(), trenchRobotDirection);
+        return botTrenchPose2d;
+    }
+
+    public Translation2d finalTrenchBotPosition() {
+        if (closestTrench() == FieldConstants.RightTrench.openingCenterRight) {
+            return FieldConstants.RightTrench.exitCenterRight;
+        } else if (closestTrench() == FieldConstants.RightTrench.oppOpeningCenterRight) {
+            return FieldConstants.RightTrench.oppExitCenterRight;
+        } else if (closestTrench() == FieldConstants.LeftTrench.openingCenterLeft) {
+            return FieldConstants.LeftTrench.exitCenterLeft;
+        } else if (closestTrench() == FieldConstants.LeftTrench.oppOpeningCenterLeft) {
+            return FieldConstants.LeftTrench.oppExitCenterLeft;
+        } else {
+            return null;
+        }
+    }
+
+    public Command moveToNearestTrench(Vision vision) {
+
+        return run(() -> {
+            Pose2d targetPosition = trenchPose2d();
+            Pose2d currentPose = state.getGlobalPoseEstimate();
+
+            double forwardSpeed = 2.0;
+
+            if (vision.seesTrenchTags() || isNearTrench()) {
+                double rotationSpeed =
+                    trenchRotationPID.calculate(currentPose.getRotation().getRadians(),
+                        targetPosition.getRotation().getRadians());
+
+                ChassisSpeeds totalSpeed = new ChassisSpeeds(forwardSpeed, 0.0, rotationSpeed);
+                setModuleStates(totalSpeed);
+            } else {
+                setModuleStates(new ChassisSpeeds());
+            }
+        }).until(() -> state.getGlobalPoseEstimate().getTranslation() == finalTrenchBotPosition());
+    }
+
 }

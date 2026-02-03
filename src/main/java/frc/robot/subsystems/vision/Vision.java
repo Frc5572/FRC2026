@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -44,6 +45,8 @@ public class Vision extends SubsystemBase {
     private final String[] cameraVizKeys;
     private final boolean[] cameraContributed;
     private final String[] cameraContributedKeys;
+
+    PhotonCamera camera = new PhotonCamera("camera");
 
     /**
      * Creates the vision subsystem.
@@ -123,6 +126,24 @@ public class Vision extends SubsystemBase {
         res[translations.length] = newTranslation1;
         res[translations.length + 1] = newTranslation2;
         return res;
+    }
+
+    public boolean seesTrenchTags() {
+        boolean seesTags = false;
+        for (var input : cameraInputs) {
+            for (var results : input.results) {
+                var result = camera.getLatestResult();
+                if (results.hasTargets()) {
+                    int tagID = result.getBestTarget().getFiducialId();
+                    if (tagID == 1 || tagID == 12 || tagID == 7 || tagID == 6 || tagID == 17
+                        || tagID == 28 || tagID == 22 || tagID == 23) {
+                        seesTags = true;
+
+                    }
+                }
+            }
+        }
+        return seesTags;
     }
 
 }
