@@ -99,7 +99,7 @@ public class SwerveRateLimiter {
      *
      * <p>
      * This method should be called once per control loop using velocity data from odometry or state
-     * estimation before calling {@link #limit(ChassisSpeeds)}.
+     * estimation before calling {@link #limit(ChassisSpeeds, double)}.
      *
      * @param robotRelative the current robot-relative chassis speeds
      */
