@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -10,7 +11,6 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -76,7 +76,6 @@ public final class Swerve extends SubsystemBase {
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
 
-    private final PIDController trenchRotationPID = new PIDController(1.5, 0.0, 0.0);
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
     public final SwerveState state;
@@ -115,8 +114,6 @@ public final class Swerve extends SubsystemBase {
             this.odometryLock.unlock();
         }
         this.state = new SwerveState(initPositions, this.gyroInputs.yaw);
-
-        trenchRotationPID.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     @Override
@@ -424,11 +421,16 @@ public final class Swerve extends SubsystemBase {
     }
 
     /** Identifies Closest Trench */
-    public Translation2d closestTrench() {
-        List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.openingCenterLeft,
-            FieldConstants.LeftTrench.oppOpeningCenterLeft,
-            FieldConstants.RightTrench.openingCenterRight,
-            FieldConstants.RightTrench.oppOpeningCenterRight);
+    public Translation2d closestTrenchSide() {
+        List<Translation2d> trenchLocations =
+            List.of(FieldConstants.LeftTrench.openingCloseCenterLeft,
+                FieldConstants.LeftTrench.openingFarCenterLeft,
+                FieldConstants.LeftTrench.blueOpeningCloseCenterLeft,
+                FieldConstants.LeftTrench.blueOpeningFarCenterLeft,
+                FieldConstants.RightTrench.openingCloseCenterRight,
+                FieldConstants.RightTrench.openingFarCenterRight,
+                FieldConstants.RightTrench.blueOpeningCloseCenterRight,
+                FieldConstants.RightTrench.blueOpeningFarCenterRight);
         Pose2d botPosition = state.getGlobalPoseEstimate();
         Translation2d botLocation = botPosition.getTranslation();
 
@@ -438,14 +440,62 @@ public final class Swerve extends SubsystemBase {
 
     }
 
+    public Translation2d oppositeTrenchSide() {
+        List<Translation2d> trenchEntrance = new ArrayList<>();
+        trenchEntrance.add(FieldConstants.LeftTrench.openingCloseCenterLeft);
+        trenchEntrance.add(FieldConstants.LeftTrench.blueOpeningCloseCenterLeft);
+        trenchEntrance.add(FieldConstants.RightTrench.openingCloseCenterRight);
+        trenchEntrance.add(FieldConstants.RightTrench.blueOpeningCloseCenterRight);
+
+        List<Translation2d> trenchOppositeSide = new ArrayList<>();
+        trenchOppositeSide.add(FieldConstants.LeftTrench.openingFarCenterLeft);
+        trenchOppositeSide.add(FieldConstants.LeftTrench.blueOpeningFarCenterLeft);
+        trenchOppositeSide.add(FieldConstants.RightTrench.openingFarCenterRight);
+        trenchOppositeSide.add(FieldConstants.RightTrench.blueOpeningFarCenterRight);
+
+        if (trenchEntrance.contains(closestTrenchSide())) {
+            int searchIndex = trenchEntrance.indexOf(closestTrenchSide());
+            return trenchOppositeSide.get(searchIndex);
+        } else if (trenchOppositeSide.contains(closestTrenchSide())) {
+            int searchIndex = trenchOppositeSide.indexOf(closestTrenchSide());
+            return trenchEntrance.get(searchIndex);
+        } else {
+            return null;
+        }
+    }
+
     /** Returns true if the robot is approaching the Trench zone. */
     public boolean isNearTrench() {
-        Translation2d target = closestTrench();
+        Translation2d target = closestTrenchSide();
         double thresholdMeters = Constants.Swerve.trenchThresholdMeters;
         double distance = state.getGlobalPoseEstimate().getTranslation().getDistance(target);
 
         Logger.recordOutput("Swerve/DistanceToTrench", distance);
 
         return distance < thresholdMeters;
+    }
+
+    /** Returns true if the robot is in the Trench zone. */
+    public boolean inTrench() {
+
+        double trenchFarLocation = oppositeTrenchSide().getX();
+        double trenchCloseLocation = closestTrenchSide().getX();
+        double trenchFarWidth =
+            oppositeTrenchSide().getY() - (FieldConstants.LeftTrench.openingWidth) / 2;
+        double trenchCloseWidth =
+            oppositeTrenchSide().getY() + (FieldConstants.LeftTrench.openingWidth) / 2;
+
+        Translation2d botLocation = state.getGlobalPoseEstimate().getTranslation();
+        double botXLocation = botLocation.getX();
+        double botYLocation = botLocation.getY();
+        if (trenchFarLocation > trenchCloseLocation) {
+            return botXLocation > trenchCloseLocation && botXLocation < trenchFarLocation
+                && botYLocation < trenchCloseWidth && botYLocation > trenchFarWidth;
+        } else if (trenchFarLocation < trenchCloseLocation) {
+            return botXLocation < trenchCloseLocation && botXLocation > trenchFarLocation
+                && botYLocation < trenchCloseWidth && botYLocation > trenchFarWidth;
+        } else {
+            return false;
+        }
     }
 }
