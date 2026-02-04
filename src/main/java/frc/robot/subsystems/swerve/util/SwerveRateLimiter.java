@@ -149,7 +149,7 @@ public class SwerveRateLimiter {
      * @return a new {@link ChassisSpeeds} representing the limited, physically achievable
      *         robot-relative velocities for the next control step
      */
-    public ChassisSpeeds limit(ChassisSpeeds wantedSpeedsRobotRelative) {
+    public ChassisSpeeds limit(ChassisSpeeds wantedSpeedsRobotRelative, double maxSpeed) {
         double currentSpeed = Math.hypot(currentVel.a1, currentVel.a2);
         double wantedSpeed = Math.hypot(wantedSpeedsRobotRelative.vxMetersPerSecond,
             wantedSpeedsRobotRelative.vyMetersPerSecond);
@@ -169,8 +169,7 @@ public class SwerveRateLimiter {
 
         // Step 1: Robot cannot accelerate indefinitely. Ensure accelerations are achievable
         // (sub-max to ensure correctness even under degradation).
-        double subphysicalAccelerationLimit =
-            Math.max(1.0 - (currentSpeed / Constants.Swerve.maxSpeed), 0.0);
+        double subphysicalAccelerationLimit = Math.max(1.0 - (currentSpeed / maxSpeed), 0.0);
         publish("subphysicalAccelerationLimit", subphysicalAccelerationLimit);
         double maxForwardAccel = forwardLimit * subphysicalAccelerationLimit;
         publish("maxForwardAccel", maxForwardAccel);

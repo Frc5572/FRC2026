@@ -200,6 +200,8 @@ public final class Constants {
         /** Max Angular Velocity in Radians per Second */
         public static final double maxAngularVelocity = 4.0;
 
+        public static final double maxSpeedShooting = 2.0;
+
         /* Neutral Modes */
         /** Angle Motor Neutral Mode */
         public static final NeutralModeValue angleNeutralMode = NeutralModeValue.Coast;

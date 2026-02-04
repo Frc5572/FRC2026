@@ -74,6 +74,8 @@ public final class Swerve extends SubsystemBase {
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
+    private double maxSpeed = Constants.Swerve.maxSpeed;
+
     public final SwerveState state;
 
     /**
@@ -170,7 +172,7 @@ public final class Swerve extends SubsystemBase {
     public Command driveRobotRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return this.run(() -> {
             ChassisSpeeds speeds = driveSpeeds.get();
-            speeds = limiter.limit(speeds);
+            speeds = limiter.limit(speeds, this.maxSpeed);
             setModuleStates(speeds);
         });
     }
@@ -239,7 +241,7 @@ public final class Swerve extends SubsystemBase {
      */
     public MoveToPoseBuilder moveToPose() {
         return new MoveToPoseBuilder(this, (speeds) -> {
-            speeds = limiter.limit(speeds);
+            speeds = limiter.limit(speeds, this.maxSpeed);
             setModuleStates(speeds);
         });
     }
@@ -336,7 +338,7 @@ public final class Swerve extends SubsystemBase {
      */
     public Command stop() {
         return this.driveRobotRelative(ChassisSpeeds::new).until(() -> {
-            var speeds = limiter.limit(new ChassisSpeeds());
+            var speeds = limiter.limit(new ChassisSpeeds(), this.maxSpeed);
             return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.1;
         }).andThen(this.emergencyStop());
     }
@@ -363,6 +365,15 @@ public final class Swerve extends SubsystemBase {
      */
     public Command emergencyStop() {
         return this.runOnce(() -> setModuleStates(new ChassisSpeeds()));
+    }
+
+    public Command limitMaxSpeed() {
+        return Commands.runEnd(() -> setMaxSpeed(Constants.Swerve.maxSpeedShooting),
+            () -> setMaxSpeed(Constants.Swerve.maxSpeed), this);
+    }
+
+    private void setMaxSpeed(double maxSpeed) {
+        this.maxSpeed = maxSpeed;
     }
 
     private void runCharacterization(double output) {

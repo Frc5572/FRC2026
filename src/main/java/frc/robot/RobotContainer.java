@@ -155,8 +155,10 @@ public final class RobotContainer {
         driver.rightBumper()
             .onTrue(climber.moveTo(() -> new Tuples.Tuple2<>(Degrees.of(0), Meters.of(0))));
 
-        driver.y().whileTrue(shooter.runShooterVelocityCommand(20.0)
-            .alongWith(Commands.waitSeconds(1.0).andThen(indexer.setSpeedCommand(2, 2))));
+        driver.y()
+            .whileTrue(shooter.runShooterVelocityCommand(20.0).alongWith(
+                Commands.waitSeconds(1.0).andThen(indexer.setSpeedCommand(2, 2)),
+                swerve.limitMaxSpeed()));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
