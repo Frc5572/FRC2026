@@ -28,7 +28,7 @@ import frc.robot.Constants;
  * <p>
  * The limiter operates in discrete time (20&nbsp;ms control loop) and should be called once per
  * cycle. The current robot velocity must be provided via {@link #update(ChassisSpeeds)} before
- * calling {@link #limit(ChassisSpeeds)}.
+ * calling {@link #limit(ChassisSpeeds, double)}.
  *
  * <p>
  * All limits are exposed via NetworkTables under {@code /SwerveRateLimiter/*} and may be tuned at
@@ -146,6 +146,7 @@ public class SwerveRateLimiter {
      * subject to acceleration limiting.
      *
      * @param wantedSpeedsRobotRelative the desired robot-relative chassis speeds (vx, vy, omega)
+     * @param maxSpeed the maximum achievable robot speed for scaling acceleration limits
      * @return a new {@link ChassisSpeeds} representing the limited, physically achievable
      *         robot-relative velocities for the next control step
      */
