@@ -440,6 +440,8 @@ public final class Swerve extends SubsystemBase {
 
     }
 
+    /** Finds the opposite side to the closest trench side */
+
     public Translation2d oppositeTrenchSide() {
         List<Translation2d> trenchEntrance = new ArrayList<>();
         trenchEntrance.add(FieldConstants.LeftTrench.openingCloseCenterLeft);
