@@ -127,36 +127,4 @@ public class Vision extends SubsystemBase {
         res[translations.length + 1] = newTranslation2;
         return res;
     }
-
-    /**
-     * 
-     * @return returns a boolean value based on whether or not the robot sees the correct april tags
-     *         (when the robot is close to the trench)
-     */
-    public boolean seesTrenchTags() {
-        List<Integer> trenchTags = new ArrayList<>();
-        trenchTags.add(1);
-        trenchTags.add(12);
-        trenchTags.add(7);
-        trenchTags.add(6);
-        trenchTags.add(17);
-        trenchTags.add(28);
-        trenchTags.add(22);
-        trenchTags.add(23);
-        boolean seesTags = false;
-        for (var input : cameraInputs) {
-            for (var results : input.results) {
-                var result = camera.getLatestResult();
-                if (results.hasTargets()) {
-                    int tagID = result.getBestTarget().getFiducialId();
-                    if (trenchTags.contains(tagID)) {
-                        seesTags = true;
-
-                    }
-                }
-            }
-        }
-        return seesTags;
-    }
-
 }

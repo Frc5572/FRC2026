@@ -417,29 +417,23 @@ public class FieldConstants {
 
         /** Center Trench for Pose */
 
-        public static final Translation2d openingCloseCenterLeft =
-            new Translation2d(LinesVertical.hubCenter - 0.1524, fieldWidth - width / 2);
+        public static final Translation2d redTrenchCenterLeft =
+            new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
 
-        public static final Translation2d openingFarCenterLeft =
-            new Translation2d(LinesVertical.hubCenter + 0.1524, fieldWidth - width / 2);
+        public static final Translation2d blueTrenchCenterLeft =
+            new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
 
-        public static final Translation2d exitCloseCenterLeft =
-            new Translation2d(LinesVertical.hubCenter + 0.75, fieldWidth - width / 2);
+        public static final Translation2d redCloseCenterLeft =
+            new Translation2d(LinesVertical.hubCenter - 0.1016, fieldWidth - openingWidth / 2);
 
-        public static final Translation2d exitFarCenterLeft =
-            new Translation2d(LinesVertical.hubCenter - 0.75, fieldWidth - width / 2);
+        public static final Translation2d redFarCenterLeft =
+            new Translation2d(LinesVertical.hubCenter + 0.1016, fieldWidth - openingWidth / 2);
 
-        public static final Translation2d blueOpeningCloseCenterLeft =
-            new Translation2d(LinesVertical.oppHubCenter - 0.1524, fieldWidth - width / 2);
+        public static final Translation2d blueCloseCenterLeft =
+            new Translation2d(LinesVertical.oppHubCenter - 0.1016, fieldWidth - openingWidth / 2);
 
-        public static final Translation2d blueExitCloseCenterLeft =
-            new Translation2d(LinesVertical.oppHubCenter + 0.75, fieldWidth - width / 2);
-
-        public static final Translation2d blueOpeningFarCenterLeft =
-            new Translation2d(LinesVertical.oppHubCenter + 0.1524, fieldWidth - width / 2);
-
-        public static final Translation2d blueExitFarCenterLeft =
-            new Translation2d(LinesVertical.oppHubCenter - 0.75, fieldWidth - width / 2);
+        public static final Translation2d blueFarCenterLeft =
+            new Translation2d(LinesVertical.oppHubCenter + 0.1016, fieldWidth - openingWidth / 2);
     }
 
     /**
@@ -482,29 +476,23 @@ public class FieldConstants {
 
         /** Center of the Trench for Pose */
 
-        public static final Translation2d openingCloseCenterRight =
-            new Translation2d(LinesVertical.hubCenter - 0.1524, width / 2);
+        public static final Translation2d redTrenchCenterRight =
+            new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
 
-        public static final Translation2d openingFarCenterRight =
-            new Translation2d(LinesVertical.hubCenter + 0.1524, width / 2);
+        public static final Translation2d blueTrenchCenterRight =
+            new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
 
-        public static final Translation2d exitCloseCenterRight =
-            new Translation2d(LinesVertical.hubCenter + .75, width / 2);
+        public static final Translation2d redCloseCenterRight =
+            new Translation2d(LinesVertical.hubCenter - 0.1016, fieldWidth - openingWidth / 2);
 
-        public static final Translation2d exitFarCenterRight =
-            new Translation2d(LinesVertical.hubCenter - .75, width / 2);
+        public static final Translation2d redFarCenterRight =
+            new Translation2d(LinesVertical.hubCenter + 0.1016, fieldWidth - openingWidth / 2);
 
-        public static final Translation2d blueOpeningCloseCenterRight =
-            new Translation2d(LinesVertical.oppHubCenter - 0.1524, width / 2);
+        public static final Translation2d blueCloseCenterRight =
+            new Translation2d(LinesVertical.oppHubCenter - 0.1016, fieldWidth - openingWidth / 2);
 
-        public static final Translation2d blueOpeningFarCenterRight =
-            new Translation2d(LinesVertical.oppHubCenter + 0.1524, width / 2);
-
-        public static final Translation2d blueExitCloseCenterRight =
-            new Translation2d(LinesVertical.oppHubCenter + 0.75, width / 2);
-
-        public static final Translation2d blueExitFarCenterRight =
-            new Translation2d(LinesVertical.oppHubCenter - 0.75, width / 2);
+        public static final Translation2d blueFarCenterRight =
+            new Translation2d(LinesVertical.oppHubCenter + 0.1016, fieldWidth - openingWidth / 2);
     }
 
     /**

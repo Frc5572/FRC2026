@@ -251,9 +251,6 @@ public final class Constants {
                 .finish(),
         };
         // @formatter:on
-
-        /** Approaching Trench */
-        public static final double trenchThresholdMeters = 2.0; // needs to be changed
     }
 
     /** Vision Constants */
