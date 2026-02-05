@@ -419,6 +419,7 @@ public final class Swerve extends SubsystemBase {
         }
     }
 
+    /** Returns list with all of the trench locations */
     public static final List<Translation2d> trenchLocation() {
         List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.redTrenchCenterLeft,
             FieldConstants.LeftTrench.blueTrenchCenterLeft,
