@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
-import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -45,8 +44,6 @@ public class Vision extends SubsystemBase {
     private final String[] cameraVizKeys;
     private final boolean[] cameraContributed;
     private final String[] cameraContributedKeys;
-
-    PhotonCamera camera = new PhotonCamera("camera");
 
     /**
      * Creates the vision subsystem.
