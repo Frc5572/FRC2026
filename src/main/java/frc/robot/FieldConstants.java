@@ -421,7 +421,7 @@ public class FieldConstants {
             new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
 
         public static final Translation2d blueTrenchCenterLeft =
-            new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
+            new Translation2d(LinesVertical.oppHubCenter, fieldWidth - (openingWidth / 2));
 
         public static final Translation2d redCloseCenterLeft =
             new Translation2d(LinesVertical.hubCenter - 0.1016, fieldWidth - openingWidth / 2);
@@ -480,7 +480,7 @@ public class FieldConstants {
             new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
 
         public static final Translation2d blueTrenchCenterRight =
-            new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
+            new Translation2d(LinesVertical.oppHubCenter, fieldWidth - (openingWidth / 2));
 
         public static final Translation2d redCloseCenterRight =
             new Translation2d(LinesVertical.hubCenter - 0.1016, fieldWidth - openingWidth / 2);
