@@ -423,15 +423,19 @@ public class FieldConstants {
         public static final Translation2d blueTrenchCenterLeft =
             new Translation2d(LinesVertical.oppHubCenter, fieldWidth - (openingWidth / 2));
 
+        // Red alliance side left trench lower bounds
         public static final Translation2d redCloseCenterLeft =
             new Translation2d(LinesVertical.hubCenter - 0.1016, fieldWidth - openingWidth / 2);
 
+        // Red alliance side left trench upper bounds
         public static final Translation2d redFarCenterLeft =
             new Translation2d(LinesVertical.hubCenter + 0.1016, fieldWidth - openingWidth / 2);
 
+        // Blue alliance side left trench lower bounds
         public static final Translation2d blueCloseCenterLeft =
             new Translation2d(LinesVertical.oppHubCenter - 0.1016, fieldWidth - openingWidth / 2);
 
+        // Blue alliance side left trench upper bounds
         public static final Translation2d blueFarCenterLeft =
             new Translation2d(LinesVertical.oppHubCenter + 0.1016, fieldWidth - openingWidth / 2);
     }
@@ -477,22 +481,26 @@ public class FieldConstants {
         /** Center of the Trench for Pose */
 
         public static final Translation2d redTrenchCenterRight =
-            new Translation2d(LinesVertical.hubCenter, fieldWidth - (openingWidth / 2));
+            new Translation2d(LinesVertical.hubCenter, openingWidth / 2);
 
         public static final Translation2d blueTrenchCenterRight =
-            new Translation2d(LinesVertical.oppHubCenter, fieldWidth - (openingWidth / 2));
+            new Translation2d(LinesVertical.oppHubCenter, openingWidth / 2);
 
+        // Red alliance side right trench lower bounds
         public static final Translation2d redCloseCenterRight =
-            new Translation2d(LinesVertical.hubCenter - 0.1016, fieldWidth - openingWidth / 2);
+            new Translation2d(LinesVertical.hubCenter - 0.1016, openingWidth / 2);
 
+        // Red alliance side right trench upper bounds
         public static final Translation2d redFarCenterRight =
-            new Translation2d(LinesVertical.hubCenter + 0.1016, fieldWidth - openingWidth / 2);
+            new Translation2d(LinesVertical.hubCenter + 0.1016, openingWidth / 2);
 
+        // Blue alliance side right trench lower bounds
         public static final Translation2d blueCloseCenterRight =
-            new Translation2d(LinesVertical.oppHubCenter - 0.1016, fieldWidth - openingWidth / 2);
+            new Translation2d(LinesVertical.oppHubCenter - 0.1016, openingWidth / 2);
 
+        // Blue alliance side right trench upper bounds
         public static final Translation2d blueFarCenterRight =
-            new Translation2d(LinesVertical.oppHubCenter + 0.1016, fieldWidth - openingWidth / 2);
+            new Translation2d(LinesVertical.oppHubCenter + 0.1016, openingWidth / 2);
     }
 
     /**
