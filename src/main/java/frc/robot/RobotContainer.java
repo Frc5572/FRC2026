@@ -27,6 +27,7 @@ import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOEmpty;
 import frc.robot.subsystems.shooter.ShooterReal;
+import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -157,6 +158,17 @@ public final class RobotContainer {
 
         driver.y().whileTrue(shooter.runShooterVelocityCommand(20.0)
             .alongWith(Commands.waitSeconds(1.0).andThen(indexer.setSpeedCommand(2, 2))));
+
+        driver.x().whileTrue(Commands.run(() -> ShotCalculator.calculateBoth(Math.sqrt(Math.pow(
+            swerve.state.getGlobalPoseEstimate().getX() - FieldConstants.LinesVertical.hubCenter, 2)
+            + Math.pow(
+                swerve.state.getGlobalPoseEstimate().getY() - FieldConstants.LinesHorizontal.center,
+                2)),
+            20, (x) -> {
+                adjustableHood.setGoal(x);
+            }, (y) -> {
+                shooter.setVelocity(y);
+            }), adjustableHood, shooter));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
