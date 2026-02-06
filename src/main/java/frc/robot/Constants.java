@@ -253,6 +253,17 @@ public final class Constants {
         // @formatter:on
     }
 
+    /** Trench Move To Pose Constants */
+    public static final class Trench {
+        public static final double kPX = 0.0;
+        public static final double kIX = 0.0;
+        public static final double kDX = 0.0;
+
+        public static final double kPY = 0.0;
+        public static final double kIY = 0.0;
+        public static final double kDY = 0.0;
+    }
+
     /** Vision Constants */
     public static final class Vision {
         public static final AprilTagFieldLayout fieldLayout =

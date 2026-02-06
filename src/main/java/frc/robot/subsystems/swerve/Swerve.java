@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -74,6 +75,11 @@ public final class Swerve extends SubsystemBase {
     private final GyroInputsAutoLogged gyroInputs = new GyroInputsAutoLogged();
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
+
+    private final PIDController TrenchXController =
+        new PIDController(Constants.Trench.kPX, Constants.Trench.kIX, Constants.Trench.kDX);
+    private final PIDController TrenchYController =
+        new PIDController(Constants.Trench.kPY, Constants.Trench.kIY, Constants.Trench.kDY);
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
@@ -474,5 +480,43 @@ public final class Swerve extends SubsystemBase {
         } else {
             return false;
         }
+    }
+
+    /** returns a list with all of the trench bounds */
+    public static final List<Translation2d> trenchSides() {
+        List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.redCloseCenterLeft,
+            FieldConstants.LeftTrench.redFarCenterLeft,
+            FieldConstants.LeftTrench.blueCloseCenterLeft,
+            FieldConstants.LeftTrench.blueFarCenterLeft,
+            FieldConstants.RightTrench.redCloseCenterRight,
+            FieldConstants.RightTrench.redFarCenterRight,
+            FieldConstants.RightTrench.blueFarCenterRight,
+            FieldConstants.RightTrench.blueCloseCenterRight);
+        return trenchLocations;
+    }
+
+    public Translation2d goalTrenchPosition() {
+        Translation2d currentBotPos = state.getGlobalPoseEstimate().getTranslation();
+
+        return currentBotPos.nearest(trenchSides());
+    }
+
+
+    /** Command that moves the robot to the trench without going through */
+    public Command moveToTrench() {
+        return run(() -> {
+            Translation2d currentPose = state.getGlobalPoseEstimate().getTranslation();
+
+            double xSpeed =
+                TrenchXController.calculate(currentPose.getX(), goalTrenchPosition().getX());
+            double ySpeed =
+                TrenchYController.calculate(currentPose.getY(), goalTrenchPosition().getY());
+
+            driveFieldRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, 0.0,
+                state.getGlobalPoseEstimate().getRotation()));
+
+        }).until(() -> inTrench())
+            .finallyDo((interupted) -> driveFieldRelative(() -> new ChassisSpeeds()))
+            .withName("Move to trench");
     }
 }
