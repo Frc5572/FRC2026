@@ -15,8 +15,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-
 
 /** turret hardware */
 public class TurretReal implements TurretIO {
@@ -34,7 +34,6 @@ public class TurretReal implements TurretIO {
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
     private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getAbsolutePosition();
     private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getAbsolutePosition();
-
     public final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
     private final VoltageOut voltage = new VoltageOut(0.0);
 
@@ -114,5 +113,10 @@ public class TurretReal implements TurretIO {
     @Override
     public void resetPosition(Angle angle) {
         turretMotor.setPosition(angle);
+    }
+
+    @Override
+    public Command setAutoTurretFollow() {
+
     }
 }
