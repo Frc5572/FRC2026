@@ -27,6 +27,7 @@ public class ShotCalculator {
     private static final InterpolatingTreeMap<Double, FullShooterParams> SHOOTER_MAP =
         new InterpolatingTreeMap<Double, FullShooterParams>(ShotCalculator::inverseInterpolate,
             ShotCalculator::interpolate);
+
     static {
         SHOOTER_MAP.put(1.5, new FullShooterParams(2800.0, 35.0, 0.38));
         SHOOTER_MAP.put(2.0, new FullShooterParams(3100.0, 38.0, 0.45));
@@ -38,10 +39,26 @@ public class ShotCalculator {
         SHOOTER_MAP.put(5.0, new FullShooterParams(4550.0, 62.0, 0.94));
     }
 
+    /**
+     * Parameters for a shooter shot, including RPS, hood angle, and time of flight.
+     * 
+     * @param rps The required shooter RPS to achieve the desired velocity at the given distance.
+     * @param hoodAngle The required hood angle to achieve the desired trajectory at the given
+     *        distance.
+     * @param timeOfFlight The expected time of flight for a shot at the given distance with the
+     *        baseline parameters. Used for velocity correction calculations.
+     */
     public record FullShooterParams(double rps, double hoodAngle, double timeOfFlight) {
     }
 
-
+    /**
+     * Calculates shooter parameters based on distance and required velocity.
+     * 
+     * @param distance The distance to the target in meters.
+     * @param requiredVelocity The required velocity of the projectile at the target in m/s.
+     * @param hoodAngle A consumer to accept the calculated hood angle.
+     * @param rpsOutput A consumer to accept the calculated shooter RPS.
+     */
     public static void calculateBoth(double distance, double requiredVelocity,
         Consumer<Angle> hoodAngle, Consumer<Double> rpsOutput) {
         FullShooterParams baseline = SHOOTER_MAP.get(distance);
