@@ -501,7 +501,6 @@ public final class Swerve extends SubsystemBase {
         return currentBotPos.nearest(trenchSides());
     }
 
-
     /** Command that moves the robot to the trench without going through */
     public Command moveToTrench() {
         return run(() -> {
