@@ -76,9 +76,9 @@ public final class Swerve extends SubsystemBase {
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
 
-    private final PIDController TrenchXController =
+    private final PIDController trenchXController =
         new PIDController(Constants.Trench.kPX, Constants.Trench.kIX, Constants.Trench.kDX);
-    private final PIDController TrenchYController =
+    private final PIDController trenchYController =
         new PIDController(Constants.Trench.kPY, Constants.Trench.kIY, Constants.Trench.kDY);
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
@@ -495,6 +495,7 @@ public final class Swerve extends SubsystemBase {
         return trenchLocations;
     }
 
+    /** Returns the goal location of the robot */
     public Translation2d goalTrenchPosition() {
         Translation2d currentBotPos = state.getGlobalPoseEstimate().getTranslation();
 
@@ -507,15 +508,14 @@ public final class Swerve extends SubsystemBase {
             Translation2d currentPose = state.getGlobalPoseEstimate().getTranslation();
 
             double xSpeed =
-                TrenchXController.calculate(currentPose.getX(), goalTrenchPosition().getX());
+                trenchXController.calculate(currentPose.getX(), goalTrenchPosition().getX());
             double ySpeed =
-                TrenchYController.calculate(currentPose.getY(), goalTrenchPosition().getY());
+                trenchYController.calculate(currentPose.getY(), goalTrenchPosition().getY());
 
             driveFieldRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, 0.0,
                 state.getGlobalPoseEstimate().getRotation()));
 
-        }).until(() -> inTrench())
-            .finallyDo((interupted) -> driveFieldRelative(() -> new ChassisSpeeds()))
+        }).until(() -> inTrench()).finallyDo(() -> driveFieldRelative(() -> new ChassisSpeeds()))
             .withName("Move to trench");
     }
 }
