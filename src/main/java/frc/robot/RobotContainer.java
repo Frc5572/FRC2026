@@ -27,7 +27,6 @@ import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOEmpty;
 import frc.robot.subsystems.shooter.ShooterReal;
-import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -46,6 +45,7 @@ import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.subsystems.vision.color.ColorDetectionReal;
 import frc.robot.util.DeviceDebug;
+import frc.robot.util.ShotCalculator;
 import frc.robot.util.Tuples;
 import frc.robot.viz.RobotViz;
 

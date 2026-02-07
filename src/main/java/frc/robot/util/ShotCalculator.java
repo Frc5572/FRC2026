@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter;
+package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.Consumer;
@@ -13,15 +13,37 @@ import edu.wpi.first.units.measure.Angle;
  * to allow for more nuanced adjustments.
  */
 public class ShotCalculator {
-    private static double inverseInterpolate(double a, double b, double q) {
-        return (q - a) / (b - a);
+
+    /**
+     * Inverse interpolation function to calculate the interpolation factor t based on the query
+     * value and the start/end values. This is used by the InterpolatingTreeMap to determine how far
+     * along the query is between the two bounding keys.
+     * 
+     * @param startValue The value at the lower bound key.
+     * @param endValue The value at the upper bound key.
+     * @param query The value for which we want to find the interpolation factor.
+     * @return The interpolation factor t, where 0 corresponds to startValue and 1 corresponds to
+     *         endValue.
+     */
+    private static double inverseInterpolate(double startValue, double endValue, double query) {
+        return (query - startValue) / (endValue - startValue);
     }
 
-    private static FullShooterParams interpolate(FullShooterParams a, FullShooterParams b,
-        double t) {
-        return new FullShooterParams(MathUtil.interpolate(a.rps, b.rps, t),
-            MathUtil.interpolate(a.hoodAngle, b.hoodAngle, t),
-            MathUtil.interpolate(a.timeOfFlight, b.timeOfFlight, t));
+    /**
+     * Per-parameter interpolation for shooter parameters. Interpolates each parameter independently
+     * based on the interpolation factor t.
+     * 
+     * @param startValue The shooter parameters at the lower bound distance.
+     * @param endValue The shooter parameters at the upper bound distance.
+     * @param t The interpolation factor between 0 and 1, where 0 corresponds to startValue and 1
+     *        corresponds to endValue.
+     * @return A new FullShooterParams object with each parameter interpolated based on t.
+     */
+    private static FullShooterParams interpolate(FullShooterParams startValue,
+        FullShooterParams endValue, double t) {
+        return new FullShooterParams(MathUtil.interpolate(startValue.rps, endValue.rps, t),
+            MathUtil.interpolate(startValue.hoodAngle, endValue.hoodAngle, t),
+            MathUtil.interpolate(startValue.timeOfFlight, endValue.timeOfFlight, t));
     }
 
     private static final InterpolatingTreeMap<Double, FullShooterParams> SHOOTER_MAP =
@@ -58,6 +80,8 @@ public class ShotCalculator {
      * @param requiredVelocity The required velocity of the projectile at the target in m/s.
      * @param hoodAngle A consumer to accept the calculated hood angle.
      * @param rpsOutput A consumer to accept the calculated shooter RPS.
+     * 
+     * 
      */
     public static void calculateBoth(double distance, double requiredVelocity,
         Consumer<Angle> hoodAngle, Consumer<Double> rpsOutput) {
