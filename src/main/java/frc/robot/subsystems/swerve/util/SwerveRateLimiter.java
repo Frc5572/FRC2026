@@ -28,7 +28,7 @@ import frc.robot.Constants;
  * <p>
  * The limiter operates in discrete time (20&nbsp;ms control loop) and should be called once per
  * cycle. The current robot velocity must be provided via {@link #update(ChassisSpeeds)} before
- * calling {@link #limit(ChassisSpeeds)}.
+ * calling {@link #limit(ChassisSpeeds, double)}.
  *
  * <p>
  * All limits are exposed via NetworkTables under {@code /SwerveRateLimiter/*} and may be tuned at
@@ -99,7 +99,7 @@ public class SwerveRateLimiter {
      *
      * <p>
      * This method should be called once per control loop using velocity data from odometry or state
-     * estimation before calling {@link #limit(ChassisSpeeds)}.
+     * estimation before calling {@link #limit(ChassisSpeeds, double)}.
      *
      * @param robotRelative the current robot-relative chassis speeds
      */
@@ -149,7 +149,7 @@ public class SwerveRateLimiter {
      * @return a new {@link ChassisSpeeds} representing the limited, physically achievable
      *         robot-relative velocities for the next control step
      */
-    public ChassisSpeeds limit(ChassisSpeeds wantedSpeedsRobotRelative) {
+    public ChassisSpeeds limit(ChassisSpeeds wantedSpeedsRobotRelative, double customSkidLimit) {
         double currentSpeed = Math.hypot(currentVel.a1, currentVel.a2);
         double wantedSpeed = Math.hypot(wantedSpeedsRobotRelative.vxMetersPerSecond,
             wantedSpeedsRobotRelative.vyMetersPerSecond);
@@ -206,8 +206,9 @@ public class SwerveRateLimiter {
         // magnitude of acceleration to prevent this.
         wantedAccMagnitude = Math.hypot(wantedAcc.a1, wantedAcc.a2);
         publish("wantedAccMagnitudeStep3", wantedAccMagnitude);
-        if (wantedAccMagnitude > skidLimit) {
-            double multiplier = skidLimit / wantedAccMagnitude;
+        double minSkidLimit = Math.min(skidLimit, customSkidLimit);
+        if (wantedAccMagnitude > minSkidLimit) {
+            double multiplier = minSkidLimit / wantedAccMagnitude;
             wantedAcc.a1 *= multiplier;
             wantedAcc.a2 *= multiplier;
         }
