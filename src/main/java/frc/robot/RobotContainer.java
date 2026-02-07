@@ -159,16 +159,18 @@ public final class RobotContainer {
         driver.y().whileTrue(shooter.runShooterVelocityCommand(20.0)
             .alongWith(Commands.waitSeconds(1.0).andThen(indexer.setSpeedCommand(2, 2))));
 
-        driver.x().whileTrue(Commands.run(() -> ShotCalculator.calculateBoth(Math.sqrt(Math.pow(
-            swerve.state.getGlobalPoseEstimate().getX() - FieldConstants.LinesVertical.hubCenter, 2)
-            + Math.pow(
-                swerve.state.getGlobalPoseEstimate().getY() - FieldConstants.LinesHorizontal.center,
-                2)),
+        driver.x().whileTrue(Commands.run(() -> ShotCalculator.calculateBoth(Math.hypot(
+            swerve.state.getGlobalPoseEstimate().getX() - FieldConstants.LinesVertical.hubCenter,
+            swerve.state.getGlobalPoseEstimate().getY() - FieldConstants.LinesHorizontal.center),
             20, (x) -> {
                 adjustableHood.setGoal(x);
             }, (y) -> {
                 shooter.setVelocity(y);
             }), adjustableHood, shooter));
+
+
+        tester.a()
+            .whileTrue(shooter.runShooterVelocityCommand(20.0).alongWith(swerve.limitSkidLimit()));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
