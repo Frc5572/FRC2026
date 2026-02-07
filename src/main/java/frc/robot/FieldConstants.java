@@ -384,11 +384,15 @@ public class FieldConstants {
      * This primarily provides 3D points useful for vision targeting to the trench opening.
      */
     public static class LeftTrench {
+
         /** Trench width (meters). */
         public static final double width = Units.inchesToMeters(65.65);
 
         /** Trench depth (meters). */
         public static final double depth = Units.inchesToMeters(47.0);
+
+        /** Trench depth from center (meters) */
+        public static final double centerDepth = depth / 2;
 
         /** Trench height (meters). */
         public static final double height = Units.inchesToMeters(40.25);
@@ -398,6 +402,9 @@ public class FieldConstants {
 
         /** Height of the trench opening (meters). */
         public static final double openingHeight = Units.inchesToMeters(22.25);
+
+        /** Distance from the edge of the trench to the center of the trench */
+        public static final double centerWidth = openingWidth / 2;
 
         /** Alliance-side opening top-left corner point (3D). */
         public static final Translation3d openingTopLeft =
@@ -414,6 +421,30 @@ public class FieldConstants {
         /** Opposing-side opening top-right corner point (3D). */
         public static final Translation3d oppOpeningTopRight =
             new Translation3d(LinesVertical.oppHubCenter, fieldWidth - openingWidth, openingHeight);
+
+        /** Center Trench for Pose */
+
+        public static final Translation2d redTrenchCenterLeft =
+            new Translation2d(LinesVertical.hubCenter, fieldWidth - centerWidth);
+
+        public static final Translation2d blueTrenchCenterLeft =
+            new Translation2d(LinesVertical.oppHubCenter, fieldWidth - centerWidth);
+
+        // Red alliance side left trench lower bounds
+        public static final Translation2d redCloseCenterLeft =
+            new Translation2d(LinesVertical.hubCenter - centerDepth, fieldWidth - centerWidth);
+
+        // Red alliance side left trench upper bounds
+        public static final Translation2d redFarCenterLeft =
+            new Translation2d(LinesVertical.hubCenter + centerDepth, fieldWidth - centerWidth);
+
+        // Blue alliance side left trench lower bounds
+        public static final Translation2d blueCloseCenterLeft =
+            new Translation2d(LinesVertical.oppHubCenter - centerDepth, fieldWidth - centerWidth);
+
+        // Blue alliance side left trench upper bounds
+        public static final Translation2d blueFarCenterLeft =
+            new Translation2d(LinesVertical.oppHubCenter + centerDepth, fieldWidth - centerWidth);
     }
 
     /**
@@ -423,6 +454,7 @@ public class FieldConstants {
      * This primarily provides 3D points useful for vision targeting to the trench opening.
      */
     public static class RightTrench {
+
         /** Trench width (meters). */
         public static final double width = Units.inchesToMeters(65.65);
 
@@ -432,11 +464,17 @@ public class FieldConstants {
         /** Trench height (meters). */
         public static final double height = Units.inchesToMeters(40.25);
 
+        /** Trench depth from center */
+        public static final double centerDepth = depth / 2;
+
         /** Width of the trench opening (meters). */
         public static final double openingWidth = Units.inchesToMeters(50.34);
 
         /** Height of the trench opening (meters). */
         public static final double openingHeight = Units.inchesToMeters(22.25);
+
+        /** Distance from the edge of the trench to the center of the trench */
+        public static final double centerWidth = openingWidth / 2;
 
         /** Alliance-side opening top-left corner point (3D). */
         public static final Translation3d openingTopLeft =
@@ -453,6 +491,30 @@ public class FieldConstants {
         /** Opposing-side opening top-right corner point (3D). */
         public static final Translation3d oppOpeningTopRight =
             new Translation3d(LinesVertical.oppHubCenter, 0, openingHeight);
+
+        /** Center of the Trench for Pose */
+
+        public static final Translation2d redTrenchCenterRight =
+            new Translation2d(LinesVertical.hubCenter, centerWidth);
+
+        public static final Translation2d blueTrenchCenterRight =
+            new Translation2d(LinesVertical.oppHubCenter, centerWidth);
+
+        // Red alliance side right trench lower bounds
+        public static final Translation2d redCloseCenterRight =
+            new Translation2d(LinesVertical.hubCenter - centerDepth, centerWidth);
+
+        // Red alliance side right trench upper bounds
+        public static final Translation2d redFarCenterRight =
+            new Translation2d(LinesVertical.hubCenter + centerDepth, centerWidth);
+
+        // Blue alliance side right trench lower bounds
+        public static final Translation2d blueCloseCenterRight =
+            new Translation2d(LinesVertical.oppHubCenter - centerDepth, centerWidth);
+
+        // Blue alliance side right trench upper bounds
+        public static final Translation2d blueFarCenterRight =
+            new Translation2d(LinesVertical.oppHubCenter + centerDepth, centerWidth);
     }
 
     /**
