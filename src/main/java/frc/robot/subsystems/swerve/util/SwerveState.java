@@ -25,7 +25,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.vision.CameraConstants;
@@ -198,10 +197,9 @@ public class SwerveState {
         Logger.recordOutput("State/VisionRobotPose", robotPose);
     }
 
-    private Transform3d getRobotToCamera(CameraConstants constants) {
+    private Transform3d getRobotToCamera(CameraConstants constants, double time) {
         if (constants.isTurret) {
-            Optional<Rotation2d> turretAngleOpt =
-                currentTurretAngle.getSample(Timer.getFPGATimestamp());
+            Optional<Rotation2d> turretAngleOpt = currentTurretAngle.getSample(time);
             Rotation3d rotate = new Rotation3d(0.0, 0.0, turretAngleOpt.get().getDegrees());
             return new Transform3d(constants.robotToCamera.getTranslation(),
                 constants.robotToCamera.getRotation().rotateBy(rotate));
@@ -231,7 +229,8 @@ public class SwerveState {
                 Transform3d best = multiTag_.estimatedPose.best;
                 Pose3d cameraPose =
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
-                Pose3d robotPose = cameraPose.plus(getRobotToCamera(camera).inverse());
+                Pose3d robotPose = cameraPose
+                    .plus(getRobotToCamera(camera, pipelineResult.getTimestampSeconds()).inverse());
                 visionAdjustedOdometry.resetPose(robotPose.toPose2d());
                 initted = true;
             });
@@ -280,10 +279,12 @@ public class SwerveState {
                 double distance = target.getBestCameraToTarget().getTranslation().getNorm();
                 Rotation3d targetInCameraFrame = new Rotation3d(Radians.of(0.0),
                     Degrees.of(-target.getPitch()), Degrees.of(-target.getYaw()));
-                Rotation3d cameraRotationInWorldFrame = getRobotToCamera(camera).getRotation()
-                    .rotateBy(new Rotation3d(yawSample.get()));
+                Rotation3d cameraRotationInWorldFrame =
+                    getRobotToCamera(camera, pipelineResult.getTimestampSeconds()).getRotation()
+                        .rotateBy(new Rotation3d(yawSample.get()));
                 Translation3d debugTranslation = new Pose3d(getGlobalPoseEstimate())
-                    .plus(getRobotToCamera(camera)).getTranslation();
+                    .plus(getRobotToCamera(camera, pipelineResult.getTimestampSeconds()))
+                    .getTranslation();
                 Logger.recordOutput("State/singleTagCameraRotationInWorldFrame",
                     new Pose3d(debugTranslation, cameraRotationInWorldFrame));
                 Rotation3d targetRotationInWorldFrame =
