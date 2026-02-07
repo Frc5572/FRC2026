@@ -25,6 +25,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.vision.CameraConstants;
@@ -59,7 +60,8 @@ public class SwerveState {
     private final TimeInterpolatableBuffer<Rotation2d> rotationBuffer =
         TimeInterpolatableBuffer.createBuffer(1.5);
 
-    private Angle currentTurretAngle;
+    private TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
+        TimeInterpolatableBuffer.createBuffer(1.5);
 
     /**
      * Creates a new swerve state estimator.
@@ -198,15 +200,17 @@ public class SwerveState {
 
     private Transform3d getRobotToCamera(CameraConstants constants) {
         if (constants.isTurret) {
-            Transform3d pose = constants.robotToCamera;
-            return new Transform3d(pose.getTranslation(), pose.getRotation()
-                .rotateBy(new Rotation3d(Degrees.of(0.0), Degrees.of(0.0), currentTurretAngle)));
+            Optional<Rotation2d> turretAngleOpt =
+                currentTurretAngle.getSample(Timer.getFPGATimestamp());
+            Rotation3d rotate = new Rotation3d(0.0, 0.0, turretAngleOpt.get().getDegrees());
+            return new Transform3d(constants.robotToCamera.getTranslation(),
+                constants.robotToCamera.getRotation().rotateBy(rotate));
         }
         return constants.robotToCamera;
     }
 
-    public void setTurretAngle(Angle angle) {
-        currentTurretAngle = angle;
+    public void setTurretAngle(Double timestamp, Angle angle) {
+        currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
     }
 
     /**

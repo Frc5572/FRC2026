@@ -288,10 +288,7 @@ public final class Constants {
                     new Rotation3d(Math.PI, 0, 0)))
                 .translationError(0.02)
                 .finish(),
-        };
-
-        public static CameraConstants[] turretCameraConstants = new CameraConstants[] {
-            new CameraConstantsBuilder()
+                new CameraConstantsBuilder()
                 .name("cam1")
                 .height(800)
                 .width(1280)
@@ -303,6 +300,9 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretLeft))
                 .translationError(0.02)
+                .rotationError(0)
+                .singleTagError(0)
+                .isTurret(true)
                 .finish(),
             new CameraConstantsBuilder()
                 .name("cam1")
@@ -316,6 +316,9 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
                 .translationError(0.02)
+                .rotationError(0)
+                .singleTagError(0)
+                .isTurret(true)
                 .finish(),
         };
         // @formatter:on
