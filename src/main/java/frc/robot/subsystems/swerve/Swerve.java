@@ -85,6 +85,8 @@ public final class Swerve extends SubsystemBase {
 
     public final SwerveState state;
 
+    public double customSkidLimit = 1000.0;
+
     /**
      * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
      * background odometry processing.
@@ -179,7 +181,7 @@ public final class Swerve extends SubsystemBase {
     public Command driveRobotRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return this.run(() -> {
             ChassisSpeeds speeds = driveSpeeds.get();
-            speeds = limiter.limit(speeds);
+            speeds = limiter.limit(speeds, customSkidLimit);
             setModuleStates(speeds);
         });
     }
@@ -248,7 +250,7 @@ public final class Swerve extends SubsystemBase {
      */
     public MoveToPoseBuilder moveToPose() {
         return new MoveToPoseBuilder(this, (speeds) -> {
-            speeds = limiter.limit(speeds);
+            speeds = limiter.limit(speeds, customSkidLimit);
             setModuleStates(speeds);
         });
     }
@@ -345,7 +347,7 @@ public final class Swerve extends SubsystemBase {
      */
     public Command stop() {
         return this.driveRobotRelative(ChassisSpeeds::new).until(() -> {
-            var speeds = limiter.limit(new ChassisSpeeds());
+            var speeds = limiter.limit(new ChassisSpeeds(), customSkidLimit);
             return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.1;
         }).andThen(this.emergencyStop());
     }
@@ -372,6 +374,11 @@ public final class Swerve extends SubsystemBase {
      */
     public Command emergencyStop() {
         return this.runOnce(() -> setModuleStates(new ChassisSpeeds()));
+    }
+
+    public Command limitSkidLimit() {
+        return Commands.runEnd(() -> customSkidLimit = FieldConstants.Hub.innerWidth / 2.0,
+            () -> customSkidLimit = 1000.0, this);
     }
 
     private void runCharacterization(double output) {

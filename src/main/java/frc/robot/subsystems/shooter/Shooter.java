@@ -26,6 +26,10 @@ public final class Shooter extends SubsystemBase {
         Logger.processInputs("Shooter", inputs);
     }
 
+    public void setVelocity(double velocity) {
+        io.runShooterVelocity(velocity);
+    }
+
     public Command runShooterVelocityCommand(double velocity) {
         return run(() -> io.runShooterVelocity(velocity));
     }
