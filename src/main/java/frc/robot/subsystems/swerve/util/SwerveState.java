@@ -176,6 +176,22 @@ public class SwerveState {
         initted = true;
     }
 
+
+
+    private Transform3d getRobotToCamera(CameraConstants constants, double time) {
+        if (constants.isTurret) {
+            Optional<Rotation2d> turretAngleOpt = currentTurretAngle.getSample(time);
+            Rotation3d rotate = new Rotation3d(0.0, 0.0, turretAngleOpt.get().getDegrees());
+            return new Transform3d(constants.robotToCamera.getTranslation(),
+                constants.robotToCamera.getRotation().rotateBy(rotate));
+        }
+        return constants.robotToCamera;
+    }
+
+    public void setTurretAngle(Double timestamp, Angle angle) {
+        currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
+    }
+
     /**
      * Adds a vision measurement using an externally computed camera pose.
      *
@@ -195,20 +211,6 @@ public class SwerveState {
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);
         Logger.recordOutput("State/VisionRobotPose", robotPose);
-    }
-
-    private Transform3d getRobotToCamera(CameraConstants constants, double time) {
-        if (constants.isTurret) {
-            Optional<Rotation2d> turretAngleOpt = currentTurretAngle.getSample(time);
-            Rotation3d rotate = new Rotation3d(0.0, 0.0, turretAngleOpt.get().getDegrees());
-            return new Transform3d(constants.robotToCamera.getTranslation(),
-                constants.robotToCamera.getRotation().rotateBy(rotate));
-        }
-        return constants.robotToCamera;
-    }
-
-    public void setTurretAngle(Double timestamp, Angle angle) {
-        currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
     }
 
     /**
@@ -298,7 +300,8 @@ public class SwerveState {
                 Translation2d cameraPosition = maybePose.get().getTranslation()
                     .minus(cameraToTargetInWorldFrame).toTranslation2d();
                 Pose3d cameraPose = new Pose3d(cameraPosition.getX(), cameraPosition.getY(),
-                    getRobotToCamera(camera).getZ(), cameraRotationInWorldFrame);
+                    getRobotToCamera(camera, pipelineResult.getTimestampSeconds()).getZ(),
+                    cameraRotationInWorldFrame);
                 Logger.recordOutput("State/singleTagCameraPose", cameraPose);
                 double stdDevMultiplier = stdDevMultiplier(pipelineResult.targets, cameraPose);
                 double translationStdDev =
