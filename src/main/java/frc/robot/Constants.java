@@ -256,14 +256,7 @@ public final class Constants {
     /** Vision Constants */
     public static final class Vision {
         public static final AprilTagFieldLayout fieldLayout =
-            FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout(); // This
-        // should
-        // refernce ur
-        // field
-        // constants, so
-        // they dont
-        // become
-        // different
+            FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
         /** TODO: meausre on bot */
         public static final Pose3d turretCenter =
