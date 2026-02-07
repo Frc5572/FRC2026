@@ -124,5 +124,4 @@ public class Vision extends SubsystemBase {
         res[translations.length + 1] = newTranslation2;
         return res;
     }
-
 }
