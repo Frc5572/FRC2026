@@ -264,12 +264,14 @@ public final class Constants {
         // they dont
         // become
         // different
+
+        /** TODO: meausre on bot */
         public static final Pose3d turretCenter =
-            new Pose3d(Inches.of(13.50), Inches.of(6.99), Inches.of(0.00), Rotation3d.kZero);
+            new Pose3d(Inches.of(-6.5), Inches.of(0.00), Inches.of(0.00), Rotation3d.kZero);
         public static final Pose3d turretLeft =
             new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
         public static final Pose3d turretRight =
-            new Pose3d(Inches.of(19.093), Inches.of(7.681), Inches.of(0.0), Rotation3d.kZero);
+            new Pose3d(Inches.of(5.307), Inches.of(-5.958), Inches.of(0.0), Rotation3d.kZero);
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
