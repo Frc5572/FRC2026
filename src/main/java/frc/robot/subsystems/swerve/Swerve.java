@@ -432,21 +432,12 @@ public final class Swerve extends SubsystemBase {
         }
     }
 
-    /** Returns list with all of the trench locations */
-    public static final List<Translation2d> trenchLocation() {
-        List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.redTrenchCenterLeft,
-            FieldConstants.LeftTrench.blueTrenchCenterLeft,
-            FieldConstants.RightTrench.redTrenchCenterRight,
-            FieldConstants.RightTrench.blueTrenchCenterRight);
-        return trenchLocations;
-    }
-
     /** Identifies Closest Trench */
     public Translation2d closestTrench() {
         Pose2d botPosition = state.getGlobalPoseEstimate();
         Translation2d botLocation = botPosition.getTranslation();
 
-        return botLocation.nearest(trenchLocation());
+        return botLocation.nearest(Constants.Trench.trenchLocation);
     }
 
     /** Returns the distance between the robot and the closest Trench zone. */
