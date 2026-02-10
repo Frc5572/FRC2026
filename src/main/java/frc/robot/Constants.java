@@ -284,7 +284,7 @@ public final class Constants {
                 .translationError(0.02)
                 .finish(),
                 new CameraConstantsBuilder()
-                .name("cam1")
+                .name("leftTurretCamera")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -300,7 +300,7 @@ public final class Constants {
                 .isTurret(true)
                 .finish(),
             new CameraConstantsBuilder()
-                .name("cam1")
+                .name("rightTurretCamera")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
