@@ -223,15 +223,15 @@ public final class Constants {
         public static final ModuleConstants[] modulesConstants = new ModuleConstants[] {
             // Front Left Module
             new ModuleConstantsBuilder()
-                .driveMotorId(0)
-                .angleMotorId(1)
+                .driveMotorId(1)
+                .angleMotorId(0)
                 .canCoderId(1)
                 .angleOffset(Rotation2d.fromRotations(0.008789))
                 .finish(),
             // Front Right Module
             new ModuleConstantsBuilder()
-                .driveMotorId(6)
-                .angleMotorId(7)
+                .driveMotorId(7)
+                .angleMotorId(6)
                 .canCoderId(2)
                 .angleOffset(Rotation2d.fromRotations(-0.301758))
                 .finish(),
@@ -244,8 +244,8 @@ public final class Constants {
                 .finish(),
             // Back Right Module
             new ModuleConstantsBuilder()
-                .driveMotorId(4)
-                .angleMotorId(5)
+                .driveMotorId(5)
+                .angleMotorId(4)
                 .canCoderId(4)
                 .angleOffset(Rotation2d.fromRotations(0.321777))
                 .finish(),
