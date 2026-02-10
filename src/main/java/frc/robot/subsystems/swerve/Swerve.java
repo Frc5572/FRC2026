@@ -18,6 +18,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -456,25 +457,25 @@ public final class Swerve extends SubsystemBase {
         double botXLocation = botLocation.getX();
         double botYLocation = botLocation.getY();
         if (closestTrench().equals(FieldConstants.LeftTrench.redTrenchCenterLeft)) {
-            return botXLocation > (FieldConstants.LeftTrench.redCloseCenterLeft).getX()
-                && botXLocation < (FieldConstants.LeftTrench.redFarCenterLeft).getX()
-                && botYLocation > (FieldConstants.LeftTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.LeftTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.LeftTrench.redCloseCenterLeft).getX()
+                && botXLocation <= (FieldConstants.LeftTrench.redFarCenterLeft).getX()
+                && botYLocation >= (FieldConstants.LeftTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.LeftTrench.openingTopLeft).getY();
         } else if (closestTrench().equals(FieldConstants.LeftTrench.blueTrenchCenterLeft)) {
-            return botXLocation > (FieldConstants.LeftTrench.blueCloseCenterLeft).getX()
-                && botXLocation < (FieldConstants.LeftTrench.blueFarCenterLeft).getX()
-                && botYLocation > (FieldConstants.LeftTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.LeftTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.LeftTrench.blueCloseCenterLeft).getX()
+                && botXLocation <= (FieldConstants.LeftTrench.blueFarCenterLeft).getX()
+                && botYLocation >= (FieldConstants.LeftTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.LeftTrench.openingTopLeft).getY();
         } else if (closestTrench().equals(FieldConstants.RightTrench.redTrenchCenterRight)) {
-            return botXLocation > (FieldConstants.RightTrench.redCloseCenterRight).getX()
-                && botXLocation < (FieldConstants.RightTrench.redFarCenterRight).getX()
-                && botYLocation > (FieldConstants.RightTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.RightTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.RightTrench.redCloseCenterRight).getX()
+                && botXLocation <= (FieldConstants.RightTrench.redFarCenterRight).getX()
+                && botYLocation >= (FieldConstants.RightTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.RightTrench.openingTopLeft).getY();
         } else if (closestTrench().equals(FieldConstants.RightTrench.blueTrenchCenterRight)) {
-            return botXLocation > (FieldConstants.RightTrench.blueCloseCenterRight).getX()
-                && botXLocation < (FieldConstants.RightTrench.blueFarCenterRight).getX()
-                && botYLocation > (FieldConstants.RightTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.RightTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.RightTrench.blueCloseCenterRight).getX()
+                && botXLocation <= (FieldConstants.RightTrench.blueFarCenterRight).getX()
+                && botYLocation >= (FieldConstants.RightTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.RightTrench.openingTopLeft).getY();
         } else {
             return false;
         }
@@ -500,6 +501,15 @@ public final class Swerve extends SubsystemBase {
         return currentBotPos.nearest(trenchSides());
     }
 
+    /** Returns when the bot is near the goal possition */
+    public boolean atGoalPosition() {
+        Translation2d currentBotPos = state.getGlobalPoseEstimate().getTranslation();
+        double distance = currentBotPos.getDistance(goalTrenchPosition());
+
+        // the tollerence needs to be changed
+        return distance < Units.inchesToMeters(2);
+    }
+
     /** Command that moves the robot to the trench without going through */
     public Command moveToTrench() {
         return run(() -> {
@@ -513,7 +523,8 @@ public final class Swerve extends SubsystemBase {
             driveFieldRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, 0.0,
                 state.getGlobalPoseEstimate().getRotation()));
 
-        }).until(() -> inTrench()).finallyDo(() -> driveFieldRelative(() -> new ChassisSpeeds()))
+        }).until(() -> atGoalPosition() && inTrench())
+            .finallyDo(() -> driveFieldRelative(() -> new ChassisSpeeds()))
             .withName("Move to trench");
     }
 }
