@@ -6,6 +6,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -154,5 +155,16 @@ public class Turret extends SubsystemBase {
 
     public Command goToAngle(Angle rotations) {
         return run(() -> this.setGoal(rotations));
+    }
+
+    /*
+     * Sets the turret to go in the opposite direction of the drivetrain so it can resist the
+     * direction change, and stay facing the hub.
+     */
+
+    public Command setAutoTurretFollow(Rotation2d swervePose) {
+        return Commands.run(() -> {
+            io.setAutoTurretFollow(swervePose);
+        });
     }
 }

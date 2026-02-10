@@ -6,7 +6,6 @@ import java.util.Random;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.sim.SimPosition;
 
@@ -70,7 +69,6 @@ public class TurretSim implements TurretIO {
     @Override
     public void resetPosition(Angle angle) {}
 
-    public Command setAutoTurretFollow() {
-
-    }
+    @Override
+    public void setAutoTurretFollow(Rotation2d swervePose) {}
 }

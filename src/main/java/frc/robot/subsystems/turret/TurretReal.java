@@ -6,16 +6,18 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 
 /** turret hardware */
@@ -36,6 +38,9 @@ public class TurretReal implements TurretIO {
     private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getAbsolutePosition();
     public final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
     private final VoltageOut voltage = new VoltageOut(0.0);
+
+    // Put actual hub location coordinates
+    private final Translation2d hubLocation = new Translation2d(8.27, 4.1); 
 
     /** Real Turret Implementation */
     public TurretReal() {
@@ -116,7 +121,8 @@ public class TurretReal implements TurretIO {
     }
 
     @Override
-    public Command setAutoTurretFollow() {
-
+    public void setAutoTurretFollow(Pose2d swervePose) {
+        double swerveRotation = swervePose.getRotation().getRotations();
+        turretMotor.setControl(new PositionVoltage(-swerveRotation));
     }
 }
