@@ -501,7 +501,7 @@ public final class Swerve extends SubsystemBase {
         return currentBotPos.nearest(trenchSides());
     }
 
-    /** Returns when the bot is near the goal possition */
+    /** Returns when the bot is near the goal position */
     public boolean atGoalPosition() {
         Translation2d currentBotPos = state.getGlobalPoseEstimate().getTranslation();
         double distance = currentBotPos.getDistance(goalTrenchPosition());
