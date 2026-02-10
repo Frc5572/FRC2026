@@ -258,9 +258,10 @@ public final class Constants {
         public static final AprilTagFieldLayout fieldLayout =
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
-        /** TODO: meausre on bot */
         public static final Pose3d turretCenter =
-            new Pose3d(Inches.of(-6.5), Inches.of(0.00), Inches.of(0.00), Rotation3d.kZero);
+            new Pose3d(new Translation3d(-0.1651, 0, 0.36772), Rotation3d.kZero);
+
+        /** TODO: meausre on bot */
         public static final Pose3d turretLeft =
             new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
         public static final Pose3d turretRight =

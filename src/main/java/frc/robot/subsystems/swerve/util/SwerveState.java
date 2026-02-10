@@ -59,7 +59,7 @@ public class SwerveState {
     private final TimeInterpolatableBuffer<Rotation2d> rotationBuffer =
         TimeInterpolatableBuffer.createBuffer(1.5);
 
-    private TimeInterpolatableBuffer<Rotation2d> turretAngleBuffer =
+    private TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
         TimeInterpolatableBuffer.createBuffer(1.5);
 
     /**
@@ -180,16 +180,21 @@ public class SwerveState {
 
     private Transform3d getRobotToCamera(CameraConstants constants, double time) {
         if (constants.isTurret) {
-            Optional<Rotation2d> turretAngleOpt = turretAngleBuffer.getSample(time);
+            Optional<Rotation2d> turretAngleOpt = currentTurretAngle.getSample(time);
+            if (turretAngleOpt == null) {
+                return constants.robotToCamera;
+            }
             Rotation3d rotate = new Rotation3d(0.0, 0.0, turretAngleOpt.get().getRadians());
-            return new Transform3d(constants.robotToCamera.getTranslation(),
-                constants.robotToCamera.getRotation().rotateBy(rotate));
+            Transform3d robotToTurret =
+                new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
+            Transform3d turretToCamera = constants.robotToCamera;
+            return robotToTurret.plus(turretToCamera);
         }
         return constants.robotToCamera;
     }
 
     public void setTurretAngle(double timestamp, Angle angle) {
-        turretAngleBuffer.addSample(timestamp, new Rotation2d(angle));
+        currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
     }
 
     /**
@@ -226,13 +231,13 @@ public class SwerveState {
     public boolean addVisionObservation(CameraConstants camera,
         PhotonPipelineResult pipelineResult) {
         var multiTag = pipelineResult.getMultiTagResult();
+        Transform3d robotToCamera = getRobotToCamera(camera, pipelineResult.getTimestampSeconds());
         if (!initted) {
             multiTag.ifPresent(multiTag_ -> {
                 Transform3d best = multiTag_.estimatedPose.best;
                 Pose3d cameraPose =
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
-                Pose3d robotPose = cameraPose
-                    .plus(getRobotToCamera(camera, pipelineResult.getTimestampSeconds()).inverse());
+                Pose3d robotPose = cameraPose.plus(robotToCamera.inverse());
                 visionAdjustedOdometry.resetPose(robotPose.toPose2d());
                 initted = true;
             });
@@ -282,11 +287,9 @@ public class SwerveState {
                 Rotation3d targetInCameraFrame = new Rotation3d(Radians.of(0.0),
                     Degrees.of(-target.getPitch()), Degrees.of(-target.getYaw()));
                 Rotation3d cameraRotationInWorldFrame =
-                    getRobotToCamera(camera, pipelineResult.getTimestampSeconds()).getRotation()
-                        .rotateBy(new Rotation3d(yawSample.get()));
-                Translation3d debugTranslation = new Pose3d(getGlobalPoseEstimate())
-                    .plus(getRobotToCamera(camera, pipelineResult.getTimestampSeconds()))
-                    .getTranslation();
+                    robotToCamera.getRotation().rotateBy(new Rotation3d(yawSample.get()));
+                Translation3d debugTranslation =
+                    new Pose3d(getGlobalPoseEstimate()).plus(robotToCamera).getTranslation();
                 Logger.recordOutput("State/singleTagCameraRotationInWorldFrame",
                     new Pose3d(debugTranslation, cameraRotationInWorldFrame));
                 Rotation3d targetRotationInWorldFrame =
@@ -300,8 +303,7 @@ public class SwerveState {
                 Translation2d cameraPosition = maybePose.get().getTranslation()
                     .minus(cameraToTargetInWorldFrame).toTranslation2d();
                 Pose3d cameraPose = new Pose3d(cameraPosition.getX(), cameraPosition.getY(),
-                    getRobotToCamera(camera, pipelineResult.getTimestampSeconds()).getZ(),
-                    cameraRotationInWorldFrame);
+                    robotToCamera.getZ(), cameraRotationInWorldFrame);
                 Logger.recordOutput("State/singleTagCameraPose", cameraPose);
                 double stdDevMultiplier = stdDevMultiplier(pipelineResult.targets, cameraPose);
                 double translationStdDev =
