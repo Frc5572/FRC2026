@@ -1,12 +1,11 @@
 package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Radians;
-import java.util.Map;
 import java.util.function.Consumer;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 
 /**
@@ -109,8 +108,30 @@ public class ShotCalculator {
         rpsOutput.accept(adjustedRps);
     }
 
-    public static void velocityComp(Translation2d robotPosition, Translation2d robotVelocity,
-        Translation2d goalPosition, Consumer<Double> rpsOutput, Consumer<Angle> hoodAngle) {
+    /**
+     * Calculates shooter parameters based on current robot position, velocity, and goal position.
+     * This method projects the robot's future position based on its current velocity, then
+     * calculates the required shot velocity to hit the target from that future position. It then
+     * uses the required shot velocity to adjust the shooter parameters accordingly
+     * 
+     * @param robotPosition The current position of the robot on the field as a Translation2d (x,
+     *        y).
+     * @param robotVelocity The current velocity of the robot as a Translation2d (vx, vy). This is
+     *        used to project the robot's future position and to calculate the required shot
+     *        velocity.
+     * @param goalPosition The position of the target on the field as a Translation2d (x, y).
+     * @param rpsOutput A consumer to accept the calculated shooter RPS.
+     * @param hoodAngle A consumer to accept the calculated hood angle.
+     * @param turretAngle A consumer to accept the calculated turret angle (the angle the turret
+     *        needs to turn to face the calculated target).
+     */
+    public static void velocityComp(Translation2d robotPosition, ChassisSpeeds chassisSpeeds,
+        Translation2d goalPosition, Consumer<Double> rpsOutput, Consumer<Angle> hoodAngle,
+        Consumer<Angle> turretAngle) {
+
+        // Convert chassis speeds to field-relative velocity vector
+        Translation2d robotVelocity =
+            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
 
         // 1. Project future position
         Translation2d futurePos = robotPosition.plus(robotVelocity);
@@ -131,27 +152,10 @@ public class ShotCalculator {
         Translation2d shotVelocity = targetVelocity.minus(robotVelocity);
 
         // 6. Extract results
-        Rotation2d turretAngle = shotVelocity.getAngle();
+        turretAngle.accept(shotVelocity.getAngle().getMeasure());
         double requiredVelocity = shotVelocity.getNorm();
 
-        // 7. Use table in reverse: velocity → effective distance → RPM
-        double effectiveDistance = velocityToEffectiveDistance(requiredVelocity);
-        double requiredRpm = SHOOTER_MAP.get(effectiveDistance).rps;
-    }
+        calculateBoth(distance, requiredVelocity, hoodAngle, rpsOutput);
 
-    public double velocityToEffectiveDistance(double velocity) {
-        // Binary search or iterate through table to find distance
-        // where (distance / ToF) = velocity
-        // Most InterpolatingTreeMap implementations support inverse lookup
-        // or you can build a reverse map: velocity → distance
-
-        for (Map.Entry<Double, ShooterParams> entry : SHOOTER_MAP.entrySet()) {
-            double dist = entry.getKey();
-            double vel = dist / entry.getValue().timeOfFlight;
-            if (vel >= velocity) {
-                return dist; // Interpolate for better accuracy
-            }
-        }
-        return SHOOTER_MAP.lastKey(); // Clamp to max
     }
 }
