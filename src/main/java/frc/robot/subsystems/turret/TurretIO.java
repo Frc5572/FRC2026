@@ -45,6 +45,4 @@ public interface TurretIO {
     public void setTargetAngle(Angle angle);
 
     public void resetPosition(Angle angle);
-
-    public void setAutoTurretFollow(Rotation2d swervePose);
 }

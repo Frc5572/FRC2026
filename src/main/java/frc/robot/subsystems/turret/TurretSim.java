@@ -68,7 +68,4 @@ public class TurretSim implements TurretIO {
 
     @Override
     public void resetPosition(Angle angle) {}
-
-    @Override
-    public void setAutoTurretFollow(Rotation2d swervePose) {}
 }

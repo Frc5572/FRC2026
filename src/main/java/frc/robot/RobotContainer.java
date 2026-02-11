@@ -141,7 +141,7 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
-        turret.setDefaultCommand(turret.setAutoTurretFollow());
+        turret.setDefaultCommand(turret.setAutoTurretFollow(swerve.state.getGlobalPoseEstimate()));
 
         // driver.y().onTrue(swerve.setFieldRelativeOffset());
 
