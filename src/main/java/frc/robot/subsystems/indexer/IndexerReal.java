@@ -23,31 +23,42 @@ public class IndexerReal implements IndexerIO {
     public EncoderConfig magazineConfig;
     private VelocityDutyCycle velocityDutyCycleRequest = new VelocityDutyCycle(0);
 
+    private boolean magazineConnected;
+
     /** Real Indexer Implementation */
     public IndexerReal() {
+        boolean connected = false;
         try {
             magazine = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
-            encoder = magazine.getEncoder();
-            magazineConfig = new EncoderConfig();
-
-            magazineConfig.velocityConversionFactor(1.0 / 60.0);
 
             if (magazine.getFirmwareVersion() == 0) {
                 throw new Exception("Motor not found");
             }
+            magazineConfig = new EncoderConfig();
+            magazineConfig.velocityConversionFactor(1.0 / 60.0);
+            encoder = magazine.getEncoder();
+            connected = true;
         } catch (Exception e) {
+            System.out.println("magazine initializaiton failed: " + e.getMessage());
             magazine = null;
             encoder = null;
             magazineConfig = null;
+            connected = false;
         }
+        this.magazineConnected = connected;
     }
 
     @Override
     public void updateInputs(IndexerInputs inputs) {
         BaseStatusSignal.refreshAll(spinMotorVelocity);
         inputs.spindexerVelocity = spinMotorVelocity.getValue();
-        if (magazine != null) {
+
+        inputs.magazineMotorConnected = this.magazineConnected;
+
+        if (this.magazineConnected && magazine != null) {
             inputs.magazineVelocity = RotationsPerSecond.of(encoder.getVelocity());
+        } else {
+            inputs.magazineVelocity = RotationsPerSecond.of(0);
         }
     }
 
@@ -58,7 +69,7 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
-        if (magazine != null) {
+        if (this.magazineConnected && magazine != null) {
             magazine.set(dutyCycle);
         }
     }
