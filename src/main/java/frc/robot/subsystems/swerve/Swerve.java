@@ -426,21 +426,12 @@ public final class Swerve extends SubsystemBase {
         }
     }
 
-    /** Returns list with all of the trench locations */
-    public static final List<Translation2d> trenchLocation() {
-        List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.redTrenchCenterLeft,
-            FieldConstants.LeftTrench.blueTrenchCenterLeft,
-            FieldConstants.RightTrench.redTrenchCenterRight,
-            FieldConstants.RightTrench.blueTrenchCenterRight);
-        return trenchLocations;
-    }
-
     /** Identifies Closest Trench */
     public Translation2d closestTrench() {
         Pose2d botPosition = state.getGlobalPoseEstimate();
         Translation2d botLocation = botPosition.getTranslation();
 
-        return botLocation.nearest(trenchLocation());
+        return botLocation.nearest(Constants.Trench.trenchLocation);
     }
 
     /** Returns the distance between the robot and the closest Trench zone. */
@@ -459,27 +450,57 @@ public final class Swerve extends SubsystemBase {
         double botXLocation = botLocation.getX();
         double botYLocation = botLocation.getY();
         if (closestTrench().equals(FieldConstants.LeftTrench.redTrenchCenterLeft)) {
-            return botXLocation > (FieldConstants.LeftTrench.redCloseCenterLeft).getX()
-                && botXLocation < (FieldConstants.LeftTrench.redFarCenterLeft).getX()
-                && botYLocation > (FieldConstants.LeftTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.LeftTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.LeftTrench.redCloseCenterLeft).getX()
+                && botXLocation <= (FieldConstants.LeftTrench.redFarCenterLeft).getX()
+                && botYLocation >= (FieldConstants.LeftTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.LeftTrench.openingTopLeft).getY();
         } else if (closestTrench().equals(FieldConstants.LeftTrench.blueTrenchCenterLeft)) {
-            return botXLocation > (FieldConstants.LeftTrench.blueCloseCenterLeft).getX()
-                && botXLocation < (FieldConstants.LeftTrench.blueFarCenterLeft).getX()
-                && botYLocation > (FieldConstants.LeftTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.LeftTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.LeftTrench.blueCloseCenterLeft).getX()
+                && botXLocation <= (FieldConstants.LeftTrench.blueFarCenterLeft).getX()
+                && botYLocation >= (FieldConstants.LeftTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.LeftTrench.openingTopLeft).getY();
         } else if (closestTrench().equals(FieldConstants.RightTrench.redTrenchCenterRight)) {
-            return botXLocation > (FieldConstants.RightTrench.redCloseCenterRight).getX()
-                && botXLocation < (FieldConstants.RightTrench.redFarCenterRight).getX()
-                && botYLocation > (FieldConstants.RightTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.RightTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.RightTrench.redCloseCenterRight).getX()
+                && botXLocation <= (FieldConstants.RightTrench.redFarCenterRight).getX()
+                && botYLocation >= (FieldConstants.RightTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.RightTrench.openingTopLeft).getY();
         } else if (closestTrench().equals(FieldConstants.RightTrench.blueTrenchCenterRight)) {
-            return botXLocation > (FieldConstants.RightTrench.blueCloseCenterRight).getX()
-                && botXLocation < (FieldConstants.RightTrench.blueFarCenterRight).getX()
-                && botYLocation > (FieldConstants.RightTrench.openingTopRight).getY()
-                && botYLocation < (FieldConstants.RightTrench.openingTopLeft).getY();
+            return botXLocation >= (FieldConstants.RightTrench.blueCloseCenterRight).getX()
+                && botXLocation <= (FieldConstants.RightTrench.blueFarCenterRight).getX()
+                && botYLocation >= (FieldConstants.RightTrench.openingTopRight).getY()
+                && botYLocation <= (FieldConstants.RightTrench.openingTopLeft).getY();
         } else {
             return false;
         }
+    }
+
+    /** returns a list with all of the trench bounds */
+    public static final List<Translation2d> trenchSides() {
+        List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.redCloseCenterLeft,
+            FieldConstants.LeftTrench.redFarCenterLeft,
+            FieldConstants.LeftTrench.blueCloseCenterLeft,
+            FieldConstants.LeftTrench.blueFarCenterLeft,
+            FieldConstants.RightTrench.redCloseCenterRight,
+            FieldConstants.RightTrench.redFarCenterRight,
+            FieldConstants.RightTrench.blueFarCenterRight,
+            FieldConstants.RightTrench.blueCloseCenterRight);
+        return trenchLocations;
+    }
+
+    /** Returns the goal location of the robot */
+    public Translation2d goalTrenchPosition() {
+        Translation2d currentBotPos = state.getGlobalPoseEstimate().getTranslation();
+
+        return currentBotPos.nearest(trenchSides());
+    }
+
+    /** Command that moves the robot to the trench without going through */
+    public Command moveToTrench() {
+        return this.moveToPose()
+            .target(
+                () -> new Pose2d(goalTrenchPosition(), state.getGlobalPoseEstimate().getRotation()))
+            .autoRoutine(null).maxSpeed(Constants.Swerve.maxSpeed).flipForRed(false)
+            .translationTolerance(Constants.Trench.tolerance).rotationTolerance(Math.toRadians(2))
+            .finish().until(() -> this.inTrench());
     }
 }
