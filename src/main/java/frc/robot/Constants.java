@@ -12,7 +12,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -256,7 +256,16 @@ public final class Constants {
     /** Vision Constants */
     public static final class Vision {
         public static final AprilTagFieldLayout fieldLayout =
-            AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
+            FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
+
+        public static final Pose3d turretCenter =
+            new Pose3d(new Translation3d(-0.1651, 0, 0.36772), Rotation3d.kZero);
+
+        /** TODO: meausre on bot */
+        public static final Pose3d turretLeft =
+            new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
+        public static final Pose3d turretRight =
+            new Pose3d(Inches.of(5.307), Inches.of(-5.958), Inches.of(0.0), Rotation3d.kZero);
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -274,6 +283,22 @@ public final class Constants {
                     -Units.inchesToMeters(12), Units.inchesToMeters(10)),
                     new Rotation3d(Math.PI, 0, 0)))
                 .translationError(0.02)
+                .finish(),
+            new CameraConstantsBuilder()
+                .name("rightTurretCamera")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(new Transform3d(turretCenter, turretRight))
+                .translationError(0.02)
+                .rotationError(0)
+                .singleTagError(0)
+                .isTurret(true)
                 .finish(),
         };
         // @formatter:on
