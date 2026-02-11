@@ -23,11 +23,10 @@ public class IndexerReal implements IndexerIO {
     public EncoderConfig magazineConfig;
     private VelocityDutyCycle velocityDutyCycleRequest = new VelocityDutyCycle(0);
 
-    private boolean magazineConnected;
+    private boolean magazineConnected = false;
 
     /** Real Indexer Implementation */
     public IndexerReal() {
-        boolean connected = false;
         try {
             magazine = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
 
@@ -37,15 +36,10 @@ public class IndexerReal implements IndexerIO {
             magazineConfig = new EncoderConfig();
             magazineConfig.velocityConversionFactor(1.0 / 60.0);
             encoder = magazine.getEncoder();
-            connected = true;
+            magazineConnected = true;
         } catch (Exception e) {
             System.out.println("magazine initialization failed: " + e.getMessage());
-            magazine = null;
-            encoder = null;
-            magazineConfig = null;
-            connected = false;
         }
-        this.magazineConnected = connected;
     }
 
     @Override
@@ -53,9 +47,9 @@ public class IndexerReal implements IndexerIO {
         BaseStatusSignal.refreshAll(spinMotorVelocity);
         inputs.spindexerVelocity = spinMotorVelocity.getValue();
 
-        inputs.magazineMotorConnected = this.magazineConnected;
+        inputs.magazineMotorConnected = magazineConnected;
 
-        if (this.magazineConnected && magazine != null) {
+        if (magazineConnected && magazine != null) {
             inputs.magazineVelocity = RotationsPerSecond.of(encoder.getVelocity());
         } else {
             inputs.magazineVelocity = RotationsPerSecond.of(0);
@@ -69,7 +63,7 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
-        if (this.magazineConnected && magazine != null) {
+        if (magazineConnected && magazine != null) {
             magazine.set(dutyCycle);
         }
     }

@@ -29,23 +29,20 @@ public class IntakeReal implements IntakeIO {
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
 
-    private boolean intakeConnected;
+    private boolean intakeConnected = false;
 
     /** Real Intake Implementation */
     public IntakeReal() {
-        boolean success = false;
         try {
             intakeMotor = new SparkFlex(Constants.IntakeConstants.intakeID, MotorType.kBrushless);
             if (intakeMotor.getFirmwareVersion() == 0) {
                 throw new Exception("Motor not found");
             }
-            success = true;
+            intakeConnected = true;
         } catch (Exception e) {
             System.out.println("Intake initialization failed: " + e.getMessage());
-            intakeMotor = null;
-            success = false;
+            intakeConnected = false;
         }
-        this.intakeConnected = success;
         configure();
     }
 
@@ -67,7 +64,7 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void runIntakeMotor(double speed) {
-        if (this.intakeConnected && intakeMotor != null) {
+        if (intakeConnected && intakeMotor != null) {
             intakeMotor.set(speed);
         }
     }
@@ -78,8 +75,8 @@ public class IntakeReal implements IntakeIO {
         inputs.hopperPosition = Meters.of(rightMotorPosition.getValue().in(Rotations));
         inputs.limitSwitch = limitSwitchMin.get();
 
-        inputs.intakeMotorConnected = this.intakeConnected;
-        if (this.intakeConnected && intakeMotor != null) {
+        inputs.intakeMotorConnected = intakeConnected;
+        if (intakeConnected && intakeMotor != null) {
             inputs.intakeDutyCycle = intakeMotor.get();
         } else {
             inputs.intakeDutyCycle = 0.0;
