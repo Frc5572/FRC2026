@@ -5,9 +5,11 @@ import static edu.wpi.first.units.Units.Rotations;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.swerve.util.SwerveState;
 
 /**
  * Subsystem representing the robot turret.
@@ -17,15 +19,17 @@ public class Turret extends SubsystemBase {
     private boolean hasSynced = false;
     private final TurretIO io;
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
+    private final SwerveState state;
 
     /**
      * Creates a new Turret subsystem.
      *
      * @param io Hardware abstraction used to read sensors and control actuators
      */
-    public Turret(TurretIO io) {
+    public Turret(TurretIO io, SwerveState state) {
         super("Turret");
         this.io = io;
+        this.state = state;
     }
 
     @Override
@@ -42,6 +46,7 @@ public class Turret extends SubsystemBase {
             io.resetPosition(turretRotationEstimate);
             hasSynced = true;
         }
+        state.setTurretAngle(Timer.getTimestamp(), turretRotationEstimate);
     }
 
     /**
