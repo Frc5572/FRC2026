@@ -39,7 +39,7 @@ public class IndexerReal implements IndexerIO {
             encoder = magazine.getEncoder();
             connected = true;
         } catch (Exception e) {
-            System.out.println("magazine initializaiton failed: " + e.getMessage());
+            System.out.println("magazine initialization failed: " + e.getMessage());
             magazine = null;
             encoder = null;
             magazineConfig = null;
