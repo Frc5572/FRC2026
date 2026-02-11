@@ -88,7 +88,7 @@ public class RobotState {
      * </ul>
      *
      * <p>
-     * This method updates only the pose estimator / odometry state owned by {@code SwerveState}. It
+     * This method updates only the pose estimator / odometry state owned by {@code RobotState}. It
      * does <b>not</b> update any associated simulation state or drivetrain model.
      *
      * <p>

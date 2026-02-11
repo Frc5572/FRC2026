@@ -29,7 +29,7 @@ public class IntakeReal implements IntakeIO {
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
 
-    /** Intake consturctor */
+    /** Intake constructor */
     public IntakeReal() {
         config.Feedback.SensorToMechanismRatio = 1; // change for testing
         config.Slot0.kP = Constants.IntakeConstants.KP; // change for testing

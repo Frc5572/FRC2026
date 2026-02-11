@@ -19,7 +19,7 @@ import frc.robot.util.Tuples.Tuple2;
  *
  * <p>
  * This subsystem acts as a bridge between one or more vision pipelines (e.g. PhotonVision) and the
- * {@link SwerveState} pose estimator.
+ * {@link RobotState} pose estimator.
  *
  * <h2>Timestamp handling</h2> Vision measurements are frequently delayed relative to the control
  * loop. This subsystem ensures measurements are applied in chronological order so that the pose
