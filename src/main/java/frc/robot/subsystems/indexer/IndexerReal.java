@@ -31,7 +31,6 @@ public class IndexerReal implements IndexerIO {
 
             magazineConfig.velocityConversionFactor(1.0 / 60.0);
 
-            // Check if the hardware is actually there to prevent CAN lag
             if (magazine.getFirmwareVersion() == 0) {
                 throw new Exception("Motor not found");
             }
