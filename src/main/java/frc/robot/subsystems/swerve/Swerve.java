@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -18,7 +17,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -76,11 +74,6 @@ public final class Swerve extends SubsystemBase {
     private final GyroInputsAutoLogged gyroInputs = new GyroInputsAutoLogged();
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
-
-    private final PIDController trenchXController =
-        new PIDController(Constants.Trench.kPX, Constants.Trench.kIX, Constants.Trench.kDX);
-    private final PIDController trenchYController =
-        new PIDController(Constants.Trench.kPY, Constants.Trench.kIY, Constants.Trench.kDY);
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
@@ -501,30 +494,13 @@ public final class Swerve extends SubsystemBase {
         return currentBotPos.nearest(trenchSides());
     }
 
-    /** Returns when the bot is near the goal position */
-    public boolean atGoalPosition() {
-        Translation2d currentBotPos = state.getGlobalPoseEstimate().getTranslation();
-        double distance = currentBotPos.getDistance(goalTrenchPosition());
-
-        // the tollerence needs to be changed
-        return distance < Units.inchesToMeters(2);
-    }
-
     /** Command that moves the robot to the trench without going through */
     public Command moveToTrench() {
-        return run(() -> {
-            Translation2d currentPose = state.getGlobalPoseEstimate().getTranslation();
-
-            double xSpeed =
-                trenchXController.calculate(currentPose.getX(), goalTrenchPosition().getX());
-            double ySpeed =
-                trenchYController.calculate(currentPose.getY(), goalTrenchPosition().getY());
-
-            driveFieldRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, 0.0,
-                state.getGlobalPoseEstimate().getRotation()));
-
-        }).until(() -> atGoalPosition() && inTrench())
-            .finallyDo(() -> driveFieldRelative(() -> new ChassisSpeeds()))
-            .withName("Move to trench");
+        return this.moveToPose()
+            .target(
+                () -> new Pose2d(goalTrenchPosition(), state.getGlobalPoseEstimate().getRotation()))
+            .autoRoutine(null).maxSpeed(Constants.Swerve.maxSpeed).flipForRed(false)
+            .translationTolerance(Constants.Trench.tolerance).rotationTolerance(Math.toRadians(2))
+            .finish().until(() -> this.inTrench());
     }
 }

@@ -256,13 +256,9 @@ public final class Constants {
 
     /** Trench Move To Pose Constants */
     public static final class Trench {
-        public static final double kPX = 0.0;
-        public static final double kIX = 0.0;
-        public static final double kDX = 0.0;
 
-        public static final double kPY = 0.0;
-        public static final double kIY = 0.0;
-        public static final double kDY = 0.0;
+        // translation tolerance value for move to trench
+        public static final double tolerance = 0.08;
 
         // Creates a list of all of the trench locations
         public static final List<Translation2d> trenchLocation =
