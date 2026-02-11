@@ -163,7 +163,6 @@ public class Turret extends SubsystemBase {
      * Sets the turret to go in the opposite direction of the drivetrain so it can resist the
      * direction change, and stay facing the hub.
      */
-
     public Command setAutoTurretFollow(Pose2d swervePose) {
         return Commands.run(() -> {
             double hubTarget = FieldConstants.Hub.topCenterPoint.toTranslation2d()
