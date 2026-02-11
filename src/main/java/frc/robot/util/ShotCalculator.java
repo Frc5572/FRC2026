@@ -116,9 +116,8 @@ public class ShotCalculator {
      * 
      * @param robotPosition The current position of the robot on the field as a Translation2d (x,
      *        y).
-     * @param robotVelocity The current velocity of the robot as a Translation2d (vx, vy). This is
-     *        used to project the robot's future position and to calculate the required shot
-     *        velocity.
+     * @param chassisSpeeds The current velocity of the robot as a ChassisSpeeds object (vx, vy,
+     *        omega).
      * @param goalPosition The position of the target on the field as a Translation2d (x, y).
      * @param rpsOutput A consumer to accept the calculated shooter RPS.
      * @param hoodAngle A consumer to accept the calculated hood angle.
