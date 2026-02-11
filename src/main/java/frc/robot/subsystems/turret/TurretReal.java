@@ -17,7 +17,6 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
-
 /** turret hardware */
 public class TurretReal implements TurretIO {
     private TalonFX turretMotor = new TalonFX(Constants.Turret.TurretMotorID);
@@ -34,13 +33,12 @@ public class TurretReal implements TurretIO {
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
     private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getAbsolutePosition();
     private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getAbsolutePosition();
-
     public final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
     private final VoltageOut voltage = new VoltageOut(0.0);
 
     /** Real Turret Implementation */
     public TurretReal() {
-        configTurret();
+
 
         turretMotor.setNeutralMode(NeutralModeValue.Brake);
 
