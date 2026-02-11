@@ -349,4 +349,8 @@ public class SwerveState {
         return visionAdjustedOdometry.getEstimatedPosition();
     }
 
+    public ChassisSpeeds getCurrentSpeeds() {
+        return currentSpeeds;
+    }
+
 }
