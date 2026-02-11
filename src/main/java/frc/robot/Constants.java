@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.List;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -251,6 +252,20 @@ public final class Constants {
                 .finish(),
         };
         // @formatter:on
+    }
+
+    /** Trench Move To Pose Constants */
+    public static final class Trench {
+
+        // translation tolerance value for move to trench
+        public static final double tolerance = 0.08;
+
+        // Creates a list of all of the trench locations
+        public static final List<Translation2d> trenchLocation =
+            List.of(FieldConstants.LeftTrench.redTrenchCenterLeft,
+                FieldConstants.LeftTrench.blueTrenchCenterLeft,
+                FieldConstants.RightTrench.redTrenchCenterRight,
+                FieldConstants.RightTrench.blueTrenchCenterRight);
     }
 
     /** Vision Constants */
