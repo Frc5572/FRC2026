@@ -30,13 +30,6 @@ public class IntakeReal implements IntakeIO {
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
 
     public IntakeReal() {
-        configure();
-    }
-
-    /**
-     * configure
-     */
-    public void configure() {
         config.Feedback.SensorToMechanismRatio = 1; // change for testing
         config.Slot0.kP = Constants.IntakeConstants.KP; // change for testing
         config.Slot0.kI = Constants.IntakeConstants.KI; // change for testing
@@ -46,6 +39,7 @@ public class IntakeReal implements IntakeIO {
         hopperRightMotor.getConfigurator().apply(config);
         hopperLeftMotor
             .setControl(new Follower(hopperRightMotor.getDeviceID(), MotorAlignmentValue.Opposed)); // check
+
     }
 
 
