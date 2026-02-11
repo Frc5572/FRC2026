@@ -79,7 +79,7 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
-                turret = new Turret(new TurretIOEmpty());
+                turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberIOEmpty());
