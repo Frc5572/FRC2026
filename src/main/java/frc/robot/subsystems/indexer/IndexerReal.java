@@ -16,22 +16,39 @@ import frc.robot.Constants;
  * real implementation of indexer
  */
 public class IndexerReal implements IndexerIO {
-    public SparkFlex magazine = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
+    public SparkFlex magazine;
     public TalonFX spindexer = new TalonFX(Constants.Indexer.spinMotorID);
-    public RelativeEncoder encoder = magazine.getEncoder();
+    public RelativeEncoder encoder;
     private final StatusSignal<AngularVelocity> spinMotorVelocity = spindexer.getVelocity();
-    public EncoderConfig magazineConfig = new EncoderConfig();
+    public EncoderConfig magazineConfig;
     private VelocityDutyCycle velocityDutyCycleRequest = new VelocityDutyCycle(0);
 
     public IndexerReal() {
-        magazineConfig.velocityConversionFactor(1 / 60);
+        try {
+            magazine = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
+            encoder = magazine.getEncoder();
+            magazineConfig = new EncoderConfig();
+
+            magazineConfig.velocityConversionFactor(1.0 / 60.0);
+
+            // Check if the hardware is actually there to prevent CAN lag
+            if (magazine.getFirmwareVersion() == 0) {
+                throw new Exception("Motor not found");
+            }
+        } catch (Exception e) {
+            magazine = null;
+            encoder = null;
+            magazineConfig = null;
+        }
     }
 
     @Override
     public void updateInputs(IndexerInputs inputs) {
         BaseStatusSignal.refreshAll(spinMotorVelocity);
         inputs.spindexerVelocity = spinMotorVelocity.getValue();
-        inputs.magazineVelocity = RotationsPerSecond.of(encoder.getVelocity());
+        if (magazine != null) {
+            inputs.magazineVelocity = RotationsPerSecond.of(encoder.getVelocity());
+        }
     }
 
     @Override
@@ -41,6 +58,8 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
-        magazine.set(dutyCycle);
+        if (magazine != null) {
+            magazine.set(dutyCycle);
+        }
     }
 }

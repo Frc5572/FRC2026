@@ -23,13 +23,18 @@ import frc.robot.Constants;
 public class IntakeReal implements IntakeIO {
     private TalonFX hopperRightMotor = new TalonFX(Constants.IntakeConstants.hopperRightID);
     private TalonFX hopperLeftMotor = new TalonFX(Constants.IntakeConstants.hopperLeftID);
-    private SparkFlex intakeMotor = new SparkFlex(0, MotorType.kBrushless);
+    private SparkFlex intakeMotor;
     private TalonFXConfiguration config = new TalonFXConfiguration();
     private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
 
     public IntakeReal() {
+        try {
+            intakeMotor = new SparkFlex(0, MotorType.kBrushless);
+        } catch (Exception e) {
+            intakeMotor = null;
+        }
         configure();
     }
 
@@ -51,7 +56,9 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void runIntakeMotor(double speed) {
-        intakeMotor.set(speed);
+        if (intakeMotor != null) {
+            intakeMotor.set(speed);
+        }
     }
 
     @Override
@@ -59,7 +66,12 @@ public class IntakeReal implements IntakeIO {
         BaseStatusSignal.refreshAll(rightMotorPosition);
         inputs.hopperPosition = Meters.of(rightMotorPosition.getValue().in(Rotations));
         inputs.limitSwitch = limitSwitchMin.get();
-        inputs.intakeDutyCycle = intakeMotor.get();
+
+        if (intakeMotor != null) {
+            inputs.intakeDutyCycle = intakeMotor.get();
+        } else {
+            inputs.intakeDutyCycle = 0.0;
+        }
 
     }
 
