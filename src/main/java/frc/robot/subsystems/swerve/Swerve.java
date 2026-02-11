@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.RobotState;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.GyroInputsAutoLogged;
 import frc.robot.subsystems.swerve.mod.SwerveModule;
@@ -29,7 +30,6 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleIO;
 import frc.robot.subsystems.swerve.util.MoveToPoseBuilder;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
-import frc.robot.subsystems.swerve.util.SwerveState;
 import frc.robot.subsystems.swerve.util.TuningCommands;
 import frc.robot.util.AllianceFlipUtil;
 
@@ -77,7 +77,7 @@ public final class Swerve extends SubsystemBase {
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
-    public final SwerveState state;
+    public final RobotState state;
 
     public double customSkidLimit = 1000.0;
 
@@ -114,7 +114,7 @@ public final class Swerve extends SubsystemBase {
         } finally {
             this.odometryLock.unlock();
         }
-        this.state = new SwerveState(initPositions, this.gyroInputs.yaw);
+        this.state = new RobotState(initPositions, this.gyroInputs.yaw);
     }
 
     @Override

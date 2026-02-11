@@ -10,7 +10,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.swerve.util.SwerveState;
+import frc.robot.RobotState;
 import frc.robot.util.Tuples.Tuple2;
 
 /**
@@ -39,7 +39,7 @@ public class Vision extends SubsystemBase {
     private final VisionIO io;
     private final VisionIO.CameraInputs[] cameraInputs;
     private final String[] cameraInputKeys;
-    private final SwerveState state;
+    private final RobotState state;
     private final Translation3d[][] cameraViz;
     private final String[] cameraVizKeys;
     private final boolean[] cameraContributed;
@@ -51,7 +51,7 @@ public class Vision extends SubsystemBase {
      * @param state shared swerve pose estimator to receive vision updates
      * @param io vision IO implementation responsible for acquiring camera results
      */
-    public Vision(SwerveState state, VisionIO io) {
+    public Vision(RobotState state, VisionIO io) {
         super("Vision");
         this.io = io;
         this.state = state;
