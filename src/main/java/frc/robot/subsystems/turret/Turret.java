@@ -159,7 +159,7 @@ public class Turret extends SubsystemBase {
         return run(() -> this.setGoal(rotations));
     }
 
-    /*
+    /**
      * Sets the turret to go in the opposite direction of the drivetrain so it can resist the
      * direction change, and stay facing the hub.
      */
