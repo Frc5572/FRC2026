@@ -29,6 +29,7 @@ public class IntakeReal implements IntakeIO {
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
 
+    /** Real Intake Implementation */
     public IntakeReal() {
         try {
             intakeMotor = new SparkFlex(0, MotorType.kBrushless);

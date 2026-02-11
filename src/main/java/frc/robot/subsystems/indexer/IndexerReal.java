@@ -23,6 +23,7 @@ public class IndexerReal implements IndexerIO {
     public EncoderConfig magazineConfig;
     private VelocityDutyCycle velocityDutyCycleRequest = new VelocityDutyCycle(0);
 
+    /** Real Indexer Implementation */
     public IndexerReal() {
         try {
             magazine = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
