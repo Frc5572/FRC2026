@@ -3,7 +3,9 @@ package frc.robot.util;
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.Consumer;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 
 /**
@@ -37,28 +39,28 @@ public class ShotCalculator {
      * @param endValue The shooter parameters at the upper bound distance.
      * @param t The interpolation factor between 0 and 1, where 0 corresponds to startValue and 1
      *        corresponds to endValue.
-     * @return A new FullShooterParams object with each parameter interpolated based on t.
+     * @return A new ShooterParams object with each parameter interpolated based on t.
      */
-    private static FullShooterParams interpolate(FullShooterParams startValue,
-        FullShooterParams endValue, double t) {
-        return new FullShooterParams(MathUtil.interpolate(startValue.rps, endValue.rps, t),
+    private static ShooterParams interpolate(ShooterParams startValue, ShooterParams endValue,
+        double t) {
+        return new ShooterParams(MathUtil.interpolate(startValue.rps, endValue.rps, t),
             MathUtil.interpolate(startValue.hoodAngle, endValue.hoodAngle, t),
             MathUtil.interpolate(startValue.timeOfFlight, endValue.timeOfFlight, t));
     }
 
-    private static final InterpolatingTreeMap<Double, FullShooterParams> SHOOTER_MAP =
-        new InterpolatingTreeMap<Double, FullShooterParams>(ShotCalculator::inverseInterpolate,
+    private static final InterpolatingTreeMap<Double, ShooterParams> SHOOTER_MAP =
+        new InterpolatingTreeMap<Double, ShooterParams>(ShotCalculator::inverseInterpolate,
             ShotCalculator::interpolate);
 
     static {
-        SHOOTER_MAP.put(1.5, new FullShooterParams(2800.0, 35.0, 0.38));
-        SHOOTER_MAP.put(2.0, new FullShooterParams(3100.0, 38.0, 0.45));
-        SHOOTER_MAP.put(2.5, new FullShooterParams(3400.0, 42.0, 0.52));
-        SHOOTER_MAP.put(3.0, new FullShooterParams(3650.0, 46.0, 0.60));
-        SHOOTER_MAP.put(3.5, new FullShooterParams(3900.0, 50.0, 0.68));
-        SHOOTER_MAP.put(4.0, new FullShooterParams(4100.0, 54.0, 0.76));
-        SHOOTER_MAP.put(4.5, new FullShooterParams(4350.0, 58.0, 0.85));
-        SHOOTER_MAP.put(5.0, new FullShooterParams(4550.0, 62.0, 0.94));
+        SHOOTER_MAP.put(1.5, new ShooterParams(2800.0, 35.0, 0.38));
+        SHOOTER_MAP.put(2.0, new ShooterParams(3100.0, 38.0, 0.45));
+        SHOOTER_MAP.put(2.5, new ShooterParams(3400.0, 42.0, 0.52));
+        SHOOTER_MAP.put(3.0, new ShooterParams(3650.0, 46.0, 0.60));
+        SHOOTER_MAP.put(3.5, new ShooterParams(3900.0, 50.0, 0.68));
+        SHOOTER_MAP.put(4.0, new ShooterParams(4100.0, 54.0, 0.76));
+        SHOOTER_MAP.put(4.5, new ShooterParams(4350.0, 58.0, 0.85));
+        SHOOTER_MAP.put(5.0, new ShooterParams(4550.0, 62.0, 0.94));
     }
 
     /**
@@ -70,7 +72,7 @@ public class ShotCalculator {
      * @param timeOfFlight The expected time of flight for a shot at the given distance with the
      *        baseline parameters. Used for velocity correction calculations.
      */
-    public record FullShooterParams(double rps, double hoodAngle, double timeOfFlight) {
+    public record ShooterParams(double rps, double hoodAngle, double timeOfFlight) {
     }
 
     /**
@@ -85,7 +87,7 @@ public class ShotCalculator {
      */
     public static void calculateBoth(double distance, double requiredVelocity,
         Consumer<Angle> hoodAngle, Consumer<Double> rpsOutput) {
-        FullShooterParams baseline = SHOOTER_MAP.get(distance);
+        ShooterParams baseline = SHOOTER_MAP.get(distance);
         double baselineVelocity = distance / baseline.timeOfFlight;
         double velocityRatio = requiredVelocity / baselineVelocity;
 
@@ -104,5 +106,55 @@ public class ShotCalculator {
 
         hoodAngle.accept(adjustedHood);
         rpsOutput.accept(adjustedRps);
+    }
+
+    /**
+     * Calculates shooter parameters based on current robot position, velocity, and goal position.
+     * This method projects the robot's future position based on its current velocity, then
+     * calculates the required shot velocity to hit the target from that future position. It then
+     * uses the required shot velocity to adjust the shooter parameters accordingly
+     * 
+     * @param robotPosition The current position of the robot on the field as a Translation2d (x,
+     *        y).
+     * @param chassisSpeeds The current velocity of the robot as a ChassisSpeeds object (vx, vy,
+     *        omega).
+     * @param goalPosition The position of the target on the field as a Translation2d (x, y).
+     * @param rpsOutput A consumer to accept the calculated shooter RPS.
+     * @param hoodAngle A consumer to accept the calculated hood angle.
+     * @param turretAngle A consumer to accept the calculated turret angle (the angle the turret
+     *        needs to turn to face the calculated target).
+     */
+    public static void velocityComp(Translation2d robotPosition, ChassisSpeeds chassisSpeeds,
+        Translation2d goalPosition, Consumer<Double> rpsOutput, Consumer<Angle> hoodAngle,
+        Consumer<Angle> turretAngle) {
+
+        // Convert chassis speeds to field-relative velocity vector
+        Translation2d robotVelocity =
+            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+
+        // 1. Project future position
+        Translation2d futurePos = robotPosition.plus(robotVelocity);
+
+        // 2. Get target vector
+        Translation2d toGoal = goalPosition.minus(futurePos);
+        double distance = toGoal.getNorm();
+        Translation2d targetDirection = toGoal.div(distance);
+
+        // 3. Look up baseline velocity from table
+        ShooterParams baseline = SHOOTER_MAP.get(distance);
+        double baselineVelocity = distance / baseline.timeOfFlight;
+
+        // 4. Build target velocity vector
+        Translation2d targetVelocity = targetDirection.times(baselineVelocity);
+
+        // 5. THE MAGIC: subtract robot velocity
+        Translation2d shotVelocity = targetVelocity.minus(robotVelocity);
+
+        // 6. Extract results
+        turretAngle.accept(shotVelocity.getAngle().getMeasure());
+        double requiredVelocity = shotVelocity.getNorm();
+
+        calculateBoth(distance, requiredVelocity, hoodAngle, rpsOutput);
+
     }
 }
