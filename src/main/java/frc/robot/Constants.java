@@ -168,7 +168,7 @@ public final class Constants {
 
         /* Angle Motor PID Values */
         /** Proportional Swerve Angle Motor PID Value */
-        public static final double angleKP = 100.0;
+        public static final double angleKP = 10.0;
         /** Integral Swerve Angle Motor PID Value */
         public static final double angleKI = 0.0;
         /** Derivative Swerve Angle Motor PID Value */
@@ -223,31 +223,31 @@ public final class Constants {
         public static final ModuleConstants[] modulesConstants = new ModuleConstants[] {
             // Front Left Module
             new ModuleConstantsBuilder()
-                .driveMotorId(2)
-                .angleMotorId(1)
+                .driveMotorId(1)
+                .angleMotorId(0)
                 .canCoderId(1)
-                .angleOffset(Rotation2d.fromRotations(0.008789))
+                .angleOffset(Rotation2d.fromRotations(0.106445))
                 .finish(),
             // Front Right Module
             new ModuleConstantsBuilder()
-                .driveMotorId(9)
-                .angleMotorId(8)
+                .driveMotorId(7)
+                .angleMotorId(6)
                 .canCoderId(2)
-                .angleOffset(Rotation2d.fromRotations(-0.301758))
+                .angleOffset(Rotation2d.fromRotations(0.409668))
                 .finish(),
             // Back Left Module
             new ModuleConstantsBuilder()
-                .driveMotorId(0)
-                .angleMotorId(19)
-                .canCoderId(4)
-                .angleOffset(Rotation2d.fromRotations(-0.451172))
+                .driveMotorId(2)
+                .angleMotorId(3)
+                .canCoderId(3)
+                .angleOffset(Rotation2d.fromRotations(0.474121))
                 .finish(),
             // Back Right Module
             new ModuleConstantsBuilder()
-                .driveMotorId(11)
-                .angleMotorId(10)
-                .canCoderId(3)
-                .angleOffset(Rotation2d.fromRotations(0.321777))
+                .driveMotorId(5)
+                .angleMotorId(4)
+                .canCoderId(4)
+                .angleOffset(Rotation2d.fromRotations(-0.402344))
                 .finish(),
         };
         // @formatter:on
