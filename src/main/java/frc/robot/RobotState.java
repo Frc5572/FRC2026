@@ -1,4 +1,4 @@
-package frc.robot.subsystems.swerve.util;
+package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
@@ -25,8 +25,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import frc.robot.Constants;
 import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -49,7 +49,7 @@ import frc.robot.subsystems.vision.CameraConstants;
  * using configurable standard deviations to weight vision updates against odometry uncertainty.
  */
 @NullMarked
-public class SwerveState {
+public class RobotState {
 
     /** Whether the pose estimator has been initialized from vision */
     private boolean initted = false;
@@ -67,7 +67,7 @@ public class SwerveState {
      *
      * @param wheelPositions the initial swerve module positions used to seed odometry
      */
-    public SwerveState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
+    public RobotState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
         SwerveDriveOdometry swerveOdometry =
             new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
@@ -88,7 +88,7 @@ public class SwerveState {
      * </ul>
      *
      * <p>
-     * This method updates only the pose estimator / odometry state owned by {@code SwerveState}. It
+     * This method updates only the pose estimator / odometry state owned by {@code RobotState}. It
      * does <b>not</b> update any associated simulation state or drivetrain model.
      *
      * <p>
