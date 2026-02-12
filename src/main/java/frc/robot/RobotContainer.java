@@ -20,6 +20,7 @@ import frc.robot.subsystems.climber.ClimberIOEmpty;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIOEmpty;
+import frc.robot.subsystems.indexer.IndexerReal;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOEmpty;
 import frc.robot.subsystems.shooter.Shooter;
@@ -84,7 +85,7 @@ public final class RobotContainer {
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberIOEmpty());
-                indexer = new Indexer(new IndexerIOEmpty());
+                indexer = new Indexer(new IndexerReal());
 
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
@@ -136,7 +137,7 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
-        turret.setDefaultCommand(turret.setAutoTurretFollow(swerve.state.getGlobalPoseEstimate()));
+        // turret.setDefaultCommand(turret.setAutoTurretFollow(swerve.state.getGlobalPoseEstimate()));
 
         // driver.y().onTrue(swerve.setFieldRelativeOffset());
 
