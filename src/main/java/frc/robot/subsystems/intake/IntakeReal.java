@@ -43,13 +43,6 @@ public class IntakeReal implements IntakeIO {
             System.out.println("Intake initialization failed: " + e.getMessage());
             intakeConnected = false;
         }
-        configure();
-    }
-
-    /**
-     * configure
-     */
-    public void configure() {
         config.Feedback.SensorToMechanismRatio = 1; // change for testing
         config.Slot0.kP = Constants.IntakeConstants.KP; // change for testing
         config.Slot0.kI = Constants.IntakeConstants.KI; // change for testing
