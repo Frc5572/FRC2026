@@ -16,22 +16,44 @@ import frc.robot.Constants;
  * real implementation of indexer
  */
 public class IndexerReal implements IndexerIO {
-    public SparkFlex magazine = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
+    public SparkFlex magazine;
     public TalonFX spindexer = new TalonFX(Constants.Indexer.spinMotorID);
-    public RelativeEncoder encoder = magazine.getEncoder();
+    public RelativeEncoder encoder;
     private final StatusSignal<AngularVelocity> spinMotorVelocity = spindexer.getVelocity();
-    public EncoderConfig magazineConfig = new EncoderConfig();
+    public EncoderConfig magazineConfig;
     private VelocityDutyCycle velocityDutyCycleRequest = new VelocityDutyCycle(0);
 
+    private boolean magazineConnected = false;
+
+    /** Real Indexer Implementation */
     public IndexerReal() {
-        magazineConfig.velocityConversionFactor(1 / 60);
+        try {
+            magazine = new SparkFlex(Constants.Indexer.indexerID, MotorType.kBrushless);
+
+            if (magazine.getFirmwareVersion() == 0) {
+                throw new Exception("Motor not found");
+            }
+            magazineConfig = new EncoderConfig();
+            magazineConfig.velocityConversionFactor(1.0 / 60.0);
+            encoder = magazine.getEncoder();
+            magazineConnected = true;
+        } catch (Exception e) {
+            System.out.println("magazine initialization failed: " + e.getMessage());
+        }
     }
 
     @Override
     public void updateInputs(IndexerInputs inputs) {
         BaseStatusSignal.refreshAll(spinMotorVelocity);
         inputs.spindexerVelocity = spinMotorVelocity.getValue();
-        inputs.magazineVelocity = RotationsPerSecond.of(encoder.getVelocity());
+
+        inputs.magazineMotorConnected = magazineConnected;
+
+        if (magazineConnected && magazine != null) {
+            inputs.magazineVelocity = RotationsPerSecond.of(encoder.getVelocity());
+        } else {
+            inputs.magazineVelocity = RotationsPerSecond.of(0);
+        }
     }
 
     @Override
@@ -41,6 +63,8 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
-        magazine.set(dutyCycle);
+        if (magazineConnected && magazine != null) {
+            magazine.set(dutyCycle);
+        }
     }
 }

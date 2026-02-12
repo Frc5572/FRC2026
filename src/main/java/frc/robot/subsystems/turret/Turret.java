@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
-import frc.robot.subsystems.swerve.util.SwerveState;
+import frc.robot.RobotState;
 
 /**
  * Subsystem representing the robot turret.
@@ -22,14 +22,14 @@ public class Turret extends SubsystemBase {
     private boolean hasSynced = false;
     private final TurretIO io;
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
-    private final SwerveState state;
+    private final RobotState state;
 
     /**
      * Creates a new Turret subsystem.
      *
      * @param io Hardware abstraction used to read sensors and control actuators
      */
-    public Turret(TurretIO io, SwerveState state) {
+    public Turret(TurretIO io, RobotState state) {
         super("Turret");
         this.io = io;
         this.state = state;

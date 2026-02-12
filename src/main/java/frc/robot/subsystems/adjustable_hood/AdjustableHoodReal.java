@@ -37,15 +37,6 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
     /** Real AdjustableHood Implementation */
     public AdjustableHoodReal() {
-        configAdjustableHood();
-
-        hoodMotor.setNeutralMode(NeutralModeValue.Brake);
-
-        BaseStatusSignal.setUpdateFrequencyForAll(50, hoodAngle, hoodVoltage, hoodCurrent,
-            hoodCANcoderAngle);
-    }
-
-    private void configAdjustableHood() {
 
         // PID and feedforward
 
@@ -74,7 +65,14 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
         hoodMotor.getConfigurator().apply(hoodConfig);
         hoodCANcoder.getConfigurator().apply(hoodCANcoderConfig);
+
+        hoodMotor.setNeutralMode(NeutralModeValue.Brake);
+
+        BaseStatusSignal.setUpdateFrequencyForAll(50, hoodAngle, hoodVoltage, hoodCurrent,
+            hoodCANcoderAngle);
     }
+
+
 
     @Override
     public void setAdjustableHoodVoltage(Voltage volts) {

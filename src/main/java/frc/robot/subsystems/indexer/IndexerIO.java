@@ -15,8 +15,10 @@ public interface IndexerIO {
      */
     @AutoLog
     public class IndexerInputs {
-        AngularVelocity magazineVelocity = RotationsPerSecond.of(0);
-        AngularVelocity spindexerVelocity = RotationsPerSecond.of(0);
+        public AngularVelocity magazineVelocity = RotationsPerSecond.of(0);
+        public AngularVelocity spindexerVelocity = RotationsPerSecond.of(0);
+
+        public boolean magazineMotorConnected = false;
     }
 
     public void updateInputs(IndexerInputs inputs);
