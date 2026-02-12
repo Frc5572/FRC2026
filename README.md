@@ -13,9 +13,9 @@
 - 5 = Back Right Drive Motor
 - 6 = Front Right Angle Motor
 - 7 = Front Right Drive Motor
-- 8 =
+- 8 = Climber Pivot Motor
 - 9 =
-- 10 =
+- 10 = Turret Motor
 - 11 =
 - 12 =
 - 13 =
@@ -33,3 +33,5 @@
 - 2 = Front Right CANCoder
 - 3 = Back Left CANCoder
 - 4 = Back Right CANCoder
+- 5 = Turret CANCoder 1
+- 6 = Turret CANCoder 2

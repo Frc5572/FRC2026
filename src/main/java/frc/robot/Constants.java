@@ -419,7 +419,7 @@ public final class Constants {
         public static final class Pivot {
 
             /** CAN ID for the pivot motor. */
-            public static final int ID = 46;
+            public static final int ID = 8;
 
             /** Neutral mode for the pivot motor (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
@@ -487,9 +487,9 @@ public final class Constants {
         public static final Angle minAngle = Degrees.of(-360);
         public static final Angle maxAngle = Degrees.of(360);
 
-        public static final int TurretMotorID = 20;
-        public static final int TurretCANcoderID1 = 21;
-        public static final int TurretCANcoderID2 = 22;
+        public static final int TurretMotorID = 10;
+        public static final int TurretCANcoderID1 = 5;
+        public static final int TurretCANcoderID2 = 6;
 
         public static final double KP = 0.0;
         public static final double KI = 0.0;
@@ -540,5 +540,3 @@ public final class Constants {
         disableHAL = true;
     }
 }
-
-
