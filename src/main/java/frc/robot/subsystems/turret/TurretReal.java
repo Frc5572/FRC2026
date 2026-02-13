@@ -38,18 +38,6 @@ public class TurretReal implements TurretIO {
 
     /** Real Turret Implementation */
     public TurretReal() {
-
-
-        turretMotor.setNeutralMode(NeutralModeValue.Brake);
-
-
-        BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
-            canCoder1Pos, canCoder2Pos);
-
-    }
-
-    private void configTurret() {
-
         turretConfig.Feedback.SensorToMechanismRatio = Constants.Turret.motorGearing;
 
         // PID and feedforward
@@ -81,6 +69,17 @@ public class TurretReal implements TurretIO {
         turretMotor.getConfigurator().apply(turretConfig);
         turretCANcoder1.getConfigurator().apply(canCoder1Config);
         turretCANcoder2.getConfigurator().apply(canCoder2Config);
+
+        turretMotor.setNeutralMode(NeutralModeValue.Brake);
+
+
+        BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
+            canCoder1Pos, canCoder2Pos);
+
+    }
+
+    private void configTurret() {
+
     }
 
     @Override

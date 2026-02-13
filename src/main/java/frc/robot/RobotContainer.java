@@ -6,7 +6,6 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -20,6 +19,7 @@ import frc.robot.subsystems.climber.ClimberIOEmpty;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIOEmpty;
+import frc.robot.subsystems.indexer.IndexerReal;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOEmpty;
 import frc.robot.subsystems.shooter.Shooter;
@@ -56,7 +56,6 @@ public final class RobotContainer {
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
-    public final CommandXboxController tester = new CommandXboxController(1);
 
     /* Subsystems */
     private final Swerve swerve;
@@ -84,7 +83,7 @@ public final class RobotContainer {
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberIOEmpty());
-                indexer = new Indexer(new IndexerIOEmpty());
+                indexer = new Indexer(new IndexerReal());
 
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
@@ -136,7 +135,7 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
-        turret.setDefaultCommand(turret.setAutoTurretFollow(swerve.state.getGlobalPoseEstimate()));
+        // turret.setDefaultCommand(turret.setAutoTurretFollow(swerve.state.getGlobalPoseEstimate()));
 
         // driver.y().onTrue(swerve.setFieldRelativeOffset());
 
@@ -164,24 +163,6 @@ public final class RobotContainer {
             }, (y) -> {
                 shooter.setVelocity(y);
             }), adjustableHood, shooter));
-
-
-        tester.a()
-            .whileTrue(shooter.runShooterVelocityCommand(20.0).alongWith(swerve.limitSkidLimit()));
-
-        tester.b()
-            .whileTrue(Commands.run(() -> ShotCalculator.velocityComp(
-                swerve.state.getGlobalPoseEstimate().getTranslation(),
-                swerve.state.getCurrentSpeeds(),
-                new Translation2d(FieldConstants.LinesVertical.hubCenter,
-                    FieldConstants.LinesHorizontal.center),
-                (x) -> {
-                    shooter.setVelocity(x);
-                }, (y) -> {
-                    adjustableHood.setGoal(y);
-                }, (z) -> {
-                    turret.setGoal(z);
-                }), shooter, adjustableHood, turret).alongWith(swerve.limitSkidLimit()));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */

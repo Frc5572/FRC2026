@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.RobotState;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.GyroInputsAutoLogged;
 import frc.robot.subsystems.swerve.mod.SwerveModule;
@@ -29,7 +30,6 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleIO;
 import frc.robot.subsystems.swerve.util.MoveToPoseBuilder;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
-import frc.robot.subsystems.swerve.util.SwerveState;
 import frc.robot.subsystems.swerve.util.TuningCommands;
 import frc.robot.util.AllianceFlipUtil;
 
@@ -43,7 +43,7 @@ import frc.robot.util.AllianceFlipUtil;
  * <li>Swerve modules and their IO implementations</li>
  * <li>Gyro integration</li>
  * <li>High-frequency odometry sampling via {@link PhoenixOdometryThread}</li>
- * <li>Pose estimation and vision fusion via {@link SwerveState}</li>
+ * <li>Pose estimation and vision fusion via {@link RobotState}</li>
  * <li>Acceleration, tilt, and skid limiting via {@link SwerveRateLimiter}</li>
  * </ul>
  *
@@ -53,8 +53,8 @@ import frc.robot.util.AllianceFlipUtil;
  *
  * <h2>Pose estimation</h2> Wheel encoder and gyro data are integrated at high rate to produce
  * odometry updates, which are then fused with delayed vision measurements inside
- * {@link SwerveState}. The resulting pose estimate is the authoritative source of robot position
- * for autonomous and field-relative driving.
+ * {@link RobotState}. The resulting pose estimate is the authoritative source of robot position for
+ * autonomous and field-relative driving.
  *
  * <h2>Driving model</h2> All drive commands ultimately resolve to robot-relative
  * {@link ChassisSpeeds}. These speeds are passed through a {@link SwerveRateLimiter} before being
@@ -77,7 +77,7 @@ public final class Swerve extends SubsystemBase {
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
-    public final SwerveState state;
+    public final RobotState state;
 
     public double customSkidLimit = 1000.0;
 
@@ -114,7 +114,7 @@ public final class Swerve extends SubsystemBase {
         } finally {
             this.odometryLock.unlock();
         }
-        this.state = new SwerveState(initPositions, this.gyroInputs.yaw);
+        this.state = new RobotState(initPositions, this.gyroInputs.yaw);
     }
 
     @Override
@@ -200,7 +200,7 @@ public final class Swerve extends SubsystemBase {
      *
      * <p>
      * The supplied field-relative speeds are transformed into robot-relative speeds using the
-     * current pose estimate from {@link SwerveState}.
+     * current pose estimate from {@link RobotState}.
      *
      * @param driveSpeeds supplier of field-relative chassis speeds
      * @return a command that drives the robot while scheduled
@@ -220,7 +220,7 @@ public final class Swerve extends SubsystemBase {
      *
      * <p>
      * If you only want to update the odometry/estimator without affecting any simulation state, use
-     * {@link SwerveState#resetPose(Pose2d)} instead.
+     * {@link RobotState#resetPose(Pose2d)} instead.
      *
      * @param newPose a supplier that provides the new robot pose in field coordinates
      * @return a command that applies the pose override once when scheduled
