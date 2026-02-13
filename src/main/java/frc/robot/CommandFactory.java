@@ -9,11 +9,11 @@ import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 
-/**
- * Sets the turret's target to the left or right based off of its closest distence, then sets the
- * angle of the hood, then the velocity of the shooter, then it shoots.
- */
 public class CommandFactory {
+    /**
+     * Sets the turret's target to the left or right based off of its closest distence, then sets
+     * the angle of the hood, then the velocity of the shooter, then it shoots.
+     */
     public static Command autoShoot(Pose2d swervePose, Turret turret, AdjustableHood hood,
         Shooter shooter) {
         return Commands.run(() -> {
