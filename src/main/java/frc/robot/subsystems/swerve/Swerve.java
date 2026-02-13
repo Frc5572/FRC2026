@@ -505,15 +505,22 @@ public final class Swerve extends SubsystemBase {
             .finish().until(() -> this.inTrench());
     }
 
-    private final PIDController PIDYController =
+    private final PIDController pidYController =
         new PIDController(Constants.SwerveTransformPID.translationP,
             Constants.SwerveTransformPID.translationI, Constants.SwerveTransformPID.translationD);
 
+    /**
+     * Command that moves the robot through the trench, constraining Y movement to stay in the
+     * trench.
+     * 
+     * @param driveSpeeds supplier of field-relative chassis speeds
+     * @return a command that drives the robot while scheduled
+     */
     public Command moveThroughTrench(Supplier<ChassisSpeeds> driveSpeeds) {
-        double PIDYVal = PIDYController.calculate(
+        double pidYVal = pidYController.calculate(
             state.getGlobalPoseEstimate().getTranslation().getY(), goalTrenchPosition().getY());
         return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, PIDYVal,
+            new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYVal,
                 driveSpeeds.get().omegaRadiansPerSecond),
             state.getGlobalPoseEstimate().getRotation()));
     }
