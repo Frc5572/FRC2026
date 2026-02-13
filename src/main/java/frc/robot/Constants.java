@@ -533,12 +533,6 @@ public final class Constants {
         public static final double shooterKI = 0.0;
         public static final double shooterKD = 0.0;
     }
-
-    public static boolean disableHAL = false;
-
-    public static void disableHAP() {
-        disableHAL = true;
-    }
 }
 
 
