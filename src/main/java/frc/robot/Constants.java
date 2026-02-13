@@ -344,6 +344,8 @@ public final class Constants {
         public static final SensorDirectionValue hoodCANCoderInvert =
             SensorDirectionValue.Clockwise_Positive;
         public static final double hoodCANcoderDiscontinuity = 0.5;
+
+        public static final double passingAngle = 0.0;
     }
 
     /**
@@ -532,6 +534,9 @@ public final class Constants {
         public static final double shooterKP = 0.11;
         public static final double shooterKI = 0.0;
         public static final double shooterKD = 0.0;
+
+        public static final double passingSpeed = 0.0;
+        public static final double shooterVelocity = 0.0;
     }
 
     public static boolean disableHAL = false;
