@@ -15,7 +15,7 @@ public class CommandFactory {
      * Sets the turret's target to the left or right based off of its closest distence, then sets
      * the angle of the hood, then the velocity of the shooter, then it shoots.
      */
-    public static Command autoShoot(Pose2d swervePose, Turret turret, AdjustableHood hood,
+    public static Command autoPass(Pose2d swervePose, Turret turret, AdjustableHood hood,
         Shooter shooter) {
         return Commands.run(() -> {
             double leftDistance = Hub.nearLeftCorner.getDistance(swervePose.getTranslation());
