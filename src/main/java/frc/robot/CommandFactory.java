@@ -9,6 +9,7 @@ import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 
+/** Command Factory */
 public class CommandFactory {
     /**
      * Sets the turret's target to the left or right based off of its closest distence, then sets
