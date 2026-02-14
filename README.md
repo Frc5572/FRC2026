@@ -19,8 +19,8 @@
 - 11 = Hood Motor
 - 12 = Left Shooter Motor
 - 13 = Intake Motor
-- 14 =
-- 15 =
+- 14 = Left Climber
+- 15 = Right Climber
 - 16 = Left Hopper Motor
 - 17 = Right Hopper Motor
 - 18 = Magazine Motor

@@ -365,10 +365,10 @@ public final class Constants {
         public static final class Telescope {
 
             /** CAN ID for the right telescope motor. */
-            public static final int RIGHT_ID = 47;
+            public static final int RIGHT_ID = 15;
 
             /** CAN ID for the left telescope motor. */
-            public static final int LEFT_ID = 48;
+            public static final int LEFT_ID = 14;
 
             /** Neutral mode for telescope motors (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
