@@ -1,7 +1,10 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.FieldConstants.Hub;
@@ -18,16 +21,18 @@ public class CommandFactory {
     public static Command autoPass(Pose2d swervePose, Turret turret, AdjustableHood hood,
         Shooter shooter) {
         return Commands.run(() -> {
-            double leftDistance = Hub.nearLeftCorner.getDistance(swervePose.getTranslation());
-            double rightDistance = Hub.nearRightCorner.getDistance(swervePose.getTranslation());
-            if (leftDistance < rightDistance) {
-                double leftDistanceGoal =
-                    Hub.nearLeftCorner.minus(swervePose.getTranslation()).getAngle().getRotations();
-                turret.setGoal(Rotations.of(leftDistanceGoal));
+            Distance leftDistance =
+                Meters.of(Hub.nearLeftCorner.getDistance(swervePose.getTranslation()));
+            Distance rightDistance =
+                Meters.of(Hub.nearRightCorner.getDistance(swervePose.getTranslation()));
+            if (leftDistance.in(Meters) < rightDistance.in(Meters)) {
+                Angle leftDistanceGoal = Rotations.of(Hub.nearLeftCorner
+                    .minus(swervePose.getTranslation()).getAngle().getRotations());
+                turret.setGoal(leftDistanceGoal);
             } else {
-                double rightDistanceGoal = Hub.nearRightCorner.minus(swervePose.getTranslation())
-                    .getAngle().getRotations();
-                turret.setGoal(Rotations.of(rightDistanceGoal));
+                Angle rightDistanceGoal = Rotations.of(Hub.nearRightCorner
+                    .minus(swervePose.getTranslation()).getAngle().getRotations());
+                turret.setGoal(rightDistanceGoal);
             }
             hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
             shooter.runShooterVelocityCommand(Constants.Shooter.shooterVelocity);
