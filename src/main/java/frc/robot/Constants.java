@@ -142,8 +142,7 @@ public final class Constants {
 
         /* Motor Inverts */
         public static final InvertedValue angleMotorInvert = InvertedValue.Clockwise_Positive;
-        public static final InvertedValue driveMotorInvert =
-            InvertedValue.CounterClockwise_Positive;
+        public static final InvertedValue driveMotorInvert = InvertedValue.Clockwise_Positive;
 
         /* Angle Encoder Invert */
         public static final SensorDirectionValue cancoderInvert =
@@ -169,7 +168,7 @@ public final class Constants {
 
         /* Angle Motor PID Values */
         /** Proportional Swerve Angle Motor PID Value */
-        public static final double angleKP = 10.0;
+        public static final double angleKP = 100.0;
         /** Integral Swerve Angle Motor PID Value */
         public static final double angleKI = 0.0;
         /** Derivative Swerve Angle Motor PID Value */
@@ -322,7 +321,6 @@ public final class Constants {
     /** Adjustable Hood Subsystem */
     public static final class AdjustableHood {
         public static final int HoodMotorID = 11;
-        public static final int HoodCANCoderID = 42;
 
         public static final double KP = 0.0;
         public static final double KI = 0.0;
