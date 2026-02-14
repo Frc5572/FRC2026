@@ -14,17 +14,17 @@
 - 6 = Front Right Angle Motor
 - 7 = Front Right Drive Motor
 - 8 = Climber Pivot Motor
-- 9 =
-- 10 = Turret Motor
+- 9 = Indexer Motor
+- 10 = 
 - 11 =
-- 12 =
-- 13 =
+- 12 = 
+- 13 = 
 - 14 =
 - 15 =
-- 16 =
-- 17 =
-- 18 =
-- 19 =
+- 16 = Left Intake Motor
+- 17 = Right Intake Motor
+- 18 = Magazine Motor
+- 19 = Turret Motor
 
 
 ### Cancoders

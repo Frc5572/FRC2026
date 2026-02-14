@@ -52,8 +52,8 @@ public final class Constants {
      * Constants file
      */
     public static class IntakeConstants { // change all variables before testing
-        public static final int hopperLeftID = 31;
-        public static final int hopperRightID = 32;
+        public static final int hopperLeftID = 16;
+        public static final int hopperRightID = 17;
         public static final int intakeID = 33;
         public static final double hopperMaxDistance = 0;
         public static final double intakeSpeed = 0;
@@ -70,8 +70,8 @@ public final class Constants {
      * Indexer Constants
      */
     public static class Indexer {
-        public static final int indexerID = 26;
-        public static final int spinMotorID = 27;
+        public static final int indexerID = 18;
+        public static final int spinMotorID = 9;
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
     }
@@ -487,7 +487,7 @@ public final class Constants {
         public static final Angle minAngle = Degrees.of(-360);
         public static final Angle maxAngle = Degrees.of(360);
 
-        public static final int TurretMotorID = 10;
+        public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;
         public static final int TurretCANcoderID2 = 6;
 
@@ -516,7 +516,7 @@ public final class Constants {
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */
-        public static final int motor1ID = 36;
+        public static final int motor1ID = 10;
         /** ID for Shooter Motor 2 */
         public static final int motor2ID = 37;
 
