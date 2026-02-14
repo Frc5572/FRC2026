@@ -54,7 +54,7 @@ public final class Constants {
     public static class IntakeConstants { // change all variables before testing
         public static final int hopperLeftID = 16;
         public static final int hopperRightID = 17;
-        public static final int intakeID = 33;
+        public static final int intakeID = 13;
         public static final double hopperMaxDistance = 0;
         public static final double intakeSpeed = 0;
         public static final double hopperMinDistance = 0;

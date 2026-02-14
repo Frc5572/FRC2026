@@ -18,11 +18,11 @@
 - 10 = Right Shooter Motor
 - 11 = Hood Motor
 - 12 = Left Shooter Motor
-- 13 = 
+- 13 = Intake Motor
 - 14 =
 - 15 =
-- 16 = Left Intake Motor
-- 17 = Right Intake Motor
+- 16 = Left Hopper Motor
+- 17 = Right Hopper Motor
 - 18 = Magazine Motor
 - 19 = Turret Motor
 
