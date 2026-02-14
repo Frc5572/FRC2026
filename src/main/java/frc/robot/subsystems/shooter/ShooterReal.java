@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -28,11 +29,12 @@ public final class ShooterReal implements ShooterIO {
     /** Shooter Real Implementation Constructor */
     public ShooterReal() {
         configMotors();
+
+        shooterMotor2
+            .setControl(new Follower(shooterMotor1.getDeviceID(), Shooter.shooterMotorAlignment));
     }
 
     private void configMotors() {
-        shooterMotor1
-            .setControl(new Follower(shooterMotor2.getDeviceID(), Shooter.shooterMotorAlignment));
 
         motorConfig.MotorOutput.Inverted = Shooter.shooterMotorInvert;
         motorConfig.MotorOutput.NeutralMode = Shooter.shooterNeutralMode;
@@ -49,8 +51,7 @@ public final class ShooterReal implements ShooterIO {
 
     @Override
     public void runShooterVelocity(double velocity) {
-        shooterMotor1
-            .setControl(shooterVelocityVoltage.withVelocity(velocity).withFeedForward(0.1));
+        shooterMotor1.setControl(new DutyCycleOut(velocity));
     }
 
     @Override

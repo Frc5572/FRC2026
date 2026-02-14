@@ -52,9 +52,9 @@ public final class Constants {
      * Constants file
      */
     public static class IntakeConstants { // change all variables before testing
-        public static final int hopperLeftID = 31;
-        public static final int hopperRightID = 32;
-        public static final int intakeID = 33;
+        public static final int hopperLeftID = 16;
+        public static final int hopperRightID = 17;
+        public static final int intakeID = 13;
         public static final double hopperMaxDistance = 0;
         public static final double intakeSpeed = 0;
         public static final double hopperMinDistance = 0;
@@ -63,15 +63,15 @@ public final class Constants {
         public static final double KP = 0;
         public static final double KI = 0;
         public static final double KD = 0;
-        public static final int limitSwitchID = 34;
+        public static final int limitSwitchID = 9;
     }
 
     /**
      * Indexer Constants
      */
     public static class Indexer {
-        public static final int indexerID = 26;
-        public static final int spinMotorID = 27;
+        public static final int indexerID = 18;
+        public static final int spinMotorID = 9;
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
     }
@@ -142,8 +142,7 @@ public final class Constants {
 
         /* Motor Inverts */
         public static final InvertedValue angleMotorInvert = InvertedValue.Clockwise_Positive;
-        public static final InvertedValue driveMotorInvert =
-            InvertedValue.CounterClockwise_Positive;
+        public static final InvertedValue driveMotorInvert = InvertedValue.Clockwise_Positive;
 
         /* Angle Encoder Invert */
         public static final SensorDirectionValue cancoderInvert =
@@ -169,7 +168,7 @@ public final class Constants {
 
         /* Angle Motor PID Values */
         /** Proportional Swerve Angle Motor PID Value */
-        public static final double angleKP = 10.0;
+        public static final double angleKP = 100.0;
         /** Integral Swerve Angle Motor PID Value */
         public static final double angleKI = 0.0;
         /** Derivative Swerve Angle Motor PID Value */
@@ -321,8 +320,7 @@ public final class Constants {
 
     /** Adjustable Hood Subsystem */
     public static final class AdjustableHood {
-        public static final int HoodMotorID = 41;
-        public static final int HoodCANCoderID = 42;
+        public static final int HoodMotorID = 11;
 
         public static final double KP = 0.0;
         public static final double KI = 0.0;
@@ -365,10 +363,10 @@ public final class Constants {
         public static final class Telescope {
 
             /** CAN ID for the right telescope motor. */
-            public static final int RIGHT_ID = 47;
+            public static final int RIGHT_ID = 15;
 
             /** CAN ID for the left telescope motor. */
-            public static final int LEFT_ID = 48;
+            public static final int LEFT_ID = 14;
 
             /** Neutral mode for telescope motors (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
@@ -419,7 +417,7 @@ public final class Constants {
         public static final class Pivot {
 
             /** CAN ID for the pivot motor. */
-            public static final int ID = 46;
+            public static final int ID = 8;
 
             /** Neutral mode for the pivot motor (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
@@ -487,9 +485,9 @@ public final class Constants {
         public static final Angle minAngle = Degrees.of(-360);
         public static final Angle maxAngle = Degrees.of(360);
 
-        public static final int TurretMotorID = 20;
-        public static final int TurretCANcoderID1 = 21;
-        public static final int TurretCANcoderID2 = 22;
+        public static final int TurretMotorID = 19;
+        public static final int TurretCANcoderID1 = 5;
+        public static final int TurretCANcoderID2 = 6;
 
         public static final double KP = 0.0;
         public static final double KI = 0.0;
@@ -516,9 +514,9 @@ public final class Constants {
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */
-        public static final int motor1ID = 36;
+        public static final int motor1ID = 10;
         /** ID for Shooter Motor 2 */
-        public static final int motor2ID = 37;
+        public static final int motor2ID = 12;
 
         /** Motor Invert for Shooter Motors */
         public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
@@ -540,5 +538,3 @@ public final class Constants {
         disableHAL = true;
     }
 }
-
-

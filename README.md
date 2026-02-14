@@ -13,18 +13,18 @@
 - 5 = Back Right Drive Motor
 - 6 = Front Right Angle Motor
 - 7 = Front Right Drive Motor
-- 8 =
-- 9 =
-- 10 =
-- 11 =
-- 12 =
-- 13 =
-- 14 =
-- 15 =
-- 16 =
-- 17 =
-- 18 =
-- 19 =
+- 8 = Climber Pivot Motor
+- 9 = Indexer Motor
+- 10 = Right Shooter Motor
+- 11 = Hood Motor
+- 12 = Left Shooter Motor
+- 13 = Intake Motor
+- 14 = Left Climber
+- 15 = Right Climber
+- 16 = Left Hopper Motor
+- 17 = Right Hopper Motor
+- 18 = Magazine Motor
+- 19 = Turret Motor
 
 
 ### Cancoders
@@ -33,3 +33,5 @@
 - 2 = Front Right CANCoder
 - 3 = Back Left CANCoder
 - 4 = Back Right CANCoder
+- 5 = Turret CANCoder 1
+- 6 = Turret CANCoder 2
