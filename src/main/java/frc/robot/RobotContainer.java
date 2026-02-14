@@ -136,8 +136,11 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        driver.rightTrigger().whileTrue(intake.run(() -> intake.runIntakeOnly(0.5)))
-            .onFalse(intake.runOnce(() -> intake.runIntakeOnly(0.0)));
+        driver.rightTrigger().whileTrue(shooter.runShooterVelocityCommand(2000))
+            .onFalse(shooter.runShooterVelocityCommand(0));
+
+        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
+            .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
     }
 
