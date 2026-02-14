@@ -18,6 +18,7 @@ public interface IntakeIO {
         public Distance hopperPosition = Meters.of(0);
         public double intakeDutyCycle = 0;
         public boolean limitSwitch = false;
+        public boolean intakeMotorConnected = false;
     }
 
     public void updateInputs(IntakeInputs inputs);
