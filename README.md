@@ -15,9 +15,9 @@
 - 7 = Front Right Drive Motor
 - 8 = Climber Pivot Motor
 - 9 = Indexer Motor
-- 10 = 
-- 11 =
-- 12 = 
+- 10 = Right Shooter Motor
+- 11 = Hood Motor
+- 12 = Left Shooter Motor
 - 13 = 
 - 14 =
 - 15 =

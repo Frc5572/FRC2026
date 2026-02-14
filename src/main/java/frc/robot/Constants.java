@@ -321,7 +321,7 @@ public final class Constants {
 
     /** Adjustable Hood Subsystem */
     public static final class AdjustableHood {
-        public static final int HoodMotorID = 41;
+        public static final int HoodMotorID = 11;
         public static final int HoodCANCoderID = 42;
 
         public static final double KP = 0.0;
@@ -518,7 +518,7 @@ public final class Constants {
         /** ID for Shooter Motor 1 */
         public static final int motor1ID = 10;
         /** ID for Shooter Motor 2 */
-        public static final int motor2ID = 37;
+        public static final int motor2ID = 12;
 
         /** Motor Invert for Shooter Motors */
         public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
