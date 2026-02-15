@@ -49,7 +49,7 @@ public final class Constants {
     }
 
     /**
-     * Constants file
+     * Intake Constants
      */
     public static class IntakeConstants { // change all variables before testing
         public static final int hopperLeftID = 16;
@@ -77,7 +77,7 @@ public final class Constants {
     }
 
     /**
-     * MoveToPos constants.
+     * MoveToPos Constants
      */
     public static class SwerveTransformPID {
         public static final double translationP = 3.5;
@@ -253,7 +253,7 @@ public final class Constants {
         // @formatter:on
     }
 
-    /** Trench Move To Pose Constants */
+    /** Trench MoveToPose Constants */
     public static final class Trench {
 
         // translation tolerance value for move to trench
@@ -318,16 +318,26 @@ public final class Constants {
         // @formatter:on
     }
 
-    /** Adjustable Hood Subsystem */
+    /** Adjustable Hood Constants */
     public static final class AdjustableHood {
         public static final int HoodMotorID = 11;
 
+        /* PID Values */
+        /** Proportional PID Value for hood position control. */
         public static final double KP = 0.0;
+        /** Integral PID Value for hood position control. */
         public static final double KI = 0.0;
+        /** Derivative PID Value for hood position control. */
         public static final double KD = 0.0;
+
+        /* Characterization Values */
+        /** Static Characterization Value for overcoming friction. */
         public static final double KS = 0.0;
+        /** Velocity Characterization Value */
         public static final double KV = 0.0;
+        /** Acceleration Characterization Value */
         public static final double KA = 0.0;
+        /** Gravity Characterization Value */
         public static final double KG = 0.0;
 
         public static final Angle hoodMaxAngle = Degrees.of(0.0);
@@ -475,7 +485,7 @@ public final class Constants {
         }
     }
 
-    /** Turret subsystem */
+    /** Turret Constants */
     public static final class Turret {
         public static final double motorGearing = 53.934;
         public static final double gear1Gearing = 35.0 / 75.0;
@@ -489,11 +499,20 @@ public final class Constants {
         public static final int TurretCANcoderID1 = 5;
         public static final int TurretCANcoderID2 = 6;
 
+        /* PID Values */
+        /** Proportional PID Value for turret position control. */
         public static final double KP = 0.0;
+        /** Integral PID Value for turret position control. */
         public static final double KI = 0.0;
+        /** Derivative PID Value for turret position control. */
         public static final double KD = 0.0;
+
+        /* Characterization Values */
+        /** Static Characterization Value for overcoming friction. */
         public static final double KS = 0.0;
+        /** Velocity Characterization Value */
         public static final double KV = 0.0;
+        /** Acceleration Characterization Value */
         public static final double KA = 0.0;
 
         public static final double MMCVelocity = 0.0;
@@ -530,11 +549,5 @@ public final class Constants {
         public static final double shooterKP = 0.11;
         public static final double shooterKI = 0.0;
         public static final double shooterKD = 0.0;
-    }
-
-    public static boolean disableHAL = false;
-
-    public static void disableHAP() {
-        disableHAL = true;
     }
 }
