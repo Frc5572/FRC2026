@@ -30,7 +30,7 @@ public final class Shooter extends SubsystemBase {
         io.runShooterVelocity(velocity);
     }
 
-    public Command runShooterVelocityCommand(double velocity) {
+    public Command shoot(double velocity) {
         return run(() -> io.runShooterVelocity(velocity));
     }
 }

@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.List;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -28,6 +29,8 @@ import frc.robot.subsystems.swerve.mod.ModuleConstants;
 import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.CameraConstantsBuilder;
+import frc.robot.util.PIDConstants;
+import frc.robot.util.PIDConstantsBuilder;
 
 /**
  * Constants file.
@@ -166,31 +169,31 @@ public final class Constants {
         public static final double openLoopRamp = 0.25;
         public static final double closedLoopRamp = 0.0;
 
-        /* Angle Motor PID Values */
-        /** Proportional Swerve Angle Motor PID Value */
-        public static final double angleKP = 100.0;
-        /** Integral Swerve Angle Motor PID Value */
-        public static final double angleKI = 0.0;
-        /** Derivative Swerve Angle Motor PID Value */
-        public static final double angleKD = 0.0;
+        // @formatter:off
+        public static final PIDConstants angleMotorPID =
+            new PIDConstantsBuilder("Swerve/angle", GravityTypeValue.Elevator_Static)
+                .kP(100.0)
+                .kI(0.0)
+                .kD(0.0)
+                .kV(0.0)
+                .kS(0.0)
+                .kG(0.0)
+                .kA(0.0)
+                .finish();
+        // @formatter:on
 
-        /* Drive Motor PID Values */
-        /** Proportional Swerve Drive Motor PID Value */
-        public static final double driveKP = 0.0012;
-        /** Integral Swerve Drive Motor PID Value */
-        public static final double driveKI = 0.0;
-        /** Derivative Swerve Drive Motor PID Value */
-        public static final double driveKD = 0.0;
-        /** Feedforward Swerve Drive Motor PID Value */
-        public static final double driveKF = 0.0;
-
-        /* Drive Motor Characterization Values From SYSID */
-        /** Static Swerve Drive Motor Characterization Value */
-        public static final double driveKS = 0.185;
-        /** Velocity Swerve Drive Motor Characterization Value */
-        public static final double driveKV = 1.004 / 6.536;
-        /** Acceleration Swerve Drive Motor Characterization Value */
-        public static final double driveKA = 0.0;
+        // @formatter:off
+        public static final PIDConstants driveMotorPID =
+            new PIDConstantsBuilder("Swerve/drive", GravityTypeValue.Elevator_Static)
+                .kP(0.0012)
+                .kI(0.0)
+                .kD(0.0)
+                .kV(1.004 / 6.536)
+                .kS(0.185)
+                .kG(0.0)
+                .kA(0.0)
+                .finish();
+        // @formatter:on
 
         /* Swerve Profiling Values */
         /** Max Speed in Meters per Second */
