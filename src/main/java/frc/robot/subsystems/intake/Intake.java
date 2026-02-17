@@ -54,6 +54,7 @@ public class Intake extends SubsystemBase {
             * Constants.IntakeConstants.gearRatio;
     }
 
+    /** runs hopper */
     public void runHopper(double targetMeters) {
         double targetRotations = distanceToRotations(targetMeters);
 
