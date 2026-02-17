@@ -38,6 +38,6 @@ public class CommandFactory {
             }
             hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
             shooter.runShooterVelocityCommand(Constants.Shooter.shooterVelocity);
-        });
+        }, turret, hood, shooter);
     }
 }
