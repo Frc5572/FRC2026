@@ -13,9 +13,13 @@ public interface Tunable {
         if (Constants.tunable) {
             try {
                 for (var item : clazz.getDeclaredFields()) {
+                    if (item.getName().equals("name") || item.getName().equals("isDirty")) {
+                        continue;
+                    }
                     if (item.getType().equals(double.class)) {
                         var topic = ntInstance.getDoubleTopic(name + "/" + item.getName());
                         var publisher = topic.publish();
+                        item.setAccessible(true);
                         var value = (double) item.get(obj);
                         publisher.accept(value);
                         ntInstance.addListener(topic, EnumSet.of(Kind.kValueAll), (ev) -> {

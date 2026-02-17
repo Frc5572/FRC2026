@@ -1,5 +1,6 @@
 package frc.robot.util.tunable;
 
+import java.util.function.Consumer;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -19,7 +20,7 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
     public double kS;
     public double kG;
     public double kA;
-    public GravityTypeValue gravityType;
+    public boolean isArm;
     private boolean isDirty;
     private String name;
 
@@ -36,8 +37,8 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
         this.kS = kS;
         this.kG = kG;
         this.kA = kA;
-        this.gravityType = gravityType;
-        this.isDirty = false;
+        this.isArm = gravityType.equals(GravityTypeValue.Arm_Cosine);
+        this.isDirty = true;
 
         Tunable.setupTunable("/" + name, this, PIDConstants.class, () -> {
             this.isDirty = true;
@@ -52,13 +53,13 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
         config.kG = kG;
         config.kS = kS;
         config.kA = kA;
-        config.GravityType = gravityType;
+        config.GravityType = isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static;
     }
 
-    public void ifDirty(Runnable runnable) {
+    public void ifDirty(Consumer<PIDConstants> consumer) {
         Logger.processInputs(this.name, this);
         if (this.isDirty) {
-            runnable.run();
+            consumer.accept(this);
         }
         this.isDirty = false;
     }
@@ -72,7 +73,7 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
         table.put("kG", this.kG);
         table.put("kS", this.kS);
         table.put("kA", this.kA);
-        table.put("isArm", this.gravityType.equals(GravityTypeValue.Arm_Cosine));
+        table.put("isArm", this.isArm);
     }
 
     @Override
@@ -84,14 +85,14 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
         this.kG = table.get("kG", this.kG);
         this.kS = table.get("kS", this.kS);
         this.kS = table.get("kA", this.kA);
-        this.gravityType = table.get("isArm", this.gravityType.equals(GravityTypeValue.Arm_Cosine))
-            ? GravityTypeValue.Arm_Cosine
-            : GravityTypeValue.Elevator_Static;
+        this.isArm = table.get("isArm", this.isArm);
     }
 
     @Override
     public PIDConstants clone() {
-        PIDConstants copy = new PIDConstants(name, this.gravityType, kP, kD, kI, kV, kS, kG, kA);
+        PIDConstants copy = new PIDConstants(name,
+            isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static, kP, kD, kI, kV,
+            kS, kG, kA);
         return copy;
     }
 
