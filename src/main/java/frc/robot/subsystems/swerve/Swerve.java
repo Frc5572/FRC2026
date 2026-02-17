@@ -524,4 +524,11 @@ public final class Swerve extends SubsystemBase {
                 driveSpeeds.get().omegaRadiansPerSecond),
             state.getGlobalPoseEstimate().getRotation()));
     }
+
+    /**
+     * @return the pitch that the robot is at
+     */
+    public double getPitch() {
+        return gyroInputs.pitch.getDegrees();
+    }
 }

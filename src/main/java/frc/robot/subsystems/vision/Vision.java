@@ -124,4 +124,15 @@ public class Vision extends SubsystemBase {
         res[translations.length + 1] = newTranslation2;
         return res;
     }
+
+    public boolean hasTarget() {
+        for (VisionIO.CameraInputs input : cameraInputs) {
+            for (var result : input.results) {
+                if (result.hasTargets()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

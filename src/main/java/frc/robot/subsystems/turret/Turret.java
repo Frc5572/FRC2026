@@ -10,9 +10,12 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.RobotState;
+import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.vision.Vision;
 
 /**
  * Subsystem representing the robot turret.
@@ -23,16 +26,20 @@ public class Turret extends SubsystemBase {
     private final TurretIO io;
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final RobotState state;
+    private final Swerve swerve;
 
     /**
      * Creates a new Turret subsystem.
      *
      * @param io Hardware abstraction used to read sensors and control actuators
      */
-    public Turret(TurretIO io, RobotState state) {
+    public Turret(TurretIO io, RobotState state, Swerve swerve, Vision vision) {
         super("Turret");
         this.io = io;
         this.state = state;
+        this.swerve = swerve;
+
+        poseCorrection(vision);
     }
 
     @Override
@@ -175,4 +182,28 @@ public class Turret extends SubsystemBase {
             setGoal(Rotations.of(hubTarget));
         });
     }
+
+    public void findTag() {
+        double time = Timer.getFPGATimestamp();
+
+        double center =
+            Constants.Turret.maxAngle.plus(Constants.Turret.minAngle).div(2.0).in(Rotations);
+        double range =
+            Constants.Turret.maxAngle.minus(Constants.Turret.minAngle).div(2.0).in(Rotations);
+
+        double scan = center + (Math.sin(time * 2.0) * range);
+        this.setGoal(Rotations.of(scan));
+    }
+
+    public Command scanUntilVisible(Vision vision) {
+        return run(() -> this.findTag()).until(() -> vision.hasTarget());
+    }
+
+    private void poseCorrection(Vision vision) {
+        Trigger onBump = new Trigger(() -> Math.abs(swerve.getPitch()) > 10.0);
+
+        onBump.onFalse(this.scanUntilVisible(vision).withTimeout(3.0));
+    }
+
+
 }
