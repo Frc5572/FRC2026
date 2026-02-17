@@ -125,6 +125,10 @@ public class Vision extends SubsystemBase {
         return res;
     }
 
+    /**
+     * 
+     * @return true if the camera sees an april tag.
+     */
     public boolean hasTarget() {
         for (VisionIO.CameraInputs input : cameraInputs) {
             for (var result : input.results) {

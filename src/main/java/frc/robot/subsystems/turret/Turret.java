@@ -183,6 +183,9 @@ public class Turret extends SubsystemBase {
         });
     }
 
+    /**
+     * Moves the turret until it sees an april tag
+     */
     public void findTag() {
         double time = Timer.getFPGATimestamp();
 
