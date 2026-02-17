@@ -34,10 +34,10 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput("Intake/TargetRotaitons",
             distanceToRotations(Constants.IntakeConstants.hopperOutDistance.in(Meters)));
 
-        if (inputs.limitSwitch) {
-            io.setLeftHopperVoltage(0);
-            io.setEncoderPosition(0);
-        }
+        // if (inputs.limitSwitch) {
+        // io.setLeftHopperVoltage(0);
+        // io.setEncoderPosition(0);
+        // }
     }
 
 
@@ -54,6 +54,9 @@ public class Intake extends SubsystemBase {
     public void runHopper(double targetMeters) {
         double targetRotations = distanceToRotations(targetMeters);
 
+        Logger.recordOutput("Intake/TargetMeters", targetMeters);
+        Logger.recordOutput("Intake/TargetRotations", targetRotations);
+
         if (inputs.limitSwitch && targetRotations <= 0.01) {
             io.setLeftHopperVoltage(0);
             io.setEncoderPosition(0);
@@ -61,6 +64,13 @@ public class Intake extends SubsystemBase {
             io.setLeftHopperPosition(targetRotations);
         }
         io.setRightHopperPosition(targetRotations);
+    }
+
+    public Command stop() {
+        return this.runOnce(() -> {
+            this.io.setRightHopperVoltage(0);
+            this.io.setLeftHopperVoltage(0);
+        });
     }
 
     public Command extendHopper() {

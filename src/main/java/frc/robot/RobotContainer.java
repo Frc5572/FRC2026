@@ -143,8 +143,8 @@ public final class RobotContainer {
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
-        driver.a().onTrue(intake.extendHopper());
-        driver.b().onTrue(intake.retractHopper());
+        driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
+        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
     }
 
