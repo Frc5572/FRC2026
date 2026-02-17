@@ -64,6 +64,8 @@ public final class Constants {
         public static final double KI = 0;
         public static final double KD = 0;
         public static final int limitSwitchID = 9;
+        public static final double pinionDiameter = 0.0; // needs to be figured out
+        public static final double gearRatio = 0.0; // needs to be figured out
     }
 
     /**

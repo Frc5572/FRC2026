@@ -15,7 +15,11 @@ public interface IntakeIO {
      */
     @AutoLog
     public static class IntakeInputs {
-        public Distance hopperPosition = Meters.of(0);
+        public double leftHopperPositionRotations = 0;
+        public double rightHopperPositionRotations = 0;
+
+        public Distance leftHopperPosition = Meters.of(leftHopperPositionRotations);
+
         public double intakeDutyCycle = 0;
         public boolean limitSwitch = false;
         public boolean intakeMotorConnected = false;
@@ -27,7 +31,7 @@ public interface IntakeIO {
 
     public void setEncoderPosition(double position);
 
-    public void runHopperMotor(double setPoint);
+    public void setLeftHopperVoltage(double setPoint);
 
-
+    public void setRightHopperVoltage(double setPoint);
 }

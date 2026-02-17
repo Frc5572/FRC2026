@@ -1,6 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Meters;
 import frc.robot.sim.SimPosition;
 
 /**
@@ -10,13 +9,15 @@ public class IntakeSim implements IntakeIO {
 
     public boolean isIntaking = false;
     private double targetPosition = 0.0;
+    private double targetVoltage = 0.0;
 
     private final SimPosition hopper = new SimPosition(0.7, 2.0, 60.0);
 
     @Override
     public void updateInputs(IntakeInputs inputs) {
         hopper.update(targetPosition);
-        inputs.hopperPosition = Meters.of(hopper.position);
+        inputs.leftHopperPositionRotations = (hopper.position);
+        inputs.rightHopperPositionRotations = hopper.position;
     }
 
     @Override
@@ -28,8 +29,12 @@ public class IntakeSim implements IntakeIO {
     public void setEncoderPosition(double position) {}
 
     @Override
-    public void runHopperMotor(double setPoint) {
-        targetPosition = setPoint;
+    public void setLeftHopperVoltage(double volts) {
+        targetVoltage = (volts);
     }
 
+    @Override
+    public void setRightHopperVoltage(double volts) {
+        targetVoltage = volts;
+    }
 }
