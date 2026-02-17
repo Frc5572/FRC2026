@@ -26,20 +26,18 @@ public class Turret extends SubsystemBase {
     private final TurretIO io;
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final RobotState state;
-    private final Swerve swerve;
+    private Swerve swerve;
+    private Vision vision;
 
     /**
      * Creates a new Turret subsystem.
      *
      * @param io Hardware abstraction used to read sensors and control actuators
      */
-    public Turret(TurretIO io, RobotState state, Swerve swerve, Vision vision) {
+    public Turret(TurretIO io, RobotState state) {
         super("Turret");
         this.io = io;
         this.state = state;
-        this.swerve = swerve;
-
-        poseCorrection(vision);
     }
 
     @Override
@@ -207,6 +205,4 @@ public class Turret extends SubsystemBase {
 
         onBump.onFalse(this.scanUntilVisible(vision).withTimeout(3.0));
     }
-
-
 }
