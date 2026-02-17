@@ -25,17 +25,19 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
-import frc.robot.subsystems.swerve.mod.ModuleConstants;
-import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.CameraConstantsBuilder;
-import frc.robot.util.PIDConstants;
-import frc.robot.util.PIDConstantsBuilder;
+import frc.robot.util.tunable.ModuleConstants;
+import frc.robot.util.tunable.ModuleConstantsBuilder;
+import frc.robot.util.tunable.PIDConstants;
+import frc.robot.util.tunable.PIDConstantsBuilder;
 
 /**
  * Constants file.
  */
 public final class Constants {
+
+    public static final boolean tunable = true;
 
     /** Constants for driver controls */
     public static class DriverControls {

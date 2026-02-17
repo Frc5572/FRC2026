@@ -1,19 +1,16 @@
-package frc.robot.util;
+package frc.robot.util.tunable;
 
-import java.util.EnumSet;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
-import edu.wpi.first.networktables.NetworkTableEvent.Kind;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.util.typestate.InitField;
 import frc.robot.util.typestate.OptionalField;
 import frc.robot.util.typestate.RequiredField;
 import frc.robot.util.typestate.TypeStateBuilder;
 
-public class PIDConstants implements LoggableInputs, Cloneable {
+public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
 
     public double kP;
     public double kD;
@@ -42,29 +39,9 @@ public class PIDConstants implements LoggableInputs, Cloneable {
         this.gravityType = gravityType;
         this.isDirty = false;
 
-        final PIDConstants constants = this;
-        final NetworkTableInstance ntInstance = NetworkTableInstance.getDefault();
-        try {
-            for (var item : PIDConstants.class.getDeclaredFields()) {
-                if (item.getType().equals(double.class)) {
-                    var topic = ntInstance.getDoubleTopic("/" + name + "/" + item.getName());
-                    var publisher = topic.publish();
-                    var value = (double) item.get(constants);
-                    publisher.accept(value);
-                    ntInstance.addListener(topic, EnumSet.of(Kind.kValueAll), (ev) -> {
-                        try {
-                            var newValue = ev.valueData.value.getDouble();
-                            item.set(this, newValue);
-                            constants.isDirty = true;
-                        } catch (IllegalArgumentException | IllegalAccessException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                }
-            }
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        Tunable.setupTunable("/" + name, this, PIDConstants.class, () -> {
+            this.isDirty = true;
+        });
     }
 
     public void apply(Slot0Configs config) {
