@@ -64,8 +64,8 @@ public final class Constants {
         public static final double KI = 0;
         public static final double KD = 0;
         public static final int limitSwitchID = 9;
-        public static final double pinionDiameter = 2.0;
-        public static final double gearRatio = 1.0;
+        public static final double pinionDiameter = Units.inchesToMeters(2);
+        public static final double gearRatio = 21.0 / 20.0;
     }
 
     /**
