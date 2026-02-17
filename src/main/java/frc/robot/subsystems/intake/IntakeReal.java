@@ -37,14 +37,22 @@ public class IntakeReal implements IntakeIO {
             System.out.println("Intake initialization failed: " + e.getMessage());
             intakeConnected = false;
         }
+
         config.Feedback.SensorToMechanismRatio = 1; // change for testing
         config.Slot0.kP = Constants.IntakeConstants.KP; // change for testing
         config.Slot0.kI = Constants.IntakeConstants.KI; // change for testing
         config.Slot0.kD = Constants.IntakeConstants.KD; // change for testing
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        hopperRightMotor.getConfigurator().apply(config);
         hopperLeftMotor.getConfigurator().apply(config);
+
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        hopperRightMotor.getConfigurator().apply(config);
+
+        leftMotorPosition.setUpdateFrequency(50);
+        rightMotorPosition.setUpdateFrequency(50);
+
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         intakeMotor.getConfigurator().apply(config);
@@ -71,7 +79,16 @@ public class IntakeReal implements IntakeIO {
         } else {
             inputs.intakeDutyCycle = 0.0;
         }
+    }
 
+    @Override
+    public void setLeftHopperPosition(double rotations) {
+        hopperLeftMotor.setControl(positionVoltage.withPosition(rotations));
+    }
+
+    @Override
+    public void setRightHopperPosition(double rotations) {
+        hopperRightMotor.setControl(positionVoltage.withPosition(rotations));
     }
 
     @Override

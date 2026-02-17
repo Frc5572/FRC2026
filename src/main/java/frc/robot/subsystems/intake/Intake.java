@@ -2,8 +2,6 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -17,9 +15,6 @@ public class Intake extends SubsystemBase {
     public final IntakeInputsAutoLogged inputs = new IntakeInputsAutoLogged();
     private final Trigger limitSwitchTouched = new Trigger(() -> inputs.limitSwitch).debounce(0.25);
 
-    private final PIDController leftController = new PIDController(0.1, 0, 0);
-    private final PIDController rightController = new PIDController(0.1, 0, 0);
-
     public Intake(IntakeIO io) {
         this.io = io;
         io.setEncoderPosition(0);
@@ -30,16 +25,17 @@ public class Intake extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Intake", inputs);
 
-        double p = SmartDashboard.getNumber("Intake/kP", 0.1);
-        leftController.setP(p);
-        rightController.setP(p);
-
-        Logger.recordOutput("Intake/LeftError", leftController.getError());
-        Logger.recordOutput("Intake/RightError", rightController.getError());
+        double targetRotations =
+            distanceToRotations(Constants.IntakeConstants.hopperOutDistance.in(Meters));
+        Logger.recordOutput("Intake/LeftError",
+            targetRotations - inputs.leftHopperPositionRotations);
+        Logger.recordOutput("Intake/RightError",
+            targetRotations - inputs.rightHopperPositionRotations);
         Logger.recordOutput("Intake/TargetRotaitons",
             distanceToRotations(Constants.IntakeConstants.hopperOutDistance.in(Meters)));
 
         if (inputs.limitSwitch) {
+            io.setLeftHopperVoltage(0);
             io.setEncoderPosition(0);
         }
     }
@@ -58,18 +54,13 @@ public class Intake extends SubsystemBase {
     public void runHopper(double targetMeters) {
         double targetRotations = distanceToRotations(targetMeters);
 
-        double leftVolts =
-            leftController.calculate(inputs.leftHopperPositionRotations, targetRotations);
-        double rightVolts =
-            rightController.calculate(inputs.rightHopperPositionRotations, targetRotations);
-
         if (inputs.limitSwitch && targetRotations <= 0.01) {
-            leftVolts = 0;
             io.setLeftHopperVoltage(0);
             io.setEncoderPosition(0);
+        } else {
+            io.setLeftHopperPosition(targetRotations);
         }
-        io.setLeftHopperVoltage(leftVolts);
-        io.setRightHopperVoltage(rightVolts);
+        io.setRightHopperPosition(targetRotations);
     }
 
     public Command extendHopper() {

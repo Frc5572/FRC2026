@@ -31,6 +31,10 @@ public interface IntakeIO {
 
     public void setEncoderPosition(double position);
 
+    public void setLeftHopperPosition(double rotations);
+
+    public void setRightHopperPosition(double rotations);
+
     public void setLeftHopperVoltage(double setPoint);
 
     public void setRightHopperVoltage(double setPoint);

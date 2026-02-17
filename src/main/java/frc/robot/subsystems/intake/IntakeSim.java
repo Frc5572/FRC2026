@@ -37,4 +37,14 @@ public class IntakeSim implements IntakeIO {
     public void setRightHopperVoltage(double volts) {
         targetVoltage = volts;
     }
+
+    @Override
+    public void setLeftHopperPosition(double rotations) {
+        targetPosition = rotations;
+    }
+
+    @Override
+    public void setRightHopperPosition(double rotations) {
+        targetPosition = rotations;
+    }
 }
