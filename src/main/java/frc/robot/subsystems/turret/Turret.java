@@ -27,7 +27,6 @@ public class Turret extends SubsystemBase {
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final RobotState state;
     private Swerve swerve;
-    private Vision vision;
 
     /**
      * Creates a new Turret subsystem.
@@ -204,5 +203,9 @@ public class Turret extends SubsystemBase {
         Trigger onBump = new Trigger(() -> Math.abs(swerve.getPitch()) > 10.0);
 
         onBump.onFalse(this.scanUntilVisible(vision).withTimeout(3.0));
+    }
+
+    public Command correctPosition(Vision vision) {
+        return run(() -> poseCorrection(vision));
     }
 }
