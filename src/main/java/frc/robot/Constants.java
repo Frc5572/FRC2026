@@ -346,6 +346,19 @@ public final class Constants {
         /** Gravity Characterization Value */
         public static final double KG = 0.0;
 
+        // @formatter:off
+        public static final PIDConstants pid =
+            new PIDConstantsBuilder("AdjustableHood", GravityTypeValue.Arm_Cosine)
+                .kP(0.0)
+                .kI(0.0)
+                .kD(0.0)
+                .kV(0.0)
+                .kS(0.0)
+                .kG(0.0)
+                .kA(0.0)
+                .finish();
+        // @formatter:on
+
         public static final Angle hoodMaxAngle = Degrees.of(0.0);
         public static final Angle hoodMinAngle = Degrees.of(0.0);
 
@@ -549,7 +562,7 @@ public final class Constants {
             new FlywheelConstantsBuilder()
                 .holdCurrent(40.0)
                 .maxDutyCycle(1.0)
-                .isReversed(false)
+                .isReversed(true)
                 .velocityTolerance(0.6)
                 .atSpeedDebounce(0.1)
                 .finish();
