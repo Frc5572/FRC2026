@@ -8,7 +8,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.FieldConstants.Hub;
+import frc.robot.FieldConstants.Passing;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
@@ -24,15 +24,15 @@ public class CommandFactory {
         return Commands.run(() -> {
             Pose2d swervePose = supplierSwervePose.get();
             Distance leftDistance =
-                Meters.of(Hub.nearLeftCorner.getDistance((swervePose).getTranslation()));
+                Meters.of(Passing.blueAllianceLeft.getDistance(swervePose.getTranslation()));
             Distance rightDistance =
-                Meters.of(Hub.nearRightCorner.getDistance((swervePose).getTranslation()));
+                Meters.of(Passing.blueAllianceRight.getDistance(swervePose.getTranslation()));
             if (leftDistance.in(Meters) < rightDistance.in(Meters)) {
-                Angle leftDistanceGoal = Rotations.of(Hub.nearLeftCorner
+                Angle leftDistanceGoal = Rotations.of(Passing.blueAllianceLeft
                     .minus(swervePose.getTranslation()).getAngle().getRotations());
                 turret.setGoal(leftDistanceGoal);
             } else {
-                Angle rightDistanceGoal = Rotations.of(Hub.nearRightCorner
+                Angle rightDistanceGoal = Rotations.of(Passing.blueAllianceRight
                     .minus(swervePose.getTranslation()).getAngle().getRotations());
                 turret.setGoal(rightDistanceGoal);
             }
