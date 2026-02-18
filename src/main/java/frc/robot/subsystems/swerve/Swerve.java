@@ -505,6 +505,7 @@ public final class Swerve extends SubsystemBase {
             .finish().until(() -> this.inTrench());
     }
 
+    /** PID controller for constraining Y movement while moving through the trench. */
     private final PIDController pidYController =
         new PIDController(Constants.SwerveTransformPID.translationP,
             Constants.SwerveTransformPID.translationI, Constants.SwerveTransformPID.translationD);
@@ -514,7 +515,7 @@ public final class Swerve extends SubsystemBase {
      * trench.
      * 
      * @param driveSpeeds supplier of field-relative chassis speeds
-     * @return a command that drives the robot while scheduled
+     * @return A command that drives the robot while scheduled
      */
     public Command moveThroughTrench(Supplier<ChassisSpeeds> driveSpeeds) {
         double pidYVal = pidYController.calculate(
