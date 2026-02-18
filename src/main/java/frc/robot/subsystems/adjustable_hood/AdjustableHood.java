@@ -64,7 +64,7 @@ public class AdjustableHood extends SubsystemBase {
     }
 
     /**
-     * @param targetAngle gets the goal angle
+     * sets the target angle as the goal angle depending on robot location
      */
     public void setGoal() {
         io.setTargetAngle(goalAngle);
