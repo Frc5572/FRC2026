@@ -213,6 +213,13 @@ public class FieldConstants {
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + width / 2.0,
             fieldWidth / 2.0, innerHeight);
 
+        /**
+         * Translation 2d of the center of the Hub
+         */
+        public static final Translation2d centerHub = new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + width / 2.0,
+            fieldWidth / 2.0);
+
         /** Alliance-side hub corner closest to the alliance wall, left side. */
         public static final Translation2d nearLeftCorner =
             new Translation2d(topCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);
