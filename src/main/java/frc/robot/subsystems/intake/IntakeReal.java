@@ -5,14 +5,13 @@ import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
@@ -23,7 +22,7 @@ import frc.robot.Constants;
 public class IntakeReal implements IntakeIO {
     private TalonFX hopperRightMotor = new TalonFX(Constants.IntakeConstants.hopperRightID);
     private TalonFX hopperLeftMotor = new TalonFX(Constants.IntakeConstants.hopperLeftID);
-    private SparkFlex intakeMotor;
+    private TalonFX intakeMotor;
     private TalonFXConfiguration config = new TalonFXConfiguration();
     private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
@@ -34,10 +33,7 @@ public class IntakeReal implements IntakeIO {
     /** Real Intake Implementation */
     public IntakeReal() {
         try {
-            intakeMotor = new SparkFlex(Constants.IntakeConstants.intakeID, MotorType.kBrushless);
-            if (intakeMotor.getFirmwareVersion() == 0) {
-                throw new Exception("Motor not found");
-            }
+            intakeMotor = new TalonFX(Constants.IntakeConstants.intakeID);
             intakeConnected = true;
         } catch (Exception e) {
             System.out.println("Intake initialization failed: " + e.getMessage());
@@ -52,13 +48,16 @@ public class IntakeReal implements IntakeIO {
         hopperRightMotor.getConfigurator().apply(config);
         hopperLeftMotor
             .setControl(new Follower(hopperRightMotor.getDeviceID(), MotorAlignmentValue.Opposed)); // check
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        intakeMotor.getConfigurator().apply(config);
     }
 
 
     @Override
     public void runIntakeMotor(double speed) {
         if (intakeConnected && intakeMotor != null) {
-            intakeMotor.set(speed);
+            intakeMotor.setControl(new DutyCycleOut(speed));
         }
     }
 

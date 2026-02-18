@@ -3,8 +3,11 @@ package frc.robot.subsystems.indexer;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -40,6 +43,9 @@ public class IndexerReal implements IndexerIO {
         } catch (Exception e) {
             System.out.println("magazine initialization failed: " + e.getMessage());
         }
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        spindexer.getConfigurator().apply(config);
     }
 
     @Override
@@ -58,13 +64,13 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setSpindexerMotorDutyCycle(double dutyCycle) {
-        spindexer.setControl(velocityDutyCycleRequest.withVelocity(dutyCycle));
+        spindexer.setControl(new DutyCycleOut(dutyCycle));
     }
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
         if (magazineConnected && magazine != null) {
-            magazine.set(dutyCycle);
+            magazine.set(-dutyCycle);
         }
     }
 }
