@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -133,6 +134,10 @@ public final class RobotContainer {
 
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
+
+        new Trigger(() -> swerve.distanceFromClosestTrench() < 0.5).whileTrue(
+            swerve.moveToTrench().andThen(swerve.moveThroughTrench(TeleopControls.teleopControls(
+                () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()))));
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
