@@ -515,7 +515,7 @@ public final class Swerve extends SubsystemBase {
      * trench.
      * 
      * @param driveSpeeds supplier of field-relative chassis speeds
-     * @return A command that drives the robot while scheduled
+     * @return a command that drives the robot while scheduled
      */
     public Command moveThroughTrench(Supplier<ChassisSpeeds> driveSpeeds) {
         double pidYVal = pidYController.calculate(
