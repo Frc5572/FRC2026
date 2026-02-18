@@ -518,10 +518,14 @@ public final class Swerve extends SubsystemBase {
      * @return a command that drives the robot while scheduled
      */
     public Command moveThroughTrench(Supplier<ChassisSpeeds> driveSpeeds) {
-        double pidYVal = pidYController.calculate(
-            state.getGlobalPoseEstimate().getTranslation().getY(), goalTrenchPosition().getY());
+        Supplier<Double> pidYSupplier = () -> {
+            double val = pidYController.calculate(
+                state.getGlobalPoseEstimate().getTranslation().getY(), goalTrenchPosition().getY());
+            Logger.recordOutput("Swerve/TrenchPIDYVal", val);
+            return val;
+        };
         return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYVal,
+            new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYSupplier.get(),
                 driveSpeeds.get().omegaRadiansPerSecond),
             state.getGlobalPoseEstimate().getRotation()));
     }
