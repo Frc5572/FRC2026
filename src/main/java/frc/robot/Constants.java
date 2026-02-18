@@ -324,7 +324,7 @@ public final class Constants {
 
         /* PID Values */
         /** Proportional PID Value for hood position control. */
-        public static final double KP = 0.0;
+        public static final double KP = 0.5;
         /** Integral PID Value for hood position control. */
         public static final double KI = 0.0;
         /** Derivative PID Value for hood position control. */

@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -141,6 +142,10 @@ public final class RobotContainer {
 
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
+
+        driver.povUp().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(5)));
+
+        driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-5)));
 
     }
 

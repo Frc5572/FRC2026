@@ -1,5 +1,6 @@
 package frc.robot.subsystems.adjustable_hood;
 
+import static edu.wpi.first.units.Units.Degrees;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
@@ -16,9 +17,15 @@ public class AdjustableHood extends SubsystemBase {
 
     private final AdjustableHoodIO io;
     public final AdjustableHoodInputsAutoLogged inputs = new AdjustableHoodInputsAutoLogged();
-    public final RobotState state;
+    public RobotState state;
     private Translation2d robotPosition;
     private double hubDistance;
+    private Angle goalAngle;
+
+    private boolean isManualMode = false;
+    private double manualAngleDegrees = 0.0;
+
+    private InterpolatingDoubleTreeMap hoodAngles = new InterpolatingDoubleTreeMap();
 
     /**
      * Creates a new Adjustable Hood subsystem.
@@ -28,6 +35,9 @@ public class AdjustableHood extends SubsystemBase {
     public AdjustableHood(AdjustableHoodIO io) {
         super("Adjustable Hood");
         this.io = io;
+
+        hoodAngles.put(0.0, 0.0);
+        hoodAngles.put(1.0, 0.0);
     }
 
     @Override
@@ -35,27 +45,45 @@ public class AdjustableHood extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Adjustable Hood", inputs);
 
-        Logger.processInputs("Robot Position", inputs);
-        this.robotPosition = state.getGlobalPoseEstimate().getTranslation();
+        double targetAngle;
 
-        Logger.processInputs("Distance to Hub Center", inputs);
+        this.robotPosition = state.getGlobalPoseEstimate().getTranslation();
+        Logger.recordOutput("Robot Position", robotPosition);
+
         this.hubDistance = this.robotPosition.getDistance(FieldConstants.Hub.centerHub);
+        Logger.recordOutput("Distance to Hub Center", this.hubDistance);
+
+        if (isManualMode) {
+            targetAngle = manualAngleDegrees;
+        } else {
+            targetAngle = hoodAngles.get(this.hubDistance);
+        }
+
+        this.goalAngle = Degrees.of(targetAngle);
+        Logger.recordOutput("Hood Angle", this.goalAngle);
     }
 
     /**
      * @param targetAngle gets the goal angle
      */
     public void setGoal() {
-        Angle targetAngle;
-
-        InterpolatingDoubleTreeMap hoodAngles = new InterpolatingDoubleTreeMap();
-        hoodAngles.put(0.0, 0.0);
-        hoodAngles.put();
-
-        io.setTargetAngle(targetAngle);
+        io.setTargetAngle(goalAngle);
     }
 
-    public Command goToAngle(Angle angle) {
-        return run(() -> this.setGoal(angle));
+    /** Automatically goes to the angle based on the location of the robot */
+    public Command goToAngle() {
+        return run(() -> this.setGoal());
+    }
+
+    /** Sets the angle manually */
+    public void setManualAngle(Angle angleIncriment) {
+        this.isManualMode = true;
+        this.goalAngle = goalAngle.plus(angleIncriment);
+
+        io.setTargetAngle(goalAngle);
+    }
+
+    public Command manualMoveToAngle(Angle angleIncriment) {
+        return run(() -> this.setManualAngle(angleIncriment));
     }
 }
