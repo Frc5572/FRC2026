@@ -1,7 +1,9 @@
 package frc.robot.subsystems.adjustable_hood;
 
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -27,6 +29,15 @@ public class AdjustableHood extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Adjustable Hood", inputs);
+    }
+
+    public Distance hubDistance() {
+
+    }
+
+    public Angle goalAngle(){
+        InterpolatingDoubleTreeMap hoodAngles = new InterpolatingDoubleTreeMap();
+        hoodAngles.put()
     }
 
     /**
