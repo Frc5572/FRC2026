@@ -11,6 +11,7 @@ import frc.robot.util.typestate.OptionalField;
 import frc.robot.util.typestate.RequiredField;
 import frc.robot.util.typestate.TypeStateBuilder;
 
+/** Tunable constants for PID controllers */
 public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
 
     public double kP;
@@ -24,6 +25,7 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
     private boolean isDirty;
     private String name;
 
+    /** Create new PID Constants */
     @TypeStateBuilder("PIDConstantsBuilder")
     public PIDConstants(@InitField String name, @InitField GravityTypeValue gravityType,
         @RequiredField double kP, @OptionalField("0.0") double kI, @OptionalField("0.0") double kD,
@@ -45,6 +47,7 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
         });
     }
 
+    /** Write PID constants to TalonFX */
     public void apply(Slot0Configs config) {
         config.kP = kP;
         config.kI = kI;
@@ -56,6 +59,7 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
         config.GravityType = isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static;
     }
 
+    /** Run function with constants if they've changed. */
     public void ifDirty(Consumer<PIDConstants> consumer) {
         Logger.processInputs(this.name, this);
         if (this.isDirty) {

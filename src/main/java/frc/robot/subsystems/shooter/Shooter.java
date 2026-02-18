@@ -26,6 +26,7 @@ public final class Shooter extends SubsystemBase {
         this.io = io;
     }
 
+    @Override
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Shooter", inputs);
@@ -36,6 +37,7 @@ public final class Shooter extends SubsystemBase {
         });
     }
 
+    /** Set shooter velocity */
     public void setVelocity(double velocity) {
         boolean inTolerance = Math.abs(inputs.shooterAngularVelocity1.in(RotationsPerSecond)
             - velocity) <= Constants.Shooter.constants.velocityTolerance;
@@ -47,6 +49,7 @@ public final class Shooter extends SubsystemBase {
         }
     }
 
+    /** Shoot at a given velocity */
     public Command shoot(double velocity) {
         return run(() -> setVelocity(velocity));
     }

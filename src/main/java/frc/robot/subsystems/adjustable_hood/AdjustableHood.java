@@ -38,10 +38,12 @@ public class AdjustableHood extends SubsystemBase {
         io.setTargetAngle(targetAngle);
     }
 
+    /** Set position for hood motor */
     public Command goToAngle(Angle angle) {
         return run(() -> this.setGoal(angle));
     }
 
+    /** Set voltage for hood motor */
     public Command runVoltage(DoubleSupplier voltage) {
         return this.run(() -> {
             io.setAdjustableHoodVoltage(Volts.of(voltage.getAsDouble()));

@@ -6,8 +6,10 @@ import edu.wpi.first.networktables.NetworkTableEvent.Kind;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
 
+/** Marker interface for POJO that can expose its contents for tuning. */
 public interface Tunable {
 
+    /** Create Networktables handling for changing constants. */
     public static void setupTunable(String name, Object obj, Class<?> clazz, Runnable markDirty) {
         final NetworkTableInstance ntInstance = NetworkTableInstance.getDefault();
         if (Constants.tunable) {

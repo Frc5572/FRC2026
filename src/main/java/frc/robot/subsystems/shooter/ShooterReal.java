@@ -34,6 +34,7 @@ public final class ShooterReal implements ShooterIO {
     private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
         new VelocityTorqueCurrentFOC(0.0);
 
+    /** Create new shooter. */
     public ShooterReal() {
         shooterMotor1 = new TalonFX(Shooter.motor1ID);
         shooterMotor2 = new TalonFX(Shooter.motor2ID);

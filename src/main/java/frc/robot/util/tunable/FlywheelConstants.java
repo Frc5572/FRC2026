@@ -7,6 +7,7 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 import frc.robot.util.typestate.RequiredField;
 import frc.robot.util.typestate.TypeStateBuilder;
 
+/** Constants for shooter flywheel */
 public class FlywheelConstants implements LoggableInputs, Cloneable, Tunable {
 
     public double holdCurrent;
@@ -16,6 +17,7 @@ public class FlywheelConstants implements LoggableInputs, Cloneable, Tunable {
     public double atSpeedDebounce;
     private boolean isDirty;
 
+    /** Create new Flywheel Constants */
     @TypeStateBuilder
     public FlywheelConstants(@RequiredField double holdCurrent, @RequiredField double maxDutyCycle,
         @RequiredField boolean isReversed, @RequiredField double velocityTolerance,
@@ -33,6 +35,7 @@ public class FlywheelConstants implements LoggableInputs, Cloneable, Tunable {
         });
     }
 
+    /** Run function with constants if they've changed. */
     public void ifDirty(Consumer<FlywheelConstants> consumer) {
         Logger.processInputs("Flywheel", this);
         if (this.isDirty) {
