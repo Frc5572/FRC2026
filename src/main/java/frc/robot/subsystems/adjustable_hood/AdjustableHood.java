@@ -17,7 +17,8 @@ public class AdjustableHood extends SubsystemBase {
     private final AdjustableHoodIO io;
     public final AdjustableHoodInputsAutoLogged inputs = new AdjustableHoodInputsAutoLogged();
     public final RobotState state;
-    public Translation2d robotPosition;
+    private Translation2d robotPosition;
+    private double hubDistance;
 
     /**
      * Creates a new Adjustable Hood subsystem.
@@ -33,18 +34,12 @@ public class AdjustableHood extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Adjustable Hood", inputs);
+
+        Logger.processInputs("Robot Position", inputs);
         this.robotPosition = state.getGlobalPoseEstimate().getTranslation();
-    }
 
-    public double hubDistance() {
-        Translation2d robotLocation = state.getGlobalPoseEstimate().getTranslation();
-        return robotLocation.getDistance(FieldConstants.Hub.centerHub);
-    }
-
-    public Angle goalAngle() {
-        InterpolatingDoubleTreeMap hoodAngles = new InterpolatingDoubleTreeMap();
-        hoodAngles.put(0.0, 0.0);
-        hoodAngles.put()
+        Logger.processInputs("Distance to Hub Center", inputs);
+        this.hubDistance = this.robotPosition.getDistance(FieldConstants.Hub.centerHub);
     }
 
     /**
@@ -53,6 +48,9 @@ public class AdjustableHood extends SubsystemBase {
     public void setGoal() {
         Angle targetAngle;
 
+        InterpolatingDoubleTreeMap hoodAngles = new InterpolatingDoubleTreeMap();
+        hoodAngles.put(0.0, 0.0);
+        hoodAngles.put();
 
         io.setTargetAngle(targetAngle);
     }
