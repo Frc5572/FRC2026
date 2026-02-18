@@ -66,6 +66,7 @@ public class Intake extends SubsystemBase {
         io.setRightHopperPosition(targetRotations);
     }
 
+    /** Stops the hopper from expanding */
     public Command stop() {
         return this.runOnce(() -> {
             this.io.setRightHopperVoltage(0);
