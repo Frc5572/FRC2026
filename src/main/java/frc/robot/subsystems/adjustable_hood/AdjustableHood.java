@@ -45,45 +45,38 @@ public class AdjustableHood extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Adjustable Hood", inputs);
 
-        double targetAngle;
-
         this.robotPosition = state.getGlobalPoseEstimate().getTranslation();
-        Logger.recordOutput("Robot Position", robotPosition);
-
         this.hubDistance = this.robotPosition.getDistance(FieldConstants.Hub.centerHub);
-        Logger.recordOutput("Distance to Hub Center", this.hubDistance);
 
+        double targetAngle;
         if (isManualMode) {
             targetAngle = manualAngleDegrees;
         } else {
             targetAngle = hoodAngles.get(this.hubDistance);
         }
-
         this.goalAngle = Degrees.of(targetAngle);
+
+        io.setTargetAngle(this.goalAngle);
+
+        Logger.recordOutput("Robot Position", robotPosition);
+        Logger.recordOutput("Distance to Hub Center", this.hubDistance);
         Logger.recordOutput("Hood Angle", this.goalAngle);
-    }
-
-    /**
-     * sets the target angle as the goal angle depending on robot location
-     */
-    public void setGoal() {
-        io.setTargetAngle(goalAngle);
-    }
-
-    /** Automatically goes to the angle based on the location of the robot */
-    public Command goToAngle() {
-        return run(() -> this.setGoal());
+        Logger.recordOutput("AdjustableHood/ActualAngle", inputs.relativeAngle);
     }
 
     /** Sets the angle manually */
-    public void setManualAngle(Angle angleIncriment) {
+    public void increaseManualAngle(Angle angleIncriment) {
         this.isManualMode = true;
-        this.goalAngle = goalAngle.plus(angleIncriment);
-
-        io.setTargetAngle(goalAngle);
+        this.manualAngleDegrees += (angleIncriment.in(Degrees));
     }
 
-    public Command manualMoveToAngle(Angle angleIncriment) {
-        return run(() -> this.setManualAngle(angleIncriment));
+    /** moves the hood by a specified increment */
+    public Command manualMoveToAngle(Angle increment) {
+        return runOnce(() -> this.increaseManualAngle(increment));
+    }
+
+    /** Uses the distance and angle tables */
+    public Command useAutomaticTable() {
+        return runOnce(() -> this.isManualMode = false);
     }
 }
