@@ -1,15 +1,13 @@
 package frc.robot.subsystems.swerve.util;
 
-import java.util.EnumSet;
 import org.ejml.data.DMatrix3;
 import org.ejml.dense.fixed.CommonOps_DDF3;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.networktables.NetworkTableEvent.Kind;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
+import frc.robot.util.tunable.Tunable;
 
 /**
  * Applies rate limiting to robot-relative swerve chassis commands to ensure physically achievable,
@@ -52,7 +50,7 @@ import frc.robot.Constants;
  * https://www.youtube.com/watch?v=vUtVXz7ebEE</a>
  */
 @NullMarked
-public class SwerveRateLimiter {
+public class SwerveRateLimiter implements Tunable {
 
     private double forwardLimit = Constants.Swerve.forwardLimit;
     private double forwardTiltLimit = Constants.Swerve.forwardTiltLimit;
@@ -70,27 +68,8 @@ public class SwerveRateLimiter {
      * by the rate limiter.
      */
     public SwerveRateLimiter() {
-        final NetworkTableInstance ntInstance = NetworkTableInstance.getDefault();
-        try {
-            for (var item : SwerveRateLimiter.class.getDeclaredFields()) {
-                if (item.getType().equals(double.class)) {
-                    var topic = ntInstance.getDoubleTopic("/SwerveRateLimiter/" + item.getName());
-                    var publisher = topic.publish();
-                    var value = (double) item.get(this);
-                    publisher.accept(value);
-                    ntInstance.addListener(topic, EnumSet.of(Kind.kValueAll), (ev) -> {
-                        try {
-                            var newValue = ev.valueData.value.getDouble();
-                            item.set(this, newValue);
-                        } catch (IllegalArgumentException | IllegalAccessException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                }
-            }
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        Tunable.setupTunable("/SwerveRateLimiter", this, SwerveRateLimiter.class, () -> {
+        });
     }
 
     /**

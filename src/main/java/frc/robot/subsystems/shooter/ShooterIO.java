@@ -8,6 +8,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.GenerateEmptyIO;
+import frc.robot.util.tunable.FlywheelConstants;
 
 
 /**
@@ -29,6 +30,10 @@ public interface ShooterIO {
 
     public void updateInputs(ShooterInputs inputs);
 
-    public void runShooterVelocity(double velocity);
+    public void runDutyCycleVelocity(double velocity);
+
+    public void runTorqueCurrentVelocity(double velocity);
+
+    public void setConstants(FlywheelConstants constants);
 
 }
