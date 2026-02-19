@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -502,5 +503,25 @@ public final class Swerve extends SubsystemBase {
             .autoRoutine(null).maxSpeed(Constants.Swerve.maxSpeed).flipForRed(false)
             .translationTolerance(Constants.Trench.tolerance).rotationTolerance(Math.toRadians(2))
             .finish().until(() -> this.inTrench());
+    }
+
+    private final PIDController pidYController =
+        new PIDController(Constants.SwerveTransformPID.translationP,
+            Constants.SwerveTransformPID.translationI, Constants.SwerveTransformPID.translationD);
+
+    /**
+     * Command that moves the robot through the trench, constraining Y movement to stay in the
+     * trench.
+     * 
+     * @param driveSpeeds supplier of field-relative chassis speeds
+     * @return a command that drives the robot while scheduled
+     */
+    public Command moveThroughTrench(Supplier<ChassisSpeeds> driveSpeeds) {
+        double pidYVal = pidYController.calculate(
+            state.getGlobalPoseEstimate().getTranslation().getY(), goalTrenchPosition().getY());
+        return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(
+            new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYVal,
+                driveSpeeds.get().omegaRadiansPerSecond),
+            state.getGlobalPoseEstimate().getRotation()));
     }
 }

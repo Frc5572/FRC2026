@@ -3,11 +3,9 @@ package frc.robot.subsystems.adjustable_hood;
 import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Angle;
@@ -22,14 +20,10 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
     private final TalonFX hoodMotor = new TalonFX(Constants.AdjustableHood.HoodMotorID);
     private TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
 
-    private CANcoder hoodCANcoder = new CANcoder(Constants.AdjustableHood.HoodCANCoderID);
-    private CANcoderConfiguration hoodCANcoderConfig = new CANcoderConfiguration();
-
     private StatusSignal<Angle> hoodAngle = hoodMotor.getPosition();
     private StatusSignal<Voltage> hoodVoltage = hoodMotor.getMotorVoltage();
     private StatusSignal<Current> hoodCurrent = hoodMotor.getStatorCurrent();
     private StatusSignal<AngularVelocity> hoodVelocity = hoodMotor.getVelocity();
-    private StatusSignal<Angle> hoodCANcoderAngle = hoodCANcoder.getPosition();
 
     private final VoltageOut voltage = new VoltageOut(0.0);
 
@@ -58,18 +52,11 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
         hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
             Constants.AdjustableHood.hoodMinAngle.in(Rotations);
 
-        hoodCANcoderConfig.MagnetSensor.SensorDirection =
-            Constants.AdjustableHood.hoodCANCoderInvert;
-        hoodCANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
-            Constants.AdjustableHood.hoodCANcoderDiscontinuity;
-
         hoodMotor.getConfigurator().apply(hoodConfig);
-        hoodCANcoder.getConfigurator().apply(hoodCANcoderConfig);
 
         hoodMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        BaseStatusSignal.setUpdateFrequencyForAll(50, hoodAngle, hoodVoltage, hoodCurrent,
-            hoodCANcoderAngle);
+        BaseStatusSignal.setUpdateFrequencyForAll(50, hoodAngle, hoodVoltage, hoodCurrent);
     }
 
 
@@ -81,8 +68,7 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
     @Override
     public void updateInputs(AdjustableHoodInputs inputs) {
-        BaseStatusSignal.refreshAll(hoodAngle, hoodVoltage, hoodCurrent, hoodVelocity,
-            hoodCANcoderAngle);
+        BaseStatusSignal.refreshAll(hoodAngle, hoodVoltage, hoodCurrent, hoodVelocity);
 
         inputs.relativeAngle = hoodAngle.getValue();
         inputs.voltage = hoodVoltage.getValue();
@@ -96,5 +82,4 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
     public void setTargetAngle(Angle angle) {
         hoodMotor.setControl(mmVoltage.withPosition(angle));
     }
-
 }

@@ -1,19 +1,18 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
+import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIOEmpty;
 import frc.robot.subsystems.climber.ClimberSim;
@@ -22,8 +21,10 @@ import frc.robot.subsystems.indexer.IndexerIOEmpty;
 import frc.robot.subsystems.indexer.IndexerReal;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOEmpty;
+import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOEmpty;
+import frc.robot.subsystems.shooter.ShooterReal;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -40,8 +41,6 @@ import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
-import frc.robot.util.ShotCalculator;
-import frc.robot.util.Tuples;
 import frc.robot.viz.RobotViz;
 
 /**
@@ -78,10 +77,10 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
-                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
-                shooter = new Shooter(new ShooterIOEmpty());
-                intake = new Intake(new IntakeIOEmpty());
+                shooter = new Shooter(new ShooterReal());
+                intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
 
@@ -135,34 +134,14 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
-        // turret.setDefaultCommand(turret.setAutoTurretFollow(swerve.state.getGlobalPoseEstimate()));
+        driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        // driver.y().onTrue(swerve.setFieldRelativeOffset());
+        driver.rightTrigger().whileTrue(shooter.runShooterVelocityCommand(2000))
+            .onFalse(shooter.runShooterVelocityCommand(0));
 
-        driver.povLeft().onTrue(turret.goToAngle(Degrees.of(-90)))
-            .onFalse(turret.goToAngle(Degrees.of(0)));
-        driver.povRight().onTrue(turret.goToAngle(Degrees.of(90)))
-            .onFalse(turret.goToAngle(Degrees.of(0)));
-        driver.a().onTrue(adjustableHood.goToAngle(Degrees.of(45)))
-            .onFalse(adjustableHood.goToAngle(Degrees.of(0)));
-        driver.b().onTrue(intake.intake(Constants.IntakeConstants.hopperOutDistance, 20.0))
-            .onFalse(intake.intake(Meters.of(0), 0.0));
-        driver.leftBumper()
-            .onTrue(climber.moveTo(() -> new Tuples.Tuple2<>(Degrees.of(0), Meters.of(0.5))));
-        driver.rightBumper()
-            .onTrue(climber.moveTo(() -> new Tuples.Tuple2<>(Degrees.of(0), Meters.of(0))));
+        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
+            .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
-        driver.y().whileTrue(shooter.runShooterVelocityCommand(20.0)
-            .alongWith(Commands.waitSeconds(1.0).andThen(indexer.setSpeedCommand(2, 2))));
-
-        driver.x().whileTrue(Commands.run(() -> ShotCalculator.calculateBoth(Math.hypot(
-            swerve.state.getGlobalPoseEstimate().getX() - FieldConstants.LinesVertical.hubCenter,
-            swerve.state.getGlobalPoseEstimate().getY() - FieldConstants.LinesHorizontal.center),
-            20, (x) -> {
-                adjustableHood.setGoal(x);
-            }, (y) -> {
-                shooter.setVelocity(y);
-            }), adjustableHood, shooter));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
