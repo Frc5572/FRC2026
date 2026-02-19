@@ -299,21 +299,21 @@ public final class Constants {
                 .translationError(0.02)
                 .finish(),
             // new CameraConstantsBuilder()
-            //   .name("rightTurretCamera")
-            //   .height(800)
-            //   .width(1280)
-            //   .horizontalFieldOfView(80)
-            //   .simFps(20)
-            //   .simLatency(0.3)
-            //   .simLatencyStdDev(0.02)
-            //   .calibrationErrorMean(0.8)
-            //   .calibrationErrorStdDev(0.08)
-            //   .robotToCamera(new Transform3d(turretCenter, turretRight))
-            //   .translationError(0.02)
-            //   .rotationError(0)
-            //   .singleTagError(0)
-            //   .isTurret(true)
-            //   .finish(),
+                //.name("rightTurretCamera")
+                //.height(800)
+                //.width(1280)
+                //.horizontalFieldOfView(80)
+                //.simFps(20)
+                //.simLatency(0.3)
+                //.simLatencyStdDev(0.02)
+                //.calibrationErrorMean(0.8)
+                //.calibrationErrorStdDev(0.08)
+                //.robotToCamera(new Transform3d(turretCenter, turretRight))
+                //.translationError(0.02)
+                //.rotationError(0)
+                //.singleTagError(0)
+                //.isTurret(true)
+                //.finish(),
         };
         // @formatter:on
     }
