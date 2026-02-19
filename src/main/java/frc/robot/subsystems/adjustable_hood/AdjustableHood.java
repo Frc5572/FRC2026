@@ -1,8 +1,6 @@
 package frc.robot.subsystems.adjustable_hood;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Volts;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
@@ -80,15 +78,5 @@ public class AdjustableHood extends SubsystemBase {
     /** Uses the distance and angle tables */
     public Command useAutomaticTable() {
         return runOnce(() -> this.isManualMode = false);
-    /** Set position for hood motor */
-    public Command goToAngle(Angle angle) {
-        return run(() -> this.setGoal(angle));
-    }
-
-    /** Set voltage for hood motor */
-    public Command runVoltage(DoubleSupplier voltage) {
-        return this.run(() -> {
-            io.setAdjustableHoodVoltage(Volts.of(voltage.getAsDouble()));
-        });
     }
 }
