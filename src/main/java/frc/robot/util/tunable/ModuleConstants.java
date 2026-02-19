@@ -1,4 +1,4 @@
-package frc.robot.subsystems.swerve.mod;
+package frc.robot.util.tunable;
 
 import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -7,7 +7,7 @@ import frc.robot.util.typestate.TypeStateBuilder;
 
 /** Per-module constants */
 @NullMarked
-public class ModuleConstants {
+public class ModuleConstants implements Tunable {
 
     /** CAN ID for the drive motor */
     public final int driveMotorId;
