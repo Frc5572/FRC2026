@@ -66,10 +66,12 @@ public final class Constants {
         public static final double hopperMinDistance = 0;
         public static final Distance hopperOutDistance = Meters.of(0.283027);
         public static final double hopperTuckedDistance = 0;
-        public static final double KP = 0;
+        public static final double KP = 18;
         public static final double KI = 0;
         public static final double KD = 0;
         public static final int limitSwitchID = 9;
+        public static final double pinionDiameter = Units.inchesToMeters(2);
+        public static final double gearRatio = 21.0 / 20.0;
     }
 
     /**
