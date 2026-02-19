@@ -97,7 +97,7 @@ public class RobotViz {
         estUpdate = () -> {
             updateState(estState, turret.inputs.relativeAngle, hood.inputs.relativeAngle,
                 climber.inputs.positionPivot, climber.inputs.positionTelescope,
-                intake.inputs.hopperPosition, Arrays.stream(swerve.modules)
+                intake.inputs.leftHopperPosition, Arrays.stream(swerve.modules)
                     .map(mod -> mod.inputs.anglePosition).toArray(Rotation2d[]::new));
         };
         estTurretSupplier = () -> turret.inputs.relativeAngle;
@@ -112,7 +112,7 @@ public class RobotViz {
             gtUpdate = () -> {
                 updateState(gtState, Radians.of(sim.turret.turrentAngle.position),
                     hood.inputs.relativeAngle, climber.inputs.positionPivot,
-                    climber.inputs.positionTelescope, intake.inputs.hopperPosition,
+                    climber.inputs.positionTelescope, intake.inputs.leftHopperPosition,
                     Arrays.stream(swerve.modules).map(mod -> mod.inputs.anglePosition)
                         .toArray(Rotation2d[]::new));
             };

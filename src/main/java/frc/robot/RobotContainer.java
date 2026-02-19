@@ -132,13 +132,13 @@ public final class RobotContainer {
 
         DeviceDebug.initialize();
 
+
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        driver.rightTrigger().whileTrue(shooter.runShooterVelocityCommand(2000))
-            .onFalse(shooter.runShooterVelocityCommand(0));
+        driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
 
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
@@ -147,6 +147,9 @@ public final class RobotContainer {
 
         driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-5)));
 
+        driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
+        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
+        driver.x().whileTrue(intake.intakeBalls(0.7));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
