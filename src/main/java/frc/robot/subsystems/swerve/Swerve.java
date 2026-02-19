@@ -524,9 +524,14 @@ public final class Swerve extends SubsystemBase {
             Logger.recordOutput("Swerve/TrenchPIDYVal", val);
             return val;
         };
-        return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYSupplier.get(),
-                driveSpeeds.get().omegaRadiansPerSecond),
-            state.getGlobalPoseEstimate().getRotation()));
+        return driveFieldRelative(() -> {
+            ChassisSpeeds speeds = driveSpeeds.get();
+            ChassisSpeeds speeds2 = ChassisSpeeds.fromRobotRelativeSpeeds(
+                ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getUserRelativeHeading()),
+                state.getGlobalPoseEstimate().getRotation());
+            double constrainedY = pidYSupplier.get();
+            return new ChassisSpeeds(speeds2.vxMetersPerSecond, constrainedY,
+                speeds.omegaRadiansPerSecond);
+        });
     }
 }

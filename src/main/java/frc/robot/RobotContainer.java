@@ -135,7 +135,7 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
-        new Trigger(() -> swerve.distanceFromClosestTrench() < 0.5).whileTrue(
+        new Trigger(() -> swerve.distanceFromClosestTrench() < .825).whileTrue(
             swerve.moveToTrench().andThen(swerve.moveThroughTrench(TeleopControls.teleopControls(
                 () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()))));
 
