@@ -17,10 +17,10 @@ public class AdjustableHood extends SubsystemBase {
 
     private final AdjustableHoodIO io;
     public final AdjustableHoodInputsAutoLogged inputs = new AdjustableHoodInputsAutoLogged();
-    public RobotState state;
-    private Translation2d robotPosition;
-    private double hubDistance;
-    private Angle goalAngle;
+    private final RobotState state;
+    private Translation2d robotPosition = new Translation2d();
+    private double hubDistance = 0.0;
+    private Angle goalAngle = Degrees.of(0);
 
     private boolean isManualMode = false;
     private double manualAngleDegrees = 0.0;
@@ -32,9 +32,10 @@ public class AdjustableHood extends SubsystemBase {
      *
      * @param io Hardware abstraction
      */
-    public AdjustableHood(AdjustableHoodIO io) {
+    public AdjustableHood(AdjustableHoodIO io, RobotState state) {
         super("Adjustable Hood");
         this.io = io;
+        this.state = state;
 
         hoodAngles.put(0.0, 0.0);
         hoodAngles.put(1.0, 0.0);
@@ -45,8 +46,11 @@ public class AdjustableHood extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Adjustable Hood", inputs);
 
-        this.robotPosition = state.getGlobalPoseEstimate().getTranslation();
-        this.hubDistance = this.robotPosition.getDistance(FieldConstants.Hub.centerHub);
+        var robotPose = state.getGlobalPoseEstimate();
+        if (robotPose != null) {
+            this.robotPosition = state.getGlobalPoseEstimate().getTranslation();
+            this.hubDistance = this.robotPosition.getDistance(FieldConstants.Hub.centerHub);
+        }
 
         double targetAngle;
         if (isManualMode) {
