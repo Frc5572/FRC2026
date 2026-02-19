@@ -2,7 +2,6 @@ package frc.robot.subsystems.indexer;
 
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
@@ -39,9 +38,12 @@ public class Indexer extends SubsystemBase {
      * @return command to set speed of indexer and spinner
      */
     public Command setSpeedCommand(double magazineDutyCycle, double spindexerDutyCycle) {
-        return Commands
-            .runEnd(() -> setSpindexerDutyCycle(spindexerDutyCycle), () -> setSpindexerDutyCycle(0))
-            .alongWith(runEnd(() -> setMagazineDutyCycle(magazineDutyCycle),
-                () -> setMagazineDutyCycle(0)));
+        return runEnd(() -> {
+            setSpindexerDutyCycle(spindexerDutyCycle);
+            setMagazineDutyCycle(magazineDutyCycle);
+        }, () -> {
+            setSpindexerDutyCycle(0);
+            setMagazineDutyCycle(0);
+        });
     }
 }

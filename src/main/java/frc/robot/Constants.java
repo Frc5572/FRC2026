@@ -7,8 +7,8 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.List;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
@@ -24,15 +24,21 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
-import frc.robot.subsystems.swerve.mod.ModuleConstants;
-import frc.robot.subsystems.swerve.mod.ModuleConstantsBuilder;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.CameraConstantsBuilder;
+import frc.robot.util.tunable.FlywheelConstants;
+import frc.robot.util.tunable.FlywheelConstantsBuilder;
+import frc.robot.util.tunable.ModuleConstants;
+import frc.robot.util.tunable.ModuleConstantsBuilder;
+import frc.robot.util.tunable.PIDConstants;
+import frc.robot.util.tunable.PIDConstantsBuilder;
 
 /**
  * Constants file.
  */
 public final class Constants {
+
+    public static final boolean tunable = true;
 
     /** Constants for driver controls */
     public static class DriverControls {
@@ -49,35 +55,37 @@ public final class Constants {
     }
 
     /**
-     * Constants file
+     * Intake Constants
      */
     public static class IntakeConstants { // change all variables before testing
-        public static final int hopperLeftID = 31;
-        public static final int hopperRightID = 32;
-        public static final int intakeID = 33;
+        public static final int hopperLeftID = 16;
+        public static final int hopperRightID = 17;
+        public static final int intakeID = 13;
         public static final double hopperMaxDistance = 0;
         public static final double intakeSpeed = 0;
         public static final double hopperMinDistance = 0;
         public static final Distance hopperOutDistance = Meters.of(0.283027);
         public static final double hopperTuckedDistance = 0;
-        public static final double KP = 0;
+        public static final double KP = 18;
         public static final double KI = 0;
         public static final double KD = 0;
-        public static final int limitSwitchID = 34;
+        public static final int limitSwitchID = 9;
+        public static final double pinionDiameter = Units.inchesToMeters(2);
+        public static final double gearRatio = 21.0 / 20.0;
     }
 
     /**
      * Indexer Constants
      */
     public static class Indexer {
-        public static final int indexerID = 26;
-        public static final int spinMotorID = 27;
+        public static final int indexerID = 18;
+        public static final int spinMotorID = 9;
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
     }
 
     /**
-     * MoveToPos constants.
+     * MoveToPos Constants
      */
     public static class SwerveTransformPID {
         public static final double translationP = 3.5;
@@ -142,8 +150,7 @@ public final class Constants {
 
         /* Motor Inverts */
         public static final InvertedValue angleMotorInvert = InvertedValue.Clockwise_Positive;
-        public static final InvertedValue driveMotorInvert =
-            InvertedValue.CounterClockwise_Positive;
+        public static final InvertedValue driveMotorInvert = InvertedValue.Clockwise_Positive;
 
         /* Angle Encoder Invert */
         public static final SensorDirectionValue cancoderInvert =
@@ -167,31 +174,31 @@ public final class Constants {
         public static final double openLoopRamp = 0.25;
         public static final double closedLoopRamp = 0.0;
 
-        /* Angle Motor PID Values */
-        /** Proportional Swerve Angle Motor PID Value */
-        public static final double angleKP = 10.0;
-        /** Integral Swerve Angle Motor PID Value */
-        public static final double angleKI = 0.0;
-        /** Derivative Swerve Angle Motor PID Value */
-        public static final double angleKD = 0.0;
+        // @formatter:off
+        public static final PIDConstants angleMotorPID =
+            new PIDConstantsBuilder("Swerve/angle", GravityTypeValue.Elevator_Static)
+                .kP(100.0)
+                .kI(0.0)
+                .kD(0.0)
+                .kV(0.0)
+                .kS(0.0)
+                .kG(0.0)
+                .kA(0.0)
+                .finish();
+        // @formatter:on
 
-        /* Drive Motor PID Values */
-        /** Proportional Swerve Drive Motor PID Value */
-        public static final double driveKP = 0.0012;
-        /** Integral Swerve Drive Motor PID Value */
-        public static final double driveKI = 0.0;
-        /** Derivative Swerve Drive Motor PID Value */
-        public static final double driveKD = 0.0;
-        /** Feedforward Swerve Drive Motor PID Value */
-        public static final double driveKF = 0.0;
-
-        /* Drive Motor Characterization Values From SYSID */
-        /** Static Swerve Drive Motor Characterization Value */
-        public static final double driveKS = 0.185;
-        /** Velocity Swerve Drive Motor Characterization Value */
-        public static final double driveKV = 1.004 / 6.536;
-        /** Acceleration Swerve Drive Motor Characterization Value */
-        public static final double driveKA = 0.0;
+        // @formatter:off
+        public static final PIDConstants driveMotorPID =
+            new PIDConstantsBuilder("Swerve/drive", GravityTypeValue.Elevator_Static)
+                .kP(0.0012)
+                .kI(0.0)
+                .kD(0.0)
+                .kV(1.004 / 6.536)
+                .kS(0.185)
+                .kG(0.0)
+                .kA(0.0)
+                .finish();
+        // @formatter:on
 
         /* Swerve Profiling Values */
         /** Max Speed in Meters per Second */
@@ -254,7 +261,7 @@ public final class Constants {
         // @formatter:on
     }
 
-    /** Trench Move To Pose Constants */
+    /** Trench MoveToPose Constants */
     public static final class Trench {
 
         // translation tolerance value for move to trench
@@ -319,18 +326,40 @@ public final class Constants {
         // @formatter:on
     }
 
-    /** Adjustable Hood Subsystem */
+    /** Adjustable Hood Constants */
     public static final class AdjustableHood {
-        public static final int HoodMotorID = 41;
-        public static final int HoodCANCoderID = 42;
+        public static final int HoodMotorID = 11;
 
+        /* PID Values */
+        /** Proportional PID Value for hood position control. */
         public static final double KP = 0.0;
+        /** Integral PID Value for hood position control. */
         public static final double KI = 0.0;
+        /** Derivative PID Value for hood position control. */
         public static final double KD = 0.0;
+
+        /* Characterization Values */
+        /** Static Characterization Value for overcoming friction. */
         public static final double KS = 0.0;
+        /** Velocity Characterization Value */
         public static final double KV = 0.0;
+        /** Acceleration Characterization Value */
         public static final double KA = 0.0;
+        /** Gravity Characterization Value */
         public static final double KG = 0.0;
+
+        // @formatter:off
+        public static final PIDConstants pid =
+            new PIDConstantsBuilder("AdjustableHood", GravityTypeValue.Arm_Cosine)
+                .kP(0.0)
+                .kI(0.0)
+                .kD(0.0)
+                .kV(0.0)
+                .kS(0.0)
+                .kG(0.0)
+                .kA(0.0)
+                .finish();
+        // @formatter:on
 
         public static final Angle hoodMaxAngle = Degrees.of(0.0);
         public static final Angle hoodMinAngle = Degrees.of(0.0);
@@ -367,10 +396,10 @@ public final class Constants {
         public static final class Telescope {
 
             /** CAN ID for the right telescope motor. */
-            public static final int RIGHT_ID = 47;
+            public static final int RIGHT_ID = 15;
 
             /** CAN ID for the left telescope motor. */
-            public static final int LEFT_ID = 48;
+            public static final int LEFT_ID = 14;
 
             /** Neutral mode for telescope motors (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
@@ -421,7 +450,7 @@ public final class Constants {
         public static final class Pivot {
 
             /** CAN ID for the pivot motor. */
-            public static final int ID = 46;
+            public static final int ID = 8;
 
             /** Neutral mode for the pivot motor (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
@@ -479,7 +508,7 @@ public final class Constants {
         }
     }
 
-    /** Turret subsystem */
+    /** Turret Constants */
     public static final class Turret {
         public static final double motorGearing = 53.934;
         public static final double gear1Gearing = 35.0 / 75.0;
@@ -489,15 +518,24 @@ public final class Constants {
         public static final Angle minAngle = Degrees.of(-360);
         public static final Angle maxAngle = Degrees.of(360);
 
-        public static final int TurretMotorID = 20;
-        public static final int TurretCANcoderID1 = 21;
-        public static final int TurretCANcoderID2 = 22;
+        public static final int TurretMotorID = 19;
+        public static final int TurretCANcoderID1 = 5;
+        public static final int TurretCANcoderID2 = 6;
 
+        /* PID Values */
+        /** Proportional PID Value for turret position control. */
         public static final double KP = 0.0;
+        /** Integral PID Value for turret position control. */
         public static final double KI = 0.0;
+        /** Derivative PID Value for turret position control. */
         public static final double KD = 0.0;
+
+        /* Characterization Values */
+        /** Static Characterization Value for overcoming friction. */
         public static final double KS = 0.0;
+        /** Velocity Characterization Value */
         public static final double KV = 0.0;
+        /** Acceleration Characterization Value */
         public static final double KA = 0.0;
 
         public static final double MMCVelocity = 0.0;
@@ -518,9 +556,9 @@ public final class Constants {
     /** Shooter Constants */
     public static final class Shooter {
         /** ID for Shooter Motor 1 */
-        public static final int motor1ID = 36;
+        public static final int motor1ID = 10;
         /** ID for Shooter Motor 2 */
-        public static final int motor2ID = 37;
+        public static final int motor2ID = 12;
 
         /** Motor Invert for Shooter Motors */
         public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
@@ -537,13 +575,17 @@ public final class Constants {
 
         public static final double passingSpeed = 0.0;
         public static final double shooterVelocity = 0.0;
-    }
 
-    public static boolean disableHAL = false;
-
-    public static void disableHAP() {
-        disableHAL = true;
+        // @formatter:off
+        public static final FlywheelConstants constants =
+            new FlywheelConstantsBuilder()
+                .holdCurrent(40.0)
+                .maxDutyCycle(1.0)
+                .isReversed(true)
+                .velocityTolerance(0.6)
+                .atSpeedDebounce(0.1)
+                .finish();
+            
+        // @formatter:on
     }
 }
-
-
