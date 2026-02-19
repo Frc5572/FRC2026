@@ -1,6 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -38,7 +37,6 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
-import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
@@ -77,7 +75,7 @@ public final class RobotContainer {
             case kReal:
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
-                vision = new Vision(swerve.state, new VisionReal());
+                vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal(), swerve.state);
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
@@ -143,9 +141,15 @@ public final class RobotContainer {
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
-        driver.povUp().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(5)));
+        // driver.povUp().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(5)));
 
-        driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-5)));
+        // driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-5)));
+
+        driver.povUp().onTrue(adjustableHood.moveWithvoltage(10))
+            .onFalse(adjustableHood.moveWithvoltage(0));
+
+        driver.povDown().onTrue(adjustableHood.moveWithvoltage(-10))
+            .onFalse(adjustableHood.moveWithvoltage(0));
 
         driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
         driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());

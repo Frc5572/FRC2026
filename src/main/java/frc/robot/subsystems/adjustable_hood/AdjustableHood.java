@@ -60,7 +60,7 @@ public class AdjustableHood extends SubsystemBase {
         }
         this.goalAngle = Degrees.of(targetAngle);
 
-        io.setTargetAngle(this.goalAngle);
+        // io.setTargetAngle(this.goalAngle);
 
         Logger.recordOutput("Robot Position", robotPosition);
         Logger.recordOutput("Distance to Hub Center", this.hubDistance);
@@ -77,6 +77,10 @@ public class AdjustableHood extends SubsystemBase {
     /** moves the hood by a specified increment */
     public Command manualMoveToAngle(Angle increment) {
         return runOnce(() -> this.increaseManualAngle(increment));
+    }
+
+    public Command moveWithvoltage(double voltage) {
+        return runOnce(() -> io.setAdjustableHoodVoltage(voltage));
     }
 
     /** Uses the distance and angle tables */

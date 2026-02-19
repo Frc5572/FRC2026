@@ -332,7 +332,7 @@ public final class Constants {
 
         /* PID Values */
         /** Proportional PID Value for hood position control. */
-        public static final double KP = 0.1;
+        public static final double KP = 1.0;
         /** Integral PID Value for hood position control. */
         public static final double KI = 0.0;
         /** Derivative PID Value for hood position control. */
@@ -364,9 +364,9 @@ public final class Constants {
         public static final Angle hoodMaxAngle = Degrees.of(0.0);
         public static final Angle hoodMinAngle = Degrees.of(0.0);
 
-        public static final double MMAcceleration = 0.0;
-        public static final double MMCVelocity = 0.0;
-        public static final double MMJerk = 0.0;
+        public static final double MMAcceleration = 1000.0;
+        public static final double MMCVelocity = 1000.0;
+        public static final double MMJerk = 1000.0;
 
         public static final double hoodTolerence = 0.05;
 

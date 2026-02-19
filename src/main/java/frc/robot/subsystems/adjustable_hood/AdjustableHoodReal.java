@@ -62,7 +62,7 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
 
     @Override
-    public void setAdjustableHoodVoltage(Voltage volts) {
+    public void setAdjustableHoodVoltage(double volts) {
         hoodMotor.setControl(voltage.withOutput(volts));
     }
 

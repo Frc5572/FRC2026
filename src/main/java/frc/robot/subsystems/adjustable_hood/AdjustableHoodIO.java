@@ -29,7 +29,7 @@ public interface AdjustableHoodIO {
         public double hoodLocation = 0.0;
     }
 
-    public void setAdjustableHoodVoltage(Voltage volts);
+    public void setAdjustableHoodVoltage(double volts);
 
     /**
      * Updates the provided {@link AdjustableHoodInputs} structure with the latest sensor values.
