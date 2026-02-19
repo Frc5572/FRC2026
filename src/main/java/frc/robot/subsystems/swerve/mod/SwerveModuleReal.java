@@ -134,12 +134,7 @@ public class SwerveModuleReal implements SwerveModuleIO {
             Constants.Swerve.driveCurrentLowerTimeThreshold;
 
         /* PID Config */
-        driveConfig.Slot0.kP = Constants.Swerve.driveKP;
-        driveConfig.Slot0.kI = Constants.Swerve.driveKI;
-        driveConfig.Slot0.kD = Constants.Swerve.driveKD;
-        driveConfig.Slot0.kS = Constants.Swerve.driveKS;
-        driveConfig.Slot0.kV = Constants.Swerve.driveKV;
-        driveConfig.Slot0.kA = Constants.Swerve.driveKA;
+        Constants.Swerve.driveMotorPID.apply(driveConfig.Slot0);
 
         /* Open and Closed Loop Ramping */
         driveConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = Constants.Swerve.openLoopRamp;
@@ -174,9 +169,7 @@ public class SwerveModuleReal implements SwerveModuleIO {
             Constants.Swerve.angleCurrentLowerTimeThreshold;
 
         /* PID Config */
-        angleConfig.Slot0.kP = Constants.Swerve.angleKP;
-        angleConfig.Slot0.kI = Constants.Swerve.angleKI;
-        angleConfig.Slot0.kD = Constants.Swerve.angleKD;
+        Constants.Swerve.angleMotorPID.apply(angleConfig.Slot0);
 
         PhoenixSignals.tryUntilOk(5, () -> angleMotor.getConfigurator().apply(angleConfig));
     }

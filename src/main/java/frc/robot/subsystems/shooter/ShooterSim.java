@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import frc.robot.sim.SimPosition;
+import frc.robot.util.tunable.FlywheelConstants;
 
 /**
  * Shooter Sim Implementation
@@ -19,13 +20,23 @@ public class ShooterSim implements ShooterIO {
     }
 
     @Override
-    public void runShooterVelocity(double velocity) {
+    public void runDutyCycleVelocity(double velocity) {
+        flywheelTarget = velocity;
+    }
+
+    @Override
+    public void runTorqueCurrentVelocity(double velocity) {
         flywheelTarget = velocity;
     }
 
     public void shootOne() {
         flywheel.position *= 0.9;
         flywheel.velocity *= 0.9;
+    }
+
+    @Override
+    public void setConstants(FlywheelConstants constants) {
+
     }
 
 }
