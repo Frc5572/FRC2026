@@ -528,14 +528,9 @@ public final class Swerve extends SubsystemBase {
     }
 
     /**
-     * Creates a command that rotates the robot to face the hub and then locks the swerve modules in
-     * a cross configuration.
-     *
-     *
-     * The robot first turns to the angle opposite the hub direction. After turning, the modules are
-     * set to fixed angles to resist motion.
-     *
-     * @return command that aims and locks the drivetrain
+     * turns to hub and then crosses swerves to do a static push protection
+     * 
+     * @return aim and lock wheels command
      */
     public Command pointAtHubAndCross() {
         Supplier<Rotation2d> anglePose =
