@@ -416,9 +416,9 @@ public final class Swerve extends SubsystemBase {
     }
 
     /**
-     * sets the swerve moduels to the supplied chassisSpeeds
+     * sets the swerve modules to the supplied chassisSpeeds
      * 
-     * @param chassisSpeeds
+     * @param chassisSpeeds the state the modules should be at
      */
     public void setModuleStates(ChassisSpeeds chassisSpeeds) {
         ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
