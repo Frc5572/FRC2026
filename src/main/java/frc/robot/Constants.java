@@ -574,6 +574,7 @@ public final class Constants {
         // @formatter:on
     }
 
+    /** constants for autoshoot commands */
     public static final class AutoShoot {
         public static final double staticTranslationTolarance = 0.8;
     }

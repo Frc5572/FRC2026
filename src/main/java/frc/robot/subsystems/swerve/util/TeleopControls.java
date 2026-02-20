@@ -67,19 +67,4 @@ public class TeleopControls {
                 raxis * Constants.DriverControls.driverRotationalMaxSpeed);
         };
     }
-
-    public static Supplier<ChassisSpeeds> teleopTranlsationControls(DoubleSupplier forward,
-        DoubleSupplier right) {
-        return () -> {
-            double xaxis = right.getAsDouble();
-            double yaxis = forward.getAsDouble();
-            yaxis = MathUtil.applyDeadband(yaxis, Constants.DriverControls.stickDeadband);
-            xaxis = MathUtil.applyDeadband(xaxis, Constants.DriverControls.stickDeadband);
-            xaxis *= xaxis * Math.signum(xaxis);
-            yaxis *= yaxis * Math.signum(yaxis);
-            return new ChassisSpeeds(yaxis * Constants.DriverControls.driverTranslationalMaxSpeed,
-                xaxis * Constants.DriverControls.driverTranslationalMaxSpeed, 0.0);
-        };
-    }
-
 }
