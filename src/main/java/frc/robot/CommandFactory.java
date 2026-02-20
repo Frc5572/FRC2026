@@ -92,5 +92,31 @@ public final class CommandFactory {
 
             swerve.setModuleStates(robotRelative);
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
+        }
+
+    /**
+     * Sets the turret's target to the left or right based off of its closest distence, then sets
+     * the angle of the hood, then the velocity of the shooter, then it shoots.
+     */
+    public static Command autoPass(Supplier<Pose2d> supplierSwervePose, Turret turret,
+        AdjustableHood hood, Shooter shooter) {
+        return Commands.run(() -> {
+            Pose2d swervePose = supplierSwervePose.get();
+            Distance leftDistance =
+                Meters.of(Passing.blueAllianceLeft.getDistance(swervePose.getTranslation()));
+            Distance rightDistance =
+                Meters.of(Passing.blueAllianceRight.getDistance(swervePose.getTranslation()));
+            if (leftDistance.in(Meters) < rightDistance.in(Meters)) {
+                Angle leftDistanceGoal = Rotations.of(Passing.blueAllianceLeft
+                    .minus(swervePose.getTranslation()).getAngle().getRotations());
+                turret.setGoal(leftDistanceGoal);
+            } else {
+                Angle rightDistanceGoal = Rotations.of(Passing.blueAllianceRight
+                    .minus(swervePose.getTranslation()).getAngle().getRotations());
+                turret.setGoal(rightDistanceGoal);
+            }
+            hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
+            shooter.shoot(Constants.Shooter.shooterVelocity);
+        }, turret, hood, shooter);
     }
 }

@@ -656,6 +656,21 @@ public class FieldConstants {
     }
 
     /**
+     * Geometry and reference points on the alliance side for the autoPass command.
+     */
+    public static class Passing {
+        /** Left side of the blue alliance where it's one place the robot can feed to. */
+        public static final Translation2d blueAllianceLeft =
+            new Translation2d(LinesVertical.starting + fieldWidth / 2,
+                LinesHorizontal.center - Hub.width / 2 - LeftBump.width / 2);
+
+        /** Right side of the blue alliance where it's one place the robot can feed to. */
+        public static final Translation2d blueAllianceRight =
+            new Translation2d(LinesVertical.starting + fieldWidth / 2,
+                LinesHorizontal.center + Hub.width / 2 + LeftBump.width / 2);
+    }
+
+    /**
      * Defines commonly used rectangular field regions.
      *
      * <p>
