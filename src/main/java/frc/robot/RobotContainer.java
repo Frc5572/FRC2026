@@ -6,7 +6,7 @@ import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -53,8 +53,8 @@ import frc.robot.viz.RobotViz;
 public final class RobotContainer {
 
     /* Controllers */
-    public final CommandXboxController driver =
-        new CommandXboxController(Constants.DriverControls.controllerId);
+    public final CommandPS5Controller driver =
+        new CommandPS5Controller(Constants.DriverControls.controllerId);
 
     /* Subsystems */
     private final Swerve swerve;
@@ -68,6 +68,7 @@ public final class RobotContainer {
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
+
 
     /**
      */
@@ -135,16 +136,21 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
-        driver.y().onTrue(swerve.setFieldRelativeOffset());
+        driver.triangle().onTrue(swerve.setFieldRelativeOffset());
 
-        driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
+        driver.R2().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
 
-        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
+        driver.L2().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
+        driver.povUp().whileTrue(swerve.pointAtHubAndCross());
+        driver.povDown().whileTrue(
+            CommandFactory.staticShoot(swerve, shooter, adjustableHood, intake, indexer));
+        driver.povRight().whileTrue(CommandFactory.shootWhileMoving(swerve, shooter, adjustableHood,
+            intake, indexer, driver));
 
-        driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
-        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
-        driver.x().whileTrue(intake.intakeBalls(0.7));
+        driver.cross().whileTrue(intake.extendHopper()).onFalse(intake.stop());
+        driver.circle().onTrue(intake.retractHopper()).onFalse(intake.stop());
+        driver.square().whileTrue(intake.intakeBalls(0.7));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */

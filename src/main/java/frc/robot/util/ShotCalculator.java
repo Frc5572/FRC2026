@@ -2,6 +2,7 @@ package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -67,8 +68,8 @@ public class ShotCalculator {
      * Parameters for a shooter shot, including RPS, hood angle, and time of flight.
      * 
      * @param rps The required shooter RPS to achieve the desired velocity at the given distance.
-     * @param hoodAngle The required hood angle to achieve the desired trajectory at the given
-     *        distance.
+     * @param hoodAngle The required hood angle in degrees to achieve the desired trajectory at the
+     *        given distance.
      * @param timeOfFlight The expected time of flight for a shot at the given distance with the
      *        baseline parameters. Used for velocity correction calculations.
      */
@@ -82,8 +83,6 @@ public class ShotCalculator {
      * @param requiredVelocity The required velocity of the projectile at the target in m/s.
      * @param hoodAngle A consumer to accept the calculated hood angle.
      * @param rpsOutput A consumer to accept the calculated shooter RPS.
-     * 
-     * 
      */
     public static void calculateBoth(double distance, double requiredVelocity,
         Consumer<Angle> hoodAngle, Consumer<Double> rpsOutput) {
@@ -109,52 +108,124 @@ public class ShotCalculator {
     }
 
     /**
-     * Calculates shooter parameters based on current robot position, velocity, and goal position.
-     * This method projects the robot's future position based on its current velocity, then
-     * calculates the required shot velocity to hit the target from that future position. It then
-     * uses the required shot velocity to adjust the shooter parameters accordingly
+     * Calculates shooter parameters accounting for robot motion during projectile flight time using
+     * iterative lookahead compensation. Accounts for the fact that the robot will move during the
+     * projectile's flight, so the required distance and velocity are recalculated iteratively until
+     * convergence.
      * 
-     * @param robotPosition The current position of the robot on the field as a Translation2d (x,
-     *        y).
+     * @param launcherPosition The current position of the launcher on the field as a Translation2d.
      * @param chassisSpeeds The current velocity of the robot as a ChassisSpeeds object (vx, vy,
      *        omega).
-     * @param goalPosition The position of the target on the field as a Translation2d (x, y).
+     * @param targetPosition The position of the target on the field as a Translation2d.
      * @param rpsOutput A consumer to accept the calculated shooter RPS.
      * @param hoodAngle A consumer to accept the calculated hood angle.
-     * @param turretAngle A consumer to accept the calculated turret angle (the angle the turret
-     *        needs to turn to face the calculated target).
+     * @return The distance to the target after lookahead compensation.
      */
-    public static void velocityComp(Translation2d robotPosition, ChassisSpeeds chassisSpeeds,
-        Translation2d goalPosition, Consumer<Double> rpsOutput, Consumer<Angle> hoodAngle,
-        Consumer<Angle> turretAngle) {
+    public static double velocityComp(Translation2d launcherPosition, ChassisSpeeds chassisSpeeds,
+        Translation2d targetPosition, Consumer<Double> rpsOutput, Consumer<Angle> hoodAngle) {
 
-        // Convert chassis speeds to field-relative velocity vector
-        Translation2d robotVelocity =
+        // Convert chassis speeds to velocity vector
+        Translation2d launcherVelocity =
             new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
 
-        // 1. Project future position
-        Translation2d futurePos = robotPosition.plus(robotVelocity);
+        // Initial distance calculation
+        double distance = targetPosition.getDistance(launcherPosition);
 
-        // 2. Get target vector
-        Translation2d toGoal = goalPosition.minus(futurePos);
-        double distance = toGoal.getNorm();
-        Translation2d targetDirection = toGoal.div(distance);
+        // Iterative lookahead: account for launcher movement during projectile flight
+        double lookaheadDistance = distance;
+        double timeOfFlight;
 
-        // 3. Look up baseline velocity from table
-        ShooterParams baseline = SHOOTER_MAP.get(distance);
-        double baselineVelocity = distance / baseline.timeOfFlight;
+        for (int i = 0; i < 20; i++) {
+            // Get time of flight for current distance
+            ShooterParams baseline = SHOOTER_MAP.get(lookaheadDistance);
+            timeOfFlight = baseline.timeOfFlight;
 
-        // 4. Build target velocity vector
+            // Calculate where launcher will be after projectile flight time
+            double offsetX = launcherVelocity.getX() * timeOfFlight;
+            double offsetY = launcherVelocity.getY() * timeOfFlight;
+            Translation2d lookaheadLauncherPos =
+                launcherPosition.plus(new Translation2d(offsetX, offsetY));
+
+            // Recalculate distance from lookahead position to target
+            lookaheadDistance = targetPosition.getDistance(lookaheadLauncherPos);
+        }
+
+        // Calculate final shooter parameters
+        ShooterParams baseline = SHOOTER_MAP.get(lookaheadDistance);
+        double baselineVelocity = lookaheadDistance / baseline.timeOfFlight;
+
+        // Calculate target direction
+        Translation2d toTarget = targetPosition.minus(launcherPosition);
+        Translation2d targetDirection = toTarget.div(toTarget.getNorm());
+
+        // Build target velocity vector
         Translation2d targetVelocity = targetDirection.times(baselineVelocity);
 
-        // 5. THE MAGIC: subtract robot velocity
-        Translation2d shotVelocity = targetVelocity.minus(robotVelocity);
-
-        // 6. Extract results
-        turretAngle.accept(shotVelocity.getAngle().getMeasure());
+        // Subtract launcher velocity to get required shot velocity
+        Translation2d shotVelocity = targetVelocity.minus(launcherVelocity);
         double requiredVelocity = shotVelocity.getNorm();
 
-        calculateBoth(distance, requiredVelocity, hoodAngle, rpsOutput);
+        calculateBoth(lookaheadDistance, requiredVelocity, hoodAngle, rpsOutput);
 
+        return lookaheadDistance;
+    }
+
+    /**
+     * Retrieves shooter parameters with iterative lookahead velocity compensation applied. Accounts
+     * for the robot moving during projectile flight time by iteratively calculating the launcher's
+     * future position.
+     * 
+     * @param launcherPosition The current position of the launcher on the field as a Translation2d.
+     * @param chassisSpeeds The current velocity of the robot as a ChassisSpeeds object (vx, vy,
+     *        omega).
+     * @param targetPosition The position of the target on the field as a Translation2d.
+     * @return A ShooterParams object containing the RPS and hood angle adjusted for velocity
+     *         compensation, along with the lookahead distance and time of flight.
+     */
+    public static ShooterParams velocityCompParams(Translation2d launcherPosition,
+        ChassisSpeeds chassisSpeeds, Translation2d targetPosition) {
+        Translation2d launcherVelocity =
+            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+        double distance = targetPosition.getDistance(launcherPosition);
+        double lookaheadDistance = distance;
+        double timeOfFlight;
+
+        for (int i = 0; i < 20; i++) {
+            ShooterParams baseline = SHOOTER_MAP.get(lookaheadDistance);
+            timeOfFlight = baseline.timeOfFlight;
+            double offsetX = launcherVelocity.getX() * timeOfFlight;
+            double offsetY = launcherVelocity.getY() * timeOfFlight;
+            Translation2d lookaheadLauncherPos =
+                launcherPosition.plus(new Translation2d(offsetX, offsetY));
+            lookaheadDistance = targetPosition.getDistance(lookaheadLauncherPos);
+        }
+
+        ShooterParams baseline = SHOOTER_MAP.get(lookaheadDistance);
+        double baselineVelocity = lookaheadDistance / baseline.timeOfFlight;
+        Translation2d toTarget = targetPosition.minus(launcherPosition);
+        Translation2d targetDirection = toTarget.div(toTarget.getNorm());
+        Translation2d targetVelocity = targetDirection.times(baselineVelocity);
+        Translation2d shotVelocity = targetVelocity.minus(launcherVelocity);
+        double requiredVelocity = shotVelocity.getNorm();
+        double velocityRatio = requiredVelocity / baselineVelocity;
+        double rpsFactor = Math.sqrt(velocityRatio);
+        double hoodFactor = Math.sqrt(velocityRatio);
+        double adjustedRps = baseline.rps * rpsFactor;
+        double totalVelocity = baselineVelocity / Math.cos(Math.toRadians(baseline.hoodAngle));
+        double targetHorizFromHood = baselineVelocity * hoodFactor;
+        double ratio = MathUtil.clamp(targetHorizFromHood / totalVelocity, 0.0, 1.0);
+        double adjustedHoodAngle = Math.toDegrees(Math.acos(ratio));
+
+        return new ShooterParams(adjustedRps, adjustedHoodAngle, baseline.timeOfFlight);
+    }
+
+    /**
+     * Retrieves baseline shooter parameters for a given distance without any velocity compensation.
+     * 
+     * @param distance A DoubleSupplier that provides the distance in meters.
+     * @return The ShooterParams from the map at the specified distance.
+     */
+    public static ShooterParams staticShotparams(DoubleSupplier distance) {
+        return SHOOTER_MAP.get(distance.getAsDouble());
     }
 }

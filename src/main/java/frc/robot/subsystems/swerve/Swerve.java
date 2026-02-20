@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve;
 
+import static edu.wpi.first.units.Units.Radians;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -32,6 +33,7 @@ import frc.robot.subsystems.swerve.util.MoveToPoseBuilder;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
 import frc.robot.subsystems.swerve.util.TuningCommands;
+import frc.robot.subsystems.swerve.util.TurnToRotation;
 import frc.robot.util.AllianceFlipUtil;
 
 /**
@@ -413,7 +415,7 @@ public final class Swerve extends SubsystemBase {
         return Rotation2d.fromRotations(gyroInputs.yaw.getRotations() - fieldOffset);
     }
 
-    private void setModuleStates(ChassisSpeeds chassisSpeeds) {
+    public void setModuleStates(ChassisSpeeds chassisSpeeds) {
         ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
         SwerveModuleState[] swerveModuleStates =
             Constants.Swerve.swerveKinematics.toSwerveModuleStates(targetSpeeds);
@@ -523,5 +525,19 @@ public final class Swerve extends SubsystemBase {
             new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYVal,
                 driveSpeeds.get().omegaRadiansPerSecond),
             state.getGlobalPoseEstimate().getRotation()));
+    }
+
+    public Command pointAtHubAndCross() {
+        Supplier<Rotation2d> anglePose =
+            () -> new Rotation2d(Radians.of(FieldConstants.Hub.innerCenterPoint.toTranslation2d()
+                .minus(state.getGlobalPoseEstimate().getTranslation()).getAngle().getRadians()))
+                    .rotateBy(Rotation2d.k180deg);
+
+        return new TurnToRotation(this, anglePose, false).andThen(Commands.run(() -> {
+            modules[0].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(45)));
+            modules[1].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(135)));
+            modules[2].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(-45)));
+            modules[3].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(-135)));
+        }));
     }
 }

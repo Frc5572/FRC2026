@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake;
 import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -84,5 +85,14 @@ public class Intake extends SubsystemBase {
 
     public Command intakeBalls(double speed) {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
+    }
+
+    public Command slowReturn() {
+        Command retractSlowly = Commands.run(() -> {
+            io.setLeftHopperVoltage(-1);
+            io.setRightHopperVoltage(-1);
+        });
+
+        return retractSlowly.until(limitSwitchTouched).andThen(stop());
     }
 }

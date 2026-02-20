@@ -208,6 +208,8 @@ public final class Constants {
         /** Max Angular Velocity in Radians per Second */
         public static final double maxAngularVelocity = 4.0;
 
+        public static final double maxSpeedShooting = 1.0;
+
         /* Neutral Modes */
         /** Angle Motor Neutral Mode */
         public static final NeutralModeValue angleNeutralMode = NeutralModeValue.Coast;
@@ -283,11 +285,11 @@ public final class Constants {
         public static final Pose3d turretCenter =
             new Pose3d(new Translation3d(-0.1651, 0, 0.36772), Rotation3d.kZero);
 
-        /** TODO: meausre on bot */
-        public static final Pose3d turretLeft =
-            new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
-        public static final Pose3d turretRight =
-            new Pose3d(Inches.of(5.307), Inches.of(-5.958), Inches.of(0.0), Rotation3d.kZero);
+        // /** TODO: meausre on bot */
+        // public static final Pose3d turretLeft =
+        // new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
+        public static final Pose3d turretRightCamera =
+            new Pose3d(Inches.of(-0.941), Inches.of(-5.364), Inches.of(0.0), Rotation3d.kZero);
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -316,11 +318,11 @@ public final class Constants {
                 .simLatencyStdDev(0.02)
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
-                .robotToCamera(new Transform3d(turretCenter, turretRight))
+                .robotToCamera(new Transform3d(turretCenter, turretRightCamera))
                 .translationError(0.02)
-                .rotationError(0)
-                .singleTagError(0)
-                .isTurret(true)
+                // .rotationError(0)
+                // .singleTagError(0)
+                // .isTurret(true)
                 .finish(),
         };
         // @formatter:on
@@ -570,5 +572,9 @@ public final class Constants {
                 .finish();
             
         // @formatter:on
+    }
+
+    public static final class AutoShoot {
+        public static final double staticTranslationTolarance = 0.8;
     }
 }
