@@ -540,8 +540,7 @@ public final class Swerve extends SubsystemBase {
     public Command pointAtHubAndCross() {
         Supplier<Rotation2d> anglePose =
             () -> new Rotation2d(Radians.of(FieldConstants.Hub.innerCenterPoint.toTranslation2d()
-                .minus(state.getGlobalPoseEstimate().getTranslation()).getAngle().getRadians()))
-                    .rotateBy(Rotation2d.k180deg);
+                .minus(state.getGlobalPoseEstimate().getTranslation()).getAngle().getRadians()));
 
         return new TurnToRotation(this, anglePose, false).andThen(Commands.run(() -> {
             modules[0].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(45)));

@@ -147,7 +147,8 @@ public final class RobotContainer {
             CommandFactory.staticShoot(swerve, shooter, adjustableHood, intake, indexer));
         driver.povRight().whileTrue(CommandFactory.shootWhileMoving(swerve, shooter, adjustableHood,
             intake, indexer, driver));
-
+        driver.povLeft().whileTrue(CommandFactory.passWhileMoving(swerve, shooter, adjustableHood,
+            intake, indexer, driver));
         driver.cross().whileTrue(intake.extendHopper()).onFalse(intake.stop());
         driver.circle().onTrue(intake.retractHopper()).onFalse(intake.stop());
         driver.square().whileTrue(intake.intakeBalls(0.7));

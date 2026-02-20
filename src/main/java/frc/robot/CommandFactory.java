@@ -4,7 +4,10 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -16,7 +19,7 @@ import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.ShotCalculator;
 import frc.robot.util.ShotCalculator.ShooterParams;
 
-/** Static factory for creating shooting-related commands. */
+/** Static factory for commands. */
 public final class CommandFactory {
 
     private CommandFactory() {}
@@ -73,7 +76,7 @@ public final class CommandFactory {
             double vx = -controller.getLeftY() * Constants.Swerve.maxSpeedShooting;
             double vy = -controller.getLeftX() * Constants.Swerve.maxSpeedShooting;
 
-            Rotation2d angleToHub = new Rotation2d(Radians.of(FieldConstants.Hub.innerCenterPoint
+            Rotation2d angleToHub = new Rotation2d(Radians.of(FieldConstants.Hub.topCenterPoint
                 .toTranslation2d().minus(swerve.state.getGlobalPoseEstimate().getTranslation())
                 .getAngle().getRadians()));
 
@@ -92,31 +95,57 @@ public final class CommandFactory {
 
             swerve.setModuleStates(robotRelative);
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
-        }
+    }
 
     /**
-     * Sets the turret's target to the left or right based off of its closest distence, then sets
-     * the angle of the hood, then the velocity of the shooter, then it shoots.
+     * Creates a command that drives, auto-aims, and shoots while moving.
+     *
+     * @return drive-and-shoot command
      */
-    public static Command autoPass(Supplier<Pose2d> supplierSwervePose, Turret turret,
-        AdjustableHood hood, Shooter shooter) {
-        return Commands.run(() -> {
-            Pose2d swervePose = supplierSwervePose.get();
-            Distance leftDistance =
-                Meters.of(Passing.blueAllianceLeft.getDistance(swervePose.getTranslation()));
-            Distance rightDistance =
-                Meters.of(Passing.blueAllianceRight.getDistance(swervePose.getTranslation()));
-            if (leftDistance.in(Meters) < rightDistance.in(Meters)) {
-                Angle leftDistanceGoal = Rotations.of(Passing.blueAllianceLeft
-                    .minus(swervePose.getTranslation()).getAngle().getRotations());
-                turret.setGoal(leftDistanceGoal);
+    public static Command passWhileMoving(Swerve swerve, Shooter shooter, AdjustableHood hood,
+        Intake intake, Indexer indexer, CommandPS5Controller controller) {
+        return swerve.run(() -> {
+            Translation2d target;
+            double vx = -controller.getLeftY() * Constants.Swerve.maxSpeedShooting;
+            double vy = -controller.getLeftX() * Constants.Swerve.maxSpeedShooting;
+
+            Translation2d rightTarget = ((DriverStation.getAlliance().get() == Alliance.Blue)
+                ? FieldConstants.Passing.blueAllianceLeft
+                : FieldConstants.Passing.redAllianceLeft);
+
+            Translation2d leftTarget = ((DriverStation.getAlliance().get() == Alliance.Blue)
+                ? FieldConstants.Passing.blueAllianceRight
+                : FieldConstants.Passing.redAllianceRight);
+
+            DoubleSupplier distanceToLeft =
+                () -> leftTarget.getDistance(swerve.state.getGlobalPoseEstimate().getTranslation());
+            DoubleSupplier distanceToRight = () -> rightTarget
+                .getDistance(swerve.state.getGlobalPoseEstimate().getTranslation());
+
+            if (distanceToLeft.getAsDouble() > distanceToRight.getAsDouble()) {
+                target = leftTarget;
             } else {
-                Angle rightDistanceGoal = Rotations.of(Passing.blueAllianceRight
-                    .minus(swervePose.getTranslation()).getAngle().getRotations());
-                turret.setGoal(rightDistanceGoal);
+                target = rightTarget;
             }
-            hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
-            shooter.shoot(Constants.Shooter.shooterVelocity);
-        }, turret, hood, shooter);
+
+            Rotation2d angleToPass = new Rotation2d(
+                Radians.of(target.minus(swerve.state.getGlobalPoseEstimate().getTranslation())
+                    .getAngle().getRadians()));
+
+            Rotation2d currentRotation = swerve.state.getGlobalPoseEstimate().getRotation();
+
+            double rotationError = angleToPass.minus(currentRotation).getRadians();
+            double omega = rotationError * 5.0;
+
+            omega = Math.max(-Constants.Swerve.maxAngularVelocity,
+                Math.min(Constants.Swerve.maxAngularVelocity, omega));
+
+            ChassisSpeeds fieldRelative = new ChassisSpeeds(vx, vy, omega);
+
+            ChassisSpeeds robotRelative =
+                ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelative, currentRotation);
+
+            swerve.setModuleStates(robotRelative);
+        }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
     }
 }

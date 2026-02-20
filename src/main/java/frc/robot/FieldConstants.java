@@ -128,6 +128,9 @@ public class FieldConstants {
          */
         public static final double oppAllianceZone =
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(10).get().getX();
+
+        /** Ending line X on the opposing alliance side (mirror of starting). */
+        public static final double ending = fieldLength - starting;
     }
 
     /**
@@ -661,13 +664,23 @@ public class FieldConstants {
     public static class Passing {
         /** Left side of the blue alliance where it's one place the robot can feed to. */
         public static final Translation2d blueAllianceLeft =
-            new Translation2d(LinesVertical.starting + fieldWidth / 2,
+            new Translation2d(LinesVertical.starting - fieldWidth / 2,
                 LinesHorizontal.center - Hub.width / 2 - LeftBump.width / 2);
 
         /** Right side of the blue alliance where it's one place the robot can feed to. */
         public static final Translation2d blueAllianceRight =
-            new Translation2d(LinesVertical.starting + fieldWidth / 2,
+            new Translation2d(LinesVertical.starting - fieldWidth / 2,
                 LinesHorizontal.center + Hub.width / 2 + LeftBump.width / 2);
+
+        /** Left side of the red alliance where it's one place the robot can feed to. */
+        public static final Translation2d redAllianceLeft =
+            new Translation2d(LinesVertical.ending + fieldWidth / 2,
+                LinesHorizontal.center + Hub.width / 2 + RightBump.width / 2);
+
+        /** Right side of the red alliance where it's one place the robot can feed to. */
+        public static final Translation2d redAllianceRight =
+            new Translation2d(LinesVertical.ending + fieldWidth / 2,
+                LinesHorizontal.center - Hub.width / 2 - RightBump.width / 2);
     }
 
     /**
