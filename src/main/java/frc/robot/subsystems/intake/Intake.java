@@ -87,6 +87,7 @@ public class Intake extends SubsystemBase {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
     }
 
+    /** return intake slowly for shooting */
     public Command slowReturn() {
         Command retractSlowly = Commands.run(() -> {
             io.setLeftHopperVoltage(-1);

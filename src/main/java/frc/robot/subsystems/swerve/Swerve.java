@@ -528,11 +528,10 @@ public final class Swerve extends SubsystemBase {
     }
 
     /**
-     * 
      * Creates a command that rotates the robot to face the hub and then locks the swerve modules in
      * a cross configuration.
      *
-     * <p>
+     *
      * The robot first turns to the angle opposite the hub direction. After turning, the modules are
      * set to fixed angles to resist motion.
      *
