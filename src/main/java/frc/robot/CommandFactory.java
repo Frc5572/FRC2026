@@ -37,7 +37,7 @@ public class CommandFactory {
                 turret.setGoal(rightDistanceGoal);
             }
             hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
-            shooter.runShooterVelocityCommand(Constants.Shooter.shooterVelocity);
+            shooter.shoot(Constants.Shooter.shooterVelocity);
         }, turret, hood, shooter);
     }
 }
