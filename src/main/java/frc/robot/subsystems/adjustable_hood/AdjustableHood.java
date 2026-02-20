@@ -87,6 +87,10 @@ public class AdjustableHood extends SubsystemBase {
         return run(() -> io.setAdjustableHoodVoltage(voltage));
     }
 
+    public Command setGoal(Angle setAngle) {
+        return runOnce(() -> io.setTargetAngle(setAngle));
+    }
+
     /** Uses the distance and angle tables */
     public Command useAutomaticTable() {
         return runOnce(() -> this.isManualMode = false);
