@@ -61,7 +61,7 @@ public final class CommandFactory {
      */
     public static Command staticShoot(Swerve swerve, Shooter shooter, AdjustableHood hood,
         Intake intake, Indexer indexer) {
-        return swerve.pointAtHubAndCross().asProxy()
+        return swerve.pointAtHubAndCross()
             .alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, false));
     }
 
@@ -122,7 +122,7 @@ public final class CommandFactory {
             DoubleSupplier distanceToRight = () -> rightTarget
                 .getDistance(swerve.state.getGlobalPoseEstimate().getTranslation());
 
-            if (distanceToLeft.getAsDouble() > distanceToRight.getAsDouble()) {
+            if (Math.abs(distanceToLeft.getAsDouble()) < Math.abs(distanceToRight.getAsDouble())) {
                 target = leftTarget;
             } else {
                 target = rightTarget;

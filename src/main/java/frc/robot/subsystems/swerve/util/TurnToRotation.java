@@ -93,7 +93,6 @@ public class TurnToRotation extends Command {
         ChassisSpeeds chassisSpeeds = this.holonomicDriveController.calculate(currPose2d,
             targetPose2d, 0, targetPose2d.getRotation());
         swerve.setModuleStates(chassisSpeeds);
-        System.out.println(currPose2d);
     }
 
     @Override
