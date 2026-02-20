@@ -9,7 +9,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.List;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
@@ -563,21 +562,6 @@ public final class Constants {
         /** ID for Shooter Motor 2 */
         public static final int motor2ID = 12;
 
-        /** Motor Invert for Shooter Motors */
-        public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
-        /** Motor Alignment for Shooter Motors */
-        public static final MotorAlignmentValue shooterMotorAlignment = MotorAlignmentValue.Opposed;
-        /** Neutral Mode for Shooter Motors */
-        public static final NeutralModeValue shooterNeutralMode = NeutralModeValue.Brake;
-
-        public static final double shooterKS = 0.1;
-        public static final double shooterKV = 0.12;
-        public static final double shooterKP = 0.11;
-        public static final double shooterKI = 0.0;
-        public static final double shooterKD = 0.0;
-
-        public static final double passingSpeed = 0.0;
-        public static final double shooterVelocity = 0.0;
 
         // @formatter:off
         public static final FlywheelConstants constants =
@@ -588,7 +572,7 @@ public final class Constants {
                 .velocityTolerance(0.6)
                 .atSpeedDebounce(0.1)
                 .finish();
-            
+
         // @formatter:on
     }
 
