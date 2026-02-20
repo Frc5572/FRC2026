@@ -415,6 +415,11 @@ public final class Swerve extends SubsystemBase {
         return Rotation2d.fromRotations(gyroInputs.yaw.getRotations() - fieldOffset);
     }
 
+    /**
+     * sets the swerve moduels to the supplied chassisSpeeds
+     * 
+     * @param chassisSpeeds
+     */
     public void setModuleStates(ChassisSpeeds chassisSpeeds) {
         ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
         SwerveModuleState[] swerveModuleStates =
