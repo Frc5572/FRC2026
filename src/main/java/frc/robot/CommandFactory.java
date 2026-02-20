@@ -76,23 +76,24 @@ public final class CommandFactory {
             double vx = -controller.getLeftY() * Constants.Swerve.maxSpeedShooting;
             double vy = -controller.getLeftX() * Constants.Swerve.maxSpeedShooting;
 
-            Rotation2d angleToHub = new Rotation2d(Radians.of(FieldConstants.Hub.topCenterPoint
-                .toTranslation2d().minus(swerve.state.getGlobalPoseEstimate().getTranslation())
-                .getAngle().getRadians()));
+            Translation2d targetPosition = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+            if (DriverStation.getAlliance().isPresent()
+                && DriverStation.getAlliance().get() == Alliance.Red) {
+                targetPosition = new Translation2d(
+                    FieldConstants.fieldLength - targetPosition.getX(), targetPosition.getY());
+            }
 
+            Rotation2d angleToHub = new Rotation2d(Radians
+                .of(targetPosition.minus(swerve.state.getGlobalPoseEstimate().getTranslation())
+                    .getAngle().getRadians()));
             Rotation2d currentRotation = swerve.state.getGlobalPoseEstimate().getRotation();
-
             double rotationError = angleToHub.minus(currentRotation).getRadians();
             double omega = rotationError * 5.0;
-
             omega = Math.max(-Constants.Swerve.maxAngularVelocity,
                 Math.min(Constants.Swerve.maxAngularVelocity, omega));
-
             ChassisSpeeds fieldRelative = new ChassisSpeeds(vx, vy, omega);
-
             ChassisSpeeds robotRelative =
                 ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelative, currentRotation);
-
             swerve.setModuleStates(robotRelative);
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
     }
