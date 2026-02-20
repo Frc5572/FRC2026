@@ -527,6 +527,17 @@ public final class Swerve extends SubsystemBase {
             state.getGlobalPoseEstimate().getRotation()));
     }
 
+    /**
+     * 
+     * Creates a command that rotates the robot to face the hub and then locks the swerve modules in
+     * a cross configuration.
+     *
+     * <p>
+     * The robot first turns to the angle opposite the hub direction. After turning, the modules are
+     * set to fixed angles to resist motion.
+     *
+     * @return command that aims and locks the drivetrain
+     */
     public Command pointAtHubAndCross() {
         Supplier<Rotation2d> anglePose =
             () -> new Rotation2d(Radians.of(FieldConstants.Hub.innerCenterPoint.toTranslation2d()
@@ -540,4 +551,5 @@ public final class Swerve extends SubsystemBase {
             modules[3].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(-135)));
         }));
     }
+
 }

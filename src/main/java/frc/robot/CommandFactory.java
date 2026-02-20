@@ -16,23 +16,34 @@ import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.ShotCalculator;
 import frc.robot.util.ShotCalculator.ShooterParams;
 
-/** Command Factory */
-public class CommandFactory extends Command {
+/** Static factory for creating shooting-related commands. */
+public final class CommandFactory {
+
+    private CommandFactory() {}
+
+    /**
+     * Creates a command that calculates shot parameters and fires at the hub.
+     *
+     * @param swerve drivetrain subsystem
+     * @param shooter shooter subsystem
+     * @param hood hood subsystem
+     * @param intake intake subsystem
+     * @param indexer indexer subsystem
+     * @param isVeloComp enables velocity compensation
+     * @return shooting command
+     */
     public static Command shootAtTarget(Swerve swerve, Shooter shooter, AdjustableHood hood,
         Intake intake, Indexer indexer, boolean isVeloComp) {
         DoubleSupplier distance = () -> swerve.state.getGlobalPoseEstimate().getTranslation()
             .getDistance(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
 
         return Commands.runOnce(() -> {
-            ShooterParams params;
-            if (isVeloComp) {
-                params = ShotCalculator.velocityCompParams(
+            ShooterParams params = isVeloComp
+                ? ShotCalculator.velocityCompParams(
                     swerve.state.getGlobalPoseEstimate().getTranslation(),
                     swerve.state.getCurrentSpeeds(),
-                    FieldConstants.Hub.innerCenterPoint.toTranslation2d());
-            } else {
-                params = ShotCalculator.staticShotparams(distance);
-            }
+                    FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+                : ShotCalculator.staticShotparams(distance);
 
             shooter.shoot(params.rps()).schedule();
             hood.goToAngle(Degrees.of(params.hoodAngle())).schedule();
@@ -40,12 +51,22 @@ public class CommandFactory extends Command {
         }).alongWith(intake.slowReturn());
     }
 
+    /**
+     * Creates a command that aims at the hub and performs a static shot.
+     *
+     * @return aiming and shooting command
+     */
     public static Command staticShoot(Swerve swerve, Shooter shooter, AdjustableHood hood,
         Intake intake, Indexer indexer) {
         return swerve.pointAtHubAndCross().asProxy()
             .alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, false));
     }
 
+    /**
+     * Creates a command that drives, auto-aims, and shoots while moving.
+     *
+     * @return drive-and-shoot command
+     */
     public static Command shootWhileMoving(Swerve swerve, Shooter shooter, AdjustableHood hood,
         Intake intake, Indexer indexer, CommandPS5Controller controller) {
         return swerve.run(() -> {
@@ -55,18 +76,21 @@ public class CommandFactory extends Command {
             Rotation2d angleToHub = new Rotation2d(Radians.of(FieldConstants.Hub.innerCenterPoint
                 .toTranslation2d().minus(swerve.state.getGlobalPoseEstimate().getTranslation())
                 .getAngle().getRadians()));
+
             Rotation2d currentRotation = swerve.state.getGlobalPoseEstimate().getRotation();
 
             double rotationError = angleToHub.minus(currentRotation).getRadians();
             double omega = rotationError * 5.0;
+
             omega = Math.max(-Constants.Swerve.maxAngularVelocity,
                 Math.min(Constants.Swerve.maxAngularVelocity, omega));
 
-            ChassisSpeeds fieldRelativeSpeeds = new ChassisSpeeds(vx, vy, omega);
-            ChassisSpeeds robotRelativeSpeeds =
-                ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, currentRotation);
+            ChassisSpeeds fieldRelative = new ChassisSpeeds(vx, vy, omega);
 
-            swerve.setModuleStates(robotRelativeSpeeds);
+            ChassisSpeeds robotRelative =
+                ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelative, currentRotation);
+
+            swerve.setModuleStates(robotRelative);
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
     }
 }
