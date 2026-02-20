@@ -66,7 +66,7 @@ public final class Constants {
         public static final double hopperMinDistance = 0;
         public static final Distance hopperOutDistance = Meters.of(0.283027);
         public static final double hopperTuckedDistance = 0;
-        public static final double KP = 18;
+        public static final double KP = 6;
         public static final double KI = 0;
         public static final double KD = 0;
         public static final int limitSwitchID = 9;
@@ -332,7 +332,7 @@ public final class Constants {
 
         /* PID Values */
         /** Proportional PID Value for hood position control. */
-        public static final double KP = 1.0;
+        public static final double KP = 200.0;
         /** Integral PID Value for hood position control. */
         public static final double KI = 0.0;
         /** Derivative PID Value for hood position control. */
@@ -340,7 +340,7 @@ public final class Constants {
 
         /* Characterization Values */
         /** Static Characterization Value for overcoming friction. */
-        public static final double KS = 0.0;
+        public static final double KS = 0.3;
         /** Velocity Characterization Value */
         public static final double KV = 0.0;
         /** Acceleration Characterization Value */
@@ -361,18 +361,16 @@ public final class Constants {
                 .finish();
         // @formatter:on
 
-        public static final Angle hoodMaxAngle = Degrees.of(0.0);
-        public static final Angle hoodMinAngle = Degrees.of(0.0);
+        // public static final Angle hoodMaxAngle = Degrees.of(0.0);
+        // public static final Angle hoodMinAngle = Degrees.of(0.0);
 
-        public static final double MMAcceleration = 1000.0;
-        public static final double MMCVelocity = 1000.0;
-        public static final double MMJerk = 1000.0;
+        public static final double MMAcceleration = 100000.0;
+        public static final double MMCVelocity = 100000.0;
+        public static final double MMJerk = 100000.0;
 
         public static final double hoodTolerence = 0.05;
 
-        public static final SensorDirectionValue hoodCANCoderInvert =
-            SensorDirectionValue.Clockwise_Positive;
-        public static final double hoodCANcoderDiscontinuity = 0.5;
+        public static final double gearRatio = 79.0;
     }
 
     /**

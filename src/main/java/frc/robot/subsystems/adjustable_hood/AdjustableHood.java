@@ -1,6 +1,8 @@
 package frc.robot.subsystems.adjustable_hood;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Radian;
+import static edu.wpi.first.units.Units.Rotations;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
@@ -60,12 +62,14 @@ public class AdjustableHood extends SubsystemBase {
         }
         this.goalAngle = Degrees.of(targetAngle);
 
-        // io.setTargetAngle(this.goalAngle);
+        io.setTargetAngle(this.goalAngle);
 
         Logger.recordOutput("Robot Position", robotPosition);
         Logger.recordOutput("Distance to Hub Center", this.hubDistance);
-        Logger.recordOutput("Hood Angle", this.goalAngle);
-        Logger.recordOutput("AdjustableHood/ActualAngle", inputs.relativeAngle);
+        Logger.recordOutput("Hood Angle (Rad)", this.goalAngle.in(Radian));
+        Logger.recordOutput("Hood Angle (Deg)", this.goalAngle.in(Degrees));
+        Logger.recordOutput("Hood Angle (Rot)", this.goalAngle.in(Rotations));
+        Logger.recordOutput("AdjustableHood/ActualAngle (Deg)", inputs.relativeAngle.in(Degrees));
     }
 
     /** Sets the angle manually */
@@ -79,8 +83,8 @@ public class AdjustableHood extends SubsystemBase {
         return runOnce(() -> this.increaseManualAngle(increment));
     }
 
-    public Command moveWithvoltage(double voltage) {
-        return runOnce(() -> io.setAdjustableHoodVoltage(voltage));
+    public Command moveWithVoltage(double voltage) {
+        return run(() -> io.setAdjustableHoodVoltage(voltage));
     }
 
     /** Uses the distance and angle tables */

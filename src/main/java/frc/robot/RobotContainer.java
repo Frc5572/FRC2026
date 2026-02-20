@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -141,15 +142,9 @@ public final class RobotContainer {
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
-        // driver.povUp().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(5)));
+        driver.povUp().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(15)));
 
-        // driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-5)));
-
-        driver.povUp().onTrue(adjustableHood.moveWithvoltage(10))
-            .onFalse(adjustableHood.moveWithvoltage(0));
-
-        driver.povDown().onTrue(adjustableHood.moveWithvoltage(-10))
-            .onFalse(adjustableHood.moveWithvoltage(0));
+        driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-15)));
 
         driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
         driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
