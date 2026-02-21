@@ -177,6 +177,7 @@ public class RobotState {
         if (constants.isTurret) {
             Optional<Rotation2d> turretAngleOpt = currentTurretAngle.getSample(time);
             if (turretAngleOpt.isEmpty()) {
+                Logger.recordOutput("/ErrReason", "turretAngleOpt empty");
                 return Optional.empty();
             }
             Rotation3d rotate = new Rotation3d(0.0, 0.0, turretAngleOpt.get().getRadians());

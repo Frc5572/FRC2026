@@ -39,6 +39,7 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
+import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
@@ -78,7 +79,7 @@ public final class RobotContainer {
             case kReal:
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
-                vision = new Vision(swerve.state, new VisionIOEmpty());
+                vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
@@ -139,13 +140,13 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
+        // driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
 
-        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
+        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.4))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
         driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
-        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
+        driver.b().onTrue(intake.squeezeBalls(0.7)).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
 
         ShotDataHelper helper = new ShotDataHelper();

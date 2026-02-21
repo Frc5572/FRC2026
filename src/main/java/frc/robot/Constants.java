@@ -308,7 +308,7 @@ public final class Constants {
             //     .translationError(0.02)
             //     .finish(),
             new CameraConstantsBuilder()
-                .name("rightTurretCamera")
+                .name("turretRight")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -584,7 +584,7 @@ public final class Constants {
                 .holdCurrent(40.0)
                 .maxDutyCycle(1.0)
                 .isReversed(true)
-                .velocityTolerance(0.6)
+                .velocityTolerance(8)
                 .atSpeedDebounce(0.1)
                 .finish();
             

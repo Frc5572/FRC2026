@@ -83,6 +83,13 @@ public class Intake extends SubsystemBase {
         return run(() -> runHopper(0.0));
     }
 
+    public Command squeezeBalls(double speed) {
+        return run(() -> {
+            runHopper(0.0);
+            runIntakeOnly(speed);
+        });
+    }
+
     public Command intakeBalls(double speed) {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
     }
