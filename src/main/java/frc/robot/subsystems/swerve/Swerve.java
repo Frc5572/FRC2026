@@ -422,7 +422,7 @@ public final class Swerve extends SubsystemBase {
      * 
      * @param chassisSpeeds the state the modules should be at
      */
-    public void setModuleStates(ChassisSpeeds chassisSpeeds) {
+    private void setModuleStates(ChassisSpeeds chassisSpeeds) {
         ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
         SwerveModuleState[] swerveModuleStates =
             Constants.Swerve.swerveKinematics.toSwerveModuleStates(targetSpeeds);

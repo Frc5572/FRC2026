@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -59,8 +60,8 @@ public final class CommandFactory {
      *
      * @return aiming and shooting command
      */
-    public static Command staticShoot(Swerve swerve, Shooter shooter, AdjustableHood hood,
-        Intake intake, Indexer indexer) {
+    public static Command staticShootFixedTurret(Swerve swerve, Shooter shooter,
+        AdjustableHood hood, Intake intake, Indexer indexer) {
         return swerve.pointAtHubAndCross()
             .alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, false));
     }
@@ -70,8 +71,8 @@ public final class CommandFactory {
      *
      * @return drive-and-shoot command
      */
-    public static Command shootWhileMoving(Swerve swerve, Shooter shooter, AdjustableHood hood,
-        Intake intake, Indexer indexer, CommandPS5Controller controller) {
+    public static Command shootWhileMovingFixedTurret(Swerve swerve, Shooter shooter,
+        AdjustableHood hood, Intake intake, Indexer indexer, CommandPS5Controller controller) {
         return swerve.run(() -> {
             double vx = -controller.getLeftY() * Constants.Swerve.maxSpeedShooting;
             double vy = -controller.getLeftX() * Constants.Swerve.maxSpeedShooting;
@@ -129,9 +130,8 @@ public final class CommandFactory {
                 target = rightTarget;
             }
 
-            Rotation2d angleToPass = new Rotation2d(
-                Radians.of(target.minus(swerve.state.getGlobalPoseEstimate().getTranslation())
-                    .getAngle().getRadians()));
+            Rotation2d angleToPass =
+                target.minus(swerve.state.getGlobalPoseEstimate().getTranslation()).getAngle();
 
             Rotation2d currentRotation = swerve.state.getGlobalPoseEstimate().getRotation();
 
