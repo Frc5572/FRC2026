@@ -57,10 +57,11 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput("Intake/TargetMeters", targetMeters);
         Logger.recordOutput("Intake/TargetRotations", targetRotations);
 
-        if (inputs.limitSwitch && targetRotations <= 0.01) {
-            io.setLeftHopperVoltage(0);
-            io.setEncoderPosition(0);
-        } else {
+        // if (inputs.limitSwitch && targetRotations <= 0.01) {
+        // io.setLeftHopperVoltage(0);
+        // io.setEncoderPosition(0);
+        // } else
+        {
             io.setLeftHopperPosition(targetRotations);
         }
         io.setRightHopperPosition(targetRotations);
