@@ -19,6 +19,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -538,12 +540,24 @@ public final class Swerve extends SubsystemBase {
      * @return aim and lock wheels command
      */
     public Command pointAtHubAndCross() {
-        Supplier<Rotation2d> anglePose =
-            () -> new Rotation2d(Radians.of(FieldConstants.Hub.topCenterPoint.toTranslation2d()
-                .minus(state.getGlobalPoseEstimate().getTranslation()).getAngle().getRadians()))
-                    .rotateBy(Rotation2d.k180deg);
+        return new TurnToRotation(this, () -> {
+            Translation2d targetPosition = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+            if (DriverStation.getAlliance().isPresent()
+                && DriverStation.getAlliance().get() == Alliance.Red) {
+                targetPosition =
+                    new Translation2d(FieldConstants.fieldLength - targetPosition.getX(),
+                        FieldConstants.fieldWidth - targetPosition.getY());
+            }
+            Rotation2d angleToHub = new Rotation2d(Radians.of(targetPosition
+                .minus(state.getGlobalPoseEstimate().getTranslation()).getAngle().getRadians()));
 
-        return new TurnToRotation(this, anglePose, false).andThen(Commands.run(() -> {
+            if (DriverStation.getAlliance().isPresent()
+                && DriverStation.getAlliance().get() == Alliance.Red) {
+                angleToHub = angleToHub.plus(Rotation2d.fromDegrees(180));
+            }
+
+            return angleToHub;
+        }, false).andThen(Commands.run(() -> {
             modules[0].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(45)));
             modules[1].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(135)));
             modules[2].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(-45)));

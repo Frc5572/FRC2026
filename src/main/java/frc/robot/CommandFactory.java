@@ -118,12 +118,12 @@ public final class CommandFactory {
                 ? FieldConstants.Passing.blueAllianceRight
                 : FieldConstants.Passing.redAllianceRight);
 
-            DoubleSupplier distanceToLeft =
-                () -> leftTarget.getDistance(swerve.state.getGlobalPoseEstimate().getTranslation());
-            DoubleSupplier distanceToRight = () -> rightTarget
-                .getDistance(swerve.state.getGlobalPoseEstimate().getTranslation());
+            double distanceToLeft =
+                leftTarget.getDistance(swerve.state.getGlobalPoseEstimate().getTranslation());
+            double distanceToRight =
+                rightTarget.getDistance(swerve.state.getGlobalPoseEstimate().getTranslation());
 
-            if (Math.abs(distanceToLeft.getAsDouble()) < Math.abs(distanceToRight.getAsDouble())) {
+            if (Math.abs(distanceToLeft) < Math.abs(distanceToRight)) {
                 target = leftTarget;
             } else {
                 target = rightTarget;
