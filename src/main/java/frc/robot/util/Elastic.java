@@ -16,7 +16,7 @@ import edu.wpi.first.networktables.StringTopic;
 /**
  * The Elastic class provides methods to interact with the Elastic dashboard. This code is provided
  * by team Gold872 in
- * {@linkplain https://github.com/Gold872/elastic_dashboard/blob/main/elasticlib/Elastic.java}.
+ * https://github.com/Gold872/elastic_dashboard/blob/main/elasticlib/Elastic.java.
  */
 public final class Elastic {
     private static final StringTopic notificationTopic =
