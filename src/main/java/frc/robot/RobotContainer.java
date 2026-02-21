@@ -152,6 +152,8 @@ public final class RobotContainer {
         driver.cross().whileTrue(intake.extendHopper()).onFalse(intake.stop());
         driver.circle().onTrue(intake.retractHopper()).onFalse(intake.stop());
         driver.square().whileTrue(intake.intakeBalls(0.7));
+        driver.R1().whileTrue(swerve.moveToPoseAtDistance(() -> new Pose2d(
+            FieldConstants.Hub.innerCenterPoint.toTranslation2d(), Rotation2d.kZero), 3.0));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
