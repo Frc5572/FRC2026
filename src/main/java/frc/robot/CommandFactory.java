@@ -95,9 +95,7 @@ public final class CommandFactory {
             omega = Math.max(-Constants.Swerve.maxAngularVelocity,
                 Math.min(Constants.Swerve.maxAngularVelocity, omega));
             ChassisSpeeds fieldRelative = new ChassisSpeeds(vx, vy, omega);
-            ChassisSpeeds robotRelative =
-                ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelative, currentRotation);
-            return robotRelative;
+            return fieldRelative;
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
     }
 
@@ -144,10 +142,7 @@ public final class CommandFactory {
                 Math.min(Constants.Swerve.maxAngularVelocity, omega));
 
             ChassisSpeeds fieldRelative = new ChassisSpeeds(vx, vy, omega);
-
-            ChassisSpeeds robotRelative =
-                ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelative, currentRotation);
-            return robotRelative;
+            return fieldRelative;
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
     }
 }
