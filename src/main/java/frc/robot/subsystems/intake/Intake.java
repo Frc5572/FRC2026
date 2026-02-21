@@ -95,6 +95,6 @@ public class Intake extends SubsystemBase {
             io.setRightHopperVoltage(-1);
         });
 
-        return retractSlowly.until(limitSwitchTouched).andThen(stop());
+        return retractSlowly.until(() -> inputs.leftHopperPosition == Meters.of(0)).andThen(stop());
     }
 }

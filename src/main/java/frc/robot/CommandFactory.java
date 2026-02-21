@@ -49,7 +49,7 @@ public final class CommandFactory {
                 : ShotCalculator.staticShotparams(distance);
 
             shooter.shoot(params.rps()).schedule();
-            hood.goToAngle(Degrees.of(params.hoodAngle())).schedule();
+            hood.setGoal(Degrees.of(params.hoodAngle())).schedule();
             indexer.setSpeedCommand(0.8, 0.8).schedule();
         }).alongWith(intake.slowReturn());
     }
