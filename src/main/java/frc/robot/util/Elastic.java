@@ -13,6 +13,11 @@ import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringTopic;
 
+/**
+ * The Elastic class provides methods to interact with the Elastic dashboard. This code is provided
+ * by team Gold872 in
+ * {@linkplain https://github.com/Gold872/elastic_dashboard/blob/main/elasticlib/Elastic.java}.
+ */
 public final class Elastic {
     private static final StringTopic notificationTopic =
         NetworkTableInstance.getDefault().getStringTopic("/Elastic/RobotNotifications");
