@@ -41,6 +41,7 @@ import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
+import frc.robot.util.Elastic;
 import frc.robot.viz.RobotViz;
 
 /**
