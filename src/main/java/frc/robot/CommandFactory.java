@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -37,9 +38,10 @@ public final class CommandFactory {
      */
     public static Command shootAtTarget(Swerve swerve, Shooter shooter, AdjustableHood hood,
         Intake intake, Indexer indexer, boolean isVeloComp) {
-        DoubleSupplier distance = () -> swerve.state.getGlobalPoseEstimate().getTranslation()
-            .plus(Constants.Vision.turretCenter.toPose2d().getTranslation())
-            .getDistance(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
+        DoubleSupplier distance = () -> swerve.state.getGlobalPoseEstimate()
+            .transformBy(new Transform2d(Constants.Vision.turretCenter.toPose2d().getTranslation(),
+                Rotation2d.kZero))
+            .getTranslation().getDistance(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
 
         return Commands.runOnce(() -> {
             ShooterParams params = isVeloComp
