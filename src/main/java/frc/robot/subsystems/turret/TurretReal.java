@@ -1,11 +1,10 @@
 package frc.robot.subsystems.turret;
 
-import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -16,6 +15,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.tunable.PIDConstants;
 
 /** turret hardware */
 public class TurretReal implements TurretIO {
@@ -33,7 +33,7 @@ public class TurretReal implements TurretIO {
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
     private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getAbsolutePosition();
     private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getAbsolutePosition();
-    public final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
+    public final PositionVoltage mmVoltage = new PositionVoltage(0);
     private final VoltageOut voltage = new VoltageOut(0.0);
 
     /** Real Turret Implementation */
@@ -42,22 +42,7 @@ public class TurretReal implements TurretIO {
 
         // PID and feedforward
 
-        turretConfig.Slot0.kP = Constants.Turret.KP;
-        turretConfig.Slot0.kI = Constants.Turret.KI;
-        turretConfig.Slot0.kD = Constants.Turret.KD;
-        turretConfig.Slot0.kS = Constants.Turret.KS;
-        turretConfig.Slot0.kV = Constants.Turret.KV;
-        turretConfig.Slot0.kA = Constants.Turret.KA;
-        turretConfig.MotionMagic.MotionMagicCruiseVelocity = Constants.Turret.MMCVelocity;
-        turretConfig.MotionMagic.MotionMagicAcceleration = Constants.Turret.MMAcceleration;
-        turretConfig.MotionMagic.MotionMagicJerk = Constants.Turret.MMJerk;
-
-        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-            Constants.Turret.maxAngle.in(Rotations);
-        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-            Constants.Turret.minAngle.in(Rotations);
+        Constants.Turret.pid.apply(turretConfig.Slot0);
 
         canCoder1Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder1Invert;
         canCoder1Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
@@ -75,10 +60,6 @@ public class TurretReal implements TurretIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
             canCoder1Pos, canCoder2Pos);
-
-    }
-
-    private void configTurret() {
 
     }
 
@@ -104,12 +85,18 @@ public class TurretReal implements TurretIO {
     }
 
     @Override
-    public void setTargetAngle(Angle angle) {
-        turretMotor.setControl(mmVoltage.withPosition(angle));
+    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity) {
+        turretMotor.setControl(mmVoltage.withPosition(angle.getRotations()).withVelocity(velocity));
     }
 
     @Override
     public void resetPosition(Angle angle) {
         turretMotor.setPosition(angle);
+    }
+
+    @Override
+    public void setPID(PIDConstants constants) {
+        constants.apply(turretConfig.Slot0);
+        turretMotor.getConfigurator().apply(turretConfig);
     }
 }

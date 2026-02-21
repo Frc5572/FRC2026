@@ -352,11 +352,11 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants pid =
             new PIDConstantsBuilder("AdjustableHood", GravityTypeValue.Arm_Cosine)
-                .kP(0.0)
+                .kP(200.0)
                 .kI(0.0)
                 .kD(0.0)
                 .kV(0.0)
-                .kS(0.0)
+                .kS(0.3)
                 .kG(0.0)
                 .kA(0.0)
                 .finish();
@@ -517,42 +517,32 @@ public final class Constants {
         public static final Rotation2d gear1Offset = Rotation2d.kZero;
         public static final double gear2Gearing = 36.0 / 75.0;
         public static final Rotation2d gear2Offset = Rotation2d.kZero;
-        public static final Angle minAngle = Degrees.of(-360);
-        public static final Angle maxAngle = Degrees.of(360);
 
         public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;
         public static final int TurretCANcoderID2 = 6;
 
-        /* PID Values */
-        /** Proportional PID Value for turret position control. */
-        public static final double KP = 0.0;
-        /** Integral PID Value for turret position control. */
-        public static final double KI = 0.0;
-        /** Derivative PID Value for turret position control. */
-        public static final double KD = 0.0;
-
-        /* Characterization Values */
-        /** Static Characterization Value for overcoming friction. */
-        public static final double KS = 0.0;
-        /** Velocity Characterization Value */
-        public static final double KV = 0.0;
-        /** Acceleration Characterization Value */
-        public static final double KA = 0.0;
-
-        public static final double MMCVelocity = 0.0;
-        public static final double MMAcceleration = 0.0;
-        public static final double MMJerk = 0.0;
-
-        public static final Angle testAngle = Degrees.of(30);
-
-        public static final double turretTolerence = 0.01;
+        // @formatter:off
+        public static final PIDConstants pid =
+            new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
+                .kP(1.0)
+                .kI(0.0)
+                .kD(0.0)
+                .kV(0.0)
+                .kS(0.0)
+                .kG(0.0)
+                .kA(0.0)
+                .finish();
+        // @formatter:on
 
         public static final SensorDirectionValue canCoder1Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final SensorDirectionValue canCoder2Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
+
+        public static final Rotation2d maxAngle = Rotation2d.fromDegrees(120);
+        public static final Rotation2d minAngle = Rotation2d.fromDegrees(-120);
     }
 
     /** Shooter Constants */
@@ -587,7 +577,7 @@ public final class Constants {
                 .velocityTolerance(0.6)
                 .atSpeedDebounce(0.1)
                 .finish();
-            
+
         // @formatter:on
     }
 }
