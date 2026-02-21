@@ -180,10 +180,12 @@ public class Turret extends SubsystemBase {
         }
     }
 
+    /** Aim turret in robot frame */
     public Command goToAngleRobotRelative(Supplier<Rotation2d> rotations) {
         return run(() -> this.setGoal(rotations.get(), RotationsPerSecond.of(0)));
     }
 
+    /** Aim turret in field frame */
     public Command goToAngleFieldRelative(Supplier<Rotation2d> rotations) {
         return run(
             () -> this.setGoal(rotations.get().minus(state.getGlobalPoseEstimate().getRotation()),
@@ -193,6 +195,7 @@ public class Turret extends SubsystemBase {
     /**
      * Run characterization procedure
      *
+     * <p>
      * WARNING: will not respect min/max turret angles. Unplug everything from the turret so it can
      * spin a potentially infinite number of times.
      */
