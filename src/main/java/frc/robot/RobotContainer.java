@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -55,6 +56,7 @@ public final class RobotContainer {
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
+    public final CommandXboxController test = new CommandXboxController(3);
 
     /* Subsystems */
     private final Swerve swerve;
@@ -149,6 +151,15 @@ public final class RobotContainer {
         driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
         driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
+
+        test.b().whileTrue(turret.goToAngleFieldRelative(() -> {
+            double x = test.getLeftX();
+            double y = -test.getLeftY();
+            Rotation2d target = new Rotation2d(x, y);
+            Logger.recordOutput("test/turretTarget", target);
+            return target;
+        }));
+        test.a().whileTrue(turret.characterization());
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
