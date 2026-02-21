@@ -1,6 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -143,10 +142,10 @@ public final class RobotContainer {
         driver.L2().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
         driver.povUp().whileTrue(swerve.pointAtHubAndCross());
-        driver.povDown().whileTrue(
-            CommandFactory.staticShoot(swerve, shooter, adjustableHood, intake, indexer));
-        driver.povRight().whileTrue(CommandFactory.shootWhileMoving(swerve, shooter, adjustableHood,
-            intake, indexer, driver));
+        driver.povDown().whileTrue(CommandFactory.staticShootFixedTurret(swerve, shooter,
+            adjustableHood, intake, indexer));
+        driver.povRight().whileTrue(CommandFactory.shootWhileMovingFixedTurret(swerve, shooter,
+            adjustableHood, intake, indexer, driver));
         driver.povLeft().whileTrue(CommandFactory.passWhileMoving(swerve, shooter, adjustableHood,
             intake, indexer, driver));
         driver.cross().whileTrue(intake.extendHopper()).onFalse(intake.stop());

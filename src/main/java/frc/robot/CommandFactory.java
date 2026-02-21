@@ -73,7 +73,7 @@ public final class CommandFactory {
      */
     public static Command shootWhileMovingFixedTurret(Swerve swerve, Shooter shooter,
         AdjustableHood hood, Intake intake, Indexer indexer, CommandPS5Controller controller) {
-        return swerve.run(() -> {
+        return swerve.driveUserRelative(() -> {
             double vx = -controller.getLeftY() * Constants.Swerve.maxSpeedShooting;
             double vy = -controller.getLeftX() * Constants.Swerve.maxSpeedShooting;
 
@@ -95,7 +95,7 @@ public final class CommandFactory {
             ChassisSpeeds fieldRelative = new ChassisSpeeds(vx, vy, omega);
             ChassisSpeeds robotRelative =
                 ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelative, currentRotation);
-            swerve.setModuleStates(robotRelative);
+            return robotRelative;
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
     }
 
@@ -106,7 +106,7 @@ public final class CommandFactory {
      */
     public static Command passWhileMoving(Swerve swerve, Shooter shooter, AdjustableHood hood,
         Intake intake, Indexer indexer, CommandPS5Controller controller) {
-        return swerve.run(() -> {
+        return swerve.driveUserRelative(() -> {
             Translation2d target;
             double vx = -controller.getLeftY() * Constants.Swerve.maxSpeedShooting;
             double vy = -controller.getLeftX() * Constants.Swerve.maxSpeedShooting;
@@ -145,8 +145,7 @@ public final class CommandFactory {
 
             ChassisSpeeds robotRelative =
                 ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelative, currentRotation);
-
-            swerve.setModuleStates(robotRelative);
+            return robotRelative;
         }).alongWith(shootAtTarget(swerve, shooter, hood, intake, indexer, true));
     }
 }
