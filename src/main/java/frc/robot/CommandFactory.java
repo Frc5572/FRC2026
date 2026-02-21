@@ -1,6 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -38,6 +37,7 @@ public final class CommandFactory {
     public static Command shootAtTarget(Swerve swerve, Shooter shooter, AdjustableHood hood,
         Intake intake, Indexer indexer, boolean isVeloComp) {
         DoubleSupplier distance = () -> swerve.state.getGlobalPoseEstimate().getTranslation()
+            .plus(Constants.Vision.turretCenter.toPose2d().getTranslation())
             .getDistance(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
 
         return Commands.runOnce(() -> {
@@ -48,10 +48,10 @@ public final class CommandFactory {
                     FieldConstants.Hub.innerCenterPoint.toTranslation2d())
                 : ShotCalculator.staticShotparams(distance);
 
-            shooter.shoot(params.rps()).schedule();
-            hood.setGoal(Degrees.of(params.hoodAngle())).schedule();
-            indexer.setSpeedCommand(0.8, 0.8).schedule();
-        }).alongWith(intake.slowReturn());
+            shooter.setVelocity(params.rps());
+            hood.setGoal(Degrees.of(params.hoodAngle()));
+
+        }).alongWith(intake.slowReturn()).alongWith(indexer.setSpeedCommand(0.8, 0.8));
     }
 
     /**

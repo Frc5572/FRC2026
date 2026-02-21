@@ -558,10 +558,10 @@ public final class Swerve extends SubsystemBase {
 
             return angleToHub;
         }, false).andThen(Commands.run(() -> {
-            modules[0].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(45)));
-            modules[1].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(135)));
-            modules[2].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(-45)));
-            modules[3].setDesiredState(new SwerveModuleState(2, Rotation2d.fromDegrees(-135)));
+            modules[0].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+            modules[1].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(135)));
+            modules[2].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
+            modules[3].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-135)));
         }));
     }
 
