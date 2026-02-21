@@ -41,8 +41,8 @@ import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
-import frc.robot.util.Elastic;
 import frc.robot.viz.RobotViz;
+
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -151,6 +151,8 @@ public final class RobotContainer {
         driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
     }
+
+
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {

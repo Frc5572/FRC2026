@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -76,10 +77,12 @@ public class Intake extends SubsystemBase {
     }
 
     public Command extendHopper() {
+        SmartDashboard.putBoolean("Intake/HopperExtended", true);
         return run(() -> runHopper(Constants.IntakeConstants.hopperOutDistance.in(Meters)));
     }
 
     public Command retractHopper() {
+        SmartDashboard.putBoolean("Intake/HopperExtended", false);
         return run(() -> runHopper(0.0));
     }
 

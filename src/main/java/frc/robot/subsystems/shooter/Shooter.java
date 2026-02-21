@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -30,6 +31,8 @@ public final class Shooter extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Shooter", inputs);
+        SmartDashboard.putNumber("Shooter/AngularVelocity1 (RPS)",
+            inputs.shooterAngularVelocity1.in(RotationsPerSecond));
         Constants.Shooter.constants.ifDirty(constants -> {
             io.setConstants(constants);
             torqueCurrentDebouncer =

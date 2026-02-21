@@ -3,7 +3,6 @@ package frc.robot.util;
 import java.util.Optional;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /** Class for tracking which hub is active */
@@ -38,32 +37,57 @@ public class ActiveHub {
     }
 
     private static boolean checkHub(HubState state) {
+        var time = DriverStation.getMatchTime();
         if (state == HubState.FIRST) {
-            var time = Timer.getFPGATimestamp();
-            if ((time <= 140.0) && (time >= 130.0)) {
+            if (time <= 30.0) {
                 return true;
-            } else if ((time <= 129.0) && (time >= 105.0)) {
-                return false;
-            } else if ((time <= 104.0) && (time >= 55.0)) {
-                return true;
-            } else if (time <= 54.0) {
-                return true;
-            } else {
+            }
+            // 0:55 remaining
+            if (time <= 55.0) {
                 return false;
             }
+            // 1:20 remaining
+            if (time <= 80.0) {
+                return true;
+            }
+            // 1:45 remaining
+            if (time <= 105.0) {
+                return false;
+            }
+            // 2:10 remaining
+            if (time <= 130.0) {
+                return true;
+            }
+            // 2:20 remaining
+            if (time <= 140) {
+                return true;
+            }
+            return false;
         } else if (state == HubState.SECOND) {
-            var time = Timer.getFPGATimestamp();
-            if ((time <= 140.0) && (time >= 130.0)) {
+            if (time <= 30.0) {
                 return true;
-            } else if ((time <= 129.0) && (time >= 105.0)) {
+            }
+            // 0:55 remaining
+            if (time <= 55.0) {
                 return true;
-            } else if ((time <= 104.0) && (time >= 55.0)) {
-                return false;
-            } else if (time <= 54.0) {
-                return true;
-            } else {
+            }
+            // 1:20 remaining
+            if (time <= 80.0) {
                 return false;
             }
+            // 1:45 remaining
+            if (time <= 105.0) {
+                return true;
+            }
+            // 2:10 remaining
+            if (time <= 130.0) {
+                return false;
+            }
+            // 2:20 remaining
+            if (time <= 140) {
+                return true;
+            }
+            return false;
         } else if (state == HubState.NODATA) {
             return true;
         } else {
@@ -73,5 +97,9 @@ public class ActiveHub {
 
     private static enum HubState {
         FIRST, SECOND, NODATA
+    }
+
+    public static boolean currentHubIsActive() {
+        return checkHub(activeHubAfterAuto());
     }
 }

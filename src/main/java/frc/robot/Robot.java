@@ -15,7 +15,10 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.ActiveHub;
+import frc.robot.util.Elastic;
 import frc.robot.util.PhoenixSignals;
 
 /**
@@ -118,16 +121,23 @@ public class Robot extends LoggedRobot {
     public void disabledPeriodic() {}
 
     @Override
-    public void autonomousInit() {}
+    public void autonomousInit() {
+        Elastic.selectTab("Autonomous");
+    }
 
     @Override
     public void autonomousPeriodic() {}
 
     @Override
-    public void teleopInit() {}
+    public void teleopInit() {
+        Elastic.selectTab("Teleoperated");
+    }
 
     @Override
-    public void teleopPeriodic() {}
+    public void teleopPeriodic() {
+        SmartDashboard.putBoolean("ActiveHub", ActiveHub.currentHubIsActive());
+        Logger.recordOutput("ActiveHub", ActiveHub.currentHubIsActive());
+    }
 
     @Override
     public void testInit() {}
