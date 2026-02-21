@@ -568,13 +568,18 @@ public final class Swerve extends SubsystemBase {
     /**
      * Moves the robot to a target pose at a custom distance away
      * 
-     * @param targetPose the target pose to move to
+     * @param targetPose the target pose to move to (typically the hub center)
      * @param distanceFromTarget the distance to stop away from the target (in meters)
      * @return a command that moves the robot to the specified distance from the target
      */
     public Command moveToPoseAtDistance(Supplier<Pose2d> targetPose, double distanceFromTarget) {
-        return this.moveToPose().target(targetPose).autoRoutine(null)
-            .maxSpeed(Constants.Swerve.maxSpeed).flipForRed(false)
-            .translationTolerance(distanceFromTarget).rotationTolerance(Math.toRadians(2)).finish();
+        return this.moveToPose().target(() -> {
+            Pose2d hub = targetPose.get();
+            Pose2d distanceAway =
+                new Pose2d(hub.getX() - distanceFromTarget, hub.getY(), hub.getRotation());
+            return distanceAway;
+        }).autoRoutine(null).maxSpeed(Constants.Swerve.maxSpeed).flipForRed(false)
+            .translationTolerance(0.05).rotationTolerance(Math.toRadians(2)).finish();
     }
+
 }
