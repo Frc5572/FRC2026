@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -37,7 +38,6 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
-import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
@@ -77,8 +77,8 @@ public final class RobotContainer {
             case kReal:
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
-                vision = new Vision(swerve.state, new VisionReal());
-                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
+                vision = new Vision(swerve.state, new VisionIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal(), swerve.state);
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
@@ -105,7 +105,7 @@ public final class RobotContainer {
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, sim.visionSim);
-                adjustableHood = new AdjustableHood(sim.adjustableHood);
+                adjustableHood = new AdjustableHood(sim.adjustableHood, swerve.state);
                 turret = new Turret(sim.turret, swerve.state);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
@@ -118,7 +118,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
-                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty(), swerve.state);
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());

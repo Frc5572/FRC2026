@@ -1,10 +1,9 @@
 package frc.robot.subsystems.adjustable_hood;
 
-import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -27,7 +26,7 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
     private final VoltageOut voltage = new VoltageOut(0.0);
 
-    private final MotionMagicVoltage mmVoltage = new MotionMagicVoltage(0);
+    private final PositionVoltage mmVoltage = new PositionVoltage(0);
 
     /** Real AdjustableHood Implementation */
     public AdjustableHoodReal() {
@@ -45,12 +44,14 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
         hoodConfig.MotionMagic.MotionMagicAcceleration = Constants.AdjustableHood.MMAcceleration;
         hoodConfig.MotionMagic.MotionMagicJerk = Constants.AdjustableHood.MMJerk;
 
-        hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-            Constants.AdjustableHood.hoodMaxAngle.in(Rotations);
-        hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-            Constants.AdjustableHood.hoodMinAngle.in(Rotations);
+        hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+        // hoodConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        // Constants.AdjustableHood.hoodMaxAngle.in(Rotations);
+        hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+        // hoodConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        // Constants.AdjustableHood.hoodMinAngle.in(Rotations);
+
+        hoodConfig.Feedback.SensorToMechanismRatio = Constants.AdjustableHood.gearRatio;
 
         hoodMotor.getConfigurator().apply(hoodConfig);
 
@@ -62,7 +63,7 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
 
     @Override
-    public void setAdjustableHoodVoltage(Voltage volts) {
+    public void setAdjustableHoodVoltage(double volts) {
         hoodMotor.setControl(voltage.withOutput(volts));
     }
 

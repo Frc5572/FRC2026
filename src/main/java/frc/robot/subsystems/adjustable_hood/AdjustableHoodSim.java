@@ -2,7 +2,6 @@ package frc.robot.subsystems.adjustable_hood;
 
 import static edu.wpi.first.units.Units.Radians;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Voltage;
 import frc.robot.sim.SimPosition;
 
 /**
@@ -20,7 +19,7 @@ public class AdjustableHoodSim implements AdjustableHoodIO {
     }
 
     @Override
-    public void setAdjustableHoodVoltage(Voltage volts) {
+    public void setAdjustableHoodVoltage(double volts) {
 
     }
 
