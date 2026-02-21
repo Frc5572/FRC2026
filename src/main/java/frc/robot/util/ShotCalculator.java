@@ -12,8 +12,8 @@ import edu.wpi.first.units.measure.Angle;
 /**
  * Calculates shooter parameters (RPM and hood angle) based on distance and required velocity. Uses
  * an interpolating map of empirically derived shooter parameters at various distances, then applies
- * a correction based on the required velocity. The correction is split between RPM and hood angle
- * to allow for more nuanced adjustments.
+ * a correction based on the required velocity. The correction prioritizes hood angle adjustments
+ * while keeping RPM relatively constant with only minor variations.
  */
 public class ShotCalculator {
 
@@ -77,7 +77,8 @@ public class ShotCalculator {
     }
 
     /**
-     * Calculates shooter parameters based on distance and required velocity.
+     * Calculates shooter parameters based on distance and required velocity. Prioritizes hood angle
+     * adjustments while keeping RPM relatively constant.
      * 
      * @param distance The distance to the target in meters.
      * @param requiredVelocity The required velocity of the projectile at the target in m/s.
@@ -90,11 +91,14 @@ public class ShotCalculator {
         double baselineVelocity = distance / baseline.timeOfFlight;
         double velocityRatio = requiredVelocity / baselineVelocity;
 
-        // Split the correction: sqrt gives equal "contribution" from each
-        double rpsFactor = Math.sqrt(velocityRatio);
-        double hoodFactor = Math.sqrt(velocityRatio);
+        // Primary adjustment: hood angle handles most of the velocity correction
+        double hoodFactor = velocityRatio;
 
-        // Apply RPM scaling
+        // Secondary adjustment: limit RPM to ±25 variation from baseline
+        // ±3% corresponds to approximately ±25 RPS at typical shooter speeds
+        double rpsFactor = MathUtil.clamp(velocityRatio, 0.97, 1.03);
+
+        // Apply RPM adjustment (limited range)
         double adjustedRps = baseline.rps * rpsFactor;
 
         // Apply hood adjustment (changes horizontal component)
@@ -173,7 +177,7 @@ public class ShotCalculator {
     /**
      * Retrieves shooter parameters with iterative lookahead velocity compensation applied. Accounts
      * for the robot moving during projectile flight time by iteratively calculating the launcher's
-     * future position.
+     * future position. Prioritizes hood angle adjustments while keeping RPM relatively constant.
      * 
      * @param launcherPosition The current position of the launcher on the field as a Translation2d.
      * @param chassisSpeeds The current velocity of the robot as a ChassisSpeeds object (vx, vy,
@@ -184,39 +188,18 @@ public class ShotCalculator {
      */
     public static ShooterParams velocityCompParams(Translation2d launcherPosition,
         ChassisSpeeds chassisSpeeds, Translation2d targetPosition) {
-        Translation2d launcherVelocity =
-            new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
-        double distance = targetPosition.getDistance(launcherPosition);
-        double lookaheadDistance = distance;
-        double timeOfFlight;
+        // Use holder objects to capture results from velocityComp
+        final Double[] rpsHolder = new Double[1];
+        final Angle[] hoodHolder = new Angle[1];
 
-        for (int i = 0; i < 20; i++) {
-            ShooterParams baseline = SHOOTER_MAP.get(lookaheadDistance);
-            timeOfFlight = baseline.timeOfFlight;
-            double offsetX = launcherVelocity.getX() * timeOfFlight;
-            double offsetY = launcherVelocity.getY() * timeOfFlight;
-            Translation2d lookaheadLauncherPos =
-                launcherPosition.plus(new Translation2d(offsetX, offsetY));
-            lookaheadDistance = targetPosition.getDistance(lookaheadLauncherPos);
-        }
+        double distance = velocityComp(launcherPosition, chassisSpeeds, targetPosition,
+            rps -> rpsHolder[0] = rps, hood -> hoodHolder[0] = hood);
 
-        ShooterParams baseline = SHOOTER_MAP.get(lookaheadDistance);
-        double baselineVelocity = lookaheadDistance / baseline.timeOfFlight;
-        Translation2d toTarget = targetPosition.minus(launcherPosition);
-        Translation2d targetDirection = toTarget.div(toTarget.getNorm());
-        Translation2d targetVelocity = targetDirection.times(baselineVelocity);
-        Translation2d shotVelocity = targetVelocity.minus(launcherVelocity);
-        double requiredVelocity = shotVelocity.getNorm();
-        double velocityRatio = requiredVelocity / baselineVelocity;
-        double rpsFactor = Math.sqrt(velocityRatio);
-        double hoodFactor = Math.sqrt(velocityRatio);
-        double adjustedRps = baseline.rps * rpsFactor;
-        double totalVelocity = baselineVelocity / Math.cos(Math.toRadians(baseline.hoodAngle));
-        double targetHorizFromHood = baselineVelocity * hoodFactor;
-        double ratio = MathUtil.clamp(targetHorizFromHood / totalVelocity, 0.0, 1.0);
-        double adjustedHoodAngle = Math.toDegrees(Math.acos(ratio));
+        // Get time of flight for the lookahead distance
+        ShooterParams baseline = SHOOTER_MAP.get(distance);
 
-        return new ShooterParams(adjustedRps, adjustedHoodAngle, baseline.timeOfFlight);
+        return new ShooterParams(rpsHolder[0], Math.toDegrees(hoodHolder[0].in(Radians)),
+            baseline.timeOfFlight);
     }
 
     /**
