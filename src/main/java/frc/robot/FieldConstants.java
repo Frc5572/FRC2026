@@ -213,6 +213,13 @@ public class FieldConstants {
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + width / 2.0,
             fieldWidth / 2.0, innerHeight);
 
+        /**
+         * Translation 2d of the center of the Hub
+         */
+        public static final Translation2d centerHub = new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + width / 2.0,
+            fieldWidth / 2.0);
+
         /** Alliance-side hub corner closest to the alliance wall, left side. */
         public static final Translation2d nearLeftCorner =
             new Translation2d(topCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);
@@ -653,6 +660,21 @@ public class FieldConstants {
          */
         public static final Translation2d centerPoint = new Translation2d(0,
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
+    }
+
+    /**
+     * Geometry and reference points on the alliance side for the autoPass command.
+     */
+    public static class Passing {
+        /** Left side of the blue alliance where it's one place the robot can feed to. */
+        public static final Translation2d blueAllianceLeft =
+            new Translation2d(LinesVertical.starting + fieldWidth / 2,
+                LinesHorizontal.center - Hub.width / 2 - LeftBump.width / 2);
+
+        /** Right side of the blue alliance where it's one place the robot can feed to. */
+        public static final Translation2d blueAllianceRight =
+            new Translation2d(LinesVertical.starting + fieldWidth / 2,
+                LinesHorizontal.center + Hub.width / 2 + LeftBump.width / 2);
     }
 
     /**
