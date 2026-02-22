@@ -7,6 +7,8 @@ import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
@@ -147,8 +149,14 @@ public final class RobotContainer {
 
         driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-15)));
 
-        driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
-        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
+        driver.a()
+            .whileTrue(intake.extendHopper().alongWith(
+                Commands.runOnce(() -> SmartDashboard.putBoolean("Intake/HopperExtended", true))))
+            .onFalse(intake.stop());
+        driver.b()
+            .onTrue(intake.retractHopper().alongWith(
+                Commands.runOnce(() -> SmartDashboard.putBoolean("Intake/HopperExtended", false))))
+            .onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
     }
 
