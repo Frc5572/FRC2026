@@ -77,17 +77,13 @@ public class Intake extends SubsystemBase {
     }
 
     public Command extendHopper() {
-        return run(() -> {
-            runHopper(Constants.IntakeConstants.hopperOutDistance.in(Meters));
-            SmartDashboard.putBoolean("Intake/HopperExtended", true);;
-        });
+        return run(() -> runHopper(Constants.IntakeConstants.hopperOutDistance.in(Meters)))
+            .andThen(() -> SmartDashboard.putBoolean("Intake/HopperExtended", true));
     }
 
     public Command retractHopper() {
-        return run(() -> {
-            runHopper(0.0);
-            SmartDashboard.putBoolean("Intake/HopperExtended", false);
-        });
+        return run(() -> runHopper(0.0))
+            .andThen(() -> SmartDashboard.putBoolean("Intake/HopperExtended", false));
     }
 
     public Command intakeBalls(double speed) {
