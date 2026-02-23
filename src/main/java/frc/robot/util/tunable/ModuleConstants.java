@@ -10,6 +10,7 @@ import frc.robot.util.typestate.TypeStateBuilder;
 @NullMarked
 public class ModuleConstants implements Tunable {
 
+    /** Constants for vendor swerve modules */
     public static enum ModuleKind {
         Mk4i(8.14, 150.0 / 7.0), Mk4n(7.13, 18.75);
 
