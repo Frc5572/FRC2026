@@ -30,6 +30,7 @@ import frc.robot.subsystems.vision.CameraConstantsBuilder;
 import frc.robot.util.tunable.FlywheelConstants;
 import frc.robot.util.tunable.FlywheelConstantsBuilder;
 import frc.robot.util.tunable.ModuleConstants;
+import frc.robot.util.tunable.ModuleConstants.ModuleKind;
 import frc.robot.util.tunable.ModuleConstantsBuilder;
 import frc.robot.util.tunable.PIDConstants;
 import frc.robot.util.tunable.PIDConstantsBuilder;
@@ -143,12 +144,6 @@ public final class Constants {
         public static final SwerveDriveKinematics swerveKinematics =
             new SwerveDriveKinematics(swerveTranslations);
 
-        /* Module Gear Ratios */
-        /** Swerve Drive Motor Gear Ratio */
-        public static final double driveGearRatio = (8.14 / 1.0); // MK4i L1
-        /** Swerve Angle Motor Gear Ratio */
-        public static final double angleGearRatio = ((150.0 / 7.0) / 1.0); // (150 / 7) : 1
-
         /* Motor Inverts */
         public static final InvertedValue angleMotorInvert = InvertedValue.Clockwise_Positive;
         public static final InvertedValue driveMotorInvert = InvertedValue.Clockwise_Positive;
@@ -231,28 +226,28 @@ public final class Constants {
         // @formatter:off
         public static final ModuleConstants[] modulesConstants = new ModuleConstants[] {
             // Front Left Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4i)
                 .driveMotorId(1)
                 .angleMotorId(0)
                 .canCoderId(1)
                 .angleOffset(Rotation2d.fromRotations(0.106445))
                 .finish(),
             // Front Right Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4i)
                 .driveMotorId(7)
                 .angleMotorId(6)
                 .canCoderId(2)
                 .angleOffset(Rotation2d.fromRotations(0.409668))
                 .finish(),
             // Back Left Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4n)
                 .driveMotorId(2)
                 .angleMotorId(3)
                 .canCoderId(3)
                 .angleOffset(Rotation2d.fromRotations(0.474121))
                 .finish(),
             // Back Right Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4n)
                 .driveMotorId(5)
                 .angleMotorId(4)
                 .canCoderId(4)
