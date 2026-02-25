@@ -105,6 +105,7 @@ public class ActiveHub {
 
     /**
      * Returns the time left in the current phase of the match.
+     * 
      * <p>
      * The match is divided into 6 phases, with the following time limits:
      * <ul>
