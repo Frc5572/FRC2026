@@ -103,6 +103,22 @@ public class ActiveHub {
         return checkHub(activeHubAfterAuto());
     }
 
+    /**
+     * Returns the time left in the current phase of the match.
+     * <p>
+     * The match is divided into 6 phases, with the following time limits:
+     * <ul>
+     * <li>Transition Phase: 2:20 - 2:10
+     * <li>Phase 1: 2:10 - 1:45
+     * <li>Phase 2: 1:45 - 1:20
+     * <li>Phase 3: 1:20 - 0:55
+     * <li>Phase 4: 0:55 - 0:30
+     * <li>End Game: 0:30 - 0:00
+     * </ul>
+     * 
+     * @return time left in the current phase of the match, or -1 if the match is over, or if the
+     *         match time is not available or not in TeleOp.
+     */
     public static double timeLeftInCurrentPhase() {
         var time = DriverStation.getMatchTime();
         // 0:30 remaining (End Game)
