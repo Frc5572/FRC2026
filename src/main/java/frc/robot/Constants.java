@@ -512,11 +512,11 @@ public final class Constants {
 
     /** Turret Constants */
     public static final class Turret {
-        public static final double motorGearing = 53.934;
-        public static final double gear1Gearing = 35.0 / 75.0;
-        public static final Rotation2d gear1Offset = Rotation2d.kZero;
-        public static final double gear2Gearing = 36.0 / 75.0;
-        public static final Rotation2d gear2Offset = Rotation2d.kZero;
+        public static final double motorGearing = 32.32;
+        public static final double gear1Gearing = 1.0 / 10.77333;
+        public static final Rotation2d gear1Offset = Rotation2d.fromRotations(-0.295410);
+        public static final double gear2Gearing = 1.0 / 7.76923076923;
+        public static final Rotation2d gear2Offset = Rotation2d.fromRotations(-0.284912);
 
         public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;
@@ -525,11 +525,11 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants pid =
             new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
-                .kP(1.0)
+                .kP(12.0)
                 .kI(0.0)
                 .kD(0.0)
-                .kV(0.0)
-                .kS(0.0)
+                .kV(7.01)
+                .kS(0.301)
                 .kG(0.0)
                 .kA(0.0)
                 .finish();
@@ -538,11 +538,11 @@ public final class Constants {
         public static final SensorDirectionValue canCoder1Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final SensorDirectionValue canCoder2Invert =
-            SensorDirectionValue.Clockwise_Positive;
+            SensorDirectionValue.CounterClockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
 
-        public static final Rotation2d maxAngle = Rotation2d.fromDegrees(120);
-        public static final Rotation2d minAngle = Rotation2d.fromDegrees(-120);
+        public static final Rotation2d maxAngle = Rotation2d.fromDegrees(184);
+        public static final Rotation2d minAngle = Rotation2d.fromDegrees(-42);
     }
 
     /** Shooter Constants */

@@ -24,7 +24,7 @@ import frc.robot.RobotState;
  */
 public class Turret extends SubsystemBase {
 
-    private boolean hasSynced = false;
+    private boolean hasSynced = true;
     private final TurretIO io;
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final RobotState state;
@@ -47,16 +47,17 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
-        Angle turretRotationEstimate =
-            getTurretAngleFromGears(inputs.gear1AbsoluteAngle, inputs.gear2AbsoluteAngle);
-        Logger.recordOutput("Turret/EstimatedTurretAngle", turretRotationEstimate);
-        Logger.recordOutput("Turret/Synced", hasSynced);
+        // Angle turretRotationEstimate =
+        // getTurretAngleFromGears(inputs.gear1AbsoluteAngle, inputs.gear2AbsoluteAngle);
+        // Logger.recordOutput("Turret/EstimatedTurretAngle (deg)",
+        // turretRotationEstimate.in(Degrees));
+        // Logger.recordOutput("Turret/Synced", hasSynced);
 
-        if (!hasSynced && inputs.gear1AbsoluteAngle != null) {
-            io.resetPosition(turretRotationEstimate);
-            hasSynced = true;
-        }
-        state.setTurretAngle(Timer.getTimestamp(), turretRotationEstimate);
+        // if (!hasSynced && inputs.gear1AbsoluteAngle != null) {
+        // io.resetPosition(turretRotationEstimate);
+        // hasSynced = true;
+        // }
+        state.setTurretAngle(Timer.getTimestamp(), inputs.relativeAngle);
     }
 
     /**

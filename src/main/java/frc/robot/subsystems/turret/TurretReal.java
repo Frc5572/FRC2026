@@ -56,7 +56,7 @@ public class TurretReal implements TurretIO {
         turretCANcoder2.getConfigurator().apply(canCoder2Config);
 
         turretMotor.setNeutralMode(NeutralModeValue.Brake);
-
+        turretMotor.setPosition(0.0);
 
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
             canCoder1Pos, canCoder2Pos);
@@ -76,7 +76,7 @@ public class TurretReal implements TurretIO {
         inputs.gear1AbsoluteAngle = new Rotation2d(canCoder1Pos.getValue());
         inputs.gear2AbsoluteAngle = new Rotation2d(canCoder2Pos.getValue());
 
-        inputs.relativeAngle = turretPosition.getValue();
+        inputs.relativeAngle = turretPosition.getValue().unaryMinus();
         inputs.voltage = turretVoltage.getValue();
         inputs.current = turretCurrent.getValue();
         inputs.velocity = turretVelocity.getValue();
