@@ -7,6 +7,7 @@ import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -71,6 +72,7 @@ public final class RobotContainer {
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
+    private final Field2d field = new Field2d();
 
     /**
      */
@@ -158,9 +160,9 @@ public final class RobotContainer {
                 Commands.runOnce(() -> SmartDashboard.putBoolean("Intake/HopperExtended", false))))
             .onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
+
+        SmartDashboard.putData("Field", field);
     }
-
-
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
@@ -170,7 +172,7 @@ public final class RobotContainer {
             sim.update();
         }
         viz.periodic();
-
+        field.setRobotPose(swerve.state.getGlobalPoseEstimate());
     }
 }
 

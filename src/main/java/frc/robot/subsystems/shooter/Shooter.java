@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.filter.Debouncer;
@@ -31,8 +32,8 @@ public final class Shooter extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Shooter", inputs);
-        SmartDashboard.putNumber("Shooter/AngularVelocity1 (RPS)",
-            inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+        SmartDashboard.putBoolean("Shooter/UpToSpeed", inputs.shooterAngularVelocity1
+            .in(RadiansPerSecond) > Constants.Shooter.atSpeedThreshold);
         Constants.Shooter.constants.ifDirty(constants -> {
             io.setConstants(constants);
             torqueCurrentDebouncer =

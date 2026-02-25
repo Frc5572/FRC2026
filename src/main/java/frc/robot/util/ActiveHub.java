@@ -102,4 +102,33 @@ public class ActiveHub {
     public static boolean currentHubIsActive() {
         return checkHub(activeHubAfterAuto());
     }
+
+    public static double timeLeftInCurrentPhase() {
+        var time = DriverStation.getMatchTime();
+        // 0:30 remaining (End Game)
+        if (time <= 30.0) {
+            return time;
+        }
+        // 0:55 remaining (Phase 4)
+        if (time <= 55.0) {
+            return time - 30.0;
+        }
+        // 1:20 remaining (Phase 3)
+        if (time <= 80.0) {
+            return time - 55.0;
+        }
+        // 1:45 remaining (Phase 2)
+        if (time <= 105.0) {
+            return time - 80.0;
+        }
+        // 2:10 remaining (Phase 1)
+        if (time <= 130.0) {
+            return time - 105.0;
+        }
+        // 2:20 remaining (Transition Phase)
+        if (time <= 140) {
+            return time - 130.0;
+        }
+        return -1;
+    }
 }
