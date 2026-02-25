@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -52,5 +53,10 @@ public final class Shooter extends SubsystemBase {
     /** Shoot at a given velocity */
     public Command shoot(double velocity) {
         return run(() -> setVelocity(velocity));
+    }
+
+    /** Shoot at a given velocity */
+    public Command shoot(DoubleSupplier velocity) {
+        return run(() -> setVelocity(velocity.getAsDouble()));
     }
 }

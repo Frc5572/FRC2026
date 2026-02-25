@@ -282,33 +282,33 @@ public final class Constants {
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
         public static final Pose3d turretCenter =
-            new Pose3d(new Translation3d(-0.1651, 0, 0.36772), Rotation3d.kZero);
+            new Pose3d(new Translation3d(-0.1651, 0, 0), Rotation3d.kZero);
 
         /** TODO: meausre on bot */
         public static final Pose3d turretLeft =
-            new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
+            new Pose3d(Inches.of(-7.972), Inches.of(5.274), Inches.of(20.56), Rotation3d.kZero);
         public static final Pose3d turretRight =
-            new Pose3d(Inches.of(5.307), Inches.of(-5.958), Inches.of(0.0), Rotation3d.kZero);
+            new Pose3d(Inches.of(-7.972), Inches.of(-5.274), Inches.of(20.56), Rotation3d.kZero);
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
+            // new CameraConstantsBuilder()
+            //     .name("cam0")
+            //     .height(800)
+            //     .width(1280)
+            //     .horizontalFieldOfView(80)
+            //     .simFps(20)
+            //     .simLatency(0.3)
+            //     .simLatencyStdDev(0.02)
+            //     .calibrationErrorMean(0.8)
+            //     .calibrationErrorStdDev(0.08)
+            //     .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(11),
+            //         -Units.inchesToMeters(12), Units.inchesToMeters(10)),
+            //         new Rotation3d(Math.PI, 0, 0)))
+            //     .translationError(0.02)
+            //     .finish(),
             new CameraConstantsBuilder()
-                .name("cam0")
-                .height(800)
-                .width(1280)
-                .horizontalFieldOfView(80)
-                .simFps(20)
-                .simLatency(0.3)
-                .simLatencyStdDev(0.02)
-                .calibrationErrorMean(0.8)
-                .calibrationErrorStdDev(0.08)
-                .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(11),
-                    -Units.inchesToMeters(12), Units.inchesToMeters(10)),
-                    new Rotation3d(Math.PI, 0, 0)))
-                .translationError(0.02)
-                .finish(),
-            new CameraConstantsBuilder()
-                .name("rightTurretCamera")
+                .name("turretRight")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -319,7 +319,7 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
                 .translationError(0.02)
-                .rotationError(0)
+                .rotationError(0.02)
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
@@ -574,8 +574,17 @@ public final class Constants {
                 .holdCurrent(40.0)
                 .maxDutyCycle(1.0)
                 .isReversed(true)
-                .velocityTolerance(0.6)
+                .velocityTolerance(8)
                 .atSpeedDebounce(0.1)
+                .pid(new PIDConstantsBuilder("Flywheel", GravityTypeValue.Elevator_Static)
+                    .kP(0.0)
+                    .kI(0.0)
+                    .kD(0.0)
+                    .kV(0.1135)
+                    .kS(0.0)
+                    .kG(0.0)
+                    .kA(0.0)
+                    .finish())
                 .finish();
 
         // @formatter:on

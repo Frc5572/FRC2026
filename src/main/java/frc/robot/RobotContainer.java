@@ -7,6 +7,7 @@ import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
@@ -37,11 +38,14 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
+import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
+import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
+import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
 
 /**
@@ -78,9 +82,9 @@ public final class RobotContainer {
             case kReal:
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
-                vision = new Vision(swerve.state, new VisionIOEmpty());
-                adjustableHood = new AdjustableHood(new AdjustableHoodReal(), swerve.state);
-                turret = new Turret(new TurretIOEmpty(), swerve.state);
+                vision = new Vision(swerve.state, new VisionReal());
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
+                turret = new Turret(new TurretReal(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
@@ -106,7 +110,7 @@ public final class RobotContainer {
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, sim.visionSim);
-                adjustableHood = new AdjustableHood(sim.adjustableHood, swerve.state);
+                adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
@@ -119,7 +123,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
-                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty(), swerve.state);
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
@@ -139,20 +143,16 @@ public final class RobotContainer {
 
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
+        // driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
 
-        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
+        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.4))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
-        driver.povUp().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(15)));
-
-        driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-15)));
-
         driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
-        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
+        driver.b().onTrue(intake.squeezeBalls(0.7)).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
 
-        test.b().whileTrue(turret.goToAngleFieldRelative(() -> {
+        test.b().whileTrue(turret.goToAngleRobotRelative(() -> {
             double x = test.getLeftX();
             double y = -test.getLeftY();
             Rotation2d target = new Rotation2d(x, y);
@@ -160,6 +160,16 @@ public final class RobotContainer {
             return target;
         }));
         test.a().whileTrue(turret.characterization());
+        ShotDataHelper helper = new ShotDataHelper();
+        driver.rightTrigger().whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
+            adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle)),
+            swerve.moveToPose()
+                .target(() -> new Pose2d(
+                    FieldConstants.Hub.centerHub
+                        .minus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget), 0)),
+                    Rotation2d.k180deg))
+                .finish()))
+            .onFalse(shooter.shoot(0.0));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
@@ -170,7 +180,6 @@ public final class RobotContainer {
             sim.update();
         }
         viz.periodic();
-
     }
 }
 
