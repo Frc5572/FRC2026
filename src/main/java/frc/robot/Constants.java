@@ -586,6 +586,15 @@ public final class Constants {
                 .isReversed(true)
                 .velocityTolerance(8)
                 .atSpeedDebounce(0.1)
+                .pid(new PIDConstantsBuilder("Flywheel", GravityTypeValue.Elevator_Static)
+                    .kP(0.0)
+                    .kI(0.0)
+                    .kD(0.0)
+                    .kV(0.1135)
+                    .kS(0.0)
+                    .kG(0.0)
+                    .kA(0.0)
+                    .finish())
                 .finish();
             
         // @formatter:on

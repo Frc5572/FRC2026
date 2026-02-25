@@ -156,7 +156,7 @@ public final class RobotContainer {
                 .target(() -> new Pose2d(
                     FieldConstants.Hub.centerHub
                         .minus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget), 0)),
-                    Rotation2d.kZero))
+                    Rotation2d.k180deg))
                 .finish()))
             .onFalse(shooter.shoot(0.0));
     }

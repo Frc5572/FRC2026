@@ -180,7 +180,8 @@ public class RobotState {
                 Logger.recordOutput("/ErrReason", "turretAngleOpt empty");
                 return Optional.empty();
             }
-            Rotation3d rotate = new Rotation3d(0.0, 0.0, turretAngleOpt.get().getRadians());
+            Rotation3d rotate = new Rotation3d(0.0, 0.0,
+                turretAngleOpt.get().plus(Rotation2d.k180deg).getRadians());
 
             Transform3d robotToTurret =
                 new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
