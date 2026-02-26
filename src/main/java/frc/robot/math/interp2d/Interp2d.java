@@ -23,14 +23,15 @@ public class Interp2d<T> {
         this.data = data;
     }
 
-    public static record QueryResult<T>(T value, boolean inHull) {
+    public static record QueryResult<T>(T value, double sdf) {
     }
 
     public QueryResult<T> query(Translation2d q) {
         double minDist = Double.MAX_VALUE;
-        ClosestPoint closestRes = new ClosestPoint();
+        ClosestPoint closestRes = null;
         int closestIndex = 0;
         boolean inside = false;
+        double sdf = 0.0;
         for (int i = 0; i < triangulation.triangles.length; i++) {
             Triangle2d tri = triangulation.triangles[i];
             var x = tri.closestPoint(q);
@@ -40,10 +41,14 @@ public class Interp2d<T> {
                 closestIndex = i;
                 if (x.inside()) {
                     inside = true;
+                    sdf = tri.sdf(q);
                     // we can return early if inside, nothing will be closer.
                     break;
                 }
             }
+        }
+        if (!inside) {
+            sdf = Math.sqrt(minDist);
         }
 
         double u = 1.0 - closestRes.v() - closestRes.w();
@@ -53,7 +58,7 @@ public class Interp2d<T> {
         return new QueryResult<T>(
             mulAdd.add(mulAdd.add(mulAdd.mul(a, u), mulAdd.mul(b, closestRes.v())),
                 mulAdd.mul(c, closestRes.w())),
-            inside);
+            sdf);
     }
 
 }

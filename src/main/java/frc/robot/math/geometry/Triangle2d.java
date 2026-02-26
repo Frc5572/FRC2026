@@ -1,5 +1,6 @@
 package frc.robot.math.geometry;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 
 /** 2D triangle made up of 3 vertices. */
@@ -97,6 +98,32 @@ public class Triangle2d {
 
     private static double dot(Translation2d a, Translation2d b) {
         return a.getX() * b.getX() + a.getY() * b.getY();
+    }
+
+    private static double sign(double d) {
+        return Math.signum(d);
+    }
+
+    private static Translation2d min(Translation2d a, Translation2d b) {
+        return new Translation2d(Math.min(a.getX(), b.getX()), Math.min(a.getY(), b.getY()));
+    }
+
+    public double sdf(Translation2d p) {
+        var e0 = b.minus(a);
+        var e1 = c.minus(b);
+        var e2 = a.minus(c);
+        var v0 = p.minus(a);
+        var v1 = p.minus(b);
+        var v2 = p.minus(c);
+        var pq0 = v0.minus(e0.times(MathUtil.clamp(dot(v0, e0) / dot(e0, e0), 0.0, 1.0)));
+        var pq1 = v1.minus(e1.times(MathUtil.clamp(dot(v1, e1) / dot(e1, e1), 0.0, 1.0)));
+        var pq2 = v2.minus(e2.times(MathUtil.clamp(dot(v2, e2) / dot(e2, e2), 0.0, 1.0)));
+        var s = sign(e0.getX() * e2.getY() - e0.getY() * e2.getX());
+        var d = min(min(
+            new Translation2d(dot(pq0, pq0), s * (v0.getX() * e0.getY() - v0.getY() * e0.getX())),
+            new Translation2d(dot(pq1, pq1), s * (v1.getX() * e1.getY() - v1.getY() * e1.getX()))),
+            new Translation2d(dot(pq2, pq2), s * (v2.getX() * e2.getY() - v2.getY() * e2.getX())));
+        return -Math.sqrt(d.getX()) * sign(d.getY());
     }
 
 }
