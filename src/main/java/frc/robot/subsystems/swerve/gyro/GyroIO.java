@@ -3,6 +3,9 @@ package frc.robot.subsystems.swerve.gyro;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Units;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.util.GenerateEmptyIO;
 
@@ -16,6 +19,7 @@ public interface GyroIO {
     public static class GyroInputs {
         public boolean connected;
         public Rotation2d yaw = Rotation2d.kZero;
+        public Measure<AngleUnit> yawAngle = Units.Degrees.of(0);
         public double yawVelocityRadPerSec;
         public Rotation2d pitch = Rotation2d.kZero;
         public double pitchVelocityRadPerSec;

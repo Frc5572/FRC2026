@@ -10,9 +10,16 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.targeting.PhotonPipelineResult;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -79,8 +86,15 @@ public final class Swerve extends SubsystemBase {
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
     public final RobotState state;
+    public final PhotonCamera camera;
 
     public double customSkidLimit = 1000.0;
+
+    private PhotonPoseEstimator photonPoseEstimator = new PhotonPoseEstimator(
+        AprilTagFieldLayout.loadFromResource(AprilTagFields.kDefaultField.m_resourceFile),
+        PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+        new Transform3d(Constants.Vision.turretCenter, Constants.Vision.turretRight));
+
 
     /**
      * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
@@ -230,7 +244,7 @@ public final class Swerve extends SubsystemBase {
         return Commands.runOnce(() -> {
             Pose2d newPose_ = newPose.get();
             io.resetPose(newPose_);
-            state.resetPose(newPose_);
+            state.resetPose(newPose_, getModulePositions(), getGyroYaw());
         });
     }
 
@@ -523,5 +537,47 @@ public final class Swerve extends SubsystemBase {
             new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYVal,
                 driveSpeeds.get().omegaRadiansPerSecond),
             state.getGlobalPoseEstimate().getRotation()));
+    }
+
+    public SwerveModulePosition[] getModulePositions() {
+        SwerveModulePosition[] positions = new SwerveModulePosition[4];
+        for (SwerveModule mod : modules) {
+            positions[mod.moduleNumber] = mod.getPosition();
+        }
+        return positions;
+    }
+
+    public Pose2d getPose() {
+        return state.getGlobalPoseEstimate();
+    }
+
+    public void updateOdometry() {
+
+        var visionResult = camera.getAllUnreadResults();
+
+        if (visionResult.isPresent()) {
+            for (var result : visionResult) {
+                PhotonPipelineResult estimate = visionResult.get();
+            }
+
+            if (estimate.targetsUsed.size() >= 2) {
+                state.addVisionObservation(Constants.Vision.cameraConstants[1], estimate);
+            }
+        }
+    }
+
+    /**
+     * Receives ChassisSpeeds directly from MoveToPose and sends them to modules.
+     */
+    public void driveRobotRelativeDirect(ChassisSpeeds speeds) {
+        ChassisSpeeds discretizedSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
+
+        SwerveModuleState[] moduleStates = Constants.Swerve.toSwerveModuleStates(discretizedSpeeds);
+
+        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.Swerve.maxSpeed);
+
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].runSetpoint(moduleStates[i]);
+        }
     }
 }

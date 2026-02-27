@@ -13,6 +13,7 @@ import frc.robot.Constants;
 @NullMarked
 public class SwerveModule {
 
+    public int moduleNumber;
     private final String inputsName;
     private final SwerveModuleIO io;
     public final SwerveModuleInputsAutoLogged inputs = new SwerveModuleInputsAutoLogged();
@@ -24,6 +25,7 @@ public class SwerveModule {
      * @param io IO implementation
      */
     public SwerveModule(int moduleId, SwerveModuleIO io) {
+        this.moduleNumber = moduleId;
         this.inputsName = "Swerve/Module" + moduleId;
         this.io = io;
     }

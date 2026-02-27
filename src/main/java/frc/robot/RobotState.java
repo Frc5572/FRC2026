@@ -12,6 +12,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.PoseEstimator;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -53,6 +54,8 @@ public class RobotState {
 
     /** Whether the pose estimator has been initialized from vision */
     private boolean initted = false;
+
+    private SwerveDrivePoseEstimator swerveOdometry = null;
 
     private final PoseEstimator<SwerveModulePosition[]> visionAdjustedOdometry;
 
@@ -100,7 +103,8 @@ public class RobotState {
      *
      * @param pose the desired robot pose in field coordinates
      */
-    public void resetPose(Pose2d pose) {
+    public void resetPose(Pose2d pose, SwerveModulePosition[] positions, Rotation2d gyroYaw) {
+        swerveOdometry.resetPosition(gyroYaw, positions, pose);
         this.visionAdjustedOdometry.resetPose(pose);
         rotationBuffer.clear();
         rotationBuffer.getInternalBuffer().clear();
