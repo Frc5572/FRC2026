@@ -8,8 +8,6 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -59,8 +57,7 @@ import frc.robot.viz.RobotViz;
 @NullMarked
 public final class RobotContainer {
 
-    private final AutoChooser autoChooser;
-    public static ShuffleboardTab autoTab = Shuffleboard.getTab("Main Driver");
+    private final AutoChooser autoChooser = new AutoChooser();
 
 
     /* Controllers */
@@ -141,7 +138,6 @@ public final class RobotContainer {
         }
 
 
-        autoChooser = new AutoChooser();
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
 
 
