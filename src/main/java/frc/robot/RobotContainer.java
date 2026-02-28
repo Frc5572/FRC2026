@@ -9,7 +9,6 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -50,7 +49,6 @@ import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
-import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
 
 
@@ -159,18 +157,12 @@ public final class RobotContainer {
         driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
 
-        ShotDataHelper helper = new ShotDataHelper();
-
         double[] flywheelSpeed = new double[] {60.0};
         double[] hoodAngle = new double[] {10.0};
 
-        driver.rightTrigger().whileTrue(shooter.shoot(() -> flywheelSpeed[0]).alongWith(
-            adjustableHood.setGoal(() -> Degrees.of(hoodAngle[0])),
-            swerve.moveToPose().target(() -> new Pose2d(
-                FieldConstants.Hub.centerHub.minus(new Translation2d(
-                    Units.feetToMeters(helper.distanceFromTarget), Rotation2d.fromDegrees(-45))),
-                Rotation2d.k180deg.plus(Rotation2d.fromDegrees(-45)))).autoRoutine(null).maxSpeed(5)
-                .flipForRed(true).translationTolerance(0.05).rotationTolerance(0.5).finish()))
+        driver.rightTrigger()
+            .whileTrue(shooter.shoot(() -> flywheelSpeed[0])
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(hoodAngle[0]))))
             .onFalse(shooter.shoot(0.0));
 
         driver.leftBumper().whileTrue(turret.goToAngleFieldRelative(() -> {
