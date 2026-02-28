@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -48,8 +49,6 @@ import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
-import frc.robot.subsystems.vision.color.ColorDetection;
-import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
@@ -62,14 +61,12 @@ import frc.robot.viz.RobotViz;
  */
 @NullMarked
 public final class RobotContainer {
-
-    private final AutoChooser autoChooser = new AutoChooser();
-
-
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
     public final CommandXboxController test = new CommandXboxController(3);
+    private final AutoChooser autoChooser = new AutoChooser();
+    private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
     private final Swerve swerve;
@@ -78,7 +75,6 @@ public final class RobotContainer {
     private final Turret turret;
     private final Shooter shooter;
     private final Intake intake;
-    private final ColorDetection colorDetection;
     private final Climber climber;
     private final Indexer indexer;
     private final RobotViz viz;
@@ -88,6 +84,8 @@ public final class RobotContainer {
     /**
      */
     public RobotContainer(RobotRunType runtimeType) {
+        SmartDashboard.putNumber("Auto Shoot X", 0.0);
+        SmartDashboard.putNumber("Auto Shoot Y", 0.0);
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -100,7 +98,6 @@ public final class RobotContainer {
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
 
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
             case kSimulation:
                 FuelSim.getInstance().spawnStartingFuel();
@@ -127,7 +124,6 @@ public final class RobotContainer {
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
 
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
             default:
                 sim = null;
@@ -140,7 +136,6 @@ public final class RobotContainer {
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
 
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
         }
 
@@ -152,10 +147,21 @@ public final class RobotContainer {
 
         DeviceDebug.initialize();
 
+        // AUTO STUFF
+        autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
+            climber, intake, indexer, shooter, turret);
+        autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
+        autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
+        autoChooser.addCmd("Do Nothing", Commands::none);
+        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
+        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+        // END AUTO STUFF
 
+        // DEFAULT COMMANDS
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
+        // BUTTON BINDINGS
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
         // driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
@@ -163,9 +169,9 @@ public final class RobotContainer {
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.4))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
-        driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
-        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
-        driver.x().whileTrue(intake.intakeBalls(0.7));
+        driver.a().onTrue(intake.extendHopper());
+        driver.b().onTrue(intake.retractHopper());
+        driver.x().whileTrue(intake.intakeBalls());
 
         double[] flywheelSpeed = new double[] {60.0};
         double[] hoodAngle = new double[] {10.0};

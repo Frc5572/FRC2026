@@ -2,7 +2,9 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -61,9 +63,9 @@ public class Intake extends SubsystemBase {
         // io.setLeftHopperVoltage(0);
         // io.setEncoderPosition(0);
         // } else
-        {
-            io.setLeftHopperPosition(targetRotations);
-        }
+        // {
+        io.setLeftHopperPosition(targetRotations);
+        // }
         io.setRightHopperPosition(targetRotations);
     }
 
@@ -79,12 +81,15 @@ public class Intake extends SubsystemBase {
     public Command extendHopper() {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
-        return runOnce(() -> {
+        return startEnd(() -> {
             counts[0] = 0;
             counts[1] = 0;
-        }).andThen(run(() -> {
             io.setLeftHopperVoltage(3);
             io.setRightHopperVoltage(3);
+            SmartDashboard.putBoolean("Intake/HopperExtended", true);
+        }, () -> {
+            io.setLeftHopperVoltage(0);
+            io.setRightHopperVoltage(0);
         }).until(() -> {
             double left = inputs.leftHopperPositionRotations;
             double right = inputs.leftHopperPositionRotations;
@@ -103,22 +108,22 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
-        })).andThen(runOnce(() -> {
-            io.setLeftHopperVoltage(0);
-            io.setRightHopperVoltage(0);
-        }));
+        });
     }
 
     /** Retracts hopper */
     public Command retractHopper() {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
-        return runOnce(() -> {
+        return startEnd(() -> {
             counts[0] = 0;
             counts[1] = 0;
-        }).andThen(run(() -> {
             io.setLeftHopperVoltage(-5);
             io.setRightHopperVoltage(-5);
+            SmartDashboard.putBoolean("Intake/HopperExtended", false);
+        }, () -> {
+            io.setLeftHopperVoltage(0);
+            io.setRightHopperVoltage(0);
         }).until(() -> {
             double left = inputs.leftHopperPositionRotations;
             double right = inputs.leftHopperPositionRotations;
@@ -137,14 +142,19 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
-        })).andThen(runOnce(() -> {
-            io.setLeftHopperVoltage(0);
-            io.setRightHopperVoltage(0);
-        }));
+        });
     }
 
     /** Run intake wheels */
     public Command intakeBalls(double speed) {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
+    }
+
+    public Command intakeBalls() {
+        return runEnd(() -> runIntakeOnly(0.7), () -> runIntakeOnly(0));
+    }
+
+    public Command jerkIntake() {
+        return Commands.none();
     }
 }
