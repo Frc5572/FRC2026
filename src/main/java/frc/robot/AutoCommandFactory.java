@@ -66,8 +66,8 @@ public class AutoCommandFactory {
                 Meters.of(0.6942147612571716), new Rotation2d(Radians.of(-1.1966918933365922))))
             .autoRoutine(routine).finish();
 
-        routine.active().onTrue(travelToNeutralZone
-            .alongWith(intake.extendHopper().withTimeout(0.5).andThen(intake.intakeBalls(0.7))));
+        routine.active().onTrue(
+            travelToNeutralZone.alongWith(intake.extendHopper().andThen(intake.intakeBalls(0.7))));
 
         travelToNeutralZone.done().onTrue(slam1);
         slam1.done().onTrue(slam2);
@@ -98,11 +98,11 @@ public class AutoCommandFactory {
                 Meters.of(0.6942147612571716), new Rotation2d(Radians.of(-1.1966918933365922))))
             .autoRoutine(routine).finish();
 
-        routine.active().onTrue(travelToNeutralZone
-            .alongWith(intake.extendHopper().withTimeout(0.5), intake.intakeBalls(0.7)));
+        routine.active().onTrue(
+            travelToNeutralZone.alongWith(intake.extendHopper().andThen(intake.intakeBalls(0.7))));
         travelToNeutralZone.done().onTrue(lawnmower);
-        lawnmower.done().onTrue(frontTrench.alongWith(intake.retractHopper().withTimeout(0.5),
-            intake.intakeBalls(0.0)));
+        lawnmower.done().onTrue(frontTrench.alongWith(intake.retractHopper()
+            .andThen(intake.idle().withInterruptBehavior(InterruptionBehavior.kCancelIncoming))));
         frontTrench.done().onTrue(pointAtHub);
 
         return routine;

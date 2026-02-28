@@ -14,8 +14,10 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -150,6 +152,10 @@ public final class RobotContainer {
 
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
+        RobotModeTriggers.autonomous()
+            .whileTrue((autoChooser.selectedCommandScheduler())
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .andThen(Commands.runOnce(() -> swerve.stop())));
 
         DeviceDebug.initialize();
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
