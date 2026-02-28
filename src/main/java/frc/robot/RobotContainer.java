@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
@@ -52,6 +53,7 @@ import frc.robot.util.DeviceDebug;
 import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
 
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -78,6 +80,7 @@ public final class RobotContainer {
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
+    private final Field2d field = new Field2d();
 
     /**
      */
@@ -246,6 +249,7 @@ public final class RobotContainer {
         viz.periodic();
         flywheelSpeedFilterValue = flywheelSpeedFilter
             .calculate(shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+        field.setRobotPose(swerve.state.getGlobalPoseEstimate());
     }
 
     private void writeTimings(double[] timings) {

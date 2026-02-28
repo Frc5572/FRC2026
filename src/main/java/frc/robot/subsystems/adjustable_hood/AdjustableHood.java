@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -31,6 +32,8 @@ public class AdjustableHood extends SubsystemBase {
         Logger.processInputs("Adjustable Hood", inputs);
 
         Logger.recordOutput("AdjustableHood/ActualAngle (Deg)", inputs.relativeAngle.in(Degrees));
+        SmartDashboard.putNumber("AdjustableHood/ActualAngle (Deg)",
+            inputs.relativeAngle.in(Degrees));
     }
 
     public Command moveWithVoltage(double voltage) {
