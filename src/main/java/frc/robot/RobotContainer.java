@@ -131,6 +131,11 @@ public final class RobotContainer {
 
                 break;
         }
+
+
+        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
+
+
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
