@@ -2,7 +2,9 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -61,9 +63,9 @@ public class Intake extends SubsystemBase {
         // io.setLeftHopperVoltage(0);
         // io.setEncoderPosition(0);
         // } else
-        {
-            io.setLeftHopperPosition(targetRotations);
-        }
+        // {
+        io.setLeftHopperPosition(targetRotations);
+        // }
         io.setRightHopperPosition(targetRotations);
     }
 
@@ -76,7 +78,11 @@ public class Intake extends SubsystemBase {
     }
 
     public Command extendHopper() {
-        return run(() -> runHopper(Constants.IntakeConstants.hopperOutDistance.in(Meters)));
+        Distance distance = Constants.IntakeConstants.hopperOutDistance;
+        return run(() -> runHopper(distance.in(Meters))).until(() -> {
+            return this.inputs.leftHopperPosition.equals(distance)
+                && this.inputs.rightHopperPosition.equals(distance);
+        }).withTimeout(2.0);
     }
 
     public Command retractHopper() {
@@ -85,5 +91,9 @@ public class Intake extends SubsystemBase {
 
     public Command intakeBalls(double speed) {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
+    }
+
+    public Command jerkIntake() {
+        return Commands.none();
     }
 }
