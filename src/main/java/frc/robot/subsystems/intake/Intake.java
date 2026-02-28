@@ -76,11 +76,17 @@ public class Intake extends SubsystemBase {
     }
 
     public Command extendHopper() {
-        return run(() -> runHopper(Constants.IntakeConstants.hopperOutDistance.in(Meters)));
+        return run(() -> {
+            io.setLeftHopperVoltage(3);
+            io.setRightHopperVoltage(3);
+        });
     }
 
     public Command retractHopper() {
-        return run(() -> runHopper(0.0));
+        return run(() -> {
+            io.setLeftHopperVoltage(-5);
+            io.setRightHopperVoltage(-5);
+        });
     }
 
     public Command intakeBalls(double speed) {
