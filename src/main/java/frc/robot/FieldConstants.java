@@ -10,7 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.robot.math.Rectangle;
+import frc.robot.math.geometry.Rectangle;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

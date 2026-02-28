@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -16,7 +17,7 @@ import frc.robot.Constants;
  */
 public final class Shooter extends SubsystemBase {
     private final ShooterIO io;
-    private final ShooterInputsAutoLogged inputs = new ShooterInputsAutoLogged();
+    public final ShooterInputsAutoLogged inputs = new ShooterInputsAutoLogged();
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.1, DebounceType.kFalling);
 
     /**
@@ -56,5 +57,10 @@ public final class Shooter extends SubsystemBase {
     /** Shoot at a given velocity */
     public Command shoot(double velocity) {
         return run(() -> setVelocity(velocity));
+    }
+
+    /** Shoot at a given velocity */
+    public Command shoot(DoubleSupplier velocity) {
+        return run(() -> setVelocity(velocity.getAsDouble()));
     }
 }

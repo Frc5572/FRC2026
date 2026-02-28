@@ -79,28 +79,73 @@ public class Intake extends SubsystemBase {
 
     /** Extends hopper */
     public Command extendHopper() {
+        int[] counts = new int[] {0, 0};
+        double[] prev = new double[] {0.0, 0.0};
         return startEnd(() -> {
+            counts[0] = 0;
+            counts[1] = 0;
             io.setLeftHopperVoltage(3);
             io.setRightHopperVoltage(3);
             SmartDashboard.putBoolean("Intake/HopperExtended", true);
         }, () -> {
             io.setLeftHopperVoltage(0);
             io.setRightHopperVoltage(0);
-        }).withTimeout(0.7);
+        }).until(() -> {
+            double left = inputs.leftHopperPositionRotations;
+            double right = inputs.leftHopperPositionRotations;
+            boolean leftStopped = left < prev[0] + 0.01;
+            boolean rightStopped = right < prev[1] + 0.01;
+            prev[0] = left;
+            prev[1] = right;
+            if (leftStopped) {
+                counts[0]++;
+            } else {
+                counts[0] = 0;
+            }
+            if (rightStopped) {
+                counts[1]++;
+            } else {
+                counts[1] = 0;
+            }
+            return counts[0] > 5 && counts[1] > 5;
+        });
     }
 
-    /** Retacts hopper */
+    /** Retracts hopper */
     public Command retractHopper() {
+        int[] counts = new int[] {0, 0};
+        double[] prev = new double[] {0.0, 0.0};
         return startEnd(() -> {
+            counts[0] = 0;
+            counts[1] = 0;
             io.setLeftHopperVoltage(-5);
             io.setRightHopperVoltage(-5);
             SmartDashboard.putBoolean("Intake/HopperExtended", false);
         }, () -> {
             io.setLeftHopperVoltage(0);
             io.setRightHopperVoltage(0);
-        }).withTimeout(0.7);
+        }).until(() -> {
+            double left = inputs.leftHopperPositionRotations;
+            double right = inputs.leftHopperPositionRotations;
+            boolean leftStopped = left > prev[0] - 0.01;
+            boolean rightStopped = right > prev[1] - 0.01;
+            prev[0] = left;
+            prev[1] = right;
+            if (leftStopped) {
+                counts[0]++;
+            } else {
+                counts[0] = 0;
+            }
+            if (rightStopped) {
+                counts[1]++;
+            } else {
+                counts[1] = 0;
+            }
+            return counts[0] > 5 && counts[1] > 5;
+        });
     }
 
+    /** Run intake wheels */
     public Command intakeBalls(double speed) {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
     }
