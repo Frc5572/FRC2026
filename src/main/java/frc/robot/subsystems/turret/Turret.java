@@ -164,21 +164,35 @@ public class Turret extends SubsystemBase {
      */
     public void setGoal(Rotation2d targetAngle, AngularVelocity velocity) {
         targetAngle = normalize(targetAngle);
-        if (targetAngle.getRadians() > Constants.Turret.maxAngle.getRadians()) {
-            targetAngle = Constants.Turret.maxAngle;
-            if (velocity.in(RotationsPerSecond) > 0.0) {
-                velocity = RotationsPerSecond.zero();
-            }
-        }
-        if (targetAngle.getRadians() < Constants.Turret.minAngle.getRadians()) {
-            targetAngle = Constants.Turret.minAngle;
-            if (velocity.in(RotationsPerSecond) < 0.0) {
-                velocity = RotationsPerSecond.zero();
-            }
-        }
-        if (hasSynced) {
+        if (isValidAngle(targetAngle) || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(1)))
+            || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(-1)))) {
             io.setTargetAngle(targetAngle, velocity);
         }
+        double minAngleDiff =
+            fmod((targetAngle.getDegrees() - Constants.Turret.minAngle.getDegrees()) + 180, 360)
+                - 180;
+        double maxAngleDiff =
+            fmod((targetAngle.getDegrees() - Constants.Turret.maxAngle.getDegrees()) + 180, 360)
+                - 180;
+        if (Math.abs(minAngleDiff) < Math.abs(maxAngleDiff)) {
+            io.setTargetAngle(Constants.Turret.minAngle, RotationsPerSecond.of(0));
+        } else {
+            io.setTargetAngle(Constants.Turret.maxAngle, RotationsPerSecond.of(0));
+        }
+    }
+
+    private boolean isValidAngle(Rotation2d targetAngle) {
+        if (targetAngle.getRadians() > Constants.Turret.maxAngle.getRadians()) {
+            return false;
+        }
+        if (targetAngle.getRadians() < Constants.Turret.minAngle.getRadians()) {
+            return false;
+        }
+        return true;
+    }
+
+    private static double fmod(double a, double n) {
+        return a - Math.floor(a / n) * n;
     }
 
     /** Aim turret in robot frame */
