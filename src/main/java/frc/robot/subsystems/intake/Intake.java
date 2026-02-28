@@ -75,6 +75,7 @@ public class Intake extends SubsystemBase {
         });
     }
 
+    /** Extends hopper */
     public Command extendHopper() {
         return run(() -> {
             io.setLeftHopperVoltage(3);
@@ -82,6 +83,7 @@ public class Intake extends SubsystemBase {
         });
     }
 
+    /** Retacts hopper */
     public Command retractHopper() {
         return run(() -> {
             io.setLeftHopperVoltage(-5);
