@@ -30,6 +30,7 @@ import frc.robot.subsystems.vision.CameraConstantsBuilder;
 import frc.robot.util.tunable.FlywheelConstants;
 import frc.robot.util.tunable.FlywheelConstantsBuilder;
 import frc.robot.util.tunable.ModuleConstants;
+import frc.robot.util.tunable.ModuleConstants.ModuleKind;
 import frc.robot.util.tunable.ModuleConstantsBuilder;
 import frc.robot.util.tunable.PIDConstants;
 import frc.robot.util.tunable.PIDConstantsBuilder;
@@ -116,7 +117,7 @@ public final class Constants {
         /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(21.8);
         /** Distance from the center of the wheel to the ground */
-        public static final Distance wheelRadius = Inches.of(1.913);
+        public static final Distance wheelRadius = Inches.of(2.678 / 2.0);
         /** Diameter of the wheels, twice the radius */
         public static final Distance wheelDiameter = wheelRadius.times(2);
         /** Circumference of the wheels */
@@ -142,12 +143,6 @@ public final class Constants {
          */
         public static final SwerveDriveKinematics swerveKinematics =
             new SwerveDriveKinematics(swerveTranslations);
-
-        /* Module Gear Ratios */
-        /** Swerve Drive Motor Gear Ratio */
-        public static final double driveGearRatio = (8.14 / 1.0); // MK4i L1
-        /** Swerve Angle Motor Gear Ratio */
-        public static final double angleGearRatio = ((150.0 / 7.0) / 1.0); // (150 / 7) : 1
 
         /* Motor Inverts */
         public static final InvertedValue angleMotorInvert = InvertedValue.Clockwise_Positive;
@@ -194,8 +189,8 @@ public final class Constants {
                 .kP(0.0012)
                 .kI(0.0)
                 .kD(0.0)
-                .kV(1.004 / 6.536)
-                .kS(0.185)
+                .kV(0.990 / 6.536)
+                .kS(0.251)
                 .kG(0.0)
                 .kA(0.0)
                 .finish();
@@ -231,28 +226,28 @@ public final class Constants {
         // @formatter:off
         public static final ModuleConstants[] modulesConstants = new ModuleConstants[] {
             // Front Left Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4i)
                 .driveMotorId(1)
                 .angleMotorId(0)
                 .canCoderId(1)
                 .angleOffset(Rotation2d.fromRotations(0.106445))
                 .finish(),
             // Front Right Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4i)
                 .driveMotorId(7)
                 .angleMotorId(6)
                 .canCoderId(2)
                 .angleOffset(Rotation2d.fromRotations(0.409668))
                 .finish(),
             // Back Left Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4n)
                 .driveMotorId(2)
                 .angleMotorId(3)
                 .canCoderId(3)
                 .angleOffset(Rotation2d.fromRotations(0.474121))
                 .finish(),
             // Back Right Module
-            new ModuleConstantsBuilder()
+            new ModuleConstantsBuilder(ModuleKind.Mk4n)
                 .driveMotorId(5)
                 .angleMotorId(4)
                 .canCoderId(4)
