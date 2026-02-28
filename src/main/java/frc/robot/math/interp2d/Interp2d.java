@@ -12,10 +12,11 @@ public class Interp2d<T> {
     private final DelaunayTriangulation triangulation;
     private final MulAdd<T> mulAdd;
     private final T[] data;
+    private final Translation2d[] points;
 
     public Interp2d(T[] data, MulAdd<T> mulAdd, ToDoubleFunction<T> xFunc,
         ToDoubleFunction<T> yFunc) {
-        var points = Arrays.stream(data)
+        this.points = Arrays.stream(data)
             .map(item -> new Translation2d(xFunc.applyAsDouble(item), yFunc.applyAsDouble(item)))
             .toArray(Translation2d[]::new);
         this.triangulation = new DelaunayTriangulation(points);
@@ -59,6 +60,10 @@ public class Interp2d<T> {
             mulAdd.add(mulAdd.add(mulAdd.mul(a, u), mulAdd.mul(b, closestRes.v())),
                 mulAdd.mul(c, closestRes.w())),
             sdf);
+    }
+
+    public BilinearSurrogate<T> surrogate(Range xRange, Range yRange) {
+        return new BilinearSurrogate<T>(xRange, yRange, this::query, this.mulAdd);
     }
 
 }
