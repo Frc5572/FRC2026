@@ -2,12 +2,9 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import java.util.function.Consumer;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import choreo.auto.AutoChooser;
-import choreo.auto.AutoFactory;
-import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -62,7 +59,6 @@ import frc.robot.viz.RobotViz;
 @NullMarked
 public final class RobotContainer {
 
-    private final AutoFactory autoFactory;
     private final AutoChooser autoChooser;
     public static ShuffleboardTab autoTab = Shuffleboard.getTab("Main Driver");
 
@@ -143,14 +139,9 @@ public final class RobotContainer {
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
         }
-        autoFactory = new AutoFactory(swerve.state::getGlobalPoseEstimate, (newPose) -> {
-        }, (Consumer<SwerveSample>) (SwerveSample swerveSample) -> {
-        }, true, swerve, (traj, b) -> {
-        });
-        AutoCommandFactory autos = new AutoCommandFactory(autoFactory, adjustableHood, climber,
-            indexer, intake, shooter, swerve, turret);
+
+
         autoChooser = new AutoChooser();
-        autoChooser.addRoutine("Example", autos::example);
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
 
 
