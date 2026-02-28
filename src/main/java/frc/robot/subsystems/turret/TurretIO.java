@@ -11,6 +11,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.GenerateEmptyIO;
+import frc.robot.util.tunable.PIDConstants;
 
 /**
  * Hardware abstraction layer for the turret subsystem.
@@ -42,7 +43,9 @@ public interface TurretIO {
     /**
      * Commands the turret to move toward the specified target angle.
      */
-    public void setTargetAngle(Angle angle);
+    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity);
 
     public void resetPosition(Angle angle);
+
+    public void setPID(PIDConstants constants);
 }
