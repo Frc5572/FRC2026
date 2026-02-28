@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -73,6 +74,8 @@ public final class RobotContainer {
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     private final Field2d field = new Field2d();
+    private final AutoChooser autoChooser = new AutoChooser();
+    private final AutoCommandFactory autoCommandFactory;
 
     /**
      */
@@ -135,7 +138,10 @@ public final class RobotContainer {
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
-
+        autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
+            climber, intake, indexer, shooter, turret);
+        autoChooser.addRoutine("peashooter", autoCommandFactory::peashooter);
+        autoChooser.addCmd("Do Nothing", Commands::none);
 
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
