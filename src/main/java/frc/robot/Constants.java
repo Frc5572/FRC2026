@@ -592,4 +592,10 @@ public final class Constants {
             
         // @formatter:on
     }
+    public static class DashboardValues {
+        // Auto
+        public static final String autoChooser = "Dashboard/Auto/Auto Chooser";
+
+
+    }
 }

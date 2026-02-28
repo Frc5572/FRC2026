@@ -16,6 +16,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.ActiveHub;
 import frc.robot.util.Elastic;
@@ -26,6 +27,7 @@ import frc.robot.util.PhoenixSignals;
  */
 public class Robot extends LoggedRobot {
     private RobotContainer robotContainer;
+    private Command autoChooser;
 
     /**
      * Robnot Run type

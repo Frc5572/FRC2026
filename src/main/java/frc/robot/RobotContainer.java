@@ -4,9 +4,13 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -55,6 +59,11 @@ import frc.robot.viz.RobotViz;
  */
 @NullMarked
 public final class RobotContainer {
+
+    private final AutoFactory autoFactory;
+    private final AutoChooser autoChooser;
+    public static ShuffleboardTab autoTab = Shuffleboard.getTab("Main Driver");
+
 
     /* Controllers */
     public final CommandXboxController driver =
@@ -132,6 +141,14 @@ public final class RobotContainer {
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
         }
+        autoFactory = new AutoFactory(null, null, null, true, swerve);
+        AutoCommandFactory autos = new AutoCommandFactory(autoFactory, adjustableHood, climber,
+            indexer, intake, shooter, swerve, turret);
+        autoChooser = new AutoChooser();
+        autoChooser.addRoutine("Example", autos::example);
+        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
+
+
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
@@ -163,6 +180,7 @@ public final class RobotContainer {
 
         SmartDashboard.putData("Field", field);
     }
+
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {

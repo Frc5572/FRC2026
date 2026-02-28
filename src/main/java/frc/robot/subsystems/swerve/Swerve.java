@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -345,6 +346,16 @@ public final class Swerve extends SubsystemBase {
             var speeds = limiter.limit(new ChassisSpeeds(), customSkidLimit);
             return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.1;
         }).andThen(this.emergencyStop());
+    }
+
+    /**
+     * Get Position on field from Odometry
+     *
+     * @return Pose2d on the field
+     */
+    @AutoLogOutput(key = "Odometry/Robot")
+    public Pose2d getPose() {
+        return state.getGlobalPoseEstimate();
     }
 
     /**
