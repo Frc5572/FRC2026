@@ -2,14 +2,19 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -152,25 +157,78 @@ public final class RobotContainer {
         driver.b().onTrue(intake.squeezeBalls(0.7)).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
 
-        test.b().whileTrue(turret.goToAngleRobotRelative(() -> {
-            double x = test.getLeftX();
-            double y = -test.getLeftY();
-            Rotation2d target = new Rotation2d(x, y);
-            Logger.recordOutput("test/turretTarget", target);
-            return target;
-        }));
-        test.a().whileTrue(turret.characterization());
         ShotDataHelper helper = new ShotDataHelper();
-        driver.rightTrigger().whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
-            adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle)),
-            swerve.moveToPose()
+
+        double[] flywheelSpeed = new double[] {60.0};
+        double[] hoodAngle = new double[] {10.0};
+
+        driver.rightTrigger().whileTrue(shooter.shoot(() -> flywheelSpeed[0])
+            .alongWith(adjustableHood.setGoal(() -> Degrees.of(hoodAngle[0])), swerve.moveToPose()
                 .target(() -> new Pose2d(
                     FieldConstants.Hub.centerHub
                         .minus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget), 0)),
                     Rotation2d.k180deg))
                 .finish()))
             .onFalse(shooter.shoot(0.0));
+
+        boolean[] changingFlywheelSpeed = new boolean[] {false};
+        test.b().onTrue(Commands.runOnce(() -> {
+            changingFlywheelSpeed[0] = true;
+        }));
+        test.x().onTrue(Commands.runOnce(() -> {
+            changingFlywheelSpeed[0] = false;
+        }));
+
+        double[] timings = new double[] {0.0, -1.0};
+        new Trigger(() -> shooter.inputs.shooterAngularVelocity1
+            .in(RotationsPerSecond) < flywheelSpeedFilterValue - 10.0)
+                .onTrue(Commands.runOnce(() -> {
+                    timings[0] = Timer.getFPGATimestamp();
+                    writeTimings(timings);
+                }));
+        test.a().onTrue(Commands.runOnce(() -> {
+            timings[1] = Timer.getFPGATimestamp();
+            writeTimings(timings);
+        }));
+
+        test.povUp().onTrue(Commands.runOnce(() -> {
+            if (changingFlywheelSpeed[0]) {
+                flywheelSpeed[0] += 5.0;
+            } else {
+                hoodAngle[0] += 1.0;
+            }
+            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+        }));
+        test.povDown().onTrue(Commands.runOnce(() -> {
+            if (changingFlywheelSpeed[0]) {
+                flywheelSpeed[0] -= 5.0;
+            } else {
+                hoodAngle[0] -= 1.0;
+            }
+            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+        }));
+        test.povRight().onTrue(Commands.runOnce(() -> {
+            if (changingFlywheelSpeed[0]) {
+                flywheelSpeed[0] += 0.5;
+            } else {
+                hoodAngle[0] += 0.1;
+            }
+            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+        }));
+        test.povLeft().onTrue(Commands.runOnce(() -> {
+            if (changingFlywheelSpeed[0]) {
+                flywheelSpeed[0] -= 0.5;
+            } else {
+                hoodAngle[0] -= 0.1;
+            }
+            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+        }));
+        writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+        writeTimings(timings);
     }
+
+    private LinearFilter flywheelSpeedFilter = LinearFilter.movingAverage(10);
+    private double flywheelSpeedFilterValue = 0.0;
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
@@ -180,6 +238,19 @@ public final class RobotContainer {
             sim.update();
         }
         viz.periodic();
+        flywheelSpeedFilterValue = flywheelSpeedFilter
+            .calculate(shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+    }
+
+    private void writeTimings(double[] timings) {
+        Logger.recordOutput("/ShotData/Timings/start", timings[0]);
+        Logger.recordOutput("/ShotData/Timings/end", timings[1]);
+        Logger.recordOutput("/ShotData/Timings/diff", timings[1] - timings[0]);
+    }
+
+    private void writeShotConf(double flywheelSpeed, double hoodAngle) {
+        Logger.recordOutput("/ShotData/flywheelSpeed", flywheelSpeed);
+        Logger.recordOutput("/ShotData/hoodAngle", hoodAngle);
     }
 }
 

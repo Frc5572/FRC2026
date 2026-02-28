@@ -15,7 +15,7 @@ import frc.robot.Constants;
  */
 public final class Shooter extends SubsystemBase {
     private final ShooterIO io;
-    private final ShooterInputsAutoLogged inputs = new ShooterInputsAutoLogged();
+    public final ShooterInputsAutoLogged inputs = new ShooterInputsAutoLogged();
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.1, DebounceType.kFalling);
 
     /**
