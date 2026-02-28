@@ -7,6 +7,7 @@ import frc.robot.math.geometry.DelaunayTriangulation;
 import frc.robot.math.geometry.Triangle2d;
 import frc.robot.math.geometry.Triangle2d.ClosestPoint;
 
+/** Interpolate between two independent parameters. */
 public class Interp2d<T> {
 
     private final DelaunayTriangulation triangulation;
@@ -14,6 +15,7 @@ public class Interp2d<T> {
     private final T[] data;
     private final Translation2d[] points;
 
+    /** Create new Interp2d. */
     public Interp2d(T[] data, MulAdd<T> mulAdd, ToDoubleFunction<T> xFunc,
         ToDoubleFunction<T> yFunc) {
         this.points = Arrays.stream(data)
@@ -27,6 +29,7 @@ public class Interp2d<T> {
     public static record QueryResult<T>(T value, double sdf) {
     }
 
+    /** Get data at a given x,y point */
     public QueryResult<T> query(Translation2d q) {
         double minDist = Double.MAX_VALUE;
         ClosestPoint closestRes = null;
@@ -62,6 +65,7 @@ public class Interp2d<T> {
             sdf);
     }
 
+    /** Create a surrogate. */
     public BilinearSurrogate<T> surrogate(Range xRange, Range yRange) {
         return new BilinearSurrogate<T>(xRange, yRange, this::query, this.mulAdd);
     }

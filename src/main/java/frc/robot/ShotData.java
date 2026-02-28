@@ -7,8 +7,10 @@ import frc.robot.math.interp2d.MulAdd;
 import frc.robot.math.interp2d.Range;
 import frc.robot.math.interp2d.RangeOf;
 
+/** Data for flywheel, distance, and hood angle that results in a successful shot. */
 public class ShotData {
 
+    /** Raw data from testing. */
     // @formatter:off
     public static final ShotEntry[] entries = new ShotEntry[] {
         new ShotEntry(6.0, 60.0, 6.0, 1.63),
@@ -59,10 +61,11 @@ public class ShotData {
 
     };
 
+    /** Entry into the shot data table */
     public static final record ShotEntry(double distanceMeters, double flywheelSpeedRps,
         double hoodAngleDeg, double timeOfFlight) {
 
-        /** Vertical Exit velocity */
+        /** Vertical exit velocity */
         public double verticalVelocity() {
             // z0 + v0 * t - 1/2 * g * t^2 = z1
             // v0 = (z1 - z0 + 1/2 * g * t^2) / t
@@ -71,7 +74,7 @@ public class ShotData {
                 + 0.5 * 9.81 * timeOfFlight * timeOfFlight) / timeOfFlight;
         }
 
-        /** Horizontal Exit velocity */
+        /** Horizontal exit velocity */
         public double horizontalVelocity() {
             return distanceMeters / timeOfFlight;
         }

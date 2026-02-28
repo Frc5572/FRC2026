@@ -5,13 +5,15 @@ import java.util.Arrays;
 import java.util.List;
 import edu.wpi.first.math.geometry.Translation2d;
 
+/** Performs Delaunay Triangulation on a set of points, maintaining indices for associated data. */
 public class DelaunayTriangulation {
 
-
     public final Triangle2d[] triangles;
-
     public final int[] indices;
 
+    /**
+     * Performs Delaunay Triangulation on a set of points, maintaining indices for associated data.
+     */
     public DelaunayTriangulation(Translation2d[] points) {
         var triangulation = triangulate(Arrays.asList(points));
         this.triangles = new Triangle2d[triangulation.size()];

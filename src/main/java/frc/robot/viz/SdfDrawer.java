@@ -10,8 +10,10 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N4;
 import frc.robot.math.interp2d.Range;
 
+/** Utility for drawing sdf to an image. */
 public class SdfDrawer {
 
+    /** Utility for drawing sdf to an image. */
     public static BufferedImage drawSdf(Range xRange, Range yRange,
         ToDoubleFunction<Translation2d> sdf, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);

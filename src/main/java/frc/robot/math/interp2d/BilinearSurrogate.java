@@ -4,6 +4,7 @@ import java.util.function.Function;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.math.interp2d.Interp2d.QueryResult;
 
+/** Bilinear intrpolation of an {@link Interp2d}. */
 public class BilinearSurrogate<T> {
 
     private final Range xRange;
@@ -12,6 +13,7 @@ public class BilinearSurrogate<T> {
     private final double[][] sdf;
     private final MulAdd<T> mulAdd;
 
+    /** Bilinear intrpolation of an {@link Interp2d}. */
     @SuppressWarnings("unchecked")
     public BilinearSurrogate(Range xRange, Range yRange,
         Function<Translation2d, QueryResult<T>> eval, MulAdd<T> mulAdd) {
@@ -38,6 +40,7 @@ public class BilinearSurrogate<T> {
         }
     }
 
+    /** Get data at a given x,y point */
     public QueryResult<T> query(Translation2d q) {
         double x = q.getX();
         double y = q.getY();

@@ -109,7 +109,7 @@ public class Intake extends SubsystemBase {
         }));
     }
 
-    /** Retacts hopper */
+    /** Retracts hopper */
     public Command retractHopper() {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
@@ -143,13 +143,7 @@ public class Intake extends SubsystemBase {
         }));
     }
 
-    public Command squeezeBalls(double speed) {
-        return run(() -> {
-            runHopper(0.0);
-            runIntakeOnly(speed);
-        });
-    }
-
+    /** Run intake wheels */
     public Command intakeBalls(double speed) {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
     }

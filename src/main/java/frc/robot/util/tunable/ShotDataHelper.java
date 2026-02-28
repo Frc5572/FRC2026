@@ -1,5 +1,6 @@
 package frc.robot.util.tunable;
 
+/** Utility tunable for testing out different shot parameters. */
 public class ShotDataHelper implements Tunable {
 
     /** Hood angle in degrees */
