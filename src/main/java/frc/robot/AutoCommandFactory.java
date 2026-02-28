@@ -118,25 +118,27 @@ public class AutoCommandFactory {
 
     public AutoRoutine peashooter() {
         AutoRoutine routine = autoFactory.newRoutine("peashooter");
-        MoveToPose travelToNeutralZone =
-            swerve
-                .moveToPose().target(new Pose2d(Meters.of(7.759509086608887),
-                    Meters.of(7.354735374450684), Rotation2d.kCW_90deg))
-                .autoRoutine(routine).finish();
-        MoveToPose lawnmower =
-            swerve
-                .moveToPose().target(new Pose2d(Meters.of(7.832701206207275),
-                    Meters.of(1.2797551155090332), Rotation2d.kCW_90deg))
-                .autoRoutine(routine).finish();
-        MoveToPose frontTrench = swerve.moveToPose().target(new Pose2d(Meters.of(6.027285575866699),
-            Meters.of(0.6454197764396667), Rotation2d.kZero)).autoRoutine(routine).finish();
-        MoveToPose pointAtHub = swerve
-            .moveToPose().target(new Pose2d(Meters.of(3.3679568767547607),
-                Meters.of(0.6942147612571716), new Rotation2d(Radians.of(-1.1966918933365922))))
-            .autoRoutine(routine).finish();
+        MoveToPose travelToNeutralZone = swerve.moveToPose()
+            .target(new Pose2d(Meters.of(7.759509086608887), Meters.of(7.354735374450684),
+                Rotation2d.kCW_90deg))
+            .autoRoutine(routine).maxSpeed(Constants.Swerve.autoMaxSpeed).flipForRed(true).finish();
+        MoveToPose lawnmower = swerve.moveToPose()
+            .target(new Pose2d(Meters.of(7.832701206207275), Meters.of(1.2797551155090332),
+                Rotation2d.kCW_90deg))
+            .autoRoutine(routine).maxSpeed(Constants.Swerve.autoMaxSpeed).flipForRed(true).finish();
+        MoveToPose frontTrench = swerve.moveToPose()
+            .target(new Pose2d(Meters.of(6.027285575866699), Meters.of(0.6454197764396667),
+                Rotation2d.kZero))
+            .autoRoutine(routine).maxSpeed(Constants.Swerve.autoMaxSpeed).flipForRed(true).finish();
+        MoveToPose pointAtHub = swerve.moveToPose()
+            .target(new Pose2d(Meters.of(3.3679568767547607), Meters.of(0.6942147612571716),
+                new Rotation2d(Radians.of(-1.1966918933365922))))
+            .autoRoutine(routine).maxSpeed(Constants.Swerve.autoMaxSpeed).flipForRed(true).finish();
 
-        routine.active().onTrue(
-            travelToNeutralZone.alongWith(intake.extendHopper().andThen(intake.intakeBalls(0.7))));
+        routine.active()
+            .onTrue(swerve.overridePose(() -> swerve.state.getGlobalPoseEstimate())
+                .andThen(travelToNeutralZone
+                    .alongWith(intake.extendHopper().andThen(intake.intakeBalls(0.7)))));
         travelToNeutralZone.done().onTrue(lawnmower);
         lawnmower.done().onTrue(frontTrench.alongWith(intake.retractHopper()
             .andThen(intake.idle().withInterruptBehavior(InterruptionBehavior.kCancelIncoming))));
