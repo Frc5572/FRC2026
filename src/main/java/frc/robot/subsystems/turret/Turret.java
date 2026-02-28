@@ -24,7 +24,6 @@ import frc.robot.RobotState;
  */
 public class Turret extends SubsystemBase {
 
-    private boolean hasSynced = true;
     private final TurretIO io;
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final RobotState state;
@@ -167,7 +166,11 @@ public class Turret extends SubsystemBase {
         if (isValidAngle(targetAngle) || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(1)))
             || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(-1)))) {
             io.setTargetAngle(targetAngle, velocity);
+            Logger.recordOutput("Turret/InRange", true);
+            Logger.recordOutput("Turret/ActualTarget", targetAngle);
+            return;
         }
+        Logger.recordOutput("Turret/InRange", false);
         double minAngleDiff =
             fmod((targetAngle.getDegrees() - Constants.Turret.minAngle.getDegrees()) + 180, 360)
                 - 180;
@@ -176,8 +179,10 @@ public class Turret extends SubsystemBase {
                 - 180;
         if (Math.abs(minAngleDiff) < Math.abs(maxAngleDiff)) {
             io.setTargetAngle(Constants.Turret.minAngle, RotationsPerSecond.of(0));
+            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.minAngle);
         } else {
             io.setTargetAngle(Constants.Turret.maxAngle, RotationsPerSecond.of(0));
+            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.maxAngle);
         }
     }
 

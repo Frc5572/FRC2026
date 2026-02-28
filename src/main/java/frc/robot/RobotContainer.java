@@ -14,7 +14,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -154,7 +153,7 @@ public final class RobotContainer {
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
         driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
-        driver.b().onTrue(intake.squeezeBalls(0.7)).onFalse(intake.stop());
+        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
         driver.x().whileTrue(intake.intakeBalls(0.7));
 
         ShotDataHelper helper = new ShotDataHelper();
@@ -162,14 +161,20 @@ public final class RobotContainer {
         double[] flywheelSpeed = new double[] {60.0};
         double[] hoodAngle = new double[] {10.0};
 
-        driver.rightTrigger().whileTrue(shooter.shoot(() -> flywheelSpeed[0])
-            .alongWith(adjustableHood.setGoal(() -> Degrees.of(hoodAngle[0])), swerve.moveToPose()
-                .target(() -> new Pose2d(
-                    FieldConstants.Hub.centerHub
-                        .minus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget), 0)),
-                    Rotation2d.k180deg))
-                .finish()))
+        driver.rightTrigger().whileTrue(shooter.shoot(() -> flywheelSpeed[0]).alongWith(
+            adjustableHood.setGoal(() -> Degrees.of(hoodAngle[0])),
+            swerve.moveToPose().target(() -> new Pose2d(
+                FieldConstants.Hub.centerHub.minus(new Translation2d(
+                    Units.feetToMeters(helper.distanceFromTarget), Rotation2d.fromDegrees(-45))),
+                Rotation2d.k180deg.plus(Rotation2d.fromDegrees(-45)))).autoRoutine(null).maxSpeed(5)
+                .flipForRed(true).translationTolerance(0.05).rotationTolerance(0.5).finish()))
             .onFalse(shooter.shoot(0.0));
+
+        driver.leftBumper().whileTrue(turret.goToAngleFieldRelative(() -> {
+            return FieldConstants.Hub.centerHub
+                .minus(swerve.state.getGlobalPoseEstimate().getTranslation()).getAngle()
+                .plus(Rotation2d.k180deg);
+        })).onFalse(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
 
         boolean[] changingFlywheelSpeed = new boolean[] {false};
         test.b().onTrue(Commands.runOnce(() -> {
@@ -180,12 +185,13 @@ public final class RobotContainer {
         }));
 
         double[] timings = new double[] {0.0, -1.0};
-        new Trigger(() -> shooter.inputs.shooterAngularVelocity1
-            .in(RotationsPerSecond) < flywheelSpeedFilterValue - 10.0)
-                .onTrue(Commands.runOnce(() -> {
-                    timings[0] = Timer.getFPGATimestamp();
-                    writeTimings(timings);
-                }));
+        driver.rightTrigger()
+            .and(() -> shooter.inputs.shooterAngularVelocity1
+                .in(RotationsPerSecond) < flywheelSpeedFilterValue - 3.0)
+            .onTrue(Commands.runOnce(() -> {
+                timings[0] = Timer.getFPGATimestamp();
+                writeTimings(timings);
+            }));
         test.a().onTrue(Commands.runOnce(() -> {
             timings[1] = Timer.getFPGATimestamp();
             writeTimings(timings);
