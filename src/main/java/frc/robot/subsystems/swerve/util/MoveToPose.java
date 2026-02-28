@@ -7,11 +7,8 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.math.controller.HolonomicDriveController;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -141,16 +138,6 @@ public class MoveToPose extends Command {
         isCompleted = false;
     }
 
-    private static final HolonomicDriveController holonomicDriveController =
-        new HolonomicDriveController(new PIDController(Constants.SwerveTransformPID.translationP,
-            Constants.SwerveTransformPID.translationI, Constants.SwerveTransformPID.translationD),
-            new PIDController(Constants.SwerveTransformPID.translationP,
-                Constants.SwerveTransformPID.translationI,
-                Constants.SwerveTransformPID.translationD),
-            new ProfiledPIDController(Constants.SwerveTransformPID.rotationP,
-                Constants.SwerveTransformPID.rotationI, Constants.SwerveTransformPID.rotationD,
-                new Constraints(Constants.SwerveTransformPID.maxAngularVelocity,
-                    Constants.SwerveTransformPID.maxAngularAcceleration)));
 
     private Pose2d target = Pose2d.kZero;
 
@@ -160,7 +147,7 @@ public class MoveToPose extends Command {
         if (flipForRed) {
             target = AllianceFlipUtil.apply(target);
         }
-        ChassisSpeeds ctrlEffort = holonomicDriveController
+        ChassisSpeeds ctrlEffort = Constants.Swerve.holonomicDriveController
             .calculate(swerve.state.getGlobalPoseEstimate(), target, 0, target.getRotation());
         double speed = Math.hypot(ctrlEffort.vxMetersPerSecond, ctrlEffort.vyMetersPerSecond);
         double maxSpeed = this.maxSpeedSupplier.getAsDouble();
