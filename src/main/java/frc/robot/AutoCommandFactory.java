@@ -50,7 +50,7 @@ public class AutoCommandFactory {
         AutoTrajectory path = routine.trajectory("LeftSideGatherShoot");
         routine.active().onTrue(moveToStart);
         moveToStart.done().onTrue(path.cmd());
-        path.active().onTrue(intake.extendHopper().andThen(intake.intakeBalls(5)));
+        path.active().onTrue(intake.extendHopper().andThen(intake.intakeBalls()));
 
         Supplier<Rotation2d> rotSup = () -> {
             Pose2d target =

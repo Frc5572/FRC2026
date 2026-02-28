@@ -578,6 +578,8 @@ public final class Constants {
         public static final double passingSpeed = 0.0;
         public static final double shooterVelocity = 0.0;
 
+        public static final double atSpeedThreshold = 50.0;
+
         // @formatter:off
         public static final FlywheelConstants constants =
             new FlywheelConstantsBuilder()

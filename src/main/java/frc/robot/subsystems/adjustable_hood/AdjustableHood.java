@@ -7,6 +7,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.FieldConstants;
@@ -70,6 +71,8 @@ public class AdjustableHood extends SubsystemBase {
         Logger.recordOutput("Hood Angle (Deg)", this.goalAngle.in(Degrees));
         Logger.recordOutput("Hood Angle (Rot)", this.goalAngle.in(Rotations));
         Logger.recordOutput("AdjustableHood/ActualAngle (Deg)", inputs.relativeAngle.in(Degrees));
+        SmartDashboard.putNumber("AdjustableHood/ActualAngle (Deg)",
+            inputs.relativeAngle.in(Degrees));
     }
 
     /** Sets the angle manually */
