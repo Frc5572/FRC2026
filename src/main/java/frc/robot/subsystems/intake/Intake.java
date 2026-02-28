@@ -75,14 +75,75 @@ public class Intake extends SubsystemBase {
         });
     }
 
+    /** Extends hopper */
     public Command extendHopper() {
-        return run(() -> runHopper(Constants.IntakeConstants.hopperOutDistance.in(Meters)));
+        int[] counts = new int[] {0, 0};
+        double[] prev = new double[] {0.0, 0.0};
+        return runOnce(() -> {
+            counts[0] = 0;
+            counts[1] = 0;
+        }).andThen(run(() -> {
+            io.setLeftHopperVoltage(3);
+            io.setRightHopperVoltage(3);
+        }).until(() -> {
+            double left = inputs.leftHopperPositionRotations;
+            double right = inputs.leftHopperPositionRotations;
+            boolean leftStopped = left < prev[0] + 0.01;
+            boolean rightStopped = right < prev[1] + 0.01;
+            prev[0] = left;
+            prev[1] = right;
+            if (leftStopped) {
+                counts[0]++;
+            } else {
+                counts[0] = 0;
+            }
+            if (rightStopped) {
+                counts[1]++;
+            } else {
+                counts[1] = 0;
+            }
+            return counts[0] > 5 && counts[1] > 5;
+        })).andThen(runOnce(() -> {
+            io.setLeftHopperVoltage(0);
+            io.setRightHopperVoltage(0);
+        }));
     }
 
+    /** Retracts hopper */
     public Command retractHopper() {
-        return run(() -> runHopper(0.0));
+        int[] counts = new int[] {0, 0};
+        double[] prev = new double[] {0.0, 0.0};
+        return runOnce(() -> {
+            counts[0] = 0;
+            counts[1] = 0;
+        }).andThen(run(() -> {
+            io.setLeftHopperVoltage(-5);
+            io.setRightHopperVoltage(-5);
+        }).until(() -> {
+            double left = inputs.leftHopperPositionRotations;
+            double right = inputs.leftHopperPositionRotations;
+            boolean leftStopped = left > prev[0] - 0.01;
+            boolean rightStopped = right > prev[1] - 0.01;
+            prev[0] = left;
+            prev[1] = right;
+            if (leftStopped) {
+                counts[0]++;
+            } else {
+                counts[0] = 0;
+            }
+            if (rightStopped) {
+                counts[1]++;
+            } else {
+                counts[1] = 0;
+            }
+            return counts[0] > 5 && counts[1] > 5;
+        })).andThen(runOnce(() -> {
+            io.setLeftHopperVoltage(0);
+            io.setRightHopperVoltage(0);
+        }));
     }
 
+    /** Run intake wheels */
     public Command intakeBalls(double speed) {
         return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
     }

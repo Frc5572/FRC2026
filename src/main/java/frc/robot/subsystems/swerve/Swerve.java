@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -347,6 +348,17 @@ public final class Swerve extends SubsystemBase {
         }).andThen(this.emergencyStop());
     }
 
+
+    /**
+     * Get Position on field from Odometry
+     *
+     * @return Pose2d on the field
+     */
+    @AutoLogOutput(key = "Odometry/Robot")
+    public Pose2d getPose() {
+        return state.getGlobalPoseEstimate();
+    }
+
     /**
      * Creates a command that immediately commands zero chassis speeds to the drivetrain.
      *
@@ -370,6 +382,7 @@ public final class Swerve extends SubsystemBase {
     public Command emergencyStop() {
         return this.runOnce(() -> setModuleStates(new ChassisSpeeds()));
     }
+
 
     public Command limitSkidLimit() {
         return Commands.runEnd(() -> customSkidLimit = FieldConstants.Hub.innerWidth / 2.0,

@@ -1,4 +1,4 @@
-package frc.robot.math;
+package frc.robot.math.geometry;
 
 /** Result type for {@link SeparatingAxis}. */
 public class Penetration {
