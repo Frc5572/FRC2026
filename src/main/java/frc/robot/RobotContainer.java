@@ -6,12 +6,14 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
+import choreo.auto.AutoChooser;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
@@ -60,6 +62,9 @@ import frc.robot.viz.RobotViz;
  */
 @NullMarked
 public final class RobotContainer {
+
+    private final AutoChooser autoChooser = new AutoChooser();
+
 
     /* Controllers */
     public final CommandXboxController driver =
@@ -138,6 +143,11 @@ public final class RobotContainer {
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
         }
+
+
+        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
+
+
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
