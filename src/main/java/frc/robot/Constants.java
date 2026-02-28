@@ -14,6 +14,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -21,6 +24,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -260,6 +264,19 @@ public final class Constants {
                 .finish(),
         };
         // @formatter:on
+
+        public static final HolonomicDriveController holonomicDriveController =
+            new HolonomicDriveController(
+                new PIDController(Constants.SwerveTransformPID.translationP,
+                    Constants.SwerveTransformPID.translationI,
+                    Constants.SwerveTransformPID.translationD),
+                new PIDController(Constants.SwerveTransformPID.translationP,
+                    Constants.SwerveTransformPID.translationI,
+                    Constants.SwerveTransformPID.translationD),
+                new ProfiledPIDController(Constants.SwerveTransformPID.rotationP,
+                    Constants.SwerveTransformPID.rotationI, Constants.SwerveTransformPID.rotationD,
+                    new Constraints(Constants.SwerveTransformPID.maxAngularVelocity,
+                        Constants.SwerveTransformPID.maxAngularAcceleration)));
     }
 
     /** Trench MoveToPose Constants */
@@ -589,7 +606,7 @@ public final class Constants {
                 .velocityTolerance(0.6)
                 .atSpeedDebounce(0.1)
                 .finish();
-            
+
         // @formatter:on
     }
 }

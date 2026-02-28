@@ -4,12 +4,15 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -40,8 +43,6 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
-import frc.robot.subsystems.vision.color.ColorDetection;
-import frc.robot.subsystems.vision.color.ColorDetectionIO;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
@@ -58,6 +59,8 @@ public final class RobotContainer {
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
+    private final AutoChooser autoChooser = new AutoChooser();
+    private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
     private final Swerve swerve;
@@ -66,7 +69,6 @@ public final class RobotContainer {
     private final Turret turret;
     private final Shooter shooter;
     private final Intake intake;
-    private final ColorDetection colorDetection;
     private final Climber climber;
     private final Indexer indexer;
     private final RobotViz viz;
@@ -76,6 +78,8 @@ public final class RobotContainer {
     /**
      */
     public RobotContainer(RobotRunType runtimeType) {
+        SmartDashboard.putNumber("Auto Shoot X", 0.0);
+        SmartDashboard.putNumber("Auto Shoot Y", 0.0);
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -88,7 +92,6 @@ public final class RobotContainer {
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
 
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
             case kSimulation:
                 FuelSim.getInstance().spawnStartingFuel();
@@ -115,7 +118,6 @@ public final class RobotContainer {
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
 
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
             default:
                 sim = null;
@@ -128,13 +130,23 @@ public final class RobotContainer {
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
 
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
         }
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
+        autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
+            climber, intake, indexer, shooter, turret);
+        autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
+        autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
+        autoChooser.addCmd("Do Nothing", Commands::none);
 
+
+        // Put the auto chooser on the dashboard
+        SmartDashboard.putData("Chooser", autoChooser);
+
+        // Schedule the selected auto during the autonomous period
+        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
