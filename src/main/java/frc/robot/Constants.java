@@ -117,7 +117,7 @@ public final class Constants {
         /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(21.8);
         /** Distance from the center of the wheel to the ground */
-        public static final Distance wheelRadius = Inches.of(1.913);
+        public static final Distance wheelRadius = Inches.of(2.678 / 2.0);
         /** Diameter of the wheels, twice the radius */
         public static final Distance wheelDiameter = wheelRadius.times(2);
         /** Circumference of the wheels */
@@ -189,8 +189,8 @@ public final class Constants {
                 .kP(0.0012)
                 .kI(0.0)
                 .kD(0.0)
-                .kV(1.004 / 6.536)
-                .kS(0.185)
+                .kV(0.990 / 6.536)
+                .kS(0.251)
                 .kG(0.0)
                 .kA(0.0)
                 .finish();
