@@ -125,6 +125,11 @@ public final class Swerve extends SubsystemBase {
 
     }
 
+    /**
+     * Follow a Choreo Trajectory
+     *
+     * @param sample SwerveSample of choreo tajectory
+     */
     public void followTrajectory(SwerveSample sample) {
         // Get the current pose of the robot
         Pose2d pose = state.getGlobalPoseEstimate();
