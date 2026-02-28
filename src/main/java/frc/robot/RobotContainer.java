@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -55,6 +56,9 @@ import frc.robot.viz.RobotViz;
  */
 @NullMarked
 public final class RobotContainer {
+
+    private final AutoChooser autoChooser = new AutoChooser();
+
 
     /* Controllers */
     public final CommandXboxController driver =
@@ -132,6 +136,11 @@ public final class RobotContainer {
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
         }
+
+
+        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
+
+
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
@@ -163,6 +172,7 @@ public final class RobotContainer {
 
         SmartDashboard.putData("Field", field);
     }
+
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
