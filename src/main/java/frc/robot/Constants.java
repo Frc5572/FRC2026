@@ -547,6 +547,9 @@ public final class Constants {
 
     /** Shooter Constants */
     public static final class Shooter {
+        /** Height at which the ball leaves the shooter. */
+        public static final Distance shooterHeight = Inches.of(20);
+
         /** ID for Shooter Motor 1 */
         public static final int motor1ID = 10;
         /** ID for Shooter Motor 2 */
