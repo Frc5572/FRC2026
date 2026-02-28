@@ -26,6 +26,7 @@ public class Interp2d<T> {
         this.data = data;
     }
 
+    /** Result of a query at a point */
     public static record QueryResult<T>(T value, double sdf) {
     }
 

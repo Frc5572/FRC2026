@@ -47,8 +47,9 @@ public class DelaunayTriangulation {
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof Edge))
+            if (!(obj instanceof Edge)) {
                 return false;
+            }
             Edge e = (Edge) obj;
             return (i1 == e.i1 && i2 == e.i2) || (i1 == e.i2 && i2 == e.i1);
         }

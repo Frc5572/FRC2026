@@ -108,6 +108,7 @@ public class Triangle2d {
         return new Translation2d(Math.min(a.getX(), b.getX()), Math.min(a.getY(), b.getY()));
     }
 
+    /** Evaluate signed distance function at a given point */
     public double sdf(Translation2d p) {
         var e0 = b.minus(a);
         var e1 = c.minus(b);
