@@ -169,9 +169,9 @@ public final class RobotContainer {
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.4))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
 
-        driver.a().whileTrue(intake.extendHopper()).onFalse(intake.stop());
-        driver.b().onTrue(intake.retractHopper()).onFalse(intake.stop());
-        driver.x().whileTrue(intake.intakeBalls(0.7));
+        driver.a().onTrue(intake.extendHopper());
+        driver.b().onTrue(intake.retractHopper());
+        driver.x().whileTrue(intake.intakeBalls());
 
         double[] flywheelSpeed = new double[] {60.0};
         double[] hoodAngle = new double[] {10.0};
