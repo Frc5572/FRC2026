@@ -2,10 +2,12 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+import java.util.function.Consumer;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -141,7 +143,10 @@ public final class RobotContainer {
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
                 break;
         }
-        autoFactory = new AutoFactory(null, null, null, true, swerve);
+        autoFactory = new AutoFactory(swerve.state::getGlobalPoseEstimate, (newPose) -> {
+        }, (Consumer<SwerveSample>) (SwerveSample swerveSample) -> {
+        }, true, swerve, (traj, b) -> {
+        });
         AutoCommandFactory autos = new AutoCommandFactory(autoFactory, adjustableHood, climber,
             indexer, intake, shooter, swerve, turret);
         autoChooser = new AutoChooser();
