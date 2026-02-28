@@ -55,7 +55,6 @@ import frc.robot.viz.RobotViz;
  */
 @NullMarked
 public final class RobotContainer {
-
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
@@ -135,39 +134,35 @@ public final class RobotContainer {
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
+
+        // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
         autoChooser.addCmd("Do Nothing", Commands::none);
-
-
-        // Put the auto chooser on the dashboard
-        SmartDashboard.putData("Chooser", autoChooser);
-
-        // Schedule the selected auto during the autonomous period
+        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+        // END AUTO STUFF
 
+        // DEFAULT COMMANDS
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
+        // BUTTON BINDINGS
         driver.y().onTrue(swerve.setFieldRelativeOffset());
-
         driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
-
         driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.8))
             .onFalse(indexer.setSpeedCommand(0.0, 0.0));
-
         driver.povUp().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(15)));
-
         driver.povDown().onTrue(adjustableHood.manualMoveToAngle(Degrees.of(-15)));
-
         driver.a().onTrue(intake.extendHopper());
         driver.b().onTrue(intake.retractHopper());
         driver.x().whileTrue(intake.intakeBalls());
 
         SmartDashboard.putData("Field", field);
     }
+
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
