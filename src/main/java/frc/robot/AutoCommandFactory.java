@@ -87,8 +87,8 @@ public class AutoCommandFactory {
      */
     public AutoRoutine justShoot() {
         Supplier<Pose2d> poseSup = () -> {
-            double x = SmartDashboard.getNumber("Auto Shoot X", 0);
-            double y = SmartDashboard.getNumber("Auto Shoot Y", 0);
+            double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
+            double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
             Pose2d hub =
                 AllianceFlipUtil.apply(new Pose2d(FieldConstants.Hub.centerHub, new Rotation2d()));
             Pose2d target = new Pose2d(x, y, new Rotation2d());

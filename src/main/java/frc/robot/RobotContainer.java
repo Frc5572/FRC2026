@@ -13,7 +13,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -80,12 +82,14 @@ public final class RobotContainer {
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     private final Field2d field = new Field2d();
+    private final FieldObject2d autoShootLocation = field.getObject("Auto Shoot Location");
 
     /**
+     * Robot Container
+     *
+     * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
-        SmartDashboard.putNumber("Auto Shoot X", 0.0);
-        SmartDashboard.putNumber("Auto Shoot Y", 0.0);
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -138,10 +142,12 @@ public final class RobotContainer {
 
                 break;
         }
-
-
+        // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
-
+        SmartDashboard.putNumber(Constants.DashboardValues.shootX, 0.0);
+        SmartDashboard.putNumber(Constants.DashboardValues.shootY, 0.0);
+        SmartDashboard.putData(Constants.DashboardValues.field, field);
+        // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
@@ -150,11 +156,21 @@ public final class RobotContainer {
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
+        autoChooser.addCmd("Do Nothing", Commands::none);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
-        autoChooser.addCmd("Do Nothing", Commands::none);
-        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
-        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+        // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
+        // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
+        // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
+        // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
+        // autoShootLocation.setPose(x, y, new Rotation2d());
+        // // System.out.println("asdfasdasdf");
+        // // Logger.recordOutput("asdfadsf", autoShootLocation.getPose());
+        // }));
+        RobotModeTriggers.autonomous()
+            .whileTrue(autoChooser.selectedCommandScheduler()
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                .andThen(Commands.runOnce(() -> swerve.stop())));
         // END AUTO STUFF
 
         // DEFAULT COMMANDS
@@ -258,6 +274,15 @@ public final class RobotContainer {
         flywheelSpeedFilterValue = flywheelSpeedFilter
             .calculate(shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
+    }
+
+    /**
+     * Runs during disabled
+     */
+    public void disabledPeriodic() {
+        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
+        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
+        autoShootLocation.setPose(x, y, new Rotation2d());
     }
 
     private void writeTimings(double[] timings) {
