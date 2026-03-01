@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.numbers.N3;
 
+/** Draw colormap images */
 public class DrawColorMap {
 
     private static InterpolatingTreeMap<Double, Vector<N3>> viridis =
@@ -278,6 +279,7 @@ public class DrawColorMap {
         viridis.put(1.0, VecBuilder.fill(0.993248, 0.906157, 0.143936));
     }
 
+    /** Draw colormap key */
     public static void saveKey(String filename) throws IOException {
         int height = 1080;
         int width = 20;
@@ -296,6 +298,7 @@ public class DrawColorMap {
         ImageIO.write(image, "png", new File(filename));
     }
 
+    /** Draw colormap image. Returns min and max value for key. */
     public static <T> Pair<Double, Double> draw(String filename,
         ToDoubleFunction<Translation2d> func, double xMin, double xMax, double yMin, double yMax)
         throws IOException {
