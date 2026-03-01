@@ -47,9 +47,9 @@ public class RbfInterp2d {
             }
         }
         CommonOps_DDRM.solve(_A, zs, ws);
-        System.out.println("A: " + _A);
-        System.out.println("zs: " + zs);
-        System.out.println("ws: " + ws);
+        // System.out.println("A: " + _A);
+        // System.out.println("zs: " + zs);
+        // System.out.println("ws: " + ws);
     }
 
     /** Get value at a given x-y coordinate. */
