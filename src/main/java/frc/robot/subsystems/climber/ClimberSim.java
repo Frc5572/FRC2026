@@ -6,6 +6,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants;
 import frc.robot.sim.SimPosition;
+import frc.robot.util.tunable.PIDConstants;
 
 /**
  * Simulation implementation of the climber subsystem.
@@ -83,4 +84,10 @@ public class ClimberSim implements ClimberIO {
     public void setHeightTelescope(Distance height) {
         hookTarget = height.in(Meters);
     }
+
+    @Override
+    public void setPIDPivot(PIDConstants constants) {}
+
+    @Override
+    public void setPIDTelescope(PIDConstants constants) {}
 }
