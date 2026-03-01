@@ -15,18 +15,20 @@ public class FlywheelConstants implements LoggableInputs, Cloneable, Tunable {
     public boolean isReversed;
     public double velocityTolerance;
     public double atSpeedDebounce;
+    public PIDConstants pid;
     private boolean isDirty;
 
     /** Create new Flywheel Constants */
     @TypeStateBuilder
     public FlywheelConstants(@RequiredField double holdCurrent, @RequiredField double maxDutyCycle,
         @RequiredField boolean isReversed, @RequiredField double velocityTolerance,
-        @RequiredField double atSpeedDebounce) {
+        @RequiredField double atSpeedDebounce, @RequiredField PIDConstants pid) {
         this.holdCurrent = holdCurrent;
         this.maxDutyCycle = maxDutyCycle;
         this.isReversed = isReversed;
         this.velocityTolerance = velocityTolerance;
         this.atSpeedDebounce = atSpeedDebounce;
+        this.pid = pid;
 
         this.isDirty = false;
 

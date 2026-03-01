@@ -1,4 +1,4 @@
-package frc.robot.math;
+package frc.robot.math.geometry;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.FieldConstants;
