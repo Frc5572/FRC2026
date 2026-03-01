@@ -4,11 +4,9 @@
 
 package frc.robot;
 
-import java.io.File;
 import java.io.IOException;
-import javax.imageio.ImageIO;
 import edu.wpi.first.wpilibj.RobotBase;
-import frc.robot.viz.SdfDrawer;
+import frc.robot.viz.DrawColorMap;
 
 /**
  * Do NOT add any static variables to this class, or any initialization at all. Unless you know what
@@ -27,34 +25,29 @@ public final class Main {
      * @param args String args
      */
     public static void main(String... args) {
-        // drawSdfTest();
+        // drawImages();
         RobotBase.startRobot(Robot::new);
     }
 
-    /** Test for interp2d + bilinear gridding to make sure they're correct. */
-    @SuppressWarnings("unused")
-    private static void drawSdfTest() {
-        var res = SdfDrawer.drawSdf(ShotData.distanceRange, ShotData.flywheelRange,
-            (t) -> ShotData.distanceFlywheelSpeed.query(t).sdf(), 1080, 1080);
+    private static void drawImages() {
         try {
-            ImageIO.write(res, "png", new File("interp2d.png"));
+            DrawColorMap.saveKey("key.png");
+            var res = DrawColorMap.draw("dist_flywheel_to_hood.png",
+                (t) -> ShotData.distanceFlywheelSpeed.query(t).value().hoodAngleDeg(), 4, 20, 40,
+                75);
+            System.out.println("minValue: " + res.getFirst());
+            System.out.println("maxValue: " + res.getSecond());
+            res = DrawColorMap.draw("dist_flywheel_to_tof.png",
+                (t) -> ShotData.distanceFlywheelSpeed.query(t).value().timeOfFlight(), 4, 20, 40,
+                75);
+            System.out.println("minValue: " + res.getFirst());
+            System.out.println("maxValue: " + res.getSecond());
+            res = DrawColorMap.draw("dist_flywheel_sdf.png",
+                (t) -> ShotData.distanceFlywheelSpeed.query(t).sdf(), 4, 20, 40, 75);
+            System.out.println("minValue: " + res.getFirst());
+            System.out.println("maxValue: " + res.getSecond());
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        int[] discretizations = new int[] {20, 60, 100, 120};
-
-        for (var discretization : discretizations) {
-
-            var bil = ShotData.distanceFlywheelSpeed.surrogate(ShotData.distanceRange,
-                ShotData.flywheelRange);
-            res = SdfDrawer.drawSdf(ShotData.distanceRange, ShotData.flywheelRange,
-                (t) -> bil.query(t).sdf(), 1080, 1080);
-            try {
-                ImageIO.write(res, "png", new File("bilinear" + discretization + ".png"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 }
