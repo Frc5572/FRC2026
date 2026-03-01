@@ -159,15 +159,13 @@ public final class RobotContainer {
         autoChooser.addCmd("Do Nothing", Commands::none);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
-        RobotModeTriggers.disabled().and(() -> true).whileTrue(Commands.run(() -> {
-            double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-            double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-            autoShootLocation.setPose(x, y, new Rotation2d());
-            System.out.println("asdfasdasdf");
-            Logger.recordOutput("asdfadsf", autoShootLocation.getPose());
-        }));
-        // RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
-        // autoShootLocation.close();
+        // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
+        // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
+        // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
+        // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
+        // autoShootLocation.setPose(x, y, new Rotation2d());
+        // // System.out.println("asdfasdasdf");
+        // // Logger.recordOutput("asdfadsf", autoShootLocation.getPose());
         // }));
         RobotModeTriggers.autonomous()
             .whileTrue(autoChooser.selectedCommandScheduler()
@@ -276,7 +274,15 @@ public final class RobotContainer {
         flywheelSpeedFilterValue = flywheelSpeedFilter
             .calculate(shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
+    }
 
+    /**
+     * Runs during disabled
+     */
+    public void disabledPeriodic() {
+        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
+        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
+        autoShootLocation.setPose(x, y, new Rotation2d());
     }
 
     private void writeTimings(double[] timings) {
