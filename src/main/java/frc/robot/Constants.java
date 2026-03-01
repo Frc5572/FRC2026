@@ -434,18 +434,9 @@ public final class Constants {
             public static final double SENSOR_TO_MECHANISM_RATIO =
                 ROTATIONS_AT_TOP.in(Meters) / DEGREES_AT_TOP.in(Degrees);
 
-            // @formatter:off
             public static PIDConstants pidConstants =
-                new PIDConstantsBuilder("telescopePID", GravityTypeValue.Elevator_Static)
-                    .kP(0.0)
-                    .kI(0.0)
-                    .kD(0.0)
-                    .kV(0.0)
-                    .kS(0.0)
-                    .kG(0.0)
-                    .kA(0.0)
-                    .finish();
-            // @formatter:on
+                new PIDConstantsBuilder("telescopePID", GravityTypeValue.Elevator_Static).kP(0.0)
+                    .kI(0.0).kD(0.0).kV(0.0).kS(0.0).kG(0.0).kA(0.0).finish();
 
         }
 
@@ -494,18 +485,9 @@ public final class Constants {
             public static final double SENSOR_TO_MECHANISM_RATIO =
                 ROTATIONS_AT_TOP.in(Rotations) / DEGREES_AT_TOP.in(Degrees);
 
-            // @formatter:off
             public static PIDConstants pidConstants =
-                new PIDConstantsBuilder("PivotPID", GravityTypeValue.Arm_Cosine)
-                    .kP(0.0)
-                    .kI(0.0)
-                    .kD(0.0)
-                    .kV(0.0)
-                    .kS(0.0)
-                    .kG(0.0)
-                    .kA(0.0)
-                    .finish();
-            // @formatter:on
+                new PIDConstantsBuilder("PivotPID", GravityTypeValue.Arm_Cosine).kP(0.0).kI(0.0)
+                    .kD(0.0).kV(0.0).kS(0.0).kG(0.0).kA(0.0).finish();
         }
     }
 
