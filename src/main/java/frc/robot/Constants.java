@@ -408,10 +408,13 @@ public final class Constants {
 
 
             /** Telescope length at the top position, in degrees. */
-            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0); // TODO: ??
 
             /** Telescope length at the top position, in Meters. */
+            // TODO: This can't be right
             public static final Distance ROTATIONS_AT_TOP = Meters.of(220);
+
+            public static final Distance LEVEL_1_CLIMB = Meters.of(1);
 
             /**
              * S Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
@@ -421,7 +424,7 @@ public final class Constants {
 
             // @formatter:off
             public static PIDConstants pidConstants =
-                new PIDConstantsBuilder("telescopePID", GravityTypeValue.Arm_Cosine)
+                new PIDConstantsBuilder("telescopePID", GravityTypeValue.Elevator_Static)
                 .kP(0.0)
                 .kI(0.0)
                 .kD(0.0)
@@ -571,7 +574,7 @@ public final class Constants {
                 .velocityTolerance(0.6)
                 .atSpeedDebounce(0.1)
                 .finish();
-            
+
         // @formatter:on
     }
 }
