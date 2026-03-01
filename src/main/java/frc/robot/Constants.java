@@ -437,14 +437,14 @@ public final class Constants {
             // @formatter:off
             public static PIDConstants pidConstants =
                 new PIDConstantsBuilder("telescopePID", GravityTypeValue.Elevator_Static)
-                .kP(0.0)
-                .kI(0.0)
-                .kD(0.0)
-                .kV(0.0)
-                .kS(0.0)
-                .kG(0.0)
-                .kA(0.0)
-                .finish();
+                    .kP(0.0)
+                    .kI(0.0)
+                    .kD(0.0)
+                    .kV(0.0)
+                    .kS(0.0)
+                    .kG(0.0)
+                    .kA(0.0)
+                    .finish();
             // @formatter:on
 
         }
@@ -497,14 +497,14 @@ public final class Constants {
             // @formatter:off
             public static PIDConstants pidConstants =
                 new PIDConstantsBuilder("PivotPID", GravityTypeValue.Arm_Cosine)
-                .kP(0.0)
-                .kI(0.0)
-                .kD(0.0)
-                .kV(0.0)
-                .kS(0.0)
-                .kG(0.0)
-                .kA(0.0)
-                .finish();
+                    .kP(0.0)
+                    .kI(0.0)
+                    .kD(0.0)
+                    .kV(0.0)
+                    .kS(0.0)
+                    .kG(0.0)
+                    .kA(0.0)
+                    .finish();
             // @formatter:on
         }
     }
