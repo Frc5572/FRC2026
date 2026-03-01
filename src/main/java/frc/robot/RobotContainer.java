@@ -242,6 +242,10 @@ public final class RobotContainer {
         }));
         writeShotConf(flywheelSpeed[0], hoodAngle[0]);
         writeTimings(timings);
+
+
+        test.rightTrigger().onTrue(climber.raiseClimber());
+        test.leftTrigger().onTrue(climber.climbLevel1());
     }
 
     private LinearFilter flywheelSpeedFilter = LinearFilter.movingAverage(10);
