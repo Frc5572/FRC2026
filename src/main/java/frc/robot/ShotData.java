@@ -1,8 +1,10 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
+import java.util.function.DoubleUnaryOperator;
 import frc.robot.math.interp2d.Interp2d;
 import frc.robot.math.interp2d.MulAdd;
+import frc.robot.math.interp2d.RbfInterp2d;
 
 /** Data for flywheel, distance, and hood angle that results in a successful shot. */
 public class ShotData {
@@ -79,5 +81,14 @@ public class ShotData {
 
     public static final Interp2d<ShotEntry> flywheelSpeedHoodAngle = new Interp2d<ShotEntry>(
         entries, mulAdd, ShotEntry::flywheelSpeedRps, ShotEntry::hoodAngleDeg);
+
+    private static DoubleUnaryOperator rbf = (r) -> {
+        return Math.sqrt(1.0 + Math.pow(0.2 * r, 2));
+    };
+
+    public static final RbfInterp2d distanceFlywheelToHood = new RbfInterp2d(entries,
+        ShotEntry::distanceMeters, ShotEntry::flywheelSpeedRps, ShotEntry::hoodAngleDeg, rbf);
+    public static final RbfInterp2d distanceFlywheelToTof = new RbfInterp2d(entries,
+        ShotEntry::distanceMeters, ShotEntry::flywheelSpeedRps, ShotEntry::timeOfFlight, rbf);
 
 }
