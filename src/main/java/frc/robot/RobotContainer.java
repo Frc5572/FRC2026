@@ -174,10 +174,12 @@ public final class RobotContainer {
 
         driver.leftTrigger()
             .whileTrue(Commands.race(intake.extendHopper(), Commands.waitSeconds(0.3))
-                .andThen(intake.intakeBalls().alongWith(intake.extendHopper())))
-            .onFalse(intake.retractHopper());
+                .andThen(intake.intakeBalls().alongWith(intake.extendHopper())));
 
         driver.rightTrigger().and(driver.leftTrigger().negate()).whileTrue(intake.jerkIntake());
+
+        driver.leftTrigger().negate().and(driver.rightTrigger().negate())
+            .onTrue(intake.retractHopper());
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
