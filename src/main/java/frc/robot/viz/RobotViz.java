@@ -69,8 +69,8 @@ public class RobotViz {
 
     private final Supplier<Pose3d> robotPoseSupplier;
     private final Supplier<Pose3d> estPoseSupplier;
-    private final Supplier<Angle> turretSupplier;
-    private final Supplier<Angle> estTurretSupplier;
+    private final Supplier<Rotation2d> turretSupplier;
+    private final Supplier<Rotation2d> estTurretSupplier;
     private final Runnable gtUpdate;
     private final Runnable estUpdate;
     private final Pose3d[] gtState;
@@ -95,12 +95,12 @@ public class RobotViz {
         AdjustableHood hood, Intake intake, Climber climber) {
         estPoseSupplier = () -> new Pose3d(swerve.state.getGlobalPoseEstimate());
         estUpdate = () -> {
-            updateState(estState, turret.inputs.relativeAngle, hood.inputs.relativeAngle,
+            updateState(estState, turret.getTurretHeading(), hood.inputs.relativeAngle,
                 climber.inputs.positionPivot, climber.inputs.positionTelescope,
                 intake.inputs.leftHopperPosition, Arrays.stream(swerve.modules)
                     .map(mod -> mod.inputs.anglePosition).toArray(Rotation2d[]::new));
         };
-        estTurretSupplier = () -> turret.inputs.relativeAngle;
+        estTurretSupplier = () -> turret.getTurretHeading();
         if (sim == null) {
             gtState = estState;
             gtUpdate = () -> {
@@ -110,25 +110,25 @@ public class RobotViz {
         } else {
             gtState = new Pose3d[numPoses];
             gtUpdate = () -> {
-                updateState(gtState, Radians.of(sim.turret.turrentAngle.position),
+                updateState(gtState, Rotation2d.fromRadians(sim.turret.turrentAngle.position),
                     hood.inputs.relativeAngle, climber.inputs.positionPivot,
                     climber.inputs.positionTelescope, intake.inputs.leftHopperPosition,
                     Arrays.stream(swerve.modules).map(mod -> mod.inputs.anglePosition)
                         .toArray(Rotation2d[]::new));
             };
             robotPoseSupplier = () -> sim.getGroundTruthPose();
-            turretSupplier = () -> Radians.of(sim.turret.turrentAngle.position);
+            turretSupplier = () -> Rotation2d.fromRadians(sim.turret.turrentAngle.position);
         }
     }
 
-    private static void updateState(Pose3d[] out, Angle turretAngle, Angle hoodAngle,
+    private static void updateState(Pose3d[] out, Rotation2d turretAngle, Angle hoodAngle,
         Angle climberAngle, Distance climberHeight, Distance intakeOut, Rotation2d[] modules) {
 
         out[hoodIndex] = new Pose3d()
             .rotateAround(hoodRotationCenter, new Rotation3d(0, hoodAngle.in(Radians), 0))
-            .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.in(Radians)));
+            .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
         out[turretIndex] =
-            new Pose3d().rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.in(Radians)));
+            new Pose3d().rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
 
         out[hooksIndex] =
             new Pose3d(0, 0, climberHeight.in(Meters) - hooksDown.in(Meters), Rotation3d.kZero)
@@ -171,9 +171,9 @@ public class RobotViz {
         Pose3d robotPose = robotPoseSupplier.get();
         Pose3d estPose = estPoseSupplier.get();
         Transform3d turretTransform =
-            new Transform3d(-1.651, 0, 0, new Rotation3d(new Rotation2d(turretSupplier.get())));
+            new Transform3d(-1.651, 0, 0, new Rotation3d(turretSupplier.get()));
         Transform3d estTurretTransform =
-            new Transform3d(-1.651, 0, 0, new Rotation3d(new Rotation2d(estTurretSupplier.get())));
+            new Transform3d(-1.651, 0, 0, new Rotation3d(estTurretSupplier.get()));
         Logger.recordOutput("Viz/ActualPose", robotPose);
         for (CameraConstants constants : Constants.Vision.cameraConstants) {
             if (constants.isTurret) {

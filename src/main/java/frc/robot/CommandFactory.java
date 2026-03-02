@@ -1,16 +1,20 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.function.Supplier;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.FieldConstants.Passing;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
+import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 
@@ -31,14 +35,47 @@ public class CommandFactory {
             if (leftDistance.in(Meters) < rightDistance.in(Meters)) {
                 Rotation2d leftDistanceGoal =
                     Passing.blueAllianceLeft.minus(swervePose.getTranslation()).getAngle();
-                turret.setGoal(leftDistanceGoal, RotationsPerSecond.of(0));
+                turret.setGoalRobotRelative(leftDistanceGoal, RotationsPerSecond.of(0));
             } else {
                 Rotation2d rightDistanceGoal =
                     Passing.blueAllianceRight.minus(swervePose.getTranslation()).getAngle();
-                turret.setGoal(rightDistanceGoal, RotationsPerSecond.of(0));
+                turret.setGoalRobotRelative(rightDistanceGoal, RotationsPerSecond.of(0));
             }
             hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
             shooter.shoot(Constants.Shooter.shooterVelocity);
         }, turret, hood, shooter);
+    }
+
+    public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
+        Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood) {
+        return Commands.run(() -> {
+            final Translation2d target = targetSupplier.get();
+            Translation2d adjustedTarget = target;
+            for (int i = 0; i < 5; i++) {
+                double distance =
+                    adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation());
+                var parameters = ShotData.getShotParameters(distance,
+                    shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+                double tof = parameters.timeOfFlight();
+                var forward = state.getFieldRelativeSpeeds().times(tof);
+                adjustedTarget = target
+                    .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
+            }
+            double distance =
+                adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation());
+            var parameters = ShotData.getShotParameters(distance,
+                shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+            shooter.setVelocity(parameters.desiredSpeed());
+            hood.setTargetAngle(Degrees.of(MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0)));
+            boolean turretFacing = turret.setGoalFieldRelative(adjustedTarget
+                .minus(state.getTurretCenterFieldFrame().getTranslation()).getAngle());
+            if (parameters.isOkayToShoot() && turretFacing) {
+                indexer.setMagazineDutyCycle(0.7);
+                indexer.setSpindexerDutyCycle(0.7);
+            } else {
+                indexer.setMagazineDutyCycle(0.0);
+                indexer.setSpindexerDutyCycle(-0.2);
+            }
+        }, shooter, indexer, hood);
     }
 }

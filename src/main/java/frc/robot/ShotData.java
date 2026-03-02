@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
 import java.util.function.DoubleUnaryOperator;
+import edu.wpi.first.math.util.Units;
 import frc.robot.math.interp2d.Interp2d;
 import frc.robot.math.interp2d.MulAdd;
 import frc.robot.math.interp2d.RbfInterp2d;
@@ -37,6 +38,16 @@ public class ShotData {
         new ShotEntry(18.0, 70.0, 26.0, 1.54),
     };
     // @formatter:on
+
+    private static final double MIN_DESIRED_SPEED = 50.0;
+    private static final double MIN_DESIRED_SPEED_DISTANCE = Units.feetToMeters(6.0);
+
+    private static final double MAX_DESIRED_SPEED = 70.0;
+    private static final double MAX_DESIRED_SPEED_DISTANCE = Units.feetToMeters(18.0);
+
+    private static final double SPEED_M = (MAX_DESIRED_SPEED - MIN_DESIRED_SPEED)
+        / (MAX_DESIRED_SPEED_DISTANCE - MIN_DESIRED_SPEED_DISTANCE);
+    private static final double SPEED_B = MAX_DESIRED_SPEED - SPEED_M * MAX_DESIRED_SPEED_DISTANCE;
 
     private static final MulAdd<ShotEntry> mulAdd = new MulAdd<ShotData.ShotEntry>() {
 
@@ -90,5 +101,18 @@ public class ShotData {
         ShotEntry::distanceMeters, ShotEntry::flywheelSpeedRps, ShotEntry::hoodAngleDeg, rbf);
     public static final RbfInterp2d distanceFlywheelToTof = new RbfInterp2d(entries,
         ShotEntry::distanceMeters, ShotEntry::flywheelSpeedRps, ShotEntry::timeOfFlight, rbf);
+
+    public static record ShotParameters(double desiredSpeed, double hoodAngleDeg,
+        double timeOfFlight, boolean isOkayToShoot) {
+
+    }
+
+    public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed) {
+        double desiredSpeed = SPEED_M * distance + SPEED_B;
+        double hood = distanceFlywheelToHood.query(distance, currentFlywheelSpeed);
+        double tof = distanceFlywheelToTof.query(distance, currentFlywheelSpeed);
+        return new ShotParameters(desiredSpeed, hood, tof,
+            currentFlywheelSpeed + 10 > desiredSpeed);
+    }
 
 }

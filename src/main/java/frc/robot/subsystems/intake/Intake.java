@@ -147,14 +147,14 @@ public class Intake extends SubsystemBase {
 
     /** Run intake wheels */
     public Command intakeBalls(double speed) {
-        return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
+        return Commands.runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
     }
 
     public Command intakeBalls() {
-        return runEnd(() -> runIntakeOnly(0.7), () -> runIntakeOnly(0));
+        return intakeBalls(0.7);
     }
 
     public Command jerkIntake() {
-        return Commands.none();
+        return extendHopper().andThen(retractHopper()).repeatedly();
     }
 }
