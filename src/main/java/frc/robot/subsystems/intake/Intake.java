@@ -4,9 +4,7 @@ import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 
 /**
@@ -15,7 +13,6 @@ import frc.robot.Constants;
 public class Intake extends SubsystemBase {
     private final IntakeIO io;
     public final IntakeInputsAutoLogged inputs = new IntakeInputsAutoLogged();
-    private final Trigger limitSwitchTouched = new Trigger(() -> inputs.limitSwitch).debounce(0.25);
 
     public Intake(IntakeIO io) {
         this.io = io;
@@ -78,7 +75,7 @@ public class Intake extends SubsystemBase {
     }
 
     /** Extends hopper */
-    public Command extendHopper() {
+    public Command extendHopper(double intakeSpeed) {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
         return startEnd(() -> {
@@ -86,10 +83,12 @@ public class Intake extends SubsystemBase {
             counts[1] = 0;
             io.setLeftHopperVoltage(3);
             io.setRightHopperVoltage(3);
+            runIntakeOnly(intakeSpeed);
             SmartDashboard.putBoolean("Intake/HopperExtended", true);
         }, () -> {
             io.setLeftHopperVoltage(0);
             io.setRightHopperVoltage(0);
+            runIntakeOnly(0);
         }).until(() -> {
             double left = inputs.leftHopperPositionRotations;
             double right = inputs.leftHopperPositionRotations;
@@ -112,7 +111,7 @@ public class Intake extends SubsystemBase {
     }
 
     /** Retracts hopper */
-    public Command retractHopper() {
+    public Command retractHopper(double intakeSpeed) {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
         return startEnd(() -> {
@@ -120,10 +119,12 @@ public class Intake extends SubsystemBase {
             counts[1] = 0;
             io.setLeftHopperVoltage(-5);
             io.setRightHopperVoltage(-5);
+            runIntakeOnly(intakeSpeed);
             SmartDashboard.putBoolean("Intake/HopperExtended", false);
         }, () -> {
             io.setLeftHopperVoltage(0);
             io.setRightHopperVoltage(0);
+            runIntakeOnly(0);
         }).until(() -> {
             double left = inputs.leftHopperPositionRotations;
             double right = inputs.leftHopperPositionRotations;
@@ -147,7 +148,7 @@ public class Intake extends SubsystemBase {
 
     /** Run intake wheels */
     public Command intakeBalls(double speed) {
-        return Commands.runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
+        return runEnd(() -> runIntakeOnly(speed), () -> runIntakeOnly(0));
     }
 
     public Command intakeBalls() {
@@ -155,6 +156,6 @@ public class Intake extends SubsystemBase {
     }
 
     public Command jerkIntake() {
-        return extendHopper().andThen(retractHopper()).repeatedly();
+        return extendHopper(0).andThen(retractHopper(0)).repeatedly();
     }
 }

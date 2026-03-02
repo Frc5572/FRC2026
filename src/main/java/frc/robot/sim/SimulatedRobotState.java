@@ -7,11 +7,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
 import frc.robot.ShotData;
+import frc.robot.ShotData.ShotEntry;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.IndexerSim;
@@ -77,9 +77,13 @@ public class SimulatedRobotState {
                 double effectiveTurretAngle = this.swerveDrive.mapleSim.getSimulatedDriveTrainPose()
                     .getRotation().getRadians() + turret.turrentAngle.position
                     + 0.02 * random.nextFloat() - 0.01;
+
+                double distance = ShotData.flywheelHoodToDistance.query(speedRotationsPerSecond,
+                    Units.radiansToDegrees(effectiveHoodAngle));
+                double tof = ShotData.flywheelHoodToTof.query(speedRotationsPerSecond,
+                    Units.radiansToDegrees(effectiveHoodAngle));
                 ShotData.ShotEntry entry =
-                    ShotData.flywheelSpeedHoodAngle.query(new Translation2d(speedRotationsPerSecond,
-                        Units.radiansToDegrees(effectiveHoodAngle))).value();
+                    new ShotEntry(distance, speedRotationsPerSecond, effectiveHoodAngle, tof);
                 double vert = entry.verticalVelocity();
                 double horiz = entry.horizontalVelocity();
                 double x = Math.cos(effectiveTurretAngle) * horiz;

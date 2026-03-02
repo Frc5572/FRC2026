@@ -140,7 +140,7 @@ public final class RobotContainer {
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
 
 
-        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
+        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
 
         DeviceDebug.initialize();
 
@@ -173,13 +173,13 @@ public final class RobotContainer {
         }));
 
         driver.leftTrigger()
-            .whileTrue(Commands.race(intake.extendHopper(), Commands.waitSeconds(0.3))
-                .andThen(intake.intakeBalls().alongWith(intake.extendHopper())));
+            .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
+                .andThen(intake.extendHopper(0.7), intake.intakeBalls()));
 
         driver.rightTrigger().and(driver.leftTrigger().negate()).whileTrue(intake.jerkIntake());
 
         driver.leftTrigger().negate().and(driver.rightTrigger().negate())
-            .onTrue(intake.retractHopper());
+            .onTrue(intake.retractHopper(0));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
