@@ -11,20 +11,18 @@ import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.targeting.PhotonPipelineResult;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
+import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -88,13 +86,17 @@ public final class Swerve extends SubsystemBase {
     public final RobotState state;
     public final PhotonCamera camera;
 
+    private final HolonomicDriveController holonomicDriveController = new HolonomicDriveController(
+        new PIDController(Constants.SwerveTransformPID.translationP,
+            Constants.SwerveTransformPID.translationI, Constants.SwerveTransformPID.translationD),
+        new PIDController(Constants.SwerveTransformPID.translationP,
+            Constants.SwerveTransformPID.translationI, Constants.SwerveTransformPID.translationD),
+        new ProfiledPIDController(Constants.SwerveTransformPID.rotationP,
+            Constants.SwerveTransformPID.rotationI, Constants.SwerveTransformPID.rotationD,
+            new TrapezoidProfile.Constraints(Constants.SwerveTransformPID.maxAngularVelocity,
+                Constants.SwerveTransformPID.maxAngularAcceleration)));
+
     public double customSkidLimit = 1000.0;
-
-    private PhotonPoseEstimator photonPoseEstimator = new PhotonPoseEstimator(
-        AprilTagFieldLayout.loadFromResource(AprilTagFields.kDefaultField.m_resourceFile),
-        PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-        new Transform3d(Constants.Vision.turretCenter, Constants.Vision.turretRight));
-
 
     /**
      * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
@@ -112,6 +114,7 @@ public final class Swerve extends SubsystemBase {
         Function<PhoenixOdometryThread, GyroIO> gyroIo,
         BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn) {
         super("Swerve");
+        this.camera = new PhotonCamera("camera");
         this.odometryThread = new PhoenixOdometryThread(this.odometryLock);
         this.gyro = gyroIo.apply(this.odometryThread);
         this.modules = IntStream.range(0, Constants.Swerve.modulesConstants.length)
@@ -223,6 +226,11 @@ public final class Swerve extends SubsystemBase {
     public Command driveFieldRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(driveSpeeds.get(),
             state.getGlobalPoseEstimate().getRotation()));
+    }
+
+    /** Returns the current yaw of the robot from the gyro */
+    public Rotation2d getGyroYaw() {
+        return gyroInputs.yaw;
     }
 
     /**
@@ -551,19 +559,18 @@ public final class Swerve extends SubsystemBase {
         return state.getGlobalPoseEstimate();
     }
 
-    public void updateOdometry() {
+    public void setPose(Pose2d pose) {
+        SwerveModulePosition[] positions = getModulePositions();
 
-        var visionResult = camera.getAllUnreadResults();
+        Rotation2d gyroYaw =
+            Rotation2d.fromRadians(gyroInputs.yawRads[gyroInputs.yawRads.length - 1]);
 
-        if (visionResult.isPresent()) {
-            for (var result : visionResult) {
-                PhotonPipelineResult estimate = visionResult.get();
-            }
+        state.resetPose(pose, positions, gyroYaw);
+    }
 
-            if (estimate.targetsUsed.size() >= 2) {
-                state.addVisionObservation(Constants.Vision.cameraConstants[1], estimate);
-            }
-        }
+    public void resetOdometry(Pose2d pose) {
+        state.resetPose(pose, getModulePositions(), getGyroYaw());
+        this.io.setPose(pose);
     }
 
     /**
@@ -571,13 +578,31 @@ public final class Swerve extends SubsystemBase {
      */
     public void driveRobotRelativeDirect(ChassisSpeeds speeds) {
         ChassisSpeeds discretizedSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
-
-        SwerveModuleState[] moduleStates = Constants.Swerve.toSwerveModuleStates(discretizedSpeeds);
-
+        SwerveModuleState[] moduleStates =
+            Constants.Swerve.swerveKinematics.toSwerveModuleStates(discretizedSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.Swerve.maxSpeed);
 
         for (int i = 0; i < modules.length; i++) {
-            modules[i].runSetpoint(moduleStates[i]);
+            modules[i].setDesiredState(moduleStates[i]);
         }
     }
+
+    /**
+     * Follow Choreo Trajectory
+     *
+     * @param sample Swerve Sample
+     */
+    public void followTrajectory(SwerveSample sample) {
+        Pose2d pose = getPose();
+
+        ChassisSpeeds speeds = new ChassisSpeeds(
+            sample.vx + holonomicDriveController.getXController().calculate(pose.getX(), sample.x),
+            sample.vy + holonomicDriveController.getYController().calculate(pose.getY(), sample.y),
+            sample.omega + holonomicDriveController.getThetaController()
+                .calculate(pose.getRotation().getRadians(), sample.heading));
+
+        setModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(speeds,
+            state.getGlobalPoseEstimate().getRotation()));
+    }
+
 }

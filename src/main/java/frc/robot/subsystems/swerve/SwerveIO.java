@@ -23,4 +23,6 @@ public interface SwerveIO {
     /** Set the ground truth pose. Only useful in sim. */
     public void resetPose(Pose2d pose);
 
+    public void setPose(Pose2d pose);
+
 }

@@ -4,9 +4,12 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
@@ -51,6 +54,8 @@ import frc.robot.viz.RobotViz;
  */
 @NullMarked
 public final class RobotContainer {
+    private final AutoFactory autoFactory;
+    private final AutoChooser autoChooser;
 
     /* Controllers */
     public final CommandXboxController driver =
@@ -68,6 +73,8 @@ public final class RobotContainer {
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
+    // private final AutoCommandFactory autoCommandFactory;
+    private final AutoCommandFactory autos;
 
     /**
      */
@@ -85,6 +92,7 @@ public final class RobotContainer {
                 indexer = new Indexer(new IndexerReal());
 
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
+
                 break;
             case kSimulation:
                 FuelSim.getInstance().spawnStartingFuel();
@@ -112,6 +120,7 @@ public final class RobotContainer {
                 indexer = new Indexer(sim.indexer);
 
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
+
                 break;
             default:
                 sim = null;
@@ -125,8 +134,20 @@ public final class RobotContainer {
                 indexer = new Indexer(new IndexerIOEmpty());
 
                 colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
+
                 break;
         }
+        autoFactory = new AutoFactory(swerve::getPose, swerve::resetOdometry,
+            swerve::followTrajectory, true, swerve);
+
+        // AutoCommandFactory
+        autos = new AutoCommandFactory(autoFactory, swerve, adjustableHood, climber, intake,
+            indexer, shooter, turret, vision);
+        autoChooser = new AutoChooser();
+        autoChooser.addRoutine("Shoot Only Auto", autos::shootOnlyAuto);
+
+
+        SmartDashboard.putData("Auto Selector", autoChooser);
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();

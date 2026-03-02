@@ -68,4 +68,10 @@ public final class SwerveSim implements SwerveIO {
         mapleSim.setSimulationWorldPose(pose);
     }
 
+    @Override
+    public void setPose(Pose2d pose) {
+        mapleSim.setSimulationWorldPose(pose);
+    }
+
+
 }

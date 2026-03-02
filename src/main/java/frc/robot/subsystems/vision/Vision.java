@@ -124,4 +124,16 @@ public class Vision extends SubsystemBase {
         res[translations.length + 1] = newTranslation2;
         return res;
     }
+
+    public boolean hasHighConfidence() {
+        for (var input : cameraInputs) {
+            for (var result : input.results) {
+                if (result.hasTargets() && result.getTargets().size() >= 2) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 }

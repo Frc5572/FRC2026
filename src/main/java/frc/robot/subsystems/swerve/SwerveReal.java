@@ -25,4 +25,7 @@ public final class SwerveReal implements SwerveIO {
     @Override
     public void resetPose(Pose2d pose) {}
 
+    @Override
+    public void setPose(Pose2d pose) {}
+
 }
