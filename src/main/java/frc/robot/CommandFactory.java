@@ -5,10 +5,12 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -48,7 +50,7 @@ public class CommandFactory {
 
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood) {
-        return Commands.run(() -> {
+        return Commands.runEnd(() -> {
             final Translation2d target = targetSupplier.get();
             Translation2d adjustedTarget = target;
             for (int i = 0; i < 5; i++) {
@@ -63,19 +65,26 @@ public class CommandFactory {
             }
             double distance =
                 adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation());
-            var parameters = ShotData.getShotParameters(distance,
+            var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
             shooter.setVelocity(parameters.desiredSpeed());
             hood.setTargetAngle(Degrees.of(MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0)));
             boolean turretFacing = turret.setGoalFieldRelative(adjustedTarget
                 .minus(state.getTurretCenterFieldFrame().getTranslation()).getAngle());
-            if (parameters.isOkayToShoot() && turretFacing) {
+            boolean isOkay = parameters.isOkayToShoot();
+            Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
+            Logger.recordOutput("AutoShoot/isOkay", isOkay);
+            if (isOkay && turretFacing) {
                 indexer.setMagazineDutyCycle(0.7);
                 indexer.setSpindexerDutyCycle(0.7);
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(-0.2);
             }
+        }, () -> {
+            shooter.setVelocity(0.0);
+            indexer.setMagazineDutyCycle(0.0);
+            indexer.setSpindexerDutyCycle(0.0);
         }, shooter, indexer, hood);
     }
 }

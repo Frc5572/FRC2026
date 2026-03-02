@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
+import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -97,7 +98,7 @@ public final class RobotContainer {
 
                 break;
             case kSimulation:
-                FuelSim.getInstance().spawnStartingFuel();
+                // FuelSim.getInstance().spawnStartingFuel();
                 sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
@@ -187,6 +188,8 @@ public final class RobotContainer {
         if (sim != null) {
             SimulatedArena.getInstance().simulationPeriodic();
             FuelSim.getInstance().updateSim();
+            Logger.recordOutput("FuelSim/RedScore", FuelSim.Hub.RED_HUB.getScore());
+            Logger.recordOutput("FuelSim/BlueScore", FuelSim.Hub.BLUE_HUB.getScore());
             sim.update();
         }
         viz.periodic();

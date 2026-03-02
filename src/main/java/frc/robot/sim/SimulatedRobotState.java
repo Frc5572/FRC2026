@@ -82,8 +82,8 @@ public class SimulatedRobotState {
                     Units.radiansToDegrees(effectiveHoodAngle));
                 double tof = ShotData.flywheelHoodToTof.query(speedRotationsPerSecond,
                     Units.radiansToDegrees(effectiveHoodAngle));
-                ShotData.ShotEntry entry =
-                    new ShotEntry(distance, speedRotationsPerSecond, effectiveHoodAngle, tof);
+                ShotData.ShotEntry entry = new ShotEntry(distance, speedRotationsPerSecond,
+                    Units.radiansToDegrees(effectiveHoodAngle), tof);
                 double vert = entry.verticalVelocity();
                 double horiz = entry.horizontalVelocity();
                 double x = Math.cos(effectiveTurretAngle) * horiz;
@@ -94,7 +94,7 @@ public class SimulatedRobotState {
                         .getTranslation();
                 Translation3d velocity = new Translation3d(x, y, vert);
                 FuelSim.getInstance().spawnFuel(initial, velocity);
-                this.indexer.numFuel--;
+                // this.indexer.numFuel--;
             }
         }
     }

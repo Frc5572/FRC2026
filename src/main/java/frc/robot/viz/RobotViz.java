@@ -216,18 +216,15 @@ public class RobotViz {
 
     private static void drawTrajectory(String name, double flywheelSpeed, double hoodAngle,
         Rotation2d turretAngle, Pose2d swervePose, ChassisSpeeds fieldSpeeds) {
-        double distance =
-            ShotData.flywheelHoodToDistance.query(flywheelSpeed, Units.radiansToDegrees(hoodAngle));
-        double tof =
-            ShotData.flywheelHoodToTof.query(flywheelSpeed, Units.radiansToDegrees(hoodAngle));
-        ShotData.ShotEntry entry =
-            new ShotEntry(distance, flywheelSpeed, Units.radiansToDegrees(hoodAngle), tof);
+        Rotation2d effectiveTurretAngle = swervePose.getRotation().plus(turretAngle);
+
+        double distance = ShotData.flywheelHoodToDistance.query(flywheelSpeed, hoodAngle);
+        double tof = ShotData.flywheelHoodToTof.query(flywheelSpeed, hoodAngle);
+        ShotData.ShotEntry entry = new ShotEntry(distance, flywheelSpeed, hoodAngle, tof);
         double vert = entry.verticalVelocity();
         double horiz = entry.horizontalVelocity();
-        double horiz_x = turretAngle.plus(swervePose.getRotation()).getCos() * horiz
-            + fieldSpeeds.vxMetersPerSecond;
-        double horiz_y = turretAngle.plus(swervePose.getRotation()).getSin() * horiz
-            + fieldSpeeds.vyMetersPerSecond;
+        double horiz_x = effectiveTurretAngle.getCos() * horiz + fieldSpeeds.vxMetersPerSecond;
+        double horiz_y = effectiveTurretAngle.getSin() * horiz + fieldSpeeds.vyMetersPerSecond;
         Translation3d initial = new Pose3d(swervePose)
             .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero)).getTranslation();
         Translation3d[] trajectory = new Translation3d[20];
@@ -239,6 +236,7 @@ public class RobotViz {
             double y = horiz_y * time;
             trajectory[i] = initial.plus(new Translation3d(x, y, z));
         }
+        Logger.recordOutput(name, trajectory);
     }
 
 }
