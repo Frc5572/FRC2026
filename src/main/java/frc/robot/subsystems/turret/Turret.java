@@ -111,6 +111,7 @@ public class Turret extends SubsystemBase {
         return false;
     }
 
+    /** Set target angle relative to the field. */
     public boolean setGoalFieldRelative(Rotation2d targetAngle) {
         return this.setGoalRobotRelative(
             targetAngle.minus(state.getGlobalPoseEstimate().getRotation()),

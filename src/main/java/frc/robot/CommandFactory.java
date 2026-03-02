@@ -48,6 +48,7 @@ public class CommandFactory {
         }, turret, hood, shooter);
     }
 
+    /** Shoot at a given target. */
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood) {
         return Commands.runEnd(() -> {

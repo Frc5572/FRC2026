@@ -95,11 +95,12 @@ public class ShotData {
     public static final RbfInterp2d distanceFlywheelToTof = new RbfInterp2d(entries,
         ShotEntry::distanceFeet, ShotEntry::flywheelSpeedRps, ShotEntry::timeOfFlight, rbf);
 
+    /** Parameters for a single instance of shooting. */
     public static record ShotParameters(double desiredSpeed, double hoodAngleDeg,
         double timeOfFlight, boolean isOkayToShoot) {
-
     }
 
+    /** Get parameters for a given shot situation. */
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed) {
         double desiredSpeed =
             MathUtil.clamp(SPEED_M * distance + SPEED_B, MIN_DESIRED_SPEED, MAX_DESIRED_SPEED);

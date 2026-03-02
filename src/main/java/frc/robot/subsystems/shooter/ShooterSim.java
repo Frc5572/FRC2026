@@ -31,6 +31,7 @@ public class ShooterSim implements ShooterIO {
         flywheelTarget = velocity;
     }
 
+    /** Simulate shooting one ball */
     public void shootOne() {
         flywheel.position *= 0.9;
         flywheel.velocity *= 0.9;
