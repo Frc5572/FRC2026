@@ -1,11 +1,9 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Meters;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 
 /**
  * Intake subsystem
@@ -16,7 +14,6 @@ public class Intake extends SubsystemBase {
 
     public Intake(IntakeIO io) {
         this.io = io;
-        io.setEncoderPosition(0);
     }
 
     @Override
@@ -24,46 +21,11 @@ public class Intake extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Intake", inputs);
 
-        double targetRotations =
-            distanceToRotations(Constants.IntakeConstants.hopperOutDistance.in(Meters));
-        Logger.recordOutput("Intake/LeftError",
-            targetRotations - inputs.leftHopperPositionRotations);
-        Logger.recordOutput("Intake/RightError",
-            targetRotations - inputs.rightHopperPositionRotations);
-        Logger.recordOutput("Intake/TargetRotaitons",
-            distanceToRotations(Constants.IntakeConstants.hopperOutDistance.in(Meters)));
-
-        // if (inputs.limitSwitch) {
-        // io.setLeftHopperVoltage(0);
-        // io.setEncoderPosition(0);
-        // }
     }
 
 
     public void runIntakeOnly(double speed) {
         io.runIntakeMotor(speed);
-    }
-
-    private double distanceToRotations(double meters) {
-        return meters / (Constants.IntakeConstants.pinionDiameter * Math.PI)
-            * Constants.IntakeConstants.gearRatio;
-    }
-
-    /** runs hopper */
-    public void runHopper(double targetMeters) {
-        double targetRotations = distanceToRotations(targetMeters);
-
-        Logger.recordOutput("Intake/TargetMeters", targetMeters);
-        Logger.recordOutput("Intake/TargetRotations", targetRotations);
-
-        // if (inputs.limitSwitch && targetRotations <= 0.01) {
-        // io.setLeftHopperVoltage(0);
-        // io.setEncoderPosition(0);
-        // } else
-        // {
-        io.setLeftHopperPosition(targetRotations);
-        // }
-        io.setRightHopperPosition(targetRotations);
     }
 
     /** Stops the hopper from expanding */
