@@ -175,19 +175,20 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
 
+        adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
+        turret.setDefaultCommand(turret.goToAngleFieldRelative(() -> {
+            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
+                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
+        }));
+
         // BUTTON BINDINGS
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             // TODO passing?
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0))
-            .onFalse(adjustableHood.setGoal(Degrees.of(0)));
-
-        driver.rightTrigger().negate().whileTrue(turret.goToAngleFieldRelative(() -> {
-            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
-                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
-        }));
+        }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+            .alongWith(swerve.limitSkidLimit()));
 
         driver.leftTrigger()
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))

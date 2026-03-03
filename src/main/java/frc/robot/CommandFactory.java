@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
@@ -47,6 +48,35 @@ public class CommandFactory {
             hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
             shooter.shoot(Constants.Shooter.shooterVelocity);
         }, turret, hood, shooter);
+    }
+
+    /** Prepare flywheel and turret for shooting from a given robot pose. */
+    public static Command preShoot(Supplier<Pose2d> robotPoseSupplier,
+        Supplier<Translation2d> targetSupplier, Turret turret, Shooter shooter,
+        DoubleSupplier adjustUp, DoubleSupplier adjustRight) {
+        return Commands.run(() -> {
+            final Translation2d target = targetSupplier.get();
+            Pose2d robotPose = robotPoseSupplier.get();
+            Translation2d turretPosition = robotPose
+                .plus(new Transform2d(Constants.Vision.turretCenter.toPose2d().getTranslation(),
+                    Rotation2d.kZero))
+                .getTranslation();
+            double adjustUpValue = Units.metersToFeet(adjustUp.getAsDouble());
+            Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
+            double distance = target.getDistance(turretPosition) + adjustUpValue;
+            var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
+                shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+            shooter.setVelocity(parameters.desiredSpeed());
+            boolean turretFacing = turret.setGoalFieldRelative(
+                target.minus(turretPosition).getAngle().plus(adjustRightValue));
+            boolean isOkay = parameters.isOkayToShoot();
+            Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
+            Logger.recordOutput("AutoShoot/isOkay", isOkay);
+            Logger.recordOutput("AutoShoot/desiredSpeed", parameters.desiredSpeed());
+            Logger.recordOutput("AutoShoot/hoodAngleDeg",
+                MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
+            Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
+        }, shooter, turret);
     }
 
     /** Shoot at a given target. */
@@ -101,6 +131,6 @@ public class CommandFactory {
             shooter.setVelocity(0.0);
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
-        }, shooter, indexer, hood);
+        }, shooter, turret, indexer, hood);
     }
 }
