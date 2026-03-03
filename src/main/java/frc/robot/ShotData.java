@@ -100,11 +100,10 @@ public class ShotData {
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed) {
         double desiredSpeed =
             MathUtil.clamp(SPEED_M * distance + SPEED_B, MIN_DESIRED_SPEED, MAX_DESIRED_SPEED);
-        var q = distanceFlywheel.query(new Translation2d(distance, currentFlywheelSpeed)).value();
-        double hood = q.hoodAngleDeg();
-        double tof = q.timeOfFlight();
-        return new ShotParameters(desiredSpeed, hood, tof,
-            currentFlywheelSpeed + 10 > desiredSpeed);
+        var q = distanceFlywheel.query(new Translation2d(distance, currentFlywheelSpeed));
+        double hood = q.value().hoodAngleDeg();
+        double tof = q.value().timeOfFlight();
+        return new ShotParameters(desiredSpeed, hood, tof, q.sdf() < 0.02);
     }
 
 }
