@@ -103,4 +103,22 @@ public class AutoCommandFactory {
         moveToStart.done().onTrue(shooter.shoot(0));
         return routine;
     }
+
+    public AutoRoutine passThenShoot() {
+        AutoRoutine routine = autoFactory.newRoutine("Pass then Climb");
+        MoveToPose moveToStart = swerve.moveToPose()
+            .target(new Pose2d(3.5993399620056152, 0.6171109676361084, new Rotation2d()))
+            .autoRoutine(routine).finish();
+
+        AutoTrajectory path = routine.trajectory("passThenClimb");
+        routine.observe(path.atPose("intakeStart", 0, 0)
+            .onTrue(intake.extendHopper().alongWith(intake.intakeBalls())));
+        routine.observe(path.atPose("feedStart", 0, 0)
+            .onTrue(intake.retractHopper().alongWith(shooter.shoot(0))));
+        routine.observe(path.atPose("climb", 0, 0)
+            .onTrue(shooter.shoot(0).alongWith(intake.stop()).andThen(null)));
+        return routine;
+
+    }
+
 }
