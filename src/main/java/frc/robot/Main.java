@@ -114,19 +114,24 @@ public final class Main {
             xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <rect width="100%" height="100%" fill="white" />
                 <image x="60" y="10" width="200" height="200" xlink:href="{b64Res}" />
-                <text text-anchor="end" alignment-baseline="hanging" transform="translate(55, 10)" font-size="12px" stroke="none" fill="black">{yMax}</text>
+                <text text-anchor="end" alignment-baseline="hanging" transform="translate(55, 10)" font-size="12px" stroke="none"
+                fill="black">{yMax}</text>
                 <text text-anchor="end" transform="translate(55, 210)" font-size="12px" stroke="none" fill="black">{yMin}</text>
-                <text transform="translate(260, 215) rotate(90)" alignment-baseline="hanging" font-size="12px" stroke="none" fill="black">{xMax}</text>
+                <text transform="translate(260, 215) rotate(90)" alignment-baseline="hanging" font-size="12px" stroke="none"
+                fill="black">{xMax}</text>
                 <text transform="translate(60, 215) rotate(90)" font-size="12px" stroke="none" fill="black">{xMin}</text>
 
                 <image x="270" y="10" width="20" height="200" xlink:href="{b64Key}" />
                 <text alignment-baseline="hanging" transform="translate(285, 10)" font-size="12px" stroke="none" fill="black">{zMax}</text>
                 <text transform="translate(285, 210)" font-size="12px" stroke="none" fill="black">{zMin}</text>
 
-                <text transform="translate(160, 225)" text-anchor="middle" alignment-baseline="hanging" font-size="12px" stroke="none" fill="black">{xName}</text>
-                <text transform="translate(40, 110) rotate(-90)" text-anchor="middle" font-size="12px" stroke="none" fill="black">{yName}</text>
+                <text transform="translate(160, 225)" text-anchor="middle" alignment-baseline="hanging" font-size="12px"
+                stroke="none" fill="black">{xName}</text>
+                <text transform="translate(40, 110) rotate(-90)" text-anchor="middle" font-size="12px" stroke="none"
+                fill="black">{yName}</text>
 
-                <text transform="translate(305, 110) rotate(90)" text-anchor="middle" font-size="12px" stroke="none" fill="black">{zName}</text>
+                <text transform="translate(305, 110) rotate(90)" text-anchor="middle" font-size="12px" stroke="none"
+                fill="black">{zName}</text>
 
                 {circles}
             </svg>""";
