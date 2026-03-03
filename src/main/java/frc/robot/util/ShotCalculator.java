@@ -6,6 +6,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 
 /**
@@ -53,7 +54,9 @@ public class ShotCalculator {
             ShotCalculator::interpolate);
 
     static {
-        SHOOTER_MAP.put(1.5, new ShooterParams(2800.0, 35.0, 0.38));
+        SHOOTER_MAP.put(Units.feetToMeters(5.0), new ShooterParams(55, 6.5, 0.0));
+
+        // not done below
         SHOOTER_MAP.put(2.0, new ShooterParams(3100.0, 38.0, 0.45));
         SHOOTER_MAP.put(2.5, new ShooterParams(3400.0, 42.0, 0.52));
         SHOOTER_MAP.put(3.0, new ShooterParams(3650.0, 46.0, 0.60));

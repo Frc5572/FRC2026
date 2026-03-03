@@ -19,6 +19,7 @@ public interface IntakeIO {
         public double rightHopperPositionRotations = 0;
 
         public Distance leftHopperPosition = Meters.of(leftHopperPositionRotations);
+        public Distance rightHopperPosition = Meters.of(rightHopperPositionRotations);
 
         public double intakeDutyCycle = 0;
         public boolean limitSwitch = false;

@@ -48,8 +48,9 @@ public class VisionSim extends VisionReal {
     public void updateState(Pose3d robotPose, Angle turretAngle) {
         visionSim.update(robotPose);
         // In the future, should update based on turret state.
-        turretVisionSim.update(robotPose
-            .plus(new Transform3d(-1.651, 0, 0, new Rotation3d(new Rotation2d(turretAngle)))));
+        turretVisionSim
+            .update(robotPose.plus(new Transform3d(Constants.Vision.turretCenter.getTranslation(),
+                new Rotation3d(new Rotation2d(turretAngle)))));
     }
 
 }
