@@ -65,7 +65,7 @@ public class CommandFactory {
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
             double distance = target.getDistance(turretPosition) + adjustUpValue;
             var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
-                shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+                shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
             boolean turretFacing = turret.setGoalFieldRelative(
                 target.minus(turretPosition).getAngle().plus(adjustRightValue));
@@ -95,7 +95,7 @@ public class CommandFactory {
                     adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
                         + adjustUpValue;
                 var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
-                    shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+                    shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), false);
                 double tof = parameters.timeOfFlight();
                 var forward = state.getFieldRelativeSpeeds().times(tof);
                 adjustedTarget = target
@@ -107,7 +107,7 @@ public class CommandFactory {
                 adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
                     + adjustUpValue;
             var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
-                shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+                shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
             hood.setTargetAngle(Degrees.of(MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0)));
             boolean turretFacing = turret.setGoalFieldRelative(

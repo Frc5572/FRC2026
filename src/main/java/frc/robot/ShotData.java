@@ -1,6 +1,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -97,13 +98,24 @@ public class ShotData {
     }
 
     /** Get parameters for a given shot situation. */
-    public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed) {
+    public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed,
+        boolean log) {
         double desiredSpeed =
             MathUtil.clamp(SPEED_M * distance + SPEED_B, MIN_DESIRED_SPEED, MAX_DESIRED_SPEED);
         var q = distanceFlywheel.query(new Translation2d(distance, currentFlywheelSpeed));
         double hood = q.value().hoodAngleDeg();
         double tof = q.value().timeOfFlight();
-        return new ShotParameters(desiredSpeed, hood, tof, q.sdf() < 0.02);
+        boolean isOkayToShoot = q.sdf() < 0.02;
+        if (log) {
+            Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);
+            Logger.recordOutput("ShotParameters/distance", distance);
+            Logger.recordOutput("ShotParameters/currentSpeed", currentFlywheelSpeed);
+            Logger.recordOutput("ShotParameters/hoodDeg", hood);
+            Logger.recordOutput("ShotParameters/tof", tof);
+            Logger.recordOutput("ShotParameters/sdf", q.sdf());
+            Logger.recordOutput("ShotParameters/isOkayToShoot", isOkayToShoot);
+        }
+        return new ShotParameters(desiredSpeed, hood, tof, isOkayToShoot);
     }
 
 }
