@@ -151,8 +151,7 @@ public class Intake extends SubsystemBase {
     }
 
     /**
-     * Returns true if the hopper is close to the target extension. Adjust the 0.05 tolerance based
-     * on your mechanism's precision.
+     * Returns true if the hopper is close to the target
      */
     public boolean isHopperAtTarget(double targetMeters) {
         double targetRotations = distanceToRotations(targetMeters);
@@ -160,12 +159,12 @@ public class Intake extends SubsystemBase {
     }
 
     /**
-     * A command that finishes only when the hopper is extended. We add a 1.5s failsafe timeout in
-     * case it gets stuck.
+     * A command that finishes only when the hopper is extended.
      */
     public Command waitUntilExtended() {
         double target = Constants.IntakeConstants.hopperOutDistance.in(Meters);
         return run(() -> runHopper(target)).until(() -> isHopperAtTarget(target)).withTimeout(1.5);
+
     public Command intakeBalls() {
         return runEnd(() -> runIntakeOnly(0.7), () -> runIntakeOnly(0));
     }

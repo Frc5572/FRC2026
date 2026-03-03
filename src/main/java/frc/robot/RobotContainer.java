@@ -1,18 +1,12 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
-import choreo.auto.AutoChooser;
-import choreo.auto.AutoFactory;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,10 +15,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -50,14 +41,12 @@ import frc.robot.subsystems.swerve.gyro.GyroIOEmpty;
 import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
-import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
 import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
-import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
 
@@ -70,7 +59,6 @@ import frc.robot.viz.RobotViz;
 @NullMarked
 public final class RobotContainer {
     private final AutoFactory autoFactory;
-    private final AutoChooser autoChooser;
 
     /* Controllers */
     public final CommandXboxController driver =
@@ -112,9 +100,6 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
-
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
-
                 break;
             case kSimulation:
                 FuelSim.getInstance().spawnStartingFuel();
@@ -140,9 +125,6 @@ public final class RobotContainer {
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
-
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
-
                 break;
             default:
                 sim = null;
@@ -154,8 +136,6 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
-
-                colorDetection = new ColorDetection(new ColorDetectionIO.Empty());
 
                 break;
         }
@@ -170,123 +150,107 @@ public final class RobotContainer {
 
 
         SmartDashboard.putData("Auto Selector", autoChooser);
-                break;
+        break;
+    }
+    // DASHBOARD STUFF
+    SmartDashboard.putData(Constants.DashboardValues.autoChooser,autoChooser);SmartDashboard.putNumber(Constants.DashboardValues.shootX,0.0);SmartDashboard.putNumber(Constants.DashboardValues.shootY,0.0);SmartDashboard.putData(Constants.DashboardValues.field,field);
+    // END DASHBOARD STUFF
+
+    viz=new RobotViz(sim,swerve,turret,adjustableHood,intake,climber);
+
+    DeviceDebug.initialize();
+
+    // AUTO STUFF
+    autoCommandFactory=new AutoCommandFactory(swerve.autoFactory,swerve,adjustableHood,climber,intake,indexer,shooter,turret);autoChooser.addCmd("Do Nothing",Commands::none);autoChooser.addRoutine("Gather then Shoot (Left)",autoCommandFactory::gatherThenShootLeft);autoChooser.addRoutine("Just Shoot",autoCommandFactory::justShoot);
+    // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
+    // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
+    // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
+    // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
+    // autoShootLocation.setPose(x, y, new Rotation2d());
+    // // System.out.println("asdfasdasdf");
+    // // Logger.recordOutput("asdfadsf", autoShootLocation.getPose());
+    // }));
+    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).andThen(Commands.runOnce(()->swerve.stop())));
+    // END AUTO STUFF
+
+    // DEFAULT COMMANDS
+    swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(()->-driver.getLeftY(),()->-driver.getLeftX(),()->-driver.getRightX())));
+
+    // BUTTON BINDINGS
+    driver.y().onTrue(swerve.setFieldRelativeOffset());
+
+    // driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
+
+    driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8,0.4)).onFalse(indexer.setSpeedCommand(0.0,0.0));
+
+    driver.a().onTrue(intake.extendHopper());driver.b().onTrue(intake.retractHopper());driver.x().whileTrue(intake.intakeBalls());
+
+    double[] flywheelSpeed = new double[] {60.0};
+    double[] hoodAngle = new double[] {10.0};
+
+    driver.rightTrigger().whileTrue(shooter.shoot(()->flywheelSpeed[0]).alongWith(adjustableHood.setGoal(()->Degrees.of(hoodAngle[0])))).onFalse(shooter.shoot(0.0));
+
+    driver.leftBumper().whileTrue(turret.goToAngleFieldRelative(()->
+    {
+        return FieldConstants.Hub.centerHub
+            .minus(swerve.state.getGlobalPoseEstimate().getTranslation()).getAngle()
+            .plus(Rotation2d.k180deg);
+    })).onFalse(turret.goToAngleRobotRelative(()->Rotation2d.kZero));
+
+    boolean[] changingFlywheelSpeed = new boolean[] {false};test.b().onTrue(Commands.runOnce(()->
+    {
+        changingFlywheelSpeed[0] = true;
+    }));test.x().onTrue(Commands.runOnce(()->
+    {
+        changingFlywheelSpeed[0] = false;
+    }));
+
+    double[] timings = new double[] {0.0,
+        -1.0};driver.rightTrigger().and(()->shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond)<flywheelSpeedFilterValue-3.0).onTrue(Commands.runOnce(()->
+    {
+        timings[0] = Timer.getFPGATimestamp();
+        writeTimings(timings);
+    }));test.a().onTrue(Commands.runOnce(()->
+    {
+        timings[1] = Timer.getFPGATimestamp();
+        writeTimings(timings);
+    }));
+
+    test.povUp().onTrue(Commands.runOnce(()->
+    {
+        if (changingFlywheelSpeed[0]) {
+            flywheelSpeed[0] += 5.0;
+        } else {
+            hoodAngle[0] += 1.0;
         }
-        // DASHBOARD STUFF
-        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
-        SmartDashboard.putNumber(Constants.DashboardValues.shootX, 0.0);
-        SmartDashboard.putNumber(Constants.DashboardValues.shootY, 0.0);
-        SmartDashboard.putData(Constants.DashboardValues.field, field);
-        // END DASHBOARD STUFF
-
-        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
-
-        DeviceDebug.initialize();
-
-        // AUTO STUFF
-        autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
-            climber, intake, indexer, shooter, turret);
-        autoChooser.addCmd("Do Nothing", Commands::none);
-        autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
-        autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
-        // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
-        // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
-        // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-        // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        // autoShootLocation.setPose(x, y, new Rotation2d());
-        // // System.out.println("asdfasdasdf");
-        // // Logger.recordOutput("asdfadsf", autoShootLocation.getPose());
-        // }));
-        RobotModeTriggers.autonomous()
-            .whileTrue(autoChooser.selectedCommandScheduler()
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .andThen(Commands.runOnce(() -> swerve.stop())));
-        // END AUTO STUFF
-
-        // DEFAULT COMMANDS
-        swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
-            () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
-
-        // BUTTON BINDINGS
-        driver.y().onTrue(swerve.setFieldRelativeOffset());
-
-        // driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
-
-        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.4))
-            .onFalse(indexer.setSpeedCommand(0.0, 0.0));
-
-        driver.a().onTrue(intake.extendHopper());
-        driver.b().onTrue(intake.retractHopper());
-        driver.x().whileTrue(intake.intakeBalls());
-
-        double[] flywheelSpeed = new double[] {60.0};
-        double[] hoodAngle = new double[] {10.0};
-
-        driver.rightTrigger()
-            .whileTrue(shooter.shoot(() -> flywheelSpeed[0])
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(hoodAngle[0]))))
-            .onFalse(shooter.shoot(0.0));
-
-        driver.leftBumper().whileTrue(turret.goToAngleFieldRelative(() -> {
-            return FieldConstants.Hub.centerHub
-                .minus(swerve.state.getGlobalPoseEstimate().getTranslation()).getAngle()
-                .plus(Rotation2d.k180deg);
-        })).onFalse(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
-
-        boolean[] changingFlywheelSpeed = new boolean[] {false};
-        test.b().onTrue(Commands.runOnce(() -> {
-            changingFlywheelSpeed[0] = true;
-        }));
-        test.x().onTrue(Commands.runOnce(() -> {
-            changingFlywheelSpeed[0] = false;
-        }));
-
-        double[] timings = new double[] {0.0, -1.0};
-        driver.rightTrigger()
-            .and(() -> shooter.inputs.shooterAngularVelocity1
-                .in(RotationsPerSecond) < flywheelSpeedFilterValue - 3.0)
-            .onTrue(Commands.runOnce(() -> {
-                timings[0] = Timer.getFPGATimestamp();
-                writeTimings(timings);
-            }));
-        test.a().onTrue(Commands.runOnce(() -> {
-            timings[1] = Timer.getFPGATimestamp();
-            writeTimings(timings);
-        }));
-
-        test.povUp().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] += 5.0;
-            } else {
-                hoodAngle[0] += 1.0;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
-        test.povDown().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] -= 5.0;
-            } else {
-                hoodAngle[0] -= 1.0;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
-        test.povRight().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] += 0.5;
-            } else {
-                hoodAngle[0] += 0.1;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
-        test.povLeft().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] -= 0.5;
-            } else {
-                hoodAngle[0] -= 0.1;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
         writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+    }));test.povDown().onTrue(Commands.runOnce(()->
+    {
+        if (changingFlywheelSpeed[0]) {
+            flywheelSpeed[0] -= 5.0;
+        } else {
+            hoodAngle[0] -= 1.0;
+        }
+        writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+    }));test.povRight().onTrue(Commands.runOnce(()->
+    {
+        if (changingFlywheelSpeed[0]) {
+            flywheelSpeed[0] += 0.5;
+        } else {
+            hoodAngle[0] += 0.1;
+        }
+        writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+    }));test.povLeft().onTrue(Commands.runOnce(()->
+    {
+        if (changingFlywheelSpeed[0]) {
+            flywheelSpeed[0] -= 0.5;
+        } else {
+            hoodAngle[0] -= 0.1;
+        }
+        writeShotConf(flywheelSpeed[0], hoodAngle[0]);
+    }));
+
+    writeShotConf(flywheelSpeed[0], hoodAngle[0]);
         writeTimings(timings);
     }
 

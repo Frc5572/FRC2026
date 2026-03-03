@@ -1,21 +1,17 @@
 package frc.robot;
 
 import java.util.Set;
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
-import edu.wpi.first.wpilibj2.command.Commands;
 import java.util.function.Supplier;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -23,9 +19,11 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.MoveToPose;
+import frc.robot.subsystems.swerve.util.TurnToRotation;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
+
 
 public class AutoCommandFactory {
 
@@ -39,32 +37,12 @@ public class AutoCommandFactory {
     private final Shooter shooter;
     private final Vision vision;
 
-    public AutoCommandFactory(AutoFactory autoFactory, Swerve swerve, AdjustableHood adjustableHood,
-        Climber climber, Intake intake, Indexer indexer, Shooter shooter, Turret turret,
-        Vision vision) {
-import frc.robot.subsystems.swerve.util.TurnToRotation;
-import frc.robot.subsystems.turret.Turret;
-import frc.robot.util.AllianceFlipUtil;
-
-/**
- * Auto Command Factory
- */
-public class AutoCommandFactory {
-
-    AutoFactory autoFactory;
-    Swerve swerve;
-    AdjustableHood adjustableHood;
-    Climber climber;
-    Indexer indexer;
-    Intake intake;
-    Shooter shooter;
-    Turret turret;
-
     /**
      * Auto Command Factory
      */
     public AutoCommandFactory(AutoFactory autoFactory, Swerve swerve, AdjustableHood adjustableHood,
-        Climber climber, Intake intake, Indexer indexer, Shooter shooter, Turret turret) {
+        Climber climber, Intake intake, Indexer indexer, Shooter shooter, Turret turret,
+        Vision vision) {
         this.autoFactory = autoFactory;
         this.swerve = swerve;
         this.adjustableHood = adjustableHood;
@@ -74,7 +52,6 @@ public class AutoCommandFactory {
         this.shooter = shooter;
         this.turret = turret;
         this.vision = vision;
-        this.autoFactory = autoFactory;
     }
 
     public AutoRoutine shootOnlyAuto() {
@@ -183,6 +160,7 @@ public class AutoCommandFactory {
 
         score = score.andThen(swerve.stop());
         routine.active().onTrue(score.withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        return routine;
     }
 
     /**
