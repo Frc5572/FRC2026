@@ -300,7 +300,8 @@ public final class Constants {
         public static final Pose3d turretLeft =
             new Pose3d(Inches.of(-7.972), Inches.of(5.274), Inches.of(20.56), Rotation3d.kZero);
         public static final Pose3d turretRight =
-            new Pose3d(Inches.of(-7.972), Inches.of(-5.274), Inches.of(20.56), Rotation3d.kZero);
+            new Pose3d(Inches.of(-7.972), Inches.of(-5.274), Inches.of(20.56), Rotation3d.kZero)
+                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.k180deg));
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {

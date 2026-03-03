@@ -421,8 +421,7 @@ public final class Swerve extends SubsystemBase {
 
 
     public Command limitSkidLimit() {
-        return Commands.runEnd(() -> customSkidLimit = FieldConstants.Hub.innerWidth / 2.0,
-            () -> customSkidLimit = 1000.0, this);
+        return Commands.runEnd(() -> customSkidLimit = 10.0, () -> customSkidLimit = 1000.0, this);
     }
 
     private void runCharacterization(double output) {
