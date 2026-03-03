@@ -611,8 +611,10 @@ public final class Constants {
      * dashboard constants
      */
     public static class DashboardValues {
-        // Auto
+        public static final String field = "Dashboard/Field";
         public static final String autoChooser = "Dashboard/Auto/Auto Chooser";
+        public static final String shootX = "Dashboard/Auto/Auto Shoot X";
+        public static final String shootY = "Dashboard/Auto/Auto Shoot Y";
 
 
     }
