@@ -17,6 +17,7 @@ import frc.robot.subsystems.swerve.util.MoveToPose;
 import frc.robot.subsystems.swerve.util.TurnToRotation;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.Tuples;
 
 /**
  * Auto Command Factory
@@ -117,7 +118,10 @@ public class AutoCommandFactory {
         routine.observe(path.atPose("feedStart", 0, 0)
             .onTrue(intake.retractHopper().alongWith(shooter.shoot(0))));
         routine.observe(path.atPose("climb", 0, 0)
-            .onTrue(shooter.shoot(0).alongWith(intake.stop()).andThen(null)));
+            .onTrue(shooter.shoot(0).alongWith(intake.stop()).andThen(
+                climber.moveTo(() -> new Tuples.Tuple2<>(Constants.Climber.Pivot.ROTATIONS_AT_TOP,
+                    Constants.Climber.Telescope.ROTATIONS_AT_TOP))))); // supposed to be angle and
+                                                                       // distance
         return routine;
 
     }
