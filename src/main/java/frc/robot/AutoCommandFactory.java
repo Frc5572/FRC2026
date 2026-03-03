@@ -60,6 +60,12 @@ public class AutoCommandFactory {
         Pose2d rightFuel = AllianceFlipUtil
             .apply(new Pose2d(FieldConstants.LinesVertical.closeFuelXPosition + (35.95 / 2),
                 FieldConstants.LinesHorizontal.rightFuelYPosition, Rotation2d.kZero));
+        Pose2d leftFinalFuel = AllianceFlipUtil
+            .apply(new Pose2d(FieldConstants.LinesVertical.closeFuelXPosition + (35.95 / 2),
+                FieldConstants.LinesHorizontal.leftFinalFuelYPosition, Rotation2d.kZero));
+        Pose2d rightFinalFuel = AllianceFlipUtil
+            .apply(new Pose2d(FieldConstants.LinesVertical.closeFuelXPosition + (35.95 / 2),
+                FieldConstants.LinesHorizontal.rightFinalFuelYPosition, Rotation2d.kZero));
         Pose2d leftShootLocation =
             AllianceFlipUtil.apply(new Pose2d(FieldConstants.LinesVertical.starting - 1,
                 FieldConstants.LeftTrench.openingTopLeft.getY(), Rotation2d.kZero));
@@ -79,17 +85,20 @@ public class AutoCommandFactory {
                     Pose2d chosenTrench;
                     Rotation2d intakeRotation;
                     Pose2d intakeLocation;
+                    Pose2d intakeFinalLocation;
                     Pose2d shootLocation;
 
                     if (distToLeft < distToRight) {
                         chosenTrench = leftTrench;
                         intakeRotation = Rotation2d.fromDegrees(90);
                         intakeLocation = leftFuel;
+                        intakeFinalLocation = leftFinalFuel;
                         shootLocation = leftShootLocation;
                     } else {
                         chosenTrench = rightTrench;
                         intakeRotation = Rotation2d.fromDegrees(270);
                         intakeLocation = rightFuel;
+                        intakeFinalLocation = rightFinalFuel;
                         shootLocation = rightShootLocation;
                     }
 
@@ -117,6 +126,15 @@ public class AutoCommandFactory {
                                 intakeRotation),
                             null, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
 
+                        // Intake
+                        new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
+                            () -> new Pose2d(
+                                AllianceFlipUtil.apply(new Translation2d(intakeFinalLocation.getX(),
+                                    intakeFinalLocation.getY())),
+                                intakeRotation),
+                            null, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
+
+
                         // Back to Hub
                         new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
                             () -> shootLocation, null, () -> Constants.Swerve.autoMaxSpeed, true,
@@ -126,7 +144,6 @@ public class AutoCommandFactory {
                         Commands.parallel(shooter.shoot(65),
                             Commands.sequence(Commands.waitSeconds(0.6),
                                 indexer.setSpeedCommand(0.8, 0.8)),
-                            // Use runOnce so the sequence can progress to the next step
                             Commands.repeatingSequence(intake.extendHopper().withTimeout(0.4),
                                 intake.retractHopper().withTimeout(0.4)))
                             .withTimeout(7.0));

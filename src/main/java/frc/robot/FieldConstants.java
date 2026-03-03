@@ -188,10 +188,15 @@ public class FieldConstants {
 
         /** Left y start position of the fuel in the center zone */
         public static final double leftFuelYPosition = fieldWidth - 67.89; // distance between wall
-                                                                           // and start of fuel
+
+        /** Left y end position for intakin fuel */
+        public static final double leftFinalFuelYPosition = leftFuelYPosition - 45;
 
         /** Right y start position of the fuel in the center zone */
         public static final double rightFuelYPosition = 67.89;
+
+        /** right y end position for intaking fuel */
+        public static final double rightFinalFuelYPosition = rightFuelYPosition + 45;
     }
 
     /**
