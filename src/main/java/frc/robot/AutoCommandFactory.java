@@ -109,6 +109,7 @@ public class AutoCommandFactory {
         MoveToPose moveToStart = swerve.moveToPose()
             .target(new Pose2d(3.5993399620056152, 0.6171109676361084, new Rotation2d()))
             .autoRoutine(routine).finish();
+        routine.active().onTrue(moveToStart);
 
         AutoTrajectory path = routine.trajectory("passThenClimb");
         routine.observe(path.atPose("intakeStart", 0, 0)
