@@ -420,10 +420,13 @@ public final class Constants {
 
 
             /** Telescope length at the top position, in degrees. */
-            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0);
+            public static final Angle DEGREES_AT_TOP = Degrees.of(72.0); // TODO: ??
 
             /** Telescope length at the top position, in Meters. */
+            // TODO: This can't be right
             public static final Distance ROTATIONS_AT_TOP = Meters.of(220);
+
+            public static final Distance LEVEL_1_CLIMB = Meters.of(1);
 
             /**
              * S Sensor to mechanism ratio for converting encoder rotations to mechanism angle.
@@ -431,26 +434,9 @@ public final class Constants {
             public static final double SENSOR_TO_MECHANISM_RATIO =
                 ROTATIONS_AT_TOP.in(Meters) / DEGREES_AT_TOP.in(Degrees);
 
-            /** Proportional gain for pivot position control. */
-            public static final double KP = 50.0;
-
-            /** Integral gain for pivot position control. */
-            public static final double KI = 0.0;
-
-            /** Derivative gain for pivot position control. */
-            public static final double KD = 0.0;
-
-            /** Static feedforward constant for overcoming friction. */
-            public static final double KS = 0.9;
-
-            /** Velocity feedforward constant. */
-            public static final double KV = 0.0;
-
-            /** Acceleration feedforward constant. */
-            public static final double KA = 0.0;
-
-            /** Gravity feedforward constant for maintaining pivot angle. */
-            public static final double KG = 0.9375;
+            public static PIDConstants pidConstants =
+                new PIDConstantsBuilder("telescopePID", GravityTypeValue.Elevator_Static).kP(0.0)
+                    .kI(0.0).kD(0.0).kV(0.0).kS(0.0).kG(0.0).kA(0.0).finish();
 
         }
 
@@ -468,27 +454,6 @@ public final class Constants {
 
             /** Neutral mode for the pivot motor (brake or coast). */
             public static final NeutralModeValue BREAK = NeutralModeValue.Brake;
-
-            /** Proportional gain for pivot position control. */
-            public static final double KP = 50.0;
-
-            /** Integral gain for pivot position control. */
-            public static final double KI = 0.0;
-
-            /** Derivative gain for pivot position control. */
-            public static final double KD = 0.0;
-
-            /** Static feedforward constant for overcoming friction. */
-            public static final double KS = 0.9;
-
-            /** Velocity feedforward constant. */
-            public static final double KV = 0.0;
-
-            /** Acceleration feedforward constant. */
-            public static final double KA = 0.0;
-
-            /** Gravity feedforward constant for maintaining pivot angle. */
-            public static final double KG = 0.9375;
 
             /** Motion magic cruise velocity, in rotations per second. */
             public static final double C_VELOCITY = 4.0;
@@ -519,6 +484,10 @@ public final class Constants {
              */
             public static final double SENSOR_TO_MECHANISM_RATIO =
                 ROTATIONS_AT_TOP.in(Rotations) / DEGREES_AT_TOP.in(Degrees);
+
+            public static PIDConstants pidConstants =
+                new PIDConstantsBuilder("PivotPID", GravityTypeValue.Arm_Cosine).kP(0.0).kI(0.0)
+                    .kD(0.0).kV(0.0).kS(0.0).kG(0.0).kA(0.0).finish();
         }
     }
 

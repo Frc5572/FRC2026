@@ -18,6 +18,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.tunable.PIDConstants;
 
 /**
  * Real hardware implementation of the climber subsystem.
@@ -57,13 +58,6 @@ public class ClimberReal implements ClimberIO {
         telescopeConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         telescopeConfig.Feedback.SensorToMechanismRatio =
             Constants.Climber.Telescope.SENSOR_TO_MECHANISM_RATIO;
-        telescopeConfig.Slot0.kP = Constants.Climber.Telescope.KP;
-        telescopeConfig.Slot0.kI = Constants.Climber.Telescope.KI;
-        telescopeConfig.Slot0.kD = Constants.Climber.Telescope.KD;
-        telescopeConfig.Slot0.kS = Constants.Climber.Telescope.KS;
-        telescopeConfig.Slot0.kV = Constants.Climber.Telescope.KV;
-        telescopeConfig.Slot0.kA = Constants.Climber.Telescope.KA;
-        telescopeConfig.Slot0.kG = Constants.Climber.Telescope.KG;
         telescopeConfig.Slot0.GravityType = GravityTypeValue.Elevator_Static;
         telescopeConfig.MotorOutput.PeakForwardDutyCycle = 0.80;
         telescopeConfig.MotorOutput.PeakReverseDutyCycle = -0.80;
@@ -72,17 +66,13 @@ public class ClimberReal implements ClimberIO {
         pivotConfig.Feedback.SensorToMechanismRatio =
             Constants.Climber.Pivot.SENSOR_TO_MECHANISM_RATIO;
         pivotConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        pivotConfig.Slot0.kP = Constants.Climber.Pivot.KP;
-        pivotConfig.Slot0.kI = Constants.Climber.Pivot.KI;
-        pivotConfig.Slot0.kD = Constants.Climber.Pivot.KD;
-        pivotConfig.Slot0.kS = Constants.Climber.Pivot.KS;
-        pivotConfig.Slot0.kV = Constants.Climber.Pivot.KV;
-        pivotConfig.Slot0.kA = Constants.Climber.Pivot.KA;
-        pivotConfig.Slot0.kG = Constants.Climber.Pivot.KG;
         pivotConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         pivotConfig.MotionMagic.MotionMagicCruiseVelocity = Constants.Climber.Pivot.C_VELOCITY;
         pivotConfig.MotionMagic.MotionMagicAcceleration = Constants.Climber.Pivot.ACCELERATION;
         pivotConfig.MotionMagic.MotionMagicJerk = Constants.Climber.Pivot.JERK;
+
+        Constants.Climber.Pivot.pidConstants.apply(pivotConfig.Slot0);
+        Constants.Climber.Telescope.pidConstants.apply(telescopeConfig.Slot0);
 
         pivotMotor.getConfigurator().apply(pivotConfig);
         telecopeMotorLeft.getConfigurator().apply(telescopeConfig);
@@ -150,5 +140,18 @@ public class ClimberReal implements ClimberIO {
         inputs.velocityTelescope = telescopeVelocity.getValue();
         inputs.outputVoltageTelescope = telescopeVoltage.getValue();
         inputs.motorCurrentTelescope = telescopeCurrent.getValue();
+    }
+
+    @Override
+    public void setPIDPivot(PIDConstants constants) {
+        constants.apply(pivotConfig.Slot0);
+        pivotMotor.getConfigurator().apply(pivotConfig);
+    }
+
+    @Override
+    public void setPIDTelescope(PIDConstants constants) {
+        constants.apply(telescopeConfig.Slot0);
+        telecopeMotorLeft.getConfigurator().apply(telescopeConfig);
+        telescopeMotorRight.getConfigurator().apply(telescopeConfig);
     }
 }

@@ -12,6 +12,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.GenerateEmptyIO;
+import frc.robot.util.tunable.PIDConstants;
 
 /**
  * Hardware abstraction interface for the climber subsystem.
@@ -52,4 +53,8 @@ public interface ClimberIO {
     public void setAnglePivot(Angle angle);
 
     public void setHeightTelescope(Distance height);
+
+    public void setPIDPivot(PIDConstants constants);
+
+    public void setPIDTelescope(PIDConstants constants);
 }
