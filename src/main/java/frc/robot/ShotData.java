@@ -40,10 +40,10 @@ public class ShotData {
     // @formatter:on
 
     private static final double MIN_DESIRED_SPEED = 50.0;
-    private static final double MIN_DESIRED_SPEED_DISTANCE = Units.feetToMeters(6.0);
+    private static final double MIN_DESIRED_SPEED_DISTANCE = 6.0;
 
     private static final double MAX_DESIRED_SPEED = 70.0;
-    private static final double MAX_DESIRED_SPEED_DISTANCE = Units.feetToMeters(18.0);
+    private static final double MAX_DESIRED_SPEED_DISTANCE = 18.0;
 
     private static final double SPEED_M = (MAX_DESIRED_SPEED - MIN_DESIRED_SPEED)
         / (MAX_DESIRED_SPEED_DISTANCE - MIN_DESIRED_SPEED_DISTANCE);

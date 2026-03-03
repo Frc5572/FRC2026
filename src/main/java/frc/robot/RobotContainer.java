@@ -165,7 +165,7 @@ public final class RobotContainer {
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             // TODO passing?
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood))
+        }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0))
             .onFalse(adjustableHood.setGoal(Degrees.of(0)));
 
         driver.rightTrigger().negate().whileTrue(turret.goToAngleFieldRelative(() -> {

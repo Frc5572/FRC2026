@@ -141,9 +141,9 @@ public class RobotViz {
 
         out[hoodIndex] = new Pose3d()
             .rotateAround(hoodRotationCenter, new Rotation3d(0, hoodAngle.in(Radians), 0))
-            .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
-        out[turretIndex] =
-            new Pose3d().rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
+            .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians() + Math.PI));
+        out[turretIndex] = new Pose3d().rotateAround(turretCenter,
+            new Rotation3d(0, 0, turretAngle.getRadians() + Math.PI));
 
         out[hooksIndex] =
             new Pose3d(0, 0, climberHeight.in(Meters) - hooksDown.in(Meters), Rotation3d.kZero)
@@ -216,7 +216,8 @@ public class RobotViz {
 
     private static void drawTrajectory(String name, double flywheelSpeed, double hoodAngle,
         Rotation2d turretAngle, Pose2d swervePose, ChassisSpeeds fieldSpeeds) {
-        Rotation2d effectiveTurretAngle = swervePose.getRotation().plus(turretAngle);
+        Rotation2d effectiveTurretAngle =
+            swervePose.getRotation().plus(turretAngle).plus(Rotation2d.k180deg);
 
         ShotData.ShotEntry entry =
             ShotData.flywheelHood.query(new Translation2d(flywheelSpeed, hoodAngle)).value();

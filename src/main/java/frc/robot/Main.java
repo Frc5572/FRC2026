@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.function.ToDoubleFunction;
 import javax.imageio.ImageIO;
+import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.ShotData.ShotEntry;
 import frc.robot.math.interp2d.Interp2d;
 import frc.robot.math.interp2d.MulAdd;
@@ -37,8 +38,8 @@ public final class Main {
      * @param args String args
      */
     public static void main(String... args) {
-        drawImages();
-        // RobotBase.startRobot(Robot::new);
+        // drawImages();
+        RobotBase.startRobot(Robot::new);
     }
 
     private static void drawImages() {
