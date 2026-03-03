@@ -1,17 +1,15 @@
 package frc.robot.viz;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.function.ToDoubleFunction;
-import javax.imageio.ImageIO;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.numbers.N3;
+import frc.robot.util.Tuples.Tuple3;
 
 /** Draw colormap images */
 public class DrawColorMap {
@@ -280,7 +278,7 @@ public class DrawColorMap {
     }
 
     /** Draw colormap key */
-    public static void saveKey(String filename) throws IOException {
+    public static BufferedImage key() throws IOException {
         int height = 1080;
         int width = 20;
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -295,11 +293,11 @@ public class DrawColorMap {
             }
         }
 
-        ImageIO.write(image, "png", new File(filename));
+        return image;
     }
 
     /** Draw colormap image. Returns min and max value for key. */
-    public static <T> Pair<Double, Double> draw(String filename,
+    public static <T> Tuple3<BufferedImage, Double, Double> draw(
         ToDoubleFunction<Translation2d> func, double xMin, double xMax, double yMin, double yMax)
         throws IOException {
         int width = 1080;
@@ -333,9 +331,7 @@ public class DrawColorMap {
             }
         }
 
-        ImageIO.write(image, "png", new File(filename));
-
-        return Pair.of(minValue, maxValue);
+        return new Tuple3<>(image, minValue, maxValue);
     }
 
 }

@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -21,7 +22,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants;
 import frc.robot.ShotData;
-import frc.robot.ShotData.ShotEntry;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
@@ -218,9 +218,8 @@ public class RobotViz {
         Rotation2d turretAngle, Pose2d swervePose, ChassisSpeeds fieldSpeeds) {
         Rotation2d effectiveTurretAngle = swervePose.getRotation().plus(turretAngle);
 
-        double distance = ShotData.flywheelHoodToDistance.query(flywheelSpeed, hoodAngle);
-        double tof = ShotData.flywheelHoodToTof.query(flywheelSpeed, hoodAngle);
-        ShotData.ShotEntry entry = new ShotEntry(distance, flywheelSpeed, hoodAngle, tof);
+        ShotData.ShotEntry entry =
+            ShotData.flywheelHood.query(new Translation2d(flywheelSpeed, hoodAngle)).value();
         double vert = entry.verticalVelocity();
         double horiz = entry.horizontalVelocity();
         double horiz_x = effectiveTurretAngle.getCos() * horiz + fieldSpeeds.vxMetersPerSecond;
@@ -229,7 +228,7 @@ public class RobotViz {
             .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero)).getTranslation();
         Translation3d[] trajectory = new Translation3d[20];
         for (int i = 0; i < 20; i++) {
-            double time = i * (tof / 19.0);
+            double time = i * (entry.timeOfFlight() / 19.0);
             double z =
                 Constants.Shooter.shooterHeight.in(Meters) + vert * time - 0.5 * 9.81 * time * time;
             double x = horiz_x * time;

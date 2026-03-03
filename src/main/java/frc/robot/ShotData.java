@@ -1,11 +1,11 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
-import java.util.function.DoubleUnaryOperator;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.math.interp2d.Interp2d;
 import frc.robot.math.interp2d.MulAdd;
-import frc.robot.math.interp2d.RbfInterp2d;
 
 /** Data for flywheel, distance, and hood angle that results in a successful shot. */
 public class ShotData {
@@ -49,7 +49,7 @@ public class ShotData {
         / (MAX_DESIRED_SPEED_DISTANCE - MIN_DESIRED_SPEED_DISTANCE);
     private static final double SPEED_B = MAX_DESIRED_SPEED - SPEED_M * MAX_DESIRED_SPEED_DISTANCE;
 
-    private static final MulAdd<ShotEntry> mulAdd = new MulAdd<ShotData.ShotEntry>() {
+    public static final MulAdd<ShotEntry> mulAdd = new MulAdd<ShotData.ShotEntry>() {
 
         @Override
         public ShotEntry mul(ShotEntry a, double b) {
@@ -86,14 +86,10 @@ public class ShotData {
 
     }
 
-    private static DoubleUnaryOperator rbf = (r) -> {
-        return Math.sqrt(1.0 + Math.pow(0.2 * r, 2));
-    };
-
-    public static final RbfInterp2d distanceFlywheelToHood = new RbfInterp2d(entries,
-        ShotEntry::distanceFeet, ShotEntry::flywheelSpeedRps, ShotEntry::hoodAngleDeg, rbf);
-    public static final RbfInterp2d distanceFlywheelToTof = new RbfInterp2d(entries,
-        ShotEntry::distanceFeet, ShotEntry::flywheelSpeedRps, ShotEntry::timeOfFlight, rbf);
+    public static Interp2d<ShotEntry> distanceFlywheel =
+        new Interp2d<>(entries, mulAdd, ShotEntry::distanceFeet, ShotEntry::flywheelSpeedRps);
+    public static Interp2d<ShotEntry> flywheelHood =
+        new Interp2d<>(entries, mulAdd, ShotEntry::flywheelSpeedRps, ShotEntry::hoodAngleDeg);
 
     /** Parameters for a single instance of shooting. */
     public static record ShotParameters(double desiredSpeed, double hoodAngleDeg,
@@ -104,15 +100,11 @@ public class ShotData {
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed) {
         double desiredSpeed =
             MathUtil.clamp(SPEED_M * distance + SPEED_B, MIN_DESIRED_SPEED, MAX_DESIRED_SPEED);
-        double hood = distanceFlywheelToHood.query(distance, currentFlywheelSpeed);
-        double tof = distanceFlywheelToTof.query(distance, currentFlywheelSpeed);
+        var q = distanceFlywheel.query(new Translation2d(distance, currentFlywheelSpeed)).value();
+        double hood = q.hoodAngleDeg();
+        double tof = q.timeOfFlight();
         return new ShotParameters(desiredSpeed, hood, tof,
             currentFlywheelSpeed + 10 > desiredSpeed);
     }
-
-    public static final RbfInterp2d flywheelHoodToDistance = new RbfInterp2d(entries,
-        ShotEntry::flywheelSpeedRps, ShotEntry::hoodAngleDeg, ShotEntry::distanceFeet, rbf);
-    public static final RbfInterp2d flywheelHoodToTof = new RbfInterp2d(entries,
-        ShotEntry::flywheelSpeedRps, ShotEntry::hoodAngleDeg, ShotEntry::timeOfFlight, rbf);
 
 }
