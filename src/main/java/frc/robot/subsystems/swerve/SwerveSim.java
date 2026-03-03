@@ -18,6 +18,7 @@ import frc.robot.subsystems.swerve.gyro.GyroSim;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIO;
 import frc.robot.subsystems.swerve.mod.SwerveModuleSim;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
+import frc.robot.util.tunable.ModuleConstants.ModuleKind;
 
 /** Simulation implementation for swerve */
 @NullMarked
@@ -34,8 +35,8 @@ public final class SwerveSim implements SwerveIO {
                 .withBumperSize(Constants.Swerve.bumperFront.times(2),
                     Constants.Swerve.bumperRight.times(2))
                 .withSwerveModule(new SwerveModuleSimulationConfig(DCMotor.getKrakenX60(1),
-                    DCMotor.getKrakenX60(1), Constants.Swerve.driveGearRatio,
-                    Constants.Swerve.angleGearRatio, Volts.of(0.15), Volts.of(0.35),
+                    DCMotor.getKrakenX60(1), ModuleKind.Mk4i.driveGearRatio,
+                    ModuleKind.Mk4i.angleGearRatio, Volts.of(0.15), Volts.of(0.35),
                     Constants.Swerve.wheelRadius, KilogramSquareMeters.of(0.02), 1.2)),
             initialPose);
         SimulatedArena.getInstance().addDriveTrainSimulation(this.mapleSim);

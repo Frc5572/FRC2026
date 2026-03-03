@@ -9,10 +9,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.HolonomicDriveController;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -97,6 +100,7 @@ public final class Swerve extends SubsystemBase {
                 Constants.SwerveTransformPID.maxAngularAcceleration)));
 
     public double customSkidLimit = 1000.0;
+    public AutoFactory autoFactory;
 
     /**
      * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
@@ -133,6 +137,31 @@ public final class Swerve extends SubsystemBase {
             this.odometryLock.unlock();
         }
         this.state = new RobotState(initPositions, this.gyroInputs.yaw);
+        autoFactory = new AutoFactory(state::getGlobalPoseEstimate, state::resetPose,
+            this::followTrajectory, true, this);
+
+    }
+
+    /**
+     * Follow a Choreo Trajectory
+     *
+     * @param sample SwerveSample of choreo tajectory
+     */
+    public void followTrajectory(SwerveSample sample) {
+        // Get the current pose of the robot
+        Pose2d pose = state.getGlobalPoseEstimate();
+        PIDController xController = Constants.Swerve.holonomicDriveController.getXController();
+        PIDController yController = Constants.Swerve.holonomicDriveController.getYController();
+        ProfiledPIDController thetaController =
+            Constants.Swerve.holonomicDriveController.getThetaController();
+        // Generate the next speeds for the robot
+        ChassisSpeeds speeds =
+            new ChassisSpeeds(sample.vx + xController.calculate(pose.getX(), sample.x),
+                sample.vy + yController.calculate(pose.getY(), sample.y), sample.omega
+                    + thetaController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+        // Apply the generated speeds
+        driveFieldRelative(speeds);
     }
 
     @Override
@@ -231,6 +260,11 @@ public final class Swerve extends SubsystemBase {
     /** Returns the current yaw of the robot from the gyro */
     public Rotation2d getGyroYaw() {
         return gyroInputs.yaw;
+    private void driveFieldRelative(ChassisSpeeds driveSpeeds) {
+        ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(driveSpeeds,
+            state.getGlobalPoseEstimate().getRotation());
+        speeds = limiter.limit(speeds, customSkidLimit);
+        setModuleStates(speeds);
     }
 
     /**
@@ -369,6 +403,17 @@ public final class Swerve extends SubsystemBase {
         }).andThen(this.emergencyStop());
     }
 
+
+    /**
+     * Get Position on field from Odometry
+     *
+     * @return Pose2d on the field
+     */
+    @AutoLogOutput(key = "Odometry/Robot")
+    public Pose2d getPose() {
+        return state.getGlobalPoseEstimate();
+    }
+
     /**
      * Creates a command that immediately commands zero chassis speeds to the drivetrain.
      *
@@ -392,6 +437,7 @@ public final class Swerve extends SubsystemBase {
     public Command emergencyStop() {
         return this.runOnce(() -> setModuleStates(new ChassisSpeeds()));
     }
+
 
     public Command limitSkidLimit() {
         return Commands.runEnd(() -> customSkidLimit = FieldConstants.Hub.innerWidth / 2.0,
@@ -534,7 +580,7 @@ public final class Swerve extends SubsystemBase {
     /**
      * Command that moves the robot through the trench, constraining Y movement to stay in the
      * trench.
-     * 
+     *
      * @param driveSpeeds supplier of field-relative chassis speeds
      * @return a command that drives the robot while scheduled
      */
