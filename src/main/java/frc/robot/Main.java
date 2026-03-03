@@ -123,7 +123,8 @@ public final class Main {
                 <text transform="translate(60, 215) rotate(90)" font-size="12px" stroke="none" fill="black">{xMin}</text>
 
                 <image x="270" y="10" width="20" height="200" xlink:href="{b64Key}" />
-                <text alignment-baseline="hanging" transform="translate(285, 10)" font-size="12px" stroke="none" fill="black">{zMax}</text>
+                <text alignment-baseline="hanging" transform="translate(285, 10)" font-size="12px" stroke="none"
+                fill="black">{zMax}</text>
                 <text transform="translate(285, 210)" font-size="12px" stroke="none" fill="black">{zMin}</text>
 
                 <text transform="translate(160, 225)" text-anchor="middle" alignment-baseline="hanging" font-size="12px"
