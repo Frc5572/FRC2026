@@ -182,7 +182,7 @@ public final class RobotContainer {
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         // TRIGGERS
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
-            .whileTrue(leds.setLEDsBreathe(Color.kRed));
+            .whileTrue(leds.setLEDsBreathe(Color.kBlue));
         vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
 
 

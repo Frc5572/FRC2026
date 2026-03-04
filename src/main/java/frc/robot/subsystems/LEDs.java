@@ -3,7 +3,6 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.util.Color;
@@ -15,7 +14,6 @@ import frc.robot.Constants;
  * LEDs subsystem
  */
 public class LEDs extends SubsystemBase {
-    private final AddressableLEDBufferView LEDs;
     private final AddressableLED leds = new AddressableLED(Constants.LEDs.LED_PORT);
     private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(Constants.LEDs.LED_LENGTH);
 
@@ -31,7 +29,7 @@ public class LEDs extends SubsystemBase {
      */
     public LEDs() {
         leds.setLength(Constants.LEDs.LED_LENGTH);
-        LEDs = buffer.createView(0, Constants.LEDs.LED_LENGTH - 1);
+        leds.start();
 
     }
 
@@ -46,7 +44,7 @@ public class LEDs extends SubsystemBase {
     public Command blinkLEDs(Color mainColor) {
         LEDPattern colorToPattern = LEDPattern.solid(mainColor);
         LEDPattern blinkPattern = colorToPattern.blink(Seconds.of(.5));
-        return run(() -> blinkPattern.applyTo(LEDs)).ignoringDisable(true);
+        return run(() -> blinkPattern.applyTo(buffer)).ignoringDisable(true);
     }
 
     /**
@@ -70,7 +68,7 @@ public class LEDs extends SubsystemBase {
      */
     public Command setLEDsSolid(Color color) {
         LEDPattern solidPattern = LEDPattern.solid(color);
-        return run(() -> solidPattern.applyTo(LEDs)).ignoringDisable(true);
+        return run(() -> solidPattern.applyTo(buffer)).ignoringDisable(true);
     }
 
     /**
@@ -83,7 +81,7 @@ public class LEDs extends SubsystemBase {
      */
     public Command setLEDsGradient(Color color, Color color2) {
         LEDPattern gradientPattern = LEDPattern.gradient(GradientType.kContinuous, color, color2);
-        return run(() -> gradientPattern.applyTo(LEDs)).ignoringDisable(true);
+        return run(() -> gradientPattern.applyTo(buffer)).ignoringDisable(true);
     }
 
     /**
@@ -96,7 +94,7 @@ public class LEDs extends SubsystemBase {
     public Command setLEDsBreathe(Color color) {
         LEDPattern base = LEDPattern.solid(color);
         LEDPattern breathe = base.breathe(Seconds.of(2));
-        return run(() -> breathe.applyTo(LEDs)).ignoringDisable(true);
+        return run(() -> breathe.applyTo(buffer)).ignoringDisable(true);
     }
 
 }
