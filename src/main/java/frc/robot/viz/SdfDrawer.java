@@ -8,6 +8,7 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N4;
+import frc.robot.math.interp2d.Range;
 
 /** Utility for drawing sdf to an image. */
 public class SdfDrawer {
