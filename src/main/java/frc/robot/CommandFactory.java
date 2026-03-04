@@ -2,9 +2,10 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -28,13 +29,13 @@ public class CommandFactory {
             Distance rightDistance =
                 Meters.of(Passing.blueAllianceRight.getDistance(swervePose.getTranslation()));
             if (leftDistance.in(Meters) < rightDistance.in(Meters)) {
-                Angle leftDistanceGoal = Rotations.of(Passing.blueAllianceLeft
-                    .minus(swervePose.getTranslation()).getAngle().getRotations());
-                turret.setGoal(leftDistanceGoal);
+                Rotation2d leftDistanceGoal =
+                    Passing.blueAllianceLeft.minus(swervePose.getTranslation()).getAngle();
+                turret.setGoal(leftDistanceGoal, RotationsPerSecond.of(0));
             } else {
-                Angle rightDistanceGoal = Rotations.of(Passing.blueAllianceRight
-                    .minus(swervePose.getTranslation()).getAngle().getRotations());
-                turret.setGoal(rightDistanceGoal);
+                Rotation2d rightDistanceGoal =
+                    Passing.blueAllianceRight.minus(swervePose.getTranslation()).getAngle();
+                turret.setGoal(rightDistanceGoal, RotationsPerSecond.of(0));
             }
             hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
             shooter.shoot(Constants.Shooter.shooterVelocity);

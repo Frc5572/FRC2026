@@ -44,6 +44,11 @@ public class IntakeReal implements IntakeIO {
         config.Slot0.kD = Constants.IntakeConstants.KD; // change for testing
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        config.CurrentLimits.SupplyCurrentLimit = 40.0;
+        config.CurrentLimits.StatorCurrentLimitEnable = false;
+        config.CurrentLimits.StatorCurrentLimit = 30.0;
+
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         hopperLeftMotor.getConfigurator().apply(config);
 

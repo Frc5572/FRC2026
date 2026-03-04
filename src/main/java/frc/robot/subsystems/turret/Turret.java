@@ -1,17 +1,22 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.FieldConstants;
 import frc.robot.RobotState;
 
 /**
@@ -19,7 +24,6 @@ import frc.robot.RobotState;
  */
 public class Turret extends SubsystemBase {
 
-    private boolean hasSynced = false;
     private final TurretIO io;
     public final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final RobotState state;
@@ -40,16 +44,19 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
 
-        Angle turretRotationEstimate =
-            getTurretAngleFromGears(inputs.gear1AbsoluteAngle, inputs.gear2AbsoluteAngle);
-        Logger.recordOutput("Turret/EstimatedTurretAngle", turretRotationEstimate);
-        Logger.recordOutput("Turret/Synced", hasSynced);
+        Constants.Turret.pid.ifDirty(io::setPID);
 
-        if (!hasSynced && inputs.gear1AbsoluteAngle != null) {
-            io.resetPosition(turretRotationEstimate);
-            hasSynced = true;
-        }
-        state.setTurretAngle(Timer.getTimestamp(), turretRotationEstimate);
+        // Angle turretRotationEstimate =
+        // getTurretAngleFromGears(inputs.gear1AbsoluteAngle, inputs.gear2AbsoluteAngle);
+        // Logger.recordOutput("Turret/EstimatedTurretAngle (deg)",
+        // turretRotationEstimate.in(Degrees));
+        // Logger.recordOutput("Turret/Synced", hasSynced);
+
+        // if (!hasSynced && inputs.gear1AbsoluteAngle != null) {
+        // io.resetPosition(turretRotationEstimate);
+        // hasSynced = true;
+        // }
+        state.setTurretAngle(Timer.getTimestamp(), inputs.relativeAngle);
     }
 
     /**
@@ -77,14 +84,14 @@ public class Turret extends SubsystemBase {
         Angle step = Rotations.of(Constants.Turret.gear1Gearing);
         do {
             turretAngleLimited = turretAngleLimited.minus(step);
-        } while (turretAngleLimited.gt(Constants.Turret.minAngle));
+        } while (turretAngleLimited.gt(Constants.Turret.minAngle.getMeasure()));
         turretAngleLimited = turretAngleLimited.plus(step);
         Logger.recordOutput("TurretCalcs/Target/Gear1", gear1.getDegrees());
         Logger.recordOutput("TurretCalcs/Target/Gear2", gear2.getDegrees());
         double minScore = Double.MAX_VALUE;
         Angle currentBest = turretAngleLimited;
         int count = 0;
-        while (turretAngleLimited.lt(Constants.Turret.maxAngle)) {
+        while (turretAngleLimited.lt(Constants.Turret.maxAngle.getMeasure())) {
             Rotation2d gear1Guess = getGearAnglesFromTurret(turretAngleLimited,
                 Constants.Turret.gear1Gearing, Constants.Turret.gear1Offset);
             Rotation2d gear2Guess = getGearAnglesFromTurret(turretAngleLimited,
@@ -154,25 +161,106 @@ public class Turret extends SubsystemBase {
      *
      * @param targetAngle gets the goal angle
      */
-    public void setGoal(Angle targetAngle) {
-        if (hasSynced) {
-            io.setTargetAngle(targetAngle);
+    public void setGoal(Rotation2d targetAngle, AngularVelocity velocity) {
+        targetAngle = normalize(targetAngle);
+        if (isValidAngle(targetAngle) || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(1)))
+            || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(-1)))) {
+            io.setTargetAngle(targetAngle, velocity);
+            Logger.recordOutput("Turret/InRange", true);
+            Logger.recordOutput("Turret/ActualTarget", targetAngle);
+            return;
+        }
+        Logger.recordOutput("Turret/InRange", false);
+        double minAngleDiff =
+            fmod((targetAngle.getDegrees() - Constants.Turret.minAngle.getDegrees()) + 180, 360)
+                - 180;
+        double maxAngleDiff =
+            fmod((targetAngle.getDegrees() - Constants.Turret.maxAngle.getDegrees()) + 180, 360)
+                - 180;
+        if (Math.abs(minAngleDiff) < Math.abs(maxAngleDiff)) {
+            io.setTargetAngle(Constants.Turret.minAngle, RotationsPerSecond.of(0));
+            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.minAngle);
+        } else {
+            io.setTargetAngle(Constants.Turret.maxAngle, RotationsPerSecond.of(0));
+            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.maxAngle);
         }
     }
 
-    public Command goToAngle(Angle rotations) {
-        return run(() -> this.setGoal(rotations));
+    private boolean isValidAngle(Rotation2d targetAngle) {
+        if (targetAngle.getRadians() > Constants.Turret.maxAngle.getRadians()) {
+            return false;
+        }
+        if (targetAngle.getRadians() < Constants.Turret.minAngle.getRadians()) {
+            return false;
+        }
+        return true;
+    }
+
+    private static double fmod(double a, double n) {
+        return a - Math.floor(a / n) * n;
+    }
+
+    /** Aim turret in robot frame */
+    public Command goToAngleRobotRelative(Supplier<Rotation2d> rotations) {
+        return run(() -> this.setGoal(rotations.get(), RotationsPerSecond.of(0)));
+    }
+
+    /** Aim turret in field frame */
+    public Command goToAngleFieldRelative(Supplier<Rotation2d> rotations) {
+        return run(
+            () -> this.setGoal(rotations.get().minus(state.getGlobalPoseEstimate().getRotation()),
+                RadiansPerSecond.of(-state.getCurrentSpeeds().omegaRadiansPerSecond)));
     }
 
     /**
-     * Sets the turret to go in the opposite direction of the drivetrain so it can resist the
-     * direction change, and stay facing the hub.
+     * Run characterization procedure
+     *
+     * <p>
+     * WARNING: will not respect min/max turret angles. Unplug everything from the turret so it can
+     * spin a potentially infinite number of times.
      */
-    public Command setAutoTurretFollow(Pose2d swervePose) {
-        return Commands.run(() -> {
-            double hubTarget = FieldConstants.Hub.topCenterPoint.toTranslation2d()
-                .minus(swervePose.getTranslation()).getAngle().getRotations();
-            setGoal(Rotations.of(hubTarget));
-        });
+    public Command characterization() {
+        List<Double> velocitySamples = new LinkedList<>();
+        List<Double> voltageSamples = new LinkedList<>();
+        Timer timer = new Timer();
+
+        return Commands.sequence(
+            // Reset data
+            this.runOnce(() -> {
+                velocitySamples.clear();
+                voltageSamples.clear();
+            }),
+            // Let turret stop
+            this.run(() -> {
+                io.setTurretVoltage(Volts.of(0.0));
+                Logger.recordOutput("Sysid/Turret/FF/appliedVoltage", 0.0);
+            }).withTimeout(1.5),
+            // Start timer
+            this.runOnce(timer::restart),
+            // Accelerate and gather data
+            this.run(() -> {
+                double voltage = timer.get() * 0.1;
+                Logger.recordOutput("Sysid/Turret/FF/appliedVoltage", voltage);
+                io.setTurretVoltage(Volts.of(voltage));
+                velocitySamples.add(inputs.velocity.in(RotationsPerSecond));
+                voltageSamples.add(voltage);
+            }).finallyDo(() -> {
+                int n = velocitySamples.size();
+                double sumX = 0.0;
+                double sumY = 0.0;
+                double sumXY = 0.0;
+                double sumX2 = 0.0;
+                for (int i = 0; i < n; i++) {
+                    sumX += velocitySamples.get(i);
+                    sumY += voltageSamples.get(i);
+                    sumXY += velocitySamples.get(i) * voltageSamples.get(i);
+                    sumX2 += velocitySamples.get(i) * velocitySamples.get(i);
+                }
+                double kS = (sumY * sumX2 - sumX * sumXY) / (n * sumX2 - sumX * sumX);
+                double kV = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+
+                Logger.recordOutput("Sysid/Turret/FF/kS", kS);
+                Logger.recordOutput("Sysid/Turret/FF/kV", kV);
+            }));
     }
 }

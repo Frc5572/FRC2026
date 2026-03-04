@@ -5,9 +5,11 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import java.util.Random;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.sim.SimPosition;
+import frc.robot.util.tunable.PIDConstants;
 
 /**
  * Simulation implementation of {@link TurretIO}.
@@ -62,10 +64,13 @@ public class TurretSim implements TurretIO {
 
 
     @Override
-    public void setTargetAngle(Angle angle) {
-        turretTarget = angle.in(Radians);
+    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity) {
+        turretTarget = angle.getRadians();
     }
 
     @Override
     public void resetPosition(Angle angle) {}
+
+    @Override
+    public void setPID(PIDConstants constants) {}
 }
