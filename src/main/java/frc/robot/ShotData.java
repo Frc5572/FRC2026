@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Meters;
 import frc.robot.math.interp2d.BilinearSurrogate;
 import frc.robot.math.interp2d.Interp2d;
 import frc.robot.math.interp2d.MulAdd;
+import frc.robot.math.interp2d.Range;
 import frc.robot.math.interp2d.RangeOf;
 
 /** Data for flywheel, distance, and hood angle that results in a successful shot. */
