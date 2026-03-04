@@ -24,25 +24,25 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
 
-
+/**
+ * Auto Command Factory
+ */
 public class AutoCommandFactory {
 
-    private final AutoFactory autoFactory;
-    private final Swerve swerve;
-    private final AdjustableHood adjustableHood;
-    private final Indexer indexer;
-    private final Intake intake;
-    private final Turret turret;
-    private final Climber climber;
-    private final Shooter shooter;
-    private final Vision vision;
+    AutoFactory autoFactory;
+    Swerve swerve;
+    AdjustableHood adjustableHood;
+    Climber climber;
+    Indexer indexer;
+    Intake intake;
+    Shooter shooter;
+    Turret turret;
 
     /**
      * Auto Command Factory
      */
     public AutoCommandFactory(AutoFactory autoFactory, Swerve swerve, AdjustableHood adjustableHood,
-        Climber climber, Intake intake, Indexer indexer, Shooter shooter, Turret turret,
-        Vision vision) {
+        Climber climber, Intake intake, Indexer indexer, Shooter shooter, Turret turret) {
         this.autoFactory = autoFactory;
         this.swerve = swerve;
         this.adjustableHood = adjustableHood;
@@ -160,7 +160,6 @@ public class AutoCommandFactory {
 
         score = score.andThen(swerve.stop());
         routine.active().onTrue(score.withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-        return routine;
     }
 
     /**

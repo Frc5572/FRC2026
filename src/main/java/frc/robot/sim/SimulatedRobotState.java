@@ -7,11 +7,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
-import frc.robot.ShotData;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.IndexerSim;
@@ -68,20 +65,17 @@ public class SimulatedRobotState {
         if (this.indexer.isFeeding && this.indexer.numFuel > 0) {
             double p = random.nextDouble();
             if (p < avgBallsPerTick) {
-                double speedRotationsPerSecond =
+                double speedMetersPerSecond =
                     (shooter.flywheel.position + 0.02 * random.nextFloat() - 0.01) * 0.4;
-                Logger.recordOutput("FuelSim/speedRotationsPerSecond", speedRotationsPerSecond);
+                Logger.recordOutput("FuelSim/speedMetersPerSecond", speedMetersPerSecond);
                 shooter.shootOne();
                 double effectiveHoodAngle =
                     adjustableHood.hood.position + 0.02 * random.nextFloat() - 0.01;
                 double effectiveTurretAngle = this.swerveDrive.mapleSim.getSimulatedDriveTrainPose()
                     .getRotation().getRadians() + turret.turrentAngle.position
                     + 0.02 * random.nextFloat() - 0.01;
-                ShotData.ShotEntry entry =
-                    ShotData.flywheelSpeedHoodAngle.query(new Translation2d(speedRotationsPerSecond,
-                        Units.radiansToDegrees(effectiveHoodAngle))).value();
-                double vert = entry.verticalVelocity();
-                double horiz = entry.horizontalVelocity();
+                double vert = Math.cos(effectiveHoodAngle) * speedMetersPerSecond;
+                double horiz = Math.sin(effectiveHoodAngle) * speedMetersPerSecond;
                 double x = Math.cos(effectiveTurretAngle) * horiz;
                 double y = Math.sin(effectiveTurretAngle) * horiz;
                 Translation3d initial =

@@ -1,10 +1,8 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
-import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -12,8 +10,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
@@ -43,12 +39,10 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
-import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
-import frc.robot.subsystems.vision.VisionReal;
+import frc.robot.subsystems.vision.color.ColorDetection;
 import frc.robot.viz.RobotViz;
-
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -63,9 +57,6 @@ public final class RobotContainer {
     /* Controllers */
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
-    public final CommandXboxController test = new CommandXboxController(3);
-    private final AutoChooser autoChooser = new AutoChooser();
-    private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
     private final Swerve swerve;
@@ -74,28 +65,24 @@ public final class RobotContainer {
     private final Turret turret;
     private final Shooter shooter;
     private final Intake intake;
+    private final ColorDetection colorDetection;
     private final Climber climber;
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     // private final AutoCommandFactory autoCommandFactory;
     private final AutoCommandFactory autos;
-    private final Field2d field = new Field2d();
-    private final FieldObject2d autoShootLocation = field.getObject("Auto Shoot Location");
 
     /**
-     * Robot Container
-     *
-     * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
         switch (runtimeType) {
             case kReal:
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
-                vision = new Vision(swerve.state, new VisionReal());
-                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
-                turret = new Turret(new TurretReal(), swerve.state);
+                vision = new Vision(swerve.state, new VisionIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal(), swerve.state);
+                turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
@@ -119,7 +106,7 @@ public final class RobotContainer {
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
                 vision = new Vision(swerve.state, sim.visionSim);
-                adjustableHood = new AdjustableHood(sim.adjustableHood);
+                adjustableHood = new AdjustableHood(sim.adjustableHood, swerve.state);
                 turret = new Turret(sim.turret, swerve.state);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
@@ -130,7 +117,7 @@ public final class RobotContainer {
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
                 vision = new Vision(swerve.state, new VisionIOEmpty());
-                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty(), swerve.state);
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
@@ -265,29 +252,7 @@ public final class RobotContainer {
             sim.update();
         }
         viz.periodic();
-        flywheelSpeedFilterValue = flywheelSpeedFilter
-            .calculate(shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
-        field.setRobotPose(swerve.state.getGlobalPoseEstimate());
-    }
 
-    /**
-     * Runs during disabled
-     */
-    public void disabledPeriodic() {
-        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        autoShootLocation.setPose(x, y, new Rotation2d());
-    }
-
-    private void writeTimings(double[] timings) {
-        Logger.recordOutput("/ShotData/Timings/start", timings[0]);
-        Logger.recordOutput("/ShotData/Timings/end", timings[1]);
-        Logger.recordOutput("/ShotData/Timings/diff", timings[1] - timings[0]);
-    }
-
-    private void writeShotConf(double flywheelSpeed, double hoodAngle) {
-        Logger.recordOutput("/ShotData/flywheelSpeed", flywheelSpeed);
-        Logger.recordOutput("/ShotData/hoodAngle", hoodAngle);
     }
 }
 

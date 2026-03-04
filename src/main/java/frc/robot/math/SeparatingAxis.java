@@ -1,4 +1,4 @@
-package frc.robot.math.geometry;
+package frc.robot.math;
 
 import edu.wpi.first.math.geometry.Translation2d;
 

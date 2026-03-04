@@ -91,9 +91,9 @@ public class SwerveModuleReal implements SwerveModuleIO {
         // Create absolute encoder signals
         absolutePosition = absoluteEncoder.getAbsolutePosition();
 
-        configDriveMotor(index);
-        configAngleMotor(index);
-        configAngleEncoder(index);
+        configDriveMotor();
+        configAngleMotor();
+        configAngleEncoder();
 
         // Configure periodic frames
         PhoenixSignals.tryUntilOk(5,
@@ -116,15 +116,14 @@ public class SwerveModuleReal implements SwerveModuleIO {
         DeviceDebug.register("SwerveModule_" + index + "_Encoder", absoluteEncoder);
     }
 
-    private void configDriveMotor(int index) {
+    private void configDriveMotor() {
         /* Drive Motor Config */
         /* Motor Inverts and Neutral Mode */
         driveConfig.MotorOutput.Inverted = Constants.Swerve.driveMotorInvert;
         driveConfig.MotorOutput.NeutralMode = Constants.Swerve.driveNeutralMode;
 
         /* Gear Ratio Config */
-        driveConfig.Feedback.SensorToMechanismRatio =
-            Constants.Swerve.modulesConstants[index].kind.driveGearRatio;
+        driveConfig.Feedback.SensorToMechanismRatio = Constants.Swerve.driveGearRatio;
 
         /* Current Limiting */
         driveConfig.CurrentLimits.SupplyCurrentLimitEnable =
@@ -148,7 +147,7 @@ public class SwerveModuleReal implements SwerveModuleIO {
         PhoenixSignals.tryUntilOk(5, () -> driveMotor.getConfigurator().setPosition(0.0, 0.25));
     }
 
-    private void configAngleMotor(int index) {
+    private void configAngleMotor() {
         /* Angle Motor Config */
         /* Motor Inverts and Neutral Mode */
         angleConfig.MotorOutput.Inverted = Constants.Swerve.angleMotorInvert;
@@ -158,8 +157,7 @@ public class SwerveModuleReal implements SwerveModuleIO {
         angleConfig.Feedback.FeedbackRemoteSensorID = absoluteEncoder.getDeviceID();
         angleConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         angleConfig.Feedback.SensorToMechanismRatio = 1.0;
-        angleConfig.Feedback.RotorToSensorRatio =
-            Constants.Swerve.modulesConstants[index].kind.angleGearRatio;
+        angleConfig.Feedback.RotorToSensorRatio = Constants.Swerve.angleGearRatio;
         angleConfig.ClosedLoopGeneral.ContinuousWrap = true;
 
         /* Current Limiting */
@@ -176,7 +174,7 @@ public class SwerveModuleReal implements SwerveModuleIO {
         PhoenixSignals.tryUntilOk(5, () -> angleMotor.getConfigurator().apply(angleConfig));
     }
 
-    private void configAngleEncoder(int index) {
+    private void configAngleEncoder() {
         /* Angle Encoder Config */
         absoluteConfig.MagnetSensor.SensorDirection = Constants.Swerve.cancoderInvert;
         absoluteConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;

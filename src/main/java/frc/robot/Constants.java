@@ -14,9 +14,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.controller.HolonomicDriveController;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -24,7 +21,6 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -34,7 +30,6 @@ import frc.robot.subsystems.vision.CameraConstantsBuilder;
 import frc.robot.util.tunable.FlywheelConstants;
 import frc.robot.util.tunable.FlywheelConstantsBuilder;
 import frc.robot.util.tunable.ModuleConstants;
-import frc.robot.util.tunable.ModuleConstants.ModuleKind;
 import frc.robot.util.tunable.ModuleConstantsBuilder;
 import frc.robot.util.tunable.PIDConstants;
 import frc.robot.util.tunable.PIDConstantsBuilder;
@@ -97,7 +92,7 @@ public final class Constants {
         public static final double translationP = 3.5;
         public static final double translationI = 0.0;
         public static final double translationD = 0.0;
-        public static final double rotationP = 1.0;
+        public static final double rotationP = 3.0;
         public static final double rotationI = 0.0;
         public static final double rotationD = 0.0;
 
@@ -113,7 +108,7 @@ public final class Constants {
         public static final boolean isCanviore = true;
 
         public static final NavXComType navXID = NavXComType.kMXP_SPI;
-        public static final boolean invertGyro = false;
+        public static final boolean invertGyro = true;
 
         /* Drivetrain Constants */
         /** Distance between right and left wheels on robot */
@@ -121,7 +116,7 @@ public final class Constants {
         /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(21.8);
         /** Distance from the center of the wheel to the ground */
-        public static final Distance wheelRadius = Inches.of(2.678 / 2.0);
+        public static final Distance wheelRadius = Inches.of(1.913);
         /** Diameter of the wheels, twice the radius */
         public static final Distance wheelDiameter = wheelRadius.times(2);
         /** Circumference of the wheels */
@@ -147,6 +142,12 @@ public final class Constants {
          */
         public static final SwerveDriveKinematics swerveKinematics =
             new SwerveDriveKinematics(swerveTranslations);
+
+        /* Module Gear Ratios */
+        /** Swerve Drive Motor Gear Ratio */
+        public static final double driveGearRatio = (8.14 / 1.0); // MK4i L1
+        /** Swerve Angle Motor Gear Ratio */
+        public static final double angleGearRatio = ((150.0 / 7.0) / 1.0); // (150 / 7) : 1
 
         /* Motor Inverts */
         public static final InvertedValue angleMotorInvert = InvertedValue.Clockwise_Positive;
@@ -193,8 +194,8 @@ public final class Constants {
                 .kP(0.0012)
                 .kI(0.0)
                 .kD(0.0)
-                .kV(0.990 / 6.536)
-                .kS(0.251)
+                .kV(1.004 / 6.536)
+                .kS(0.185)
                 .kG(0.0)
                 .kA(0.0)
                 .finish();
@@ -230,28 +231,28 @@ public final class Constants {
         // @formatter:off
         public static final ModuleConstants[] modulesConstants = new ModuleConstants[] {
             // Front Left Module
-            new ModuleConstantsBuilder(ModuleKind.Mk4i)
+            new ModuleConstantsBuilder()
                 .driveMotorId(1)
                 .angleMotorId(0)
                 .canCoderId(1)
                 .angleOffset(Rotation2d.fromRotations(0.106445))
                 .finish(),
             // Front Right Module
-            new ModuleConstantsBuilder(ModuleKind.Mk4i)
+            new ModuleConstantsBuilder()
                 .driveMotorId(7)
                 .angleMotorId(6)
                 .canCoderId(2)
                 .angleOffset(Rotation2d.fromRotations(0.409668))
                 .finish(),
             // Back Left Module
-            new ModuleConstantsBuilder(ModuleKind.Mk4n)
+            new ModuleConstantsBuilder()
                 .driveMotorId(2)
                 .angleMotorId(3)
                 .canCoderId(3)
                 .angleOffset(Rotation2d.fromRotations(0.474121))
                 .finish(),
             // Back Right Module
-            new ModuleConstantsBuilder(ModuleKind.Mk4n)
+            new ModuleConstantsBuilder()
                 .driveMotorId(5)
                 .angleMotorId(4)
                 .canCoderId(4)
@@ -259,19 +260,6 @@ public final class Constants {
                 .finish(),
         };
         // @formatter:on
-
-        public static final HolonomicDriveController holonomicDriveController =
-            new HolonomicDriveController(
-                new PIDController(Constants.SwerveTransformPID.translationP,
-                    Constants.SwerveTransformPID.translationI,
-                    Constants.SwerveTransformPID.translationD),
-                new PIDController(Constants.SwerveTransformPID.translationP,
-                    Constants.SwerveTransformPID.translationI,
-                    Constants.SwerveTransformPID.translationD),
-                new ProfiledPIDController(Constants.SwerveTransformPID.rotationP,
-                    Constants.SwerveTransformPID.rotationI, Constants.SwerveTransformPID.rotationD,
-                    new Constraints(Constants.SwerveTransformPID.maxAngularVelocity,
-                        Constants.SwerveTransformPID.maxAngularAcceleration)));
     }
 
     /** Trench MoveToPose Constants */
@@ -294,34 +282,18 @@ public final class Constants {
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
         public static final Pose3d turretCenter =
-            new Pose3d(new Translation3d(-0.1651, 0, 0), Rotation3d.kZero);
+            new Pose3d(new Translation3d(-0.1651, 0, 0.36772), Rotation3d.kZero);
 
         /** TODO: meausre on bot */
         public static final Pose3d turretLeft =
-            new Pose3d(Inches.of(-7.972), Inches.of(5.274), Inches.of(20.56), Rotation3d.kZero);
+            new Pose3d(Inches.of(8.240), Inches.of(8.131), Inches.of(0.0), Rotation3d.kZero);
         public static final Pose3d turretRight =
-            new Pose3d(Inches.of(-7.972), Inches.of(-5.274), Inches.of(20.56), Rotation3d.kZero);
+            new Pose3d(Inches.of(5.307), Inches.of(-5.958), Inches.of(0.0), Rotation3d.kZero);
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
-            // new CameraConstantsBuilder()
-            //     .name("cam0")
-            //     .height(800)
-            //     .width(1280)
-            //     .horizontalFieldOfView(80)
-            //     .simFps(20)
-            //     .simLatency(0.3)
-            //     .simLatencyStdDev(0.02)
-            //     .calibrationErrorMean(0.8)
-            //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(11),
-            //         -Units.inchesToMeters(12), Units.inchesToMeters(10)),
-            //         new Rotation3d(Math.PI, 0, 0)))
-            //     .translationError(0.02)
-            //     .finish(),
             new CameraConstantsBuilder()
                 .name("cam0")
-                .name("turretRight")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -351,12 +323,6 @@ public final class Constants {
             //     .singleTagError(0)
             //     .isTurret(true)
             //     .finish(),
-                .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(0.5)
-                .rotationError(0.5)
-                .singleTagError(0)
-                .isTurret(true)
-                .finish(),
         };
         // @formatter:on
     }
@@ -386,11 +352,11 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants pid =
             new PIDConstantsBuilder("AdjustableHood", GravityTypeValue.Arm_Cosine)
-                .kP(200.0)
+                .kP(0.0)
                 .kI(0.0)
                 .kD(0.0)
                 .kV(0.0)
-                .kS(0.3)
+                .kS(0.0)
                 .kG(0.0)
                 .kA(0.0)
                 .finish();
@@ -546,44 +512,51 @@ public final class Constants {
 
     /** Turret Constants */
     public static final class Turret {
-        public static final double motorGearing = 32.32;
-        public static final double gear1Gearing = 1.0 / 10.77333;
-        public static final Rotation2d gear1Offset = Rotation2d.fromRotations(-0.295410);
-        public static final double gear2Gearing = 1.0 / 7.76923076923;
-        public static final Rotation2d gear2Offset = Rotation2d.fromRotations(-0.284912);
+        public static final double motorGearing = 53.934;
+        public static final double gear1Gearing = 35.0 / 75.0;
+        public static final Rotation2d gear1Offset = Rotation2d.kZero;
+        public static final double gear2Gearing = 36.0 / 75.0;
+        public static final Rotation2d gear2Offset = Rotation2d.kZero;
+        public static final Angle minAngle = Degrees.of(-360);
+        public static final Angle maxAngle = Degrees.of(360);
 
         public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;
         public static final int TurretCANcoderID2 = 6;
 
-        // @formatter:off
-        public static final PIDConstants pid =
-            new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
-                .kP(12.0)
-                .kI(0.0)
-                .kD(0.0)
-                .kV(7.01)
-                .kS(0.301)
-                .kG(0.0)
-                .kA(0.0)
-                .finish();
-        // @formatter:on
+        /* PID Values */
+        /** Proportional PID Value for turret position control. */
+        public static final double KP = 0.0;
+        /** Integral PID Value for turret position control. */
+        public static final double KI = 0.0;
+        /** Derivative PID Value for turret position control. */
+        public static final double KD = 0.0;
+
+        /* Characterization Values */
+        /** Static Characterization Value for overcoming friction. */
+        public static final double KS = 0.0;
+        /** Velocity Characterization Value */
+        public static final double KV = 0.0;
+        /** Acceleration Characterization Value */
+        public static final double KA = 0.0;
+
+        public static final double MMCVelocity = 0.0;
+        public static final double MMAcceleration = 0.0;
+        public static final double MMJerk = 0.0;
+
+        public static final Angle testAngle = Degrees.of(30);
+
+        public static final double turretTolerence = 0.01;
 
         public static final SensorDirectionValue canCoder1Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final SensorDirectionValue canCoder2Invert =
-            SensorDirectionValue.CounterClockwise_Positive;
+            SensorDirectionValue.Clockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
-
-        public static final Rotation2d maxAngle = Rotation2d.fromDegrees(48);
-        public static final Rotation2d minAngle = Rotation2d.fromDegrees(-135);
     }
 
     /** Shooter Constants */
     public static final class Shooter {
-        /** Height at which the ball leaves the shooter. */
-        public static final Distance shooterHeight = Inches.of(20);
-
         /** ID for Shooter Motor 1 */
         public static final int motor1ID = 10;
         /** ID for Shooter Motor 2 */
@@ -605,39 +578,16 @@ public final class Constants {
         public static final double passingSpeed = 0.0;
         public static final double shooterVelocity = 0.0;
 
-        public static final double atSpeedThreshold = 50.0;
-
         // @formatter:off
         public static final FlywheelConstants constants =
             new FlywheelConstantsBuilder()
                 .holdCurrent(40.0)
                 .maxDutyCycle(1.0)
                 .isReversed(true)
-                .velocityTolerance(8)
+                .velocityTolerance(0.6)
                 .atSpeedDebounce(0.1)
-                .pid(new PIDConstantsBuilder("Flywheel", GravityTypeValue.Elevator_Static)
-                    .kP(0.0)
-                    .kI(0.0)
-                    .kD(0.0)
-                    .kV(0.1135)
-                    .kS(0.0)
-                    .kG(0.0)
-                    .kA(0.0)
-                    .finish())
                 .finish();
-
+            
         // @formatter:on
-    }
-
-    /**
-     * dashboard constants
-     */
-    public static class DashboardValues {
-        public static final String field = "Dashboard/Field";
-        public static final String autoChooser = "Dashboard/Auto/Auto Chooser";
-        public static final String shootX = "Dashboard/Auto/Auto Shoot X";
-        public static final String shootY = "Dashboard/Auto/Auto Shoot Y";
-
-
     }
 }
