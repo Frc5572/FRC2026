@@ -30,7 +30,8 @@ public class LEDs extends SubsystemBase {
      * constructor
      */
     public LEDs() {
-        LEDs = buffer.createView(0, Constants.LEDs.LED_LENGTH);
+        leds.setLength(Constants.LEDs.LED_LENGTH);
+        LEDs = buffer.createView(0, Constants.LEDs.LED_LENGTH - 1);
 
     }
 
