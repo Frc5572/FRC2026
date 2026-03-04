@@ -12,6 +12,7 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.swerve.util.MoveToPose;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.AllianceFlipUtil;
 
@@ -38,16 +39,19 @@ public class AutoCommandFactory {
         this.turret = turret;
     }
 
-    public AutoRoutine shootThenClimbAuto() {
-        AutoRoutine routine = autoFactory.newRoutine("Shoot Then Climb");
+    public AutoRoutine shootThenClimbLeft() {
+        AutoRoutine routine = autoFactory.newRoutine("Shoot Then Climb (Left)");
 
+        shooter.shoot(60).andThen(() -> moveToClimb(routine));
+
+        return routine;
+    }
+
+    private MoveToPose moveToClimb(AutoRoutine routine) {
         Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
             FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
                 - Units.inchesToMeters(3),
             FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
-
-        routine.trajectory("shootThenClimbRight");
-
-        return routine;
+        return swerve.moveToPose().target(climbPose).autoRoutine(routine).finish();
     }
 }
