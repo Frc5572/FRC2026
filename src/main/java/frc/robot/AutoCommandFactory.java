@@ -98,13 +98,13 @@ public class AutoCommandFactory {
 
                     if (distToLeft < distToRight) {
                         chosenTrench = leftTrench;
-                        intakeRotation = Rotation2d.fromDegrees(270);
+                        intakeRotation = Rotation2d.fromDegrees(90);
                         intakeLocation = leftFuel;
                         intakeFinalLocation = leftFinalFuel;
                         shootLocation = leftShootLocation;
                     } else {
                         chosenTrench = rightTrench;
-                        intakeRotation = Rotation2d.fromDegrees(90);
+                        intakeRotation = Rotation2d.fromDegrees(270);
                         intakeLocation = rightFuel;
                         intakeFinalLocation = rightFinalFuel;
                         shootLocation = rightShootLocation;
