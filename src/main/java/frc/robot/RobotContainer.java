@@ -67,6 +67,7 @@ public final class RobotContainer {
     public final CommandXboxController driver =
         new CommandXboxController(Constants.DriverControls.controllerId);
     public final CommandXboxController test = new CommandXboxController(3);
+
     private final AutoChooser autoChooser = new AutoChooser();
     private final AutoCommandFactory autoCommandFactory;
 
@@ -159,6 +160,7 @@ public final class RobotContainer {
         autoChooser.addCmd("Do Nothing", Commands::none);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
+        autoChooser.addRoutine("Shoot then Climb", autoCommandFactory::shootThenClimb);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);

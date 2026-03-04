@@ -1,12 +1,22 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Meters;
+import java.util.Set;
 import java.util.function.Supplier;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -17,6 +27,7 @@ import frc.robot.subsystems.swerve.util.MoveToPose;
 import frc.robot.subsystems.swerve.util.TurnToRotation;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.Tuples.Tuple2;
 
 /**
  * Auto Command Factory
@@ -47,10 +58,25 @@ public class AutoCommandFactory {
         this.turret = turret;
     }
 
-    public AutoRoutine shootThenClimbLeft() {
-        AutoRoutine routine = autoFactory.newRoutine("Shoot Then Climb (Left)");
+    public AutoRoutine shootThenClimb() {
+        AutoRoutine routine = autoFactory.newRoutine("Shoot Then Climb");
 
-        shooter.shoot(60).andThen(() -> moveToClimb(routine));
+        MoveToPose moveToClimb = moveToClimb(routine);
+
+        Command fullCommand = Commands.defer(() -> {
+            return Commands.sequence(
+                Commands.parallel(shooter.shoot(65),
+                    Commands.sequence(Commands.waitSeconds(1), indexer.setSpeedCommand(0.8, 0.4)),
+                    Commands.sequence(Commands.waitSeconds(4), moveToClimb)),
+                swerve.stop(),
+                climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.zero(), Meters.zero())));
+        }, Set.of(swerve, shooter, indexer));
+
+        routine.active()
+            .onTrue(fullCommand.withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        return routine;
+    }
+
     /**
      * Gather Fuel from the left side and then return and shoot
      *
@@ -89,7 +115,9 @@ public class AutoCommandFactory {
             FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
                 - Units.inchesToMeters(3),
             FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
-        return swerve.moveToPose().target(climbPose).autoRoutine(routine).finish();
+        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(1.0).finish();
+    }
+
     /**
      * Move to a specified X,Y and shoot
      *

@@ -304,8 +304,23 @@ public final class Constants {
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
+             new CameraConstantsBuilder()
+                 .name("cam0")
+                 .height(800)
+                 .width(1280)
+                 .horizontalFieldOfView(80)
+                 .simFps(20)
+                 .simLatency(0.3)
+                 .simLatencyStdDev(0.02)
+                 .calibrationErrorMean(0.8)
+                 .calibrationErrorStdDev(0.08)
+                 .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(11),
+                     -Units.inchesToMeters(12), Units.inchesToMeters(10)),
+                     new Rotation3d(Math.PI, 0, 0)))
+                 .translationError(0.02)
+                 .finish(),
             // new CameraConstantsBuilder()
-            //     .name("cam0")
+            //     .name("turretRight")
             //     .height(800)
             //     .width(1280)
             //     .horizontalFieldOfView(80)
@@ -314,27 +329,12 @@ public final class Constants {
             //     .simLatencyStdDev(0.02)
             //     .calibrationErrorMean(0.8)
             //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(11),
-            //         -Units.inchesToMeters(12), Units.inchesToMeters(10)),
-            //         new Rotation3d(Math.PI, 0, 0)))
-            //     .translationError(0.02)
+            //     .robotToCamera(new Transform3d(turretCenter, turretRight))
+            //     .translationError(0.5)
+            //     .rotationError(0.5)
+            //     .singleTagError(0)
+            //     .isTurret(true)
             //     .finish(),
-            new CameraConstantsBuilder()
-                .name("turretRight")
-                .height(800)
-                .width(1280)
-                .horizontalFieldOfView(80)
-                .simFps(20)
-                .simLatency(0.3)
-                .simLatencyStdDev(0.02)
-                .calibrationErrorMean(0.8)
-                .calibrationErrorStdDev(0.08)
-                .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(0.5)
-                .rotationError(0.5)
-                .singleTagError(0)
-                .isTurret(true)
-                .finish(),
         };
         // @formatter:on
     }
