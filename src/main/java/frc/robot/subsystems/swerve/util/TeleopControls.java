@@ -52,7 +52,7 @@ public class TeleopControls {
      * @return a supplier that generates processed {@link ChassisSpeeds} for teleop control
      */
     public static Supplier<ChassisSpeeds> teleopControls(DoubleSupplier forward,
-        DoubleSupplier right, DoubleSupplier turnCCW) {
+        DoubleSupplier right, DoubleSupplier turnCCW, double maxSpeed, double maxRotSpeed) {
         return () -> {
             double xaxis = right.getAsDouble();
             double yaxis = forward.getAsDouble();
@@ -62,9 +62,7 @@ public class TeleopControls {
             xaxis *= xaxis * Math.signum(xaxis);
             yaxis *= yaxis * Math.signum(yaxis);
             raxis = (Math.abs(raxis) < Constants.DriverControls.stickDeadband) ? 0 : raxis;
-            return new ChassisSpeeds(yaxis * Constants.DriverControls.driverTranslationalMaxSpeed,
-                xaxis * Constants.DriverControls.driverTranslationalMaxSpeed,
-                raxis * Constants.DriverControls.driverRotationalMaxSpeed);
+            return new ChassisSpeeds(yaxis * maxSpeed, xaxis * maxSpeed, raxis * maxRotSpeed);
         };
     }
 

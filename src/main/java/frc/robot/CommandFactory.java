@@ -59,21 +59,6 @@ public class CommandFactory {
             Translation2d adjustedTarget = target;
             double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble());
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
-            Translation2d[] adjustedTargets = new Translation2d[21];
-            for (int i = 0; i < 20; i++) {
-                adjustedTargets[i] = adjustedTarget;
-                double distance =
-                    adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
-                        + adjustUpValue;
-                var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
-                    shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), false);
-                double tof = parameters.timeOfFlight();
-                var forward = state.getFieldRelativeSpeeds().times(tof);
-                adjustedTarget = target
-                    .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
-            }
-            adjustedTargets[20] = adjustedTarget;
-            Logger.recordOutput("AutoShoot/AdjustedTargetIterations", adjustedTargets);
             double distance =
                 adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
                     + adjustUpValue;

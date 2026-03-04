@@ -1,15 +1,20 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
+import java.util.HashMap;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import frc.robot.math.interp2d.Interp2d;
 import frc.robot.math.interp2d.MulAdd;
 
 /** Data for flywheel, distance, and hood angle that results in a successful shot. */
 public class ShotData {
+
+    private static final InterpolatingDoubleTreeMap minFlywheelSpeed =
+        new InterpolatingDoubleTreeMap();
 
     /** Raw data from testing. */
     // @formatter:off
@@ -39,6 +44,19 @@ public class ShotData {
         new ShotEntry(18.0, 70.0, 26.0, 1.54),
     };
     // @formatter:on
+
+    static {
+        HashMap<Double, Double> minFlywheelSpeedMap = new HashMap<>();
+        for (ShotEntry entry : entries) {
+            Double v = minFlywheelSpeedMap.get(entry.distanceFeet);
+            if (v == null || v > entry.flywheelSpeedRps) {
+                minFlywheelSpeedMap.put(entry.distanceFeet, entry.flywheelSpeedRps);
+            }
+        }
+        for (var entry : minFlywheelSpeedMap.entrySet()) {
+            minFlywheelSpeed.put(entry.getKey(), entry.getValue());
+        }
+    }
 
     private static final double MIN_DESIRED_SPEED = 50.0;
     private static final double MIN_DESIRED_SPEED_DISTANCE = 6.0;
@@ -105,7 +123,8 @@ public class ShotData {
         var q = distanceFlywheel.query(new Translation2d(distance, currentFlywheelSpeed));
         double hood = q.value().hoodAngleDeg();
         double tof = q.value().timeOfFlight();
-        boolean isOkayToShoot = q.sdf() < 0.02;
+        double minSpeed = minFlywheelSpeed.get(distance);
+        boolean isOkayToShoot = q.sdf() < 0.02 || currentFlywheelSpeed > minSpeed;
         if (log) {
             Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);
             Logger.recordOutput("ShotParameters/distance", distance);

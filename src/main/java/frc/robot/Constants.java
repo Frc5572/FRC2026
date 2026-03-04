@@ -58,6 +58,11 @@ public final class Constants {
         public static final double driverTranslationalMaxSpeed = 3.0;
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
+
+        /** Maximum Translational speed while shooting (in m/s) */
+        public static final double driverTranslationalShootSpeed = 1.0;
+        /** Maximum Rotational speed while shooting (in rad/s) */
+        public static final double driverRotationalShootSpeed = 1.5;
     }
 
     /**
