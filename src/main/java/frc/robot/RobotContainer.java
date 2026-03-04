@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
@@ -137,6 +138,15 @@ public final class RobotContainer {
 
                 break;
         }
+        // END DASHBOARD STUFF
+
+        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
+
+        DeviceDebug.initialize();
+
+        // AUTO STUFF
+
+
         autoFactory = new AutoFactory(swerve::getPose, swerve::resetOdometry,
             swerve::followTrajectory, true, swerve);
 
@@ -145,10 +155,10 @@ public final class RobotContainer {
             indexer, shooter, turret, vision);
         autoChooser = new AutoChooser();
         autoChooser.addRoutine("Shoot Only Auto", autos::shootOnlyAuto);
-
+        autoChooser.addCmd("Do Nothing", Commands::none);
 
         SmartDashboard.putData("Auto Selector", autoChooser);
-        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
+        // viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
 
         DeviceDebug.initialize();
 
