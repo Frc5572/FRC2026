@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -22,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
+import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
@@ -71,6 +73,7 @@ public final class RobotContainer {
     private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
+    private final LEDs leds = new LEDs();
     private final Swerve swerve;
     private final Vision vision;
     private final AdjustableHood adjustableHood;
@@ -176,6 +179,13 @@ public final class RobotContainer {
         // DEFAULT COMMANDS
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
+        leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
+        // TRIGGERS
+        RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
+            .whileTrue(leds.setLEDsBreathe(Color.kRed));
+        vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
+
+
 
         // BUTTON BINDINGS
         driver.y().onTrue(swerve.setFieldRelativeOffset());
@@ -276,6 +286,7 @@ public final class RobotContainer {
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
     }
 
+
     /**
      * Runs during disabled
      */
@@ -295,6 +306,7 @@ public final class RobotContainer {
         Logger.recordOutput("/ShotData/flywheelSpeed", flywheelSpeed);
         Logger.recordOutput("/ShotData/hoodAngle", hoodAngle);
     }
+
 }
 
 

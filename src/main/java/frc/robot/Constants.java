@@ -608,6 +608,14 @@ public final class Constants {
     }
 
     /**
+     * leds constants class
+     */
+    public static final class LEDs {
+        public static final int LED_PORT = 0;
+        public static final int LED_LENGTH = 20; // needs to be checked
+    }
+
+    /**
      * dashboard constants
      */
     public static class DashboardValues {
