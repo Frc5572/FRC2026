@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
+import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
@@ -85,6 +86,8 @@ public final class Swerve extends SubsystemBase {
 
     public final RobotState state;
     public final PhotonCamera camera;
+    public AutoFactory autoFactory;
+
 
     private final HolonomicDriveController holonomicDriveController = new HolonomicDriveController(
         new PIDController(Constants.SwerveTransformPID.translationP,
