@@ -58,6 +58,11 @@ public class AutoCommandFactory {
         this.turret = turret;
     }
 
+    /**
+     * The method that makes the Shoot Then Climb AutoRoutine.
+     * 
+     * @return The AutoRoutine
+     */
     public AutoRoutine shootThenClimb() {
         AutoRoutine routine = autoFactory.newRoutine("Shoot Then Climb");
 
