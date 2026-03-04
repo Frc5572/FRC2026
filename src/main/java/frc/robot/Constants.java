@@ -48,9 +48,6 @@ public final class Constants {
 
     /** Constants for driver controls */
     public static class DriverControls {
-        /** Driverstation controller Index */
-        public static final int controllerId = 0;
-        public static final int testControllerId = 0;
         /** Stick axis controls less than this amount are treated as 0. */
         public static final double stickDeadband = 0.1;
 

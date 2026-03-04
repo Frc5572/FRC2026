@@ -2,6 +2,10 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
@@ -16,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -62,9 +67,12 @@ import frc.robot.viz.RobotViz;
 @NullMarked
 public final class RobotContainer {
     /* Controllers */
-    public final CommandXboxController driver =
-        new CommandXboxController(Constants.DriverControls.controllerId);
-    public final CommandXboxController test = new CommandXboxController(3);
+    public final CommandXboxController driver = new CommandXboxController(0);
+    public final CommandXboxController operator = new CommandXboxController(1);
+    public final CommandXboxController tuner = new CommandXboxController(2);
+    public final CommandXboxController pit = new CommandXboxController(3);
+
+    /* Auto utilities */
     private final AutoChooser autoChooser = new AutoChooser();
     private final AutoCommandFactory autoCommandFactory;
 
@@ -172,11 +180,6 @@ public final class RobotContainer {
         // END AUTO STUFF
 
         // DEFAULT COMMANDS
-        swerve.setDefaultCommand(swerve.driveUserRelative(
-            TeleopControls.teleopControls(() -> -driver.getLeftY(), () -> -driver.getLeftX(),
-                () -> -driver.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
-                Constants.DriverControls.driverRotationalMaxSpeed)));
-
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
         turret.setDefaultCommand(turret.goToAngleFieldRelative(() -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
@@ -184,6 +187,18 @@ public final class RobotContainer {
         }));
 
         // BUTTON BINDINGS
+        maybeController("Driver", driver, this::setupDriver);
+        maybeController("Operator", operator, this::setupOperator);
+        maybeController("Tuner", tuner, this::setupTuner);
+        maybeController("Pit", pit, this::setupPit);
+    }
+
+    private void setupDriver() {
+        swerve.setDefaultCommand(swerve.driveUserRelative(
+            TeleopControls.teleopControls(() -> -driver.getLeftY(), () -> -driver.getLeftX(),
+                () -> -driver.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
+                Constants.DriverControls.driverRotationalMaxSpeed)));
+
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
@@ -199,14 +214,59 @@ public final class RobotContainer {
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
                 .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
+    }
 
-        // driver.rightTrigger().and(driver.leftTrigger().negate()).whileTrue(intake.jerkIntake());
+    private void setupOperator() {
+        operator.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
+        operator.b()
+            .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
+    }
 
-        driver.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
+    private void setupTuner() {
+        swerve.setDefaultCommand(swerve.driveUserRelative(
+            TeleopControls.teleopControls(() -> -tuner.getLeftY(), () -> -tuner.getLeftX(),
+                () -> -tuner.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
+                Constants.DriverControls.driverRotationalMaxSpeed)));
+
+        tuner.y().onTrue(swerve.setFieldRelativeOffset());
+
+        tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
+        tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
+    }
+
+    private void setupPit() {
+
+    }
+
+    private List<Runnable> controllerSetups = new ArrayList<>();
+    private final Set<String> seenController = new HashSet<>();
+
+    private void maybeController(String name, CommandXboxController xboxController,
+        Runnable setupFun) {
+        Runnable runner = () -> {
+            if (seenController.add(name)) {
+                System.out.println("Setting up buttons for " + name);
+                setupFun.run();
+            }
+        };
+        if (xboxController.isConnected()) {
+            runner.run();
+        } else {
+            new Trigger(xboxController::isConnected)
+                .onTrue(Commands.runOnce(() -> controllerSetups.add(runner)).ignoringDisable(true));
+        }
+    }
+
+    private void queryControllers() {
+        for (var setup : controllerSetups) {
+            setup.run();
+        }
+        controllerSetups.clear();
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
+        queryControllers();
         if (sim != null) {
             SimulatedArena.getInstance().simulationPeriodic();
             FuelSim.getInstance().updateSim();
