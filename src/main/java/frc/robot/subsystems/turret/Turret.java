@@ -38,6 +38,7 @@ public class Turret extends SubsystemBase {
         this.io = io;
         this.state = state;
         this.state.setTurretOffsetUpdate(newOffset -> {
+            Logger.recordOutput("Turret/offset", newOffset);
             this.offset = newOffset;
         });
     }

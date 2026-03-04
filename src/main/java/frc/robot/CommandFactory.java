@@ -1,8 +1,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -13,10 +11,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.FieldConstants.Passing;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.shooter.Shooter;
@@ -24,31 +20,6 @@ import frc.robot.subsystems.turret.Turret;
 
 /** Command Factory */
 public class CommandFactory {
-    /**
-     * Sets the turret's target to the left or right based off of its closest distence, then sets
-     * the angle of the hood, then the velocity of the shooter, then it shoots.
-     */
-    public static Command autoPass(Supplier<Pose2d> supplierSwervePose, Turret turret,
-        AdjustableHood hood, Shooter shooter) {
-        return Commands.run(() -> {
-            Pose2d swervePose = supplierSwervePose.get();
-            Distance leftDistance =
-                Meters.of(Passing.blueAllianceLeft.getDistance(swervePose.getTranslation()));
-            Distance rightDistance =
-                Meters.of(Passing.blueAllianceRight.getDistance(swervePose.getTranslation()));
-            if (leftDistance.in(Meters) < rightDistance.in(Meters)) {
-                Rotation2d leftDistanceGoal =
-                    Passing.blueAllianceLeft.minus(swervePose.getTranslation()).getAngle();
-                turret.setGoalRobotRelative(leftDistanceGoal, RotationsPerSecond.of(0));
-            } else {
-                Rotation2d rightDistanceGoal =
-                    Passing.blueAllianceRight.minus(swervePose.getTranslation()).getAngle();
-                turret.setGoalRobotRelative(rightDistanceGoal, RotationsPerSecond.of(0));
-            }
-            hood.setGoal(Rotations.of(Constants.AdjustableHood.passingAngle));
-            shooter.shoot(Constants.Shooter.shooterVelocity);
-        }, turret, hood, shooter);
-    }
 
     /** Prepare flywheel and turret for shooting from a given robot pose. */
     public static Command preShoot(Supplier<Pose2d> robotPoseSupplier,
@@ -86,7 +57,7 @@ public class CommandFactory {
         return Commands.runEnd(() -> {
             final Translation2d target = targetSupplier.get();
             Translation2d adjustedTarget = target;
-            double adjustUpValue = Units.metersToFeet(adjustUp.getAsDouble());
+            double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble());
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
             Translation2d[] adjustedTargets = new Translation2d[21];
             for (int i = 0; i < 20; i++) {
@@ -122,10 +93,10 @@ public class CommandFactory {
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
             if (isOkay && turretFacing) {
                 indexer.setMagazineDutyCycle(0.7);
-                indexer.setSpindexerDutyCycle(0.7);
+                indexer.setSpindexerDutyCycle(0.5);
             } else {
                 indexer.setMagazineDutyCycle(0.0);
-                indexer.setSpindexerDutyCycle(-0.2);
+                indexer.setSpindexerDutyCycle(0.0);
             }
         }, () -> {
             shooter.setVelocity(0.0);

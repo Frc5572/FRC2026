@@ -187,17 +187,16 @@ public final class RobotContainer {
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             // TODO passing?
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
-            .alongWith(swerve.limitSkidLimit()));
+        }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0));
 
         driver.leftTrigger()
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
-                .andThen(intake.extendHopper(0.7), intake.intakeBalls()));
+                .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
+            .onFalse(intake.retractHopper(0));
 
-        driver.rightTrigger().and(driver.leftTrigger().negate()).whileTrue(intake.jerkIntake());
+        // driver.rightTrigger().and(driver.leftTrigger().negate()).whileTrue(intake.jerkIntake());
 
-        driver.leftTrigger().negate().and(driver.rightTrigger().negate())
-            .onTrue(intake.retractHopper(0));
+        driver.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
     }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
