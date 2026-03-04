@@ -21,7 +21,6 @@ import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.MoveToPose;
 import frc.robot.subsystems.swerve.util.TurnToRotation;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
 
 /**
@@ -51,7 +50,6 @@ public class AutoCommandFactory {
         this.intake = intake;
         this.shooter = shooter;
         this.turret = turret;
-        this.vision = vision;
     }
 
     public AutoRoutine shootOnlyAuto() {
@@ -81,85 +79,81 @@ public class AutoCommandFactory {
             AllianceFlipUtil.apply(new Pose2d(FieldConstants.LinesVertical.starting - 1,
                 FieldConstants.RightTrench.openingTopLeft.getY(), Rotation2d.kZero));
 
-        score =
-            Commands.sequence(Commands.waitUntil(() -> vision.hasHighConfidence()).withTimeout(3.0),
-                Commands.defer(() -> {
-                    Pose2d currentPose = swerve.getPose();
-                    double distToLeft =
-                        currentPose.getTranslation().getDistance(leftTrench.getTranslation());
-                    double distToRight =
-                        currentPose.getTranslation().getDistance(rightTrench.getTranslation());
+        score = Commands.defer(() -> {
+            Pose2d currentPose = swerve.getPose();
+            double distToLeft =
+                currentPose.getTranslation().getDistance(leftTrench.getTranslation());
+            double distToRight =
+                currentPose.getTranslation().getDistance(rightTrench.getTranslation());
 
-                    Pose2d chosenTrench;
-                    Rotation2d intakeRotation;
-                    Pose2d intakeLocation;
-                    Pose2d intakeFinalLocation;
-                    Pose2d shootLocation;
+            Pose2d chosenTrench;
+            Rotation2d intakeRotation;
+            Pose2d intakeLocation;
+            Pose2d intakeFinalLocation;
+            Pose2d shootLocation;
 
-                    if (distToLeft < distToRight) {
-                        chosenTrench = leftTrench;
-                        intakeRotation = Rotation2d.fromDegrees(90);
-                        intakeLocation = leftFuel;
-                        intakeFinalLocation = leftFinalFuel;
-                        shootLocation = leftShootLocation;
-                    } else {
-                        chosenTrench = rightTrench;
-                        intakeRotation = Rotation2d.fromDegrees(270);
-                        intakeLocation = rightFuel;
-                        intakeFinalLocation = rightFinalFuel;
-                        shootLocation = rightShootLocation;
-                    }
+            if (distToLeft < distToRight) {
+                chosenTrench = leftTrench;
+                intakeRotation = Rotation2d.fromDegrees(90);
+                intakeLocation = leftFuel;
+                intakeFinalLocation = leftFinalFuel;
+                shootLocation = leftShootLocation;
+            } else {
+                chosenTrench = rightTrench;
+                intakeRotation = Rotation2d.fromDegrees(270);
+                intakeLocation = rightFuel;
+                intakeFinalLocation = rightFinalFuel;
+                shootLocation = rightShootLocation;
+            }
 
-                    return Commands.sequence(
-                        // Move to Trench
-                        new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
-                            () -> new Pose2d(
-                                AllianceFlipUtil.apply(new Translation2d(
-                                    FieldConstants.LinesVertical.starting, chosenTrench.getY())),
-                                chosenTrench.getRotation()),
-                            null, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
+            return Commands.sequence(
+                // Move to Trench
+                new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
+                    () -> new Pose2d(
+                        AllianceFlipUtil.apply(new Translation2d(
+                            FieldConstants.LinesVertical.starting, chosenTrench.getY())),
+                        chosenTrench.getRotation()),
+                    routine, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
 
-                        // Move through trench + Intake
-                        new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
-                            () -> new Pose2d(AllianceFlipUtil.apply(new Translation2d(
-                                FieldConstants.LinesVertical.neutralZoneNear, chosenTrench.getY())),
-                                chosenTrench.getRotation()),
-                            null, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5)
-                                .andThen(intake.waitUntilExtended(), intake.intakeBalls(6)),
+                // Move through trench + Intake
+                new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
+                    () -> new Pose2d(
+                        AllianceFlipUtil.apply(new Translation2d(
+                            FieldConstants.LinesVertical.neutralZoneNear, chosenTrench.getY())),
+                        chosenTrench.getRotation()),
+                    routine, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5)
+                        .andThen(intake.waitUntilExtended(), intake.intakeBalls(6)),
 
-                        // Drive to Fuel
-                        new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
-                            () -> new Pose2d(AllianceFlipUtil.apply(
-                                new Translation2d(intakeLocation.getX(), intakeLocation.getY())),
-                                intakeRotation),
-                            null, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
+                // Drive to Fuel
+                new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
+                    () -> new Pose2d(AllianceFlipUtil
+                        .apply(new Translation2d(intakeLocation.getX(), intakeLocation.getY())),
+                        intakeRotation),
+                    routine, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
 
-                        // Intake
-                        new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
-                            () -> new Pose2d(
-                                AllianceFlipUtil.apply(new Translation2d(intakeFinalLocation.getX(),
-                                    intakeFinalLocation.getY())),
-                                intakeRotation),
-                            null, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
+                // Intake
+                new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
+                    () -> new Pose2d(AllianceFlipUtil.apply(
+                        new Translation2d(intakeFinalLocation.getX(), intakeFinalLocation.getY())),
+                        intakeRotation),
+                    routine, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5),
 
+                // Back to Hub
+                new MoveToPose(swerve, swerve::driveRobotRelativeDirect, () -> shootLocation,
+                    routine, () -> Constants.Swerve.autoMaxSpeed, true, 0.05, 5.0),
 
-                        // Back to Hub
-                        new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
-                            () -> shootLocation, null, () -> Constants.Swerve.autoMaxSpeed, true,
-                            0.05, 5.0),
+                // Shoot
+                Commands.parallel(shooter.shoot(65),
+                    Commands.sequence(Commands.waitSeconds(0.6), indexer.setSpeedCommand(0.8, 0.8)),
+                    Commands.repeatingSequence(intake.extendHopper().withTimeout(0.4),
+                        intake.retractHopper().withTimeout(0.4)))
+                    .withTimeout(7.0));
 
-                        // Shoot
-                        Commands.parallel(shooter.shoot(65),
-                            Commands.sequence(Commands.waitSeconds(0.6),
-                                indexer.setSpeedCommand(0.8, 0.8)),
-                            Commands.repeatingSequence(intake.extendHopper().withTimeout(0.4),
-                                intake.retractHopper().withTimeout(0.4)))
-                            .withTimeout(7.0));
-
-                }, Set.of(swerve, intake, indexer, shooter)));
+        }, Set.of(swerve, intake, indexer, shooter));
 
         score = score.andThen(swerve.stop());
         routine.active().onTrue(score.withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        return routine;
     }
 
     /**

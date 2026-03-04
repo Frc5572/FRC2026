@@ -570,7 +570,6 @@ public final class Swerve extends SubsystemBase {
 
     public void resetOdometry(Pose2d pose) {
         state.resetPose(pose, getModulePositions(), getGyroYaw());
-        this.io.setPose(pose);
     }
 
     /**
