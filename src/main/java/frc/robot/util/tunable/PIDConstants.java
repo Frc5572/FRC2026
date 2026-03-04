@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import frc.robot.util.typestate.InitField;
 import frc.robot.util.typestate.OptionalField;
@@ -49,6 +50,18 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
 
     /** Write PID constants to TalonFX */
     public void apply(Slot0Configs config) {
+        config.kP = kP;
+        config.kI = kI;
+        config.kD = kD;
+        config.kV = kV;
+        config.kG = kG;
+        config.kS = kS;
+        config.kA = kA;
+        config.GravityType = isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static;
+    }
+
+    /** Write PID constants to TalonFX */
+    public void apply(Slot1Configs config) {
         config.kP = kP;
         config.kI = kI;
         config.kD = kD;
