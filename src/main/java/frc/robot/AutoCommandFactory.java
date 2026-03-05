@@ -122,7 +122,7 @@ public class AutoCommandFactory {
                             FieldConstants.LinesVertical.neutralZoneNear, chosenTrench.getY())),
                         chosenTrench.getRotation()),
                     routine, () -> Constants.Swerve.autoMaxSpeed, true, 0.1, 5)
-                        .andThen(intake.waitUntilExtended(), intake.intakeBalls(6)),
+                        .andThen(intake.extendHopper(0)).andThen(intake.intakeBalls(6)),
 
                 // Drive to Fuel
                 new MoveToPose(swerve, swerve::driveRobotRelativeDirect,
@@ -145,9 +145,7 @@ public class AutoCommandFactory {
                 // Shoot
                 Commands.parallel(shooter.shoot(65),
                     Commands.sequence(Commands.waitSeconds(0.6), indexer.setSpeedCommand(0.8, 0.8)),
-                    Commands.repeatingSequence(intake.extendHopper().withTimeout(0.4),
-                        intake.retractHopper().withTimeout(0.4)))
-                    .withTimeout(7.0));
+                    Commands.repeatingSequence(intake.jerkIntake())).withTimeout(7.0));
 
         }, Set.of(swerve, intake, indexer, shooter));
 
@@ -175,7 +173,7 @@ public class AutoCommandFactory {
         // path.active().whileTrue(Commands.print("Running Gather Path from Choreo").repeatedly());
         // path.done().onTrue(Commands.print("Gather Path Complete!!!!!!!!!!!"));
 
-        path.active().onTrue(intake.extendHopper().andThen(intake.intakeBalls()));
+        path.active().onTrue(intake.extendHopper(0).andThen(intake.intakeBalls()));
 
         Supplier<Rotation2d> rotSup = () -> {
             Pose2d target =

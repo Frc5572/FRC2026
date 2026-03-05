@@ -3,26 +3,30 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
+import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
@@ -52,6 +56,7 @@ import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
@@ -65,13 +70,17 @@ import frc.robot.viz.RobotViz;
 @NullMarked
 public final class RobotContainer {
     /* Controllers */
-    public final CommandXboxController driver =
-        new CommandXboxController(Constants.DriverControls.controllerId);
-    public final CommandXboxController test = new CommandXboxController(3);
+    public final CommandXboxController driver = new CommandXboxController(0);
+    public final CommandXboxController operator = new CommandXboxController(1);
+    public final CommandXboxController tuner = new CommandXboxController(2);
+    public final CommandXboxController pit = new CommandXboxController(3);
+
+    /* Auto utilities */
     private final AutoChooser autoChooser = new AutoChooser();
     private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
+    private final LEDs leds = new LEDs();
     private final Swerve swerve;
     private final Vision vision;
     private final AdjustableHood adjustableHood;
@@ -105,7 +114,7 @@ public final class RobotContainer {
 
                 break;
             case kSimulation:
-                FuelSim.getInstance().spawnStartingFuel();
+                // FuelSim.getInstance().spawnStartingFuel();
                 sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
@@ -150,7 +159,7 @@ public final class RobotContainer {
         SmartDashboard.putData(Constants.DashboardValues.field, field);
         // END DASHBOARD STUFF
 
-        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber);
+        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
 
         DeviceDebug.initialize();
 
@@ -176,107 +185,109 @@ public final class RobotContainer {
         // END AUTO STUFF
 
         // DEFAULT COMMANDS
-        swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
-            () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX())));
+        adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
+        turret.setDefaultCommand(turret.goToAngleFieldRelative(() -> {
+            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
+                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
+        }));
+        leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
+        // TRIGGERS
+        RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
+            .whileTrue(leds.setLEDsBreathe(Color.kBlue));
+        vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
 
         // BUTTON BINDINGS
-        driver.y().onTrue(swerve.setFieldRelativeOffset());
-
-        // driver.rightTrigger().whileTrue(shooter.shoot(65)).onFalse(shooter.shoot(0));
-
-        driver.leftTrigger().whileTrue(indexer.setSpeedCommand(0.8, 0.4))
-            .onFalse(indexer.setSpeedCommand(0.0, 0.0));
-
-        driver.a().onTrue(intake.extendHopper());
-        driver.b().onTrue(intake.retractHopper());
-        driver.x().whileTrue(intake.intakeBalls());
-
-        double[] flywheelSpeed = new double[] {60.0};
-        double[] hoodAngle = new double[] {10.0};
-
-        driver.rightTrigger()
-            .whileTrue(shooter.shoot(() -> flywheelSpeed[0])
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(hoodAngle[0]))))
-            .onFalse(shooter.shoot(0.0));
-
-        driver.leftBumper().whileTrue(turret.goToAngleFieldRelative(() -> {
-            return FieldConstants.Hub.centerHub
-                .minus(swerve.state.getGlobalPoseEstimate().getTranslation()).getAngle()
-                .plus(Rotation2d.k180deg);
-        })).onFalse(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
-
-        boolean[] changingFlywheelSpeed = new boolean[] {false};
-        test.b().onTrue(Commands.runOnce(() -> {
-            changingFlywheelSpeed[0] = true;
-        }));
-        test.x().onTrue(Commands.runOnce(() -> {
-            changingFlywheelSpeed[0] = false;
-        }));
-
-        double[] timings = new double[] {0.0, -1.0};
-        driver.rightTrigger()
-            .and(() -> shooter.inputs.shooterAngularVelocity1
-                .in(RotationsPerSecond) < flywheelSpeedFilterValue - 3.0)
-            .onTrue(Commands.runOnce(() -> {
-                timings[0] = Timer.getFPGATimestamp();
-                writeTimings(timings);
-            }));
-        test.a().onTrue(Commands.runOnce(() -> {
-            timings[1] = Timer.getFPGATimestamp();
-            writeTimings(timings);
-        }));
-
-        test.povUp().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] += 5.0;
-            } else {
-                hoodAngle[0] += 1.0;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
-        test.povDown().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] -= 5.0;
-            } else {
-                hoodAngle[0] -= 1.0;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
-        test.povRight().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] += 0.5;
-            } else {
-                hoodAngle[0] += 0.1;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
-        test.povLeft().onTrue(Commands.runOnce(() -> {
-            if (changingFlywheelSpeed[0]) {
-                flywheelSpeed[0] -= 0.5;
-            } else {
-                hoodAngle[0] -= 0.1;
-            }
-            writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        }));
-        writeShotConf(flywheelSpeed[0], hoodAngle[0]);
-        writeTimings(timings);
+        maybeController("Driver", driver, this::setupDriver);
+        maybeController("Operator", operator, this::setupOperator);
+        maybeController("Tuner", tuner, this::setupTuner);
+        maybeController("Pit", pit, this::setupPit);
     }
 
-    private LinearFilter flywheelSpeedFilter = LinearFilter.movingAverage(10);
-    private double flywheelSpeedFilterValue = 0.0;
+    private void setupDriver() {
+        swerve.setDefaultCommand(swerve.driveUserRelative(
+            TeleopControls.teleopControls(() -> -driver.getLeftY(), () -> -driver.getLeftX(),
+                () -> -driver.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
+                Constants.DriverControls.driverRotationalMaxSpeed)));
+
+        driver.y().onTrue(swerve.setFieldRelativeOffset());
+
+        driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
+            // TODO passing?
+            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+        }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0)
+            .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
+                () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
+                Constants.DriverControls.driverTranslationalShootSpeed,
+                Constants.DriverControls.driverRotationalShootSpeed))));
+
+        driver.leftTrigger()
+            .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
+                .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
+            .onFalse(intake.retractHopper(0));
+    }
+
+    private void setupOperator() {
+        operator.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
+        operator.b()
+            .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
+    }
+
+    private void setupTuner() {
+        swerve.setDefaultCommand(swerve.driveUserRelative(
+            TeleopControls.teleopControls(() -> -tuner.getLeftY(), () -> -tuner.getLeftX(),
+                () -> -tuner.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
+                Constants.DriverControls.driverRotationalMaxSpeed)));
+
+        tuner.y().onTrue(swerve.setFieldRelativeOffset());
+
+        tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
+        tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
+    }
+
+    private void setupPit() {
+
+    }
+
+    private List<Runnable> controllerSetups = new ArrayList<>();
+    private final Set<String> seenController = new HashSet<>();
+
+    private void maybeController(String name, CommandXboxController xboxController,
+        Runnable setupFun) {
+        Runnable runner = () -> {
+            if (seenController.add(name)) {
+                System.out.println("Setting up buttons for " + name);
+                setupFun.run();
+            }
+        };
+        if (xboxController.isConnected()) {
+            runner.run();
+        } else {
+            new Trigger(xboxController::isConnected)
+                .onTrue(Commands.runOnce(() -> controllerSetups.add(runner)).ignoringDisable(true));
+        }
+    }
+
+    private void queryControllers() {
+        for (var setup : controllerSetups) {
+            setup.run();
+        }
+        controllerSetups.clear();
+    }
 
     /** Runs once per 0.02 seconds after subsystems and commands. */
     public void periodic() {
+        queryControllers();
         if (sim != null) {
             SimulatedArena.getInstance().simulationPeriodic();
             FuelSim.getInstance().updateSim();
+            Logger.recordOutput("FuelSim/RedScore", FuelSim.Hub.RED_HUB.getScore());
+            Logger.recordOutput("FuelSim/BlueScore", FuelSim.Hub.BLUE_HUB.getScore());
             sim.update();
         }
         viz.periodic();
-        flywheelSpeedFilterValue = flywheelSpeedFilter
-            .calculate(shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond));
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
     }
+
 
     /**
      * Runs during disabled
@@ -285,16 +296,5 @@ public final class RobotContainer {
         double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
         double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
         autoShootLocation.setPose(x, y, new Rotation2d());
-    }
-
-    private void writeTimings(double[] timings) {
-        Logger.recordOutput("/ShotData/Timings/start", timings[0]);
-        Logger.recordOutput("/ShotData/Timings/end", timings[1]);
-        Logger.recordOutput("/ShotData/Timings/diff", timings[1] - timings[0]);
-    }
-
-    private void writeShotConf(double flywheelSpeed, double hoodAngle) {
-        Logger.recordOutput("/ShotData/flywheelSpeed", flywheelSpeed);
-        Logger.recordOutput("/ShotData/hoodAngle", hoodAngle);
     }
 }

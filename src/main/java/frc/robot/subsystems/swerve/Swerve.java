@@ -132,6 +132,8 @@ public final class Swerve extends SubsystemBase {
                 mod.updateInputs();
                 return mod.getPosition();
             }).toArray(_i -> initPositions);
+            this.gyro.updateInputs(this.gyroInputs);
+            Logger.processInputs("Swerve/Gyro", this.gyroInputs);
         } finally {
             this.odometryLock.unlock();
         }
@@ -255,7 +257,7 @@ public final class Swerve extends SubsystemBase {
         return Commands.runOnce(() -> {
             Pose2d newPose_ = newPose.get();
             io.resetPose(newPose_);
-            state.resetPose(newPose_, getModulePositions(), getGyroYaw());
+            state.resetPose(newPose_);
         });
     }
 
@@ -397,8 +399,7 @@ public final class Swerve extends SubsystemBase {
     }
 
     public Command limitSkidLimit() {
-        return Commands.runEnd(() -> customSkidLimit = FieldConstants.Hub.innerWidth / 2.0,
-            () -> customSkidLimit = 1000.0, this);
+        return Commands.runEnd(() -> customSkidLimit = 50.0, () -> customSkidLimit = 1000.0, this);
     }
 
     private void runCharacterization(double output) {
@@ -563,16 +564,11 @@ public final class Swerve extends SubsystemBase {
     }
 
     public void setPose(Pose2d pose) {
-        SwerveModulePosition[] positions = getModulePositions();
-
-        Rotation2d gyroYaw =
-            Rotation2d.fromRadians(gyroInputs.yawRads[gyroInputs.yawRads.length - 1]);
-
-        state.resetPose(pose, positions, gyroYaw);
+        state.resetPose(pose);
     }
 
     public void resetOdometry(Pose2d pose) {
-        state.resetPose(pose, getModulePositions(), getGyroYaw());
+        state.resetPose(pose);
     }
 
     /**

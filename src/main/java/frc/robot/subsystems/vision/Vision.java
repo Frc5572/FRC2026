@@ -6,9 +6,11 @@ import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.util.Tuples.Tuple2;
@@ -44,6 +46,9 @@ public class Vision extends SubsystemBase {
     private final String[] cameraVizKeys;
     private final boolean[] cameraContributed;
     private final String[] cameraContributedKeys;
+    private boolean seesMultitag;
+    public Trigger seesTwoAprilTags =
+        new Trigger(() -> twoAprilTags()).debounce(.3, Debouncer.DebounceType.kBoth);
 
     /**
      * Creates the vision subsystem.
@@ -96,6 +101,11 @@ public class Vision extends SubsystemBase {
         for (var result : results) {
             cameraContributed[result._0()] = state
                 .addVisionObservation(Constants.Vision.cameraConstants[result._0()], result._1());
+            if (result._1().multitagResult.isPresent()) {
+                seesMultitag = true;
+            } else if (result._0() == 0) {
+                seesMultitag = false;
+            }
             for (int i = 0; i < result._1().targets.size(); i++) {
                 var cameraPose = new Pose3d(state.getGlobalPoseEstimate())
                     .plus(Constants.Vision.cameraConstants[result._0()].robotToCamera);
@@ -125,15 +135,8 @@ public class Vision extends SubsystemBase {
         return res;
     }
 
-    public boolean hasHighConfidence() {
-        for (var input : cameraInputs) {
-            for (var result : input.results) {
-                if (result.hasTargets() && result.getTargets().size() >= 2) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public boolean twoAprilTags() {
+        return seesMultitag;
     }
 
 }
