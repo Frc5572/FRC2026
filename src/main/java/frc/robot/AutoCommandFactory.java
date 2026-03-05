@@ -52,6 +52,11 @@ public class AutoCommandFactory {
         this.turret = turret;
     }
 
+    /**
+     * 
+     * @return an auto routine where the bot drive thorugh the trench to the other side, intakes
+     *         balls then comes back and shoots.
+     */
     public AutoRoutine shootOnlyAuto() {
         AutoRoutine routine = autoFactory.newRoutine("shootOnlyAuto");
         Commands.runOnce(() -> swerve.resetOdometry(swerve.getPose()));

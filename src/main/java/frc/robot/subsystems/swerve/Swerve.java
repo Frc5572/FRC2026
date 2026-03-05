@@ -551,6 +551,10 @@ public final class Swerve extends SubsystemBase {
             state.getGlobalPoseEstimate().getRotation()));
     }
 
+    /**
+     * 
+     * @return position of each moduel
+     */
     public SwerveModulePosition[] getModulePositions() {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
         for (SwerveModule mod : modules) {
