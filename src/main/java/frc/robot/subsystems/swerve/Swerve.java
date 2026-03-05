@@ -553,7 +553,7 @@ public final class Swerve extends SubsystemBase {
 
     /**
      * 
-     * @return position of each moduel
+     * @return position of each module
      */
     public SwerveModulePosition[] getModulePositions() {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
