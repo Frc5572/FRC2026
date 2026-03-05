@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
@@ -15,7 +16,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
@@ -69,17 +69,27 @@ public class AutoCommandFactory {
         MoveToPose moveToClimb = moveToClimb(routine);
 
         Command fullCommand = Commands.defer(() -> {
-            return Commands.sequence(
-                Commands.parallel(shooter.shoot(65),
-                    Commands.sequence(Commands.waitSeconds(1), indexer.setSpeedCommand(0.8, 0.4)),
-                    Commands.sequence(Commands.waitSeconds(4), moveToClimb)),
-                swerve.stop(),
-                climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.zero(), Meters.zero())));
-        }, Set.of(swerve, shooter, indexer));
+            return Commands
+                .sequence(
+                    Commands.parallel(shooter.shoot(65),
+                        Commands.sequence(Commands.waitSeconds(1),
+                            indexer.setSpeedCommand(0.8, 0.4)),
+                        Commands.sequence(Commands.waitSeconds(4), moveToClimb)),
+                    climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0))));
+        }, Set.of(shooter, indexer, climber));
 
-        routine.active()
-            .onTrue(fullCommand.withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        routine.active().onTrue(fullCommand);
+        moveToClimb.done().onTrue(swerve.stop());
         return routine;
+    }
+
+    private MoveToPose moveToClimb(AutoRoutine routine) {
+        Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
+            FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
+                - Units.inchesToMeters(0),
+            FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
+        Logger.recordOutput("AutoClimbPose", AllianceFlipUtil.apply(climbPose));
+        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(1.0).finish();
     }
 
     /**
@@ -113,14 +123,6 @@ public class AutoCommandFactory {
             .andThen(intake.jerkIntake().alongWith(shooter.shoot(1))));
 
         return routine;
-    }
-
-    private MoveToPose moveToClimb(AutoRoutine routine) {
-        Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
-            FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
-                - Units.inchesToMeters(3),
-            FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
-        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(1.0).finish();
     }
 
     /**
