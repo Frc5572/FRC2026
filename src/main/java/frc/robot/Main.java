@@ -43,9 +43,12 @@ public final class Main {
     }
 
     private static void drawImages() {
-        drawImage("interp2d", ShotData.entries, "distance (ft)", ShotEntry::distanceFeet,
+        drawImage("hood_angle", ShotData.entries, "distance (ft)", ShotEntry::distanceFeet,
             "Flywheel Speed (rps)", ShotEntry::flywheelSpeedRps, "Hood Angle (deg)",
             ShotEntry::hoodAngleDeg, ShotData.mulAdd);
+        drawImage("time_of_flight", ShotData.entries, "distance (ft)", ShotEntry::distanceFeet,
+            "Flywheel Speed (rps)", ShotEntry::flywheelSpeedRps, "Time of Flight (s)",
+            ShotEntry::timeOfFlight, ShotData.mulAdd);
     }
 
     private static <T> void drawImage(String name, T[] data, String xName,
@@ -118,9 +121,9 @@ public final class Main {
                 <text text-anchor="end" alignment-baseline="hanging" transform="translate(55, 10)" font-size="12px" stroke="none"
                 fill="black">{yMax}</text>
                 <text text-anchor="end" transform="translate(55, 210)" font-size="12px" stroke="none" fill="black">{yMin}</text>
-                <text transform="translate(260, 215) rotate(90)" alignment-baseline="hanging" font-size="12px" stroke="none"
+                <text text-anchor="end" transform="translate(260, 215) rotate(-60)" font-size="12px" stroke="none"
                 fill="black">{xMax}</text>
-                <text transform="translate(60, 215) rotate(90)" font-size="12px" stroke="none" fill="black">{xMin}</text>
+                <text text-anchor="end" transform="translate(60, 215) rotate(-60)" alignment-baseline="hanging" font-size="12px" stroke="none" fill="black">{xMin}</text>
 
                 <image x="270" y="10" width="20" height="200" xlink:href="{b64Key}" />
                 <text alignment-baseline="hanging" transform="translate(285, 10)" font-size="12px" stroke="none"
