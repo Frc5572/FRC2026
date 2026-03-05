@@ -3,17 +3,19 @@ package frc.robot.math.interp2d;
 import java.util.Arrays;
 import java.util.function.ToDoubleFunction;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.math.geometry.DelaunayTriangulation;
 import frc.robot.math.geometry.Triangle2d;
 import frc.robot.math.geometry.Triangle2d.ClosestPoint;
+import io.github.jdiemke.triangulation.DelaunayTriangulator;
+import io.github.jdiemke.triangulation.NotEnoughPointsException;
+import io.github.jdiemke.triangulation.Vector2D;
 
 /** Interpolate between two independent parameters. */
 public class Interp2d<T> {
 
-    private final DelaunayTriangulation triangulation;
     private final MulAdd<T> mulAdd;
     private final T[] data;
     private final Translation2d[] points;
+    private final int[] triangles;
 
     /** Create new Interp2d. */
     public Interp2d(T[] data, MulAdd<T> mulAdd, ToDoubleFunction<T> xFunc,
@@ -21,7 +23,32 @@ public class Interp2d<T> {
         this.points = Arrays.stream(data)
             .map(item -> new Translation2d(xFunc.applyAsDouble(item), yFunc.applyAsDouble(item)))
             .toArray(Translation2d[]::new);
-        this.triangulation = new DelaunayTriangulation(points);
+        DelaunayTriangulator triangulator = new DelaunayTriangulator(
+            Arrays.stream(this.points).map(x -> new Vector2D(x.getX(), x.getY())).toList());
+        try {
+            triangulator.triangulate();
+        } catch (NotEnoughPointsException e) {
+            e.printStackTrace();
+        }
+        this.triangles = new int[triangulator.getTriangles().size() * 3];
+        for (int i = 0; i < triangulator.getTriangles().size(); i++) {
+            var tri = triangulator.getTriangles().get(i);
+            Vector2D[] points = new Vector2D[] {tri.a, tri.b, tri.c};
+            for (int j = 0; j < 3; j++) {
+                Vector2D point = points[j];
+                int minIdx = 0;
+                double minDist = Double.MAX_VALUE;
+                for (int k = 0; k < this.points.length; k++) {
+                    double dist =
+                        this.points[k].getSquaredDistance(new Translation2d(point.x, point.y));
+                    if (dist < minDist) {
+                        minDist = dist;
+                        minIdx = k;
+                    }
+                }
+                this.triangles[3 * i + j] = minIdx;
+            }
+        }
         this.mulAdd = mulAdd;
         this.data = data;
     }
@@ -37,8 +64,9 @@ public class Interp2d<T> {
         int closestIndex = 0;
         boolean inside = false;
         double sdf = 0.0;
-        for (int i = 0; i < triangulation.triangles.length; i++) {
-            Triangle2d tri = triangulation.triangles[i];
+        for (int i = 0; i < this.triangles.length / 3; i++) {
+            Triangle2d tri = new Triangle2d(this.points[this.triangles[3 * i + 0]],
+                this.points[this.triangles[3 * i + 1]], this.points[this.triangles[3 * i + 2]]);
             var x = tri.closestPoint(q);
             if (x.squaredDistance() < minDist) {
                 minDist = x.squaredDistance();
@@ -57,18 +85,13 @@ public class Interp2d<T> {
         }
 
         double u = 1.0 - closestRes.v() - closestRes.w();
-        T a = this.data[this.triangulation.indices[closestIndex * 3 + 0]];
-        T b = this.data[this.triangulation.indices[closestIndex * 3 + 1]];
-        T c = this.data[this.triangulation.indices[closestIndex * 3 + 2]];
+        T a = this.data[this.triangles[closestIndex * 3 + 0]];
+        T b = this.data[this.triangles[closestIndex * 3 + 1]];
+        T c = this.data[this.triangles[closestIndex * 3 + 2]];
         return new QueryResult<T>(
             mulAdd.add(mulAdd.add(mulAdd.mul(a, u), mulAdd.mul(b, closestRes.v())),
                 mulAdd.mul(c, closestRes.w())),
             sdf);
-    }
-
-    /** Create a surrogate. */
-    public BilinearSurrogate<T> surrogate(Range xRange, Range yRange) {
-        return new BilinearSurrogate<T>(xRange, yRange, this::query, this.mulAdd);
     }
 
 }

@@ -40,6 +40,10 @@ public class AdjustableHood extends SubsystemBase {
         return run(() -> io.setAdjustableHoodVoltage(voltage));
     }
 
+    public void setTargetAngle(Angle setAngle) {
+        io.setTargetAngle(setAngle);
+    }
+
     public Command setGoal(Angle setAngle) {
         return runOnce(() -> io.setTargetAngle(setAngle));
     }

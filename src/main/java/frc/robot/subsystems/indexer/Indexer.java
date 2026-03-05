@@ -21,12 +21,12 @@ public class Indexer extends SubsystemBase {
         Logger.processInputs("Indexer", inputs);
     }
 
-    private void setMagazineDutyCycle(double dutyCycle) {
+    public void setMagazineDutyCycle(double dutyCycle) {
         io.setMagazineDutyCycle(dutyCycle);
         Logger.recordOutput("Indexer/MagazineDutyCycle", dutyCycle);
     }
 
-    private void setSpindexerDutyCycle(double dutyCycle) {
+    public void setSpindexerDutyCycle(double dutyCycle) {
         io.setSpindexerMotorDutyCycle(dutyCycle);
         Logger.recordOutput("Indexer/SpindexerDutyCycle", dutyCycle);
     }

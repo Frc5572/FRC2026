@@ -69,28 +69,30 @@ public class SimulatedRobotState {
             double p = random.nextDouble();
             if (p < avgBallsPerTick) {
                 double speedRotationsPerSecond =
-                    (shooter.flywheel.position + 0.02 * random.nextFloat() - 0.01) * 0.4;
+                    (shooter.flywheel.position + 0.02 * random.nextFloat() - 0.01);
                 Logger.recordOutput("FuelSim/speedRotationsPerSecond", speedRotationsPerSecond);
                 shooter.shootOne();
                 double effectiveHoodAngle =
                     adjustableHood.hood.position + 0.02 * random.nextFloat() - 0.01;
                 double effectiveTurretAngle = this.swerveDrive.mapleSim.getSimulatedDriveTrainPose()
                     .getRotation().getRadians() + turret.turrentAngle.position
-                    + 0.02 * random.nextFloat() - 0.01;
-                ShotData.ShotEntry entry =
-                    ShotData.flywheelSpeedHoodAngle.query(new Translation2d(speedRotationsPerSecond,
-                        Units.radiansToDegrees(effectiveHoodAngle))).value();
+                    + 0.02 * random.nextFloat() - 0.01 + Math.PI;
+
+                var entry = ShotData.flywheelHood.query(new Translation2d(speedRotationsPerSecond,
+                    Units.radiansToDegrees(effectiveHoodAngle))).value();
+                var speeds =
+                    this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
                 double vert = entry.verticalVelocity();
                 double horiz = entry.horizontalVelocity();
-                double x = Math.cos(effectiveTurretAngle) * horiz;
-                double y = Math.sin(effectiveTurretAngle) * horiz;
+                double x = Math.cos(effectiveTurretAngle) * horiz + speeds.vxMetersPerSecond;
+                double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
                 Translation3d initial =
                     new Pose3d(swerveDrive.mapleSim.getSimulatedDriveTrainPose())
                         .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
                         .getTranslation();
                 Translation3d velocity = new Translation3d(x, y, vert);
                 FuelSim.getInstance().spawnFuel(initial, velocity);
-                this.indexer.numFuel--;
+                // this.indexer.numFuel--;
             }
         }
     }

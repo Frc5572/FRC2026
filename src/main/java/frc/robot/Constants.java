@@ -48,9 +48,6 @@ public final class Constants {
 
     /** Constants for driver controls */
     public static class DriverControls {
-        /** Driverstation controller Index */
-        public static final int controllerId = 0;
-        public static final int testControllerId = 0;
         /** Stick axis controls less than this amount are treated as 0. */
         public static final double stickDeadband = 0.1;
 
@@ -58,6 +55,11 @@ public final class Constants {
         public static final double driverTranslationalMaxSpeed = 3.0;
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
+
+        /** Maximum Translational speed while shooting (in m/s) */
+        public static final double driverTranslationalShootSpeed = 1.0;
+        /** Maximum Rotational speed while shooting (in rad/s) */
+        public static final double driverRotationalShootSpeed = 1.5;
     }
 
     /**
@@ -300,7 +302,8 @@ public final class Constants {
         public static final Pose3d turretLeft =
             new Pose3d(Inches.of(-7.972), Inches.of(5.274), Inches.of(20.56), Rotation3d.kZero);
         public static final Pose3d turretRight =
-            new Pose3d(Inches.of(-7.972), Inches.of(-5.274), Inches.of(20.56), Rotation3d.kZero);
+            new Pose3d(Inches.of(-7.972), Inches.of(-5.274), Inches.of(20.56), Rotation3d.kZero)
+                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.k180deg));
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -537,7 +540,7 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants pid =
             new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
-                .kP(12.0)
+                .kP(26.0)
                 .kI(0.0)
                 .kD(0.0)
                 .kV(7.01)
@@ -605,6 +608,14 @@ public final class Constants {
                 .finish();
 
         // @formatter:on
+    }
+
+    /**
+     * leds constants class
+     */
+    public static final class LEDs {
+        public static final int LED_PORT = 9;
+        public static final int LED_LENGTH = 20; // needs to be checked
     }
 
     /**

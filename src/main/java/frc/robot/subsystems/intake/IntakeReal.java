@@ -5,7 +5,6 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -21,7 +20,6 @@ public class IntakeReal implements IntakeIO {
     private TalonFX hopperLeftMotor = new TalonFX(Constants.IntakeConstants.hopperLeftID);
     private TalonFX intakeMotor;
     private TalonFXConfiguration config = new TalonFXConfiguration();
-    private final PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
     private final StatusSignal<Angle> leftMotorPosition = hopperLeftMotor.getPosition();
@@ -84,22 +82,6 @@ public class IntakeReal implements IntakeIO {
         } else {
             inputs.intakeDutyCycle = 0.0;
         }
-    }
-
-    @Override
-    public void setLeftHopperPosition(double rotations) {
-        hopperLeftMotor.setControl(positionVoltage.withPosition(rotations));
-    }
-
-    @Override
-    public void setRightHopperPosition(double rotations) {
-        hopperRightMotor.setControl(positionVoltage.withPosition(rotations));
-    }
-
-    @Override
-    public void setEncoderPosition(double position) {
-        hopperRightMotor.getConfigurator().setPosition(position);
-        hopperLeftMotor.getConfigurator().setPosition(position);
     }
 
     @Override

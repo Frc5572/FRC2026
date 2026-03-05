@@ -66,7 +66,7 @@ public class AutoCommandFactory {
         // path.active().whileTrue(Commands.print("Running Gather Path from Choreo").repeatedly());
         // path.done().onTrue(Commands.print("Gather Path Complete!!!!!!!!!!!"));
 
-        path.active().onTrue(intake.extendHopper().andThen(intake.intakeBalls()));
+        path.active().onTrue(intake.extendHopper(0).andThen(intake.intakeBalls()));
 
         Supplier<Rotation2d> rotSup = () -> {
             Pose2d target =

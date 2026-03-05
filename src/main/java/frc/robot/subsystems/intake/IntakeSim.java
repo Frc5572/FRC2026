@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
-import frc.robot.sim.SimPosition;
+import static edu.wpi.first.units.Units.Meters;
+import frc.robot.Constants;
 
 /**
  * sim class
@@ -8,16 +9,13 @@ import frc.robot.sim.SimPosition;
 public class IntakeSim implements IntakeIO {
 
     public boolean isIntaking = false;
-    private double targetPosition = 0.0;
-    private double targetVoltage = 0.0;
-
-    private final SimPosition hopper = new SimPosition(0.7, 2.0, 60.0);
+    private double position = 0;
 
     @Override
     public void updateInputs(IntakeInputs inputs) {
-        hopper.update(targetPosition);
-        inputs.leftHopperPositionRotations = (hopper.position);
-        inputs.rightHopperPositionRotations = hopper.position;
+        inputs.leftHopperPositionRotations = position;
+        inputs.rightHopperPositionRotations = position;
+        inputs.leftHopperPosition = Meters.of(position);
     }
 
     @Override
@@ -26,25 +24,20 @@ public class IntakeSim implements IntakeIO {
     }
 
     @Override
-    public void setEncoderPosition(double position) {}
-
-    @Override
     public void setLeftHopperVoltage(double volts) {
-        targetVoltage = (volts);
+        if (volts > 0.1) {
+            this.position = Constants.IntakeConstants.hopperOutDistance.in(Meters);
+        } else if (volts < -0.1) {
+            this.position = 0;
+        }
     }
 
     @Override
     public void setRightHopperVoltage(double volts) {
-        targetVoltage = volts;
-    }
-
-    @Override
-    public void setLeftHopperPosition(double rotations) {
-        targetPosition = rotations;
-    }
-
-    @Override
-    public void setRightHopperPosition(double rotations) {
-        targetPosition = rotations;
+        if (volts > 0.1) {
+            this.position = Constants.IntakeConstants.hopperOutDistance.in(Meters);
+        } else if (volts < -0.1) {
+            this.position = 0;
+        }
     }
 }
