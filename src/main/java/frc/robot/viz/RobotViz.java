@@ -154,7 +154,7 @@ public class RobotViz {
         }
     }
 
-    public void update(Pose3d[] out, Rotation2d turretAngle, Angle hoodAngle, Angle climberAngle,
+    private void update(Pose3d[] out, Rotation2d turretAngle, Angle hoodAngle, Angle climberAngle,
         Distance climberHeight, Distance intakeOut, Rotation2d[] modules) {
         out[hoodIndex] = new Pose3d()
             .rotateAround(hoodRotationCenter, new Rotation3d(0, hoodAngle.in(Radians), 0))
