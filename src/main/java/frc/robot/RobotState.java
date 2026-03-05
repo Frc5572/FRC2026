@@ -259,16 +259,14 @@ public class RobotState {
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
                 Pose3d robotPose = cameraPose.plus(robotToCamera.inverse());
                 if (camera.isTurret) {
-                    var maybeRotation = sampleRotationAt(pipelineResult.getTimestampSeconds());
                     var maybeReportedTurretRotationRobotFrame =
                         currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
-                    if (!maybeRotation.isPresent()
-                        || !maybeReportedTurretRotationRobotFrame.isPresent()) {
+                    if (!maybeReportedTurretRotationRobotFrame.isPresent()) {
                         return;
                     }
                     var reportedTurretRotationRobotFrame =
                         maybeReportedTurretRotationRobotFrame.get();
-                    var robotRotation = maybeRotation.get();
+                    var robotRotation = robotPose.getRotation().toRotation2d();
                     var turretRotationFieldFrame = cameraPose.plus(camera.robotToCamera.inverse())
                         .getRotation().toRotation2d();
                     var turretRotationRobotFrame = turretRotationFieldFrame.minus(robotRotation);
