@@ -16,6 +16,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -24,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
+import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
@@ -77,6 +79,7 @@ public final class RobotContainer {
     private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
+    private final LEDs leds = new LEDs();
     private final Swerve swerve;
     private final Vision vision;
     private final AdjustableHood adjustableHood;
@@ -185,6 +188,11 @@ public final class RobotContainer {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
                 .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
         }));
+        leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
+        // TRIGGERS
+        RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
+            .whileTrue(leds.setLEDsBreathe(Color.kBlue));
+        vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
 
         // BUTTON BINDINGS
         maybeController("Driver", driver, this::setupDriver);
@@ -278,6 +286,7 @@ public final class RobotContainer {
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
     }
 
+
     /**
      * Runs during disabled
      */
@@ -285,7 +294,20 @@ public final class RobotContainer {
         double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
         double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
         autoShootLocation.setPose(x, y, new Rotation2d());
+    }<<<<<<<HEAD=======
+
+    private void writeTimings(double[] timings) {
+        Logger.recordOutput("/ShotData/Timings/start", timings[0]);
+        Logger.recordOutput("/ShotData/Timings/end", timings[1]);
+        Logger.recordOutput("/ShotData/Timings/diff", timings[1] - timings[0]);
     }
+
+    private void writeShotConf(double flywheelSpeed, double hoodAngle) {
+        Logger.recordOutput("/ShotData/flywheelSpeed", flywheelSpeed);
+        Logger.recordOutput("/ShotData/hoodAngle", hoodAngle);
+    }
+
+    >>>>>>>main
 }
 
 
