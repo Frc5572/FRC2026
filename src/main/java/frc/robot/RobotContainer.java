@@ -294,20 +294,7 @@ public final class RobotContainer {
         double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
         double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
         autoShootLocation.setPose(x, y, new Rotation2d());
-    }<<<<<<<HEAD=======
-
-    private void writeTimings(double[] timings) {
-        Logger.recordOutput("/ShotData/Timings/start", timings[0]);
-        Logger.recordOutput("/ShotData/Timings/end", timings[1]);
-        Logger.recordOutput("/ShotData/Timings/diff", timings[1] - timings[0]);
     }
-
-    private void writeShotConf(double flywheelSpeed, double hoodAngle) {
-        Logger.recordOutput("/ShotData/flywheelSpeed", flywheelSpeed);
-        Logger.recordOutput("/ShotData/hoodAngle", hoodAngle);
-    }
-
-    >>>>>>>main
 }
 
 
