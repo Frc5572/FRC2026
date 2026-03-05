@@ -197,7 +197,7 @@ public class RobotState {
         Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
 
         Transform3d robotToTurret =
-            new Transform3d(Constants.Vision.turretCenter.getTranslation().unaryMinus(), rotate);
+            new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
 
         Transform3d robotToCamera = robotToTurret.plus(turretToCamera);
 
