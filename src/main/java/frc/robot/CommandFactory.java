@@ -17,6 +17,7 @@ import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.util.AllianceFlipUtil;
 
 /** Command Factory */
 public class CommandFactory {
@@ -89,4 +90,13 @@ public class CommandFactory {
             indexer.setSpindexerDutyCycle(0.0);
         }, shooter, turret, indexer, hood);
     }
+
+    /** Shoot at hub. */
+    public static Command shootAtHub(RobotState state, Turret turret, Shooter shooter,
+        Indexer indexer, AdjustableHood hood, DoubleSupplier adjustUp, DoubleSupplier adjustRight) {
+        return shoot(state, () -> {
+            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+        }, turret, shooter, indexer, hood, adjustUp, adjustRight);
+    }
+
 }

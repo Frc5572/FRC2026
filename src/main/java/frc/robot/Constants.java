@@ -626,6 +626,7 @@ public final class Constants {
         public static final String autoChooser = "Dashboard/Auto/Auto Chooser";
         public static final String shootX = "Dashboard/Auto/Auto Shoot X";
         public static final String shootY = "Dashboard/Auto/Auto Shoot Y";
+        public static final String fullWidthSweep = "Dashboard/Auto/Full Width Sweep";
 
 
     }

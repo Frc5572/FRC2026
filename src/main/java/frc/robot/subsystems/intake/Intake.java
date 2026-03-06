@@ -120,4 +120,10 @@ public class Intake extends SubsystemBase {
     public Command jerkIntake() {
         return extendHopper(0).andThen(retractHopper(0)).repeatedly();
     }
+
+
+    public Command extendAndIntake() {
+        return this.extendHopper(0).withTimeout(0.3).andThen(this.extendHopper(0.7),
+            this.intakeBalls());
+    }
 }

@@ -168,6 +168,7 @@ public final class RobotContainer {
         autoChooser.addCmd("Do Nothing", Commands::none);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
+        autoChooser.addRoutine("Sweep and Shoot", autoCommandFactory::sweepThenShoot);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
@@ -218,10 +219,7 @@ public final class RobotContainer {
                 Constants.DriverControls.driverTranslationalShootSpeed,
                 Constants.DriverControls.driverRotationalShootSpeed))));
 
-        driver.leftTrigger()
-            .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
-                .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
-            .onFalse(intake.retractHopper(0));
+        driver.leftTrigger().whileTrue(intake.extendAndIntake()).onFalse(intake.retractHopper(0));
     }
 
     private void setupOperator() {

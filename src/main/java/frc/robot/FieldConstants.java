@@ -177,6 +177,12 @@ public class FieldConstants {
 
         /** Y at the start of the left trench open segment (field boundary). */
         public static final double leftTrenchOpenStart = fieldWidth;
+
+        public static final Translation2d leftBlueTrenchCenter = AprilTagLayoutType.OFFICIAL
+            .getLayout().getTagPose(28).get().getTranslation().toTranslation2d();
+
+        public static final Translation2d rightBlueTrenchCenter = AprilTagLayoutType.OFFICIAL
+            .getLayout().getTagPose(23).get().getTranslation().toTranslation2d();
     }
 
     /**
