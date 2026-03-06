@@ -56,7 +56,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
 
@@ -160,8 +159,6 @@ public final class RobotContainer {
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
 
-        DeviceDebug.initialize();
-
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
@@ -231,20 +228,7 @@ public final class RobotContainer {
     }
 
     private void setupTuner() {
-        swerve.setDefaultCommand(swerve.driveUserRelative(
-            TeleopControls.teleopControls(() -> -tuner.getLeftY(), () -> -tuner.getLeftX(),
-                () -> -tuner.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
-                Constants.DriverControls.driverRotationalMaxSpeed)));
 
-        tuner.y().onTrue(swerve.setFieldRelativeOffset());
-
-        tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
-        tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
-
-        tuner.leftTrigger()
-            .whileTrue(swerve.moveToPose().target(new Pose2d(2, 2, Rotation2d.k180deg))
-                .autoRoutine(null).maxSpeed(2.0).flipForRed(false).translationTolerance(0.2)
-                .rotationTolerance(1).finish());
     }
 
     private void setupPit() {

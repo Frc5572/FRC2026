@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Angle;
@@ -12,6 +13,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.PhoenixSignals;
 
 /** adjustable hood hardware */
 public class AdjustableHoodReal implements AdjustableHoodIO {
@@ -57,7 +59,10 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
         hoodMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        BaseStatusSignal.setUpdateFrequencyForAll(50, hoodAngle, hoodVoltage, hoodCurrent);
+        PhoenixSignals.tryUntilOk(5, () -> BaseStatusSignal.setUpdateFrequencyForAll(50, hoodAngle,
+            hoodVoltage, hoodCurrent, hoodVelocity));
+        PhoenixSignals.tryUntilOk(5, () -> ParentDevice.optimizeBusUtilizationForAll(hoodMotor));
+        PhoenixSignals.registerSignals(false, hoodAngle, hoodVoltage, hoodCurrent, hoodVelocity);
     }
 
 
@@ -69,8 +74,6 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
     @Override
     public void updateInputs(AdjustableHoodInputs inputs) {
-        BaseStatusSignal.refreshAll(hoodAngle, hoodVoltage, hoodCurrent, hoodVelocity);
-
         inputs.relativeAngle = hoodAngle.getValue();
         inputs.voltage = hoodVoltage.getValue();
         inputs.current = hoodCurrent.getValue();
