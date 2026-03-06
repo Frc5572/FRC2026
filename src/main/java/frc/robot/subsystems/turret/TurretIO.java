@@ -43,7 +43,7 @@ public interface TurretIO {
     /**
      * Commands the turret to move toward the specified target angle.
      */
-    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity);
+    public void setTargetAngle(Angle angle, AngularVelocity velocity);
 
     public void resetPosition(Angle angle);
 

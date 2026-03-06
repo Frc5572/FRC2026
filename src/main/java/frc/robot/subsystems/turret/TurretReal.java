@@ -84,9 +84,9 @@ public class TurretReal implements TurretIO {
     }
 
     @Override
-    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity) {
+    public void setTargetAngle(Angle angle, AngularVelocity velocity) {
         turretMotor.setControl(
-            mmVoltage.withPosition(-angle.getRotations()).withVelocity(velocity.unaryMinus()));
+            mmVoltage.withPosition(angle.unaryMinus()).withVelocity(velocity.unaryMinus()));
     }
 
     @Override

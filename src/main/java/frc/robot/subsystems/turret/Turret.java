@@ -1,6 +1,8 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.LinkedList;
@@ -85,31 +87,9 @@ public class Turret extends SubsystemBase {
      * @param targetAngle gets the goal angle
      */
     public boolean setGoalRobotRelative(Rotation2d targetAngle, AngularVelocity velocity) {
-        targetAngle = normalize(targetAngle);
-        if (isValidAngle(targetAngle) || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(1)))
-            || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(-1)))) {
-            io.setTargetAngle(targetAngle.minus(Rotation2d.fromRotations(offset)), velocity);
-            Logger.recordOutput("Turret/InRange", true);
-            Logger.recordOutput("Turret/ActualTarget", targetAngle);
-            return true;
-        }
-        Logger.recordOutput("Turret/InRange", false);
-        double minAngleDiff =
-            fmod((targetAngle.getDegrees() - Constants.Turret.minAngle.getDegrees()) + 180, 360)
-                - 180;
-        double maxAngleDiff =
-            fmod((targetAngle.getDegrees() - Constants.Turret.maxAngle.getDegrees()) + 180, 360)
-                - 180;
-        if (Math.abs(minAngleDiff) < Math.abs(maxAngleDiff)) {
-            io.setTargetAngle(Constants.Turret.minAngle.minus(Rotation2d.fromRotations(offset)),
-                RotationsPerSecond.of(0));
-            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.minAngle);
-        } else {
-            io.setTargetAngle(Constants.Turret.maxAngle.minus(Rotation2d.fromRotations(offset)),
-                RotationsPerSecond.of(0));
-            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.maxAngle);
-        }
-        return false;
+        var angle = getValidAngleForRotation(targetAngle);
+        io.setTargetAngle(angle.minus(Rotations.of(offset)), velocity);
+        return true;
     }
 
     /** Set target angle relative to the field. */
@@ -119,14 +99,23 @@ public class Turret extends SubsystemBase {
             RadiansPerSecond.of(-state.getFieldRelativeSpeeds().omegaRadiansPerSecond));
     }
 
-    private boolean isValidAngle(Rotation2d targetAngle) {
-        if (targetAngle.getRadians() > Constants.Turret.maxAngle.getRadians()) {
+    /** Get if a target angle is within the min/max angle. */
+    public static boolean isValidAngle(Rotation2d targetAngle) {
+        if (targetAngle.getRadians() > Constants.Turret.maxAngle.in(Radians)) {
             return false;
         }
-        if (targetAngle.getRadians() < Constants.Turret.minAngle.getRadians()) {
+        if (targetAngle.getRadians() < Constants.Turret.minAngle.in(Radians)) {
             return false;
         }
         return true;
+    }
+
+    public static Angle getValidAngleForRotation(Rotation2d rotation) {
+        var angle = normalize(rotation).getMeasure();
+        if (angle.gt(Constants.Turret.maxAngle)) {
+            angle = angle.minus(Rotations.of(1));
+        }
+        return angle;
     }
 
     private static double fmod(double a, double n) {

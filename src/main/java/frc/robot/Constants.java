@@ -556,8 +556,8 @@ public final class Constants {
             SensorDirectionValue.CounterClockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
 
-        public static final Rotation2d maxAngle = Rotation2d.fromDegrees(48);
-        public static final Rotation2d minAngle = Rotation2d.fromDegrees(-135);
+        public static final Angle maxAngle = Degrees.of(90);
+        public static final Angle minAngle = Degrees.of(-270);
     }
 
     /** Shooter Constants */

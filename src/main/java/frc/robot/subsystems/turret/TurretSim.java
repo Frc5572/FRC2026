@@ -64,8 +64,8 @@ public class TurretSim implements TurretIO {
 
 
     @Override
-    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity) {
-        turretTarget = angle.getRadians();
+    public void setTargetAngle(Angle angle, AngularVelocity velocity) {
+        turretTarget = angle.in(Radians);
     }
 
     @Override

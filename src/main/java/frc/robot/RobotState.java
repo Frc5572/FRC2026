@@ -24,6 +24,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.units.measure.Angle;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
+import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -324,6 +325,8 @@ public class RobotState {
                     var turretRotationFieldFrame = cameraPose.plus(camera.robotToCamera.inverse())
                         .getRotation().toRotation2d();
                     var turretRotationRobotFrame = turretRotationFieldFrame.minus(robotRotation);
+                    var turretAngle = Turret.getValidAngleForRotation(turretRotationRobotFrame);
+
                     double calcOffset = turretRotationRobotFrame.getRotations()
                         - reportedTurretRotationRobotFrame.getRotations();
 
@@ -332,6 +335,7 @@ public class RobotState {
                     this.turretOffset = (1.0 - alpha) * this.turretOffset + alpha * calcOffset;
 
                     Logger.recordOutput("State/turretRotationFieldFrame", turretRotationFieldFrame);
+                    Logger.recordOutput("State/turretAngle", turretAngle);
                     Logger.recordOutput("State/turretRotationRobotFrame", turretRotationRobotFrame);
                     Logger.recordOutput("State/turretOffset", calcOffset);
                     Logger.recordOutput("State/turretOffsetFiltered", this.turretOffset);
