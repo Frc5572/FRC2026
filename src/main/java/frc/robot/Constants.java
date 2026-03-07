@@ -307,21 +307,21 @@ public final class Constants {
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
-            // new CameraConstantsBuilder()
-            //     .name("cam0")
-            //     .height(800)
-            //     .width(1280)
-            //     .horizontalFieldOfView(80)
-            //     .simFps(20)
-            //     .simLatency(0.3)
-            //     .simLatencyStdDev(0.02)
-            //     .calibrationErrorMean(0.8)
-            //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(11),
-            //         -Units.inchesToMeters(12), Units.inchesToMeters(10)),
-            //         new Rotation3d(Math.PI, 0, 0)))
-            //     .translationError(0.02)
-            //     .finish(),
+            new CameraConstantsBuilder()
+                .name("cam0")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(7.125),
+                    -Units.inchesToMeters(-13.041), Units.inchesToMeters(9.868710)),
+                    new Rotation3d(Math.PI, 0, 0)))
+                .translationError(0.02)
+                .finish(),
             new CameraConstantsBuilder()
                 .name("turretRight")
                 .height(800)
