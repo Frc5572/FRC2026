@@ -113,8 +113,7 @@ public final class RobotContainer {
                 break;
             case kSimulation:
                 // FuelSim.getInstance().spawnStartingFuel();
-                sim = new SimulatedRobotState(
-                    new Pose2d(2.0, 2.0, Rotation2d.fromDegrees(225).plus(Rotation2d.k180deg)));
+                sim = new SimulatedRobotState(new Pose2d(4.04, 0.7, Rotation2d.kCCW_90deg));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
                     () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),
@@ -166,6 +165,7 @@ public final class RobotContainer {
         autoChooser.addCmd("Do Nothing", Commands::none);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
+        autoChooser.addRoutine("WilsonTest", autoCommandFactory::wilsonTest);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
@@ -182,10 +182,7 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(turret.goToAngleFieldRelative(() -> {
-            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
-                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
-        }));
+        turret.setDefaultCommand(CommandFactory.followHub(turret, swerve));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         // TRIGGERS
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())

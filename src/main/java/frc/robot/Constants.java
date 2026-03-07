@@ -99,7 +99,7 @@ public final class Constants {
         public static final double translationP = 3.5;
         public static final double translationI = 0.0;
         public static final double translationD = 0.0;
-        public static final double rotationP = 1.0;
+        public static final double rotationP = 4.0;
         public static final double rotationI = 0.0;
         public static final double rotationD = 0.0;
 

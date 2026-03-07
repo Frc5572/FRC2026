@@ -16,7 +16,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.util.AllianceFlipUtil;
 
 /** Command Factory */
 public class CommandFactory {
@@ -105,5 +107,12 @@ public class CommandFactory {
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
         }, shooter, turret, indexer, hood);
+    }
+
+    public static Command followHub(Turret turret, Swerve swerve) {
+        return turret.goToAngleFieldRelative(() -> {
+            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
+                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
+        });
     }
 }
