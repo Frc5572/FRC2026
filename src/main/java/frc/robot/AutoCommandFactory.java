@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -109,31 +110,37 @@ public class AutoCommandFactory {
 
     /** Test to make sure autos work. */
     public AutoRoutine wilsonTest() {
-        double shootingTime = 6.0;
         AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
         routine.active()
-            .onTrue(
-                Commands
-                    .sequence(sweep(false, true, 8.076),
-                        CommandFactory.shoot(swerve.state,
-                            () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0).alongWith(
-                                intake.jerkIntake())
-                            .withTimeout(shootingTime),
-                        Commands
-                            .sequence(adjustableHood.setGoal(Rotations.of(0)),
-                                sweep(false, false, 6.0),
-                                CommandFactory.shoot(swerve.state,
-                                    () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                                    turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
-                                    .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
-                                adjustableHood.setGoal(Rotations.of(0)), sweep(false, false, 8.076),
-                                CommandFactory.shoot(swerve.state,
-                                    () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                                    turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
-                                    .alongWith(intake.jerkIntake()).withTimeout(shootingTime))
-                            .repeatedly()));
+            .onTrue(new ConditionalCommand(wilsonTestSide(true), wilsonTestSide(false), () -> {
+                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0;
+            }));
         return routine;
+    }
+
+    private Command wilsonTestSide(boolean left) {
+        double shootingTime = 6.0;
+        return Commands
+            .sequence(sweep(left, true, 8.076),
+                CommandFactory
+                    .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
+                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                    .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
+                Commands
+                    .sequence(adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 6.0),
+                        CommandFactory
+                            .shoot(swerve.state,
+                                () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                            .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
+                        adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076),
+                        CommandFactory
+                            .shoot(swerve.state,
+                                () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                            .alongWith(intake.jerkIntake()).withTimeout(shootingTime))
+                    .repeatedly());
     }
 
     private Command sweep(boolean left, boolean isFirst, double xMeters) {
@@ -143,23 +150,23 @@ public class AutoCommandFactory {
                     swerve.moveToPose()
                         .target(new Pose2d(5.7, 0.622,
                             isFirst ? Rotation2d.kCCW_90deg : Rotation2d.kZero))
-                        .translationTolerance(0.5).rotationTolerance(15).finish(),
+                        .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .translationTolerance(0.5).rotationTolerance(15).finish(),
+                        .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
                     swerve.moveToPose().target(
                         new Pose2d(xMeters, 3.586, Rotation2d.kCCW_90deg)).translationTolerance(
                             0.5)
-                        .rotationTolerance(15).finish(),
+                        .rotationTolerance(15).flipY(left).finish(),
                     swerve
                         .moveToPose().target(
                             new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .translationTolerance(0.5).rotationTolerance(15).finish(),
+                        .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
                     swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kZero))
-                        .translationTolerance(0.1).rotationTolerance(15).finish()),
-                Commands
-                    .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
-                        .translationTolerance(0.1).rotationTolerance(5).finish(), swerve.stop())
-                    .deadlineFor(shooter.shoot(60.0)))
+                        .translationTolerance(0.1).rotationTolerance(15).flipY(left).finish()),
+                Commands.sequence(
+                    swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
+                        .translationTolerance(0.1).rotationTolerance(5).flipY(left).finish(),
+                    swerve.stop()).deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve));
     }
 }
