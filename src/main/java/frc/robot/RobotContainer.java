@@ -227,7 +227,69 @@ public final class RobotContainer {
     }
 
     private void setupTuner() {
+        double[] parameters = new double[] {60.0, 15.0, 0.0, 0.0};
+        boolean[] select = new boolean[] {false};
+        StringBuffer res = new StringBuffer();
 
+        tuner.rightTrigger()
+            .whileTrue(shooter.shoot(() -> parameters[0])
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(parameters[1]))))
+            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0)),
+                Commands.runOnce(() -> {
+                    parameters[2] =
+                        Units.metersToFeet(swerve.state.getTurretCenterFieldFrame().getTranslation()
+                            .getDistance(AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)));
+                })));
+        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.5, 0.7));
+
+        tuner.x().onTrue(Commands.runOnce(() -> {
+            select[0] = !select[0];
+        }));
+        tuner.a().onTrue(Commands.runOnce(() -> {
+            parameters[3] = shooter.timeSinceLastShot();
+            Logger.recordOutput("Tuner/Parameters", parameters);
+        }));
+        tuner.b().onTrue(Commands.runOnce(() -> {
+            res.append("new ShotEntry(");
+            res.append(parameters[2]);
+            res.append(",");
+            res.append(parameters[0]);
+            res.append(",");
+            res.append(parameters[1]);
+            res.append(",");
+            res.append(parameters[3]);
+            res.append("),\n");
+            Logger.recordOutput("Tuner/Code", res.toString());
+        }));
+
+        tuner.povUp().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] += 5.0;
+            } else {
+                parameters[1] += 2.0;
+            }
+        }));
+        tuner.povDown().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] -= 5.0;
+            } else {
+                parameters[1] -= 2.0;
+            }
+        }));
+        tuner.povRight().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] += 0.5;
+            } else {
+                parameters[1] += 0.2;
+            }
+        }));
+        tuner.povLeft().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] -= 0.5;
+            } else {
+                parameters[1] -= 0.2;
+            }
+        }));
     }
 
     private void setupPit() {

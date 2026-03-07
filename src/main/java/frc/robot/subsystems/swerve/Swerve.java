@@ -204,7 +204,7 @@ public final class Swerve extends SubsystemBase {
     public Command driveRobotRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return this.run(() -> {
             ChassisSpeeds speeds = driveSpeeds.get();
-            speeds = limiter.limit(speeds);
+            // speeds = limiter.limit(speeds);
             setModuleStates(speeds);
         });
     }
@@ -242,7 +242,7 @@ public final class Swerve extends SubsystemBase {
     private void driveFieldRelative(ChassisSpeeds driveSpeeds) {
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(driveSpeeds,
             state.getGlobalPoseEstimate().getRotation());
-        speeds = limiter.limit(speeds);
+        // speeds = limiter.limit(speeds);
         setModuleStates(speeds);
     }
 
@@ -280,7 +280,7 @@ public final class Swerve extends SubsystemBase {
      */
     public MoveToPoseBuilder moveToPose() {
         return new MoveToPoseBuilder(this, (speeds) -> {
-            speeds = limiter.limit(speeds);
+            // speeds = limiter.limit(speeds);
             setModuleStates(speeds);
         });
     }
