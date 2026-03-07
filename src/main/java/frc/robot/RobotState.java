@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
@@ -271,8 +272,9 @@ public class RobotState {
                     var turretRotationFieldFrame = cameraPose.plus(camera.robotToCamera.inverse())
                         .getRotation().toRotation2d();
                     var turretRotationRobotFrame = turretRotationFieldFrame.minus(robotRotation);
-                    double calcOffset = turretRotationRobotFrame.getRotations()
-                        - reportedTurretRotationRobotFrame.getRotations();
+                    double calcOffset =
+                        angleDiff(turretRotationRobotFrame, reportedTurretRotationRobotFrame)
+                            .in(Rotations);
                     this.turretOffset = calcOffset;
                     if (turretOffsetUpdate != null) {
                         turretOffsetUpdate.accept(this.turretOffset);
@@ -337,6 +339,8 @@ public class RobotState {
                     Logger.recordOutput("State/turretRotationFieldFrame", turretRotationFieldFrame);
                     Logger.recordOutput("State/turretAngle", turretAngle);
                     Logger.recordOutput("State/turretRotationRobotFrame", turretRotationRobotFrame);
+                    Logger.recordOutput("State/reportedTurretRotationRobotFrame",
+                        reportedTurretRotationRobotFrame);
                     Logger.recordOutput("State/turretOffset", calcOffset);
                     Logger.recordOutput("State/turretOffsetFiltered", this.turretOffset);
 
@@ -370,6 +374,12 @@ public class RobotState {
         double avgDistance = totalDistance / count;
         double stddev = Math.pow(avgDistance, 2.0) / count;
         return stddev;
+    }
+
+    private static Angle angleDiff(Rotation2d a, Rotation2d b) {
+        double diff = (b.getRotations() - a.getRotations() + 0.5);
+        diff = diff - Math.floor(diff) - 0.5;
+        return Rotations.of(diff < -0.5 ? diff + 1.0 : diff);
     }
 
     /**
