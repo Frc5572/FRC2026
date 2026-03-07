@@ -1,12 +1,22 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Meters;
+import java.util.Set;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -17,6 +27,7 @@ import frc.robot.subsystems.swerve.util.MoveToPose;
 import frc.robot.subsystems.swerve.util.TurnToRotation;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.Tuples.Tuple2;
 
 /**
  * Auto Command Factory
@@ -45,6 +56,40 @@ public class AutoCommandFactory {
         this.intake = intake;
         this.shooter = shooter;
         this.turret = turret;
+    }
+
+    /**
+     * The method that makes the Shoot Then Climb AutoRoutine.
+     * 
+     * @return The AutoRoutine
+     */
+    public AutoRoutine shootThenClimb() {
+        AutoRoutine routine = autoFactory.newRoutine("Shoot Then Climb");
+
+        MoveToPose moveToClimb = moveToClimb(routine);
+
+        Command fullCommand = Commands.defer(() -> {
+            return Commands
+                .sequence(
+                    Commands.parallel(shooter.shoot(65),
+                        Commands.sequence(Commands.waitSeconds(1),
+                            indexer.setSpeedCommand(0.8, 0.4)),
+                        Commands.sequence(Commands.waitSeconds(4), moveToClimb)),
+                    climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0))));
+        }, Set.of(shooter, indexer, climber));
+
+        routine.active().onTrue(fullCommand);
+        moveToClimb.done().onTrue(swerve.stop());
+        return routine;
+    }
+
+    private MoveToPose moveToClimb(AutoRoutine routine) {
+        Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
+            FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
+                - Units.inchesToMeters(0),
+            FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
+        Logger.recordOutput("AutoClimbPose", AllianceFlipUtil.apply(climbPose));
+        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(1.0).finish();
     }
 
     /**
