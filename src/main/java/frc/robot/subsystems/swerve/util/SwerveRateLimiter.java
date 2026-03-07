@@ -26,7 +26,7 @@ import frc.robot.util.tunable.Tunable;
  * <p>
  * The limiter operates in discrete time (20&nbsp;ms control loop) and should be called once per
  * cycle. The current robot velocity must be provided via {@link #update(ChassisSpeeds)} before
- * calling {@link #limit(ChassisSpeeds, double)}.
+ * calling {@link #limit(ChassisSpeeds)}.
  *
  * <p>
  * All limits are exposed via NetworkTables under {@code /SwerveRateLimiter/*} and may be tuned at
