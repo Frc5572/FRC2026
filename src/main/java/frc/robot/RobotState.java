@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.units.measure.Angle;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
+import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -197,7 +199,7 @@ public class RobotState {
         Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
 
         Transform3d robotToTurret =
-            new Transform3d(Constants.Vision.turretCenter.getTranslation().unaryMinus(), rotate);
+            new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
 
         Transform3d robotToCamera = robotToTurret.plus(turretToCamera);
 
@@ -250,7 +252,7 @@ public class RobotState {
         if (!initted) {
             Transform3d robotToCamera_ = camera.robotToCamera;
             if (camera.isTurret) {
-                robotToCamera_ = getTurretRobotToCamera(camera.robotToCamera, Rotation2d.kZero);
+                robotToCamera_ = getTurretRobotToCamera(camera.robotToCamera, Rotation2d.k180deg);
             }
             final Transform3d robotToCamera = robotToCamera_;
             multiTag.ifPresent(multiTag_ -> {
@@ -259,22 +261,7 @@ public class RobotState {
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
                 Pose3d robotPose = cameraPose.plus(robotToCamera.inverse());
                 if (camera.isTurret) {
-                    var maybeRotation = sampleRotationAt(pipelineResult.getTimestampSeconds());
-                    var maybeReportedTurretRotationRobotFrame =
-                        currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
-                    if (!maybeRotation.isPresent()
-                        || !maybeReportedTurretRotationRobotFrame.isPresent()) {
-                        return;
-                    }
-                    var reportedTurretRotationRobotFrame =
-                        maybeReportedTurretRotationRobotFrame.get();
-                    var robotRotation = maybeRotation.get();
-                    var turretRotationFieldFrame = cameraPose.plus(camera.robotToCamera.inverse())
-                        .getRotation().toRotation2d();
-                    var turretRotationRobotFrame = turretRotationFieldFrame.minus(robotRotation);
-                    double calcOffset = turretRotationRobotFrame.getRotations()
-                        - reportedTurretRotationRobotFrame.getRotations();
-                    this.turretOffset = calcOffset;
+                    this.turretOffset = 0.0;
                     if (turretOffsetUpdate != null) {
                         turretOffsetUpdate.accept(this.turretOffset);
                     }
@@ -326,15 +313,21 @@ public class RobotState {
                     var turretRotationFieldFrame = cameraPose.plus(camera.robotToCamera.inverse())
                         .getRotation().toRotation2d();
                     var turretRotationRobotFrame = turretRotationFieldFrame.minus(robotRotation);
-                    double calcOffset = turretRotationRobotFrame.getRotations()
-                        - reportedTurretRotationRobotFrame.getRotations();
+                    var turretAngle = Turret.getValidAngleForRotation(turretRotationRobotFrame);
+
+                    double calcOffset =
+                        angleDiff(turretRotationRobotFrame, reportedTurretRotationRobotFrame)
+                            .in(Rotations);
 
                     // Smooth mapping from [0, \infty) to [0, 1)
                     double alpha = Math.atan(rotationStdDev) / Math.PI * 2.0;
                     this.turretOffset = (1.0 - alpha) * this.turretOffset + alpha * calcOffset;
 
                     Logger.recordOutput("State/turretRotationFieldFrame", turretRotationFieldFrame);
+                    Logger.recordOutput("State/turretAngle", turretAngle);
                     Logger.recordOutput("State/turretRotationRobotFrame", turretRotationRobotFrame);
+                    Logger.recordOutput("State/reportedTurretRotationRobotFrame",
+                        reportedTurretRotationRobotFrame);
                     Logger.recordOutput("State/turretOffset", calcOffset);
                     Logger.recordOutput("State/turretOffsetFiltered", this.turretOffset);
 
@@ -368,6 +361,12 @@ public class RobotState {
         double avgDistance = totalDistance / count;
         double stddev = Math.pow(avgDistance, 2.0) / count;
         return stddev;
+    }
+
+    private static Angle angleDiff(Rotation2d a, Rotation2d b) {
+        double diff = (b.getRotations() - a.getRotations() + 0.5);
+        diff = diff - Math.floor(diff) - 0.5;
+        return Rotations.of(diff < -0.5 ? diff + 1.0 : diff);
     }
 
     /**

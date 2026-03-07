@@ -35,18 +35,21 @@ public class TurretSim implements TurretIO {
 
     private final Random random;
 
+    private static final double start = Math.toRadians(180);
+
     public final SimPosition turrentAngle = new SimPosition(0.8, 4.0, 60.0);
-    private double turretTarget = 0.0;
+    private double turretTarget = start;
 
     public TurretSim(Random random) {
         this.random = random;
+        turrentAngle.position = start;
     }
 
     @Override
     public void updateInputs(TurretInputs inputs) {
         turrentAngle.update(turretTarget);
 
-        inputs.relativeAngle = Radians.of(turrentAngle.position);
+        inputs.relativeAngle = Radians.of(turrentAngle.position - start);
         inputs.velocity = RadiansPerSecond.of(turrentAngle.velocity);
 
         double noise1 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
@@ -64,8 +67,8 @@ public class TurretSim implements TurretIO {
 
 
     @Override
-    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity) {
-        turretTarget = angle.getRadians();
+    public void setTargetAngle(Angle angle, AngularVelocity velocity) {
+        turretTarget = angle.in(Radians);
     }
 
     @Override

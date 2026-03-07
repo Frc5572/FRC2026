@@ -15,6 +15,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.PhoenixSignals;
 import frc.robot.util.tunable.PIDConstants;
 
 /** turret hardware */
@@ -60,7 +61,8 @@ public class TurretReal implements TurretIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
             canCoder1Pos, canCoder2Pos);
-
+        PhoenixSignals.registerSignals(false, turretPosition, turretVoltage, turretCurrent,
+            canCoder1Pos, canCoder2Pos);
     }
 
     @Override
@@ -70,9 +72,6 @@ public class TurretReal implements TurretIO {
 
     @Override
     public void updateInputs(TurretInputs inputs) {
-        BaseStatusSignal.refreshAll(turretPosition, turretVoltage, turretCurrent, turretVelocity,
-            canCoder1Pos, canCoder2Pos);
-
         inputs.gear1AbsoluteAngle = new Rotation2d(canCoder1Pos.getValue());
         inputs.gear2AbsoluteAngle = new Rotation2d(canCoder2Pos.getValue());
 
@@ -85,9 +84,9 @@ public class TurretReal implements TurretIO {
     }
 
     @Override
-    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity) {
+    public void setTargetAngle(Angle angle, AngularVelocity velocity) {
         turretMotor.setControl(
-            mmVoltage.withPosition(-angle.getRotations()).withVelocity(velocity.unaryMinus()));
+            mmVoltage.withPosition(angle.unaryMinus()).withVelocity(velocity.unaryMinus()));
     }
 
     @Override

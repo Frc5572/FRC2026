@@ -99,7 +99,7 @@ public final class Constants {
         public static final double translationP = 3.5;
         public static final double translationI = 0.0;
         public static final double translationD = 0.0;
-        public static final double rotationP = 1.0;
+        public static final double rotationP = 4.0;
         public static final double rotationI = 0.0;
         public static final double rotationD = 0.0;
 
@@ -556,8 +556,8 @@ public final class Constants {
             SensorDirectionValue.CounterClockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
 
-        public static final Rotation2d maxAngle = Rotation2d.fromDegrees(48);
-        public static final Rotation2d minAngle = Rotation2d.fromDegrees(-135);
+        public static final Angle maxAngle = Degrees.of(270);
+        public static final Angle minAngle = Degrees.of(-90);
     }
 
     /** Shooter Constants */

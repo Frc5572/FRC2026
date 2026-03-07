@@ -1,7 +1,6 @@
 package frc.robot.subsystems.indexer;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -14,6 +13,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.EncoderConfig;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.Constants;
+import frc.robot.util.PhoenixSignals;
 
 /**
  * real implementation of indexer
@@ -46,11 +46,11 @@ public class IndexerReal implements IndexerIO {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         spindexer.getConfigurator().apply(config);
+        PhoenixSignals.registerSignals(false, spinMotorVelocity);
     }
 
     @Override
     public void updateInputs(IndexerInputs inputs) {
-        BaseStatusSignal.refreshAll(spinMotorVelocity);
         inputs.spindexerVelocity = spinMotorVelocity.getValue();
 
         inputs.magazineMotorConnected = magazineConnected;

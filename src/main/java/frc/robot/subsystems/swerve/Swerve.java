@@ -1,7 +1,6 @@
 package frc.robot.subsystems.swerve;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
@@ -17,7 +16,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -26,7 +24,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.GyroInputsAutoLogged;
@@ -84,7 +81,6 @@ public final class Swerve extends SubsystemBase {
 
     public final RobotState state;
 
-    public double customSkidLimit = 1000.0;
     public AutoFactory autoFactory;
 
     /**
@@ -208,7 +204,7 @@ public final class Swerve extends SubsystemBase {
     public Command driveRobotRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return this.run(() -> {
             ChassisSpeeds speeds = driveSpeeds.get();
-            speeds = limiter.limit(speeds, customSkidLimit);
+            // speeds = limiter.limit(speeds);
             setModuleStates(speeds);
         });
     }
@@ -246,7 +242,7 @@ public final class Swerve extends SubsystemBase {
     private void driveFieldRelative(ChassisSpeeds driveSpeeds) {
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(driveSpeeds,
             state.getGlobalPoseEstimate().getRotation());
-        speeds = limiter.limit(speeds, customSkidLimit);
+        // speeds = limiter.limit(speeds);
         setModuleStates(speeds);
     }
 
@@ -284,7 +280,7 @@ public final class Swerve extends SubsystemBase {
      */
     public MoveToPoseBuilder moveToPose() {
         return new MoveToPoseBuilder(this, (speeds) -> {
-            speeds = limiter.limit(speeds, customSkidLimit);
+            // speeds = limiter.limit(speeds);
             setModuleStates(speeds);
         });
     }
@@ -381,7 +377,7 @@ public final class Swerve extends SubsystemBase {
      */
     public Command stop() {
         return this.driveRobotRelative(ChassisSpeeds::new).until(() -> {
-            var speeds = limiter.limit(new ChassisSpeeds(), customSkidLimit);
+            var speeds = limiter.limit(new ChassisSpeeds());
             return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.1;
         }).andThen(this.emergencyStop());
     }
@@ -419,11 +415,6 @@ public final class Swerve extends SubsystemBase {
      */
     public Command emergencyStop() {
         return this.runOnce(() -> setModuleStates(new ChassisSpeeds()));
-    }
-
-
-    public Command limitSkidLimit() {
-        return Commands.runEnd(() -> customSkidLimit = 50.0, () -> customSkidLimit = 1000.0, this);
     }
 
     private void runCharacterization(double output) {
@@ -475,103 +466,5 @@ public final class Swerve extends SubsystemBase {
         for (int i = 0; i < modules.length; i++) {
             modules[i].setDesiredState(desiredStates[i]);
         }
-    }
-
-    /** Identifies Closest Trench */
-    public Translation2d closestTrench() {
-        Pose2d botPosition = state.getGlobalPoseEstimate();
-        Translation2d botLocation = botPosition.getTranslation();
-
-        return botLocation.nearest(Constants.Trench.trenchLocation);
-    }
-
-    /** Returns the distance between the robot and the closest Trench zone. */
-    public double distanceFromClosestTrench() {
-        Translation2d target = closestTrench();
-        double distance = state.getGlobalPoseEstimate().getTranslation().getDistance(target);
-
-        Logger.recordOutput("Swerve/DistanceToTrench", distance);
-
-        return distance;
-    }
-
-    /** Returns true if the robot is in the Trench zone. */
-    public boolean inTrench() {
-        Translation2d botLocation = state.getGlobalPoseEstimate().getTranslation();
-        double botXLocation = botLocation.getX();
-        double botYLocation = botLocation.getY();
-        if (closestTrench().equals(FieldConstants.LeftTrench.redTrenchCenterLeft)) {
-            return botXLocation >= (FieldConstants.LeftTrench.redCloseCenterLeft).getX()
-                && botXLocation <= (FieldConstants.LeftTrench.redFarCenterLeft).getX()
-                && botYLocation >= (FieldConstants.LeftTrench.openingTopRight).getY()
-                && botYLocation <= (FieldConstants.LeftTrench.openingTopLeft).getY();
-        } else if (closestTrench().equals(FieldConstants.LeftTrench.blueTrenchCenterLeft)) {
-            return botXLocation >= (FieldConstants.LeftTrench.blueCloseCenterLeft).getX()
-                && botXLocation <= (FieldConstants.LeftTrench.blueFarCenterLeft).getX()
-                && botYLocation >= (FieldConstants.LeftTrench.openingTopRight).getY()
-                && botYLocation <= (FieldConstants.LeftTrench.openingTopLeft).getY();
-        } else if (closestTrench().equals(FieldConstants.RightTrench.redTrenchCenterRight)) {
-            return botXLocation >= (FieldConstants.RightTrench.redCloseCenterRight).getX()
-                && botXLocation <= (FieldConstants.RightTrench.redFarCenterRight).getX()
-                && botYLocation >= (FieldConstants.RightTrench.openingTopRight).getY()
-                && botYLocation <= (FieldConstants.RightTrench.openingTopLeft).getY();
-        } else if (closestTrench().equals(FieldConstants.RightTrench.blueTrenchCenterRight)) {
-            return botXLocation >= (FieldConstants.RightTrench.blueCloseCenterRight).getX()
-                && botXLocation <= (FieldConstants.RightTrench.blueFarCenterRight).getX()
-                && botYLocation >= (FieldConstants.RightTrench.openingTopRight).getY()
-                && botYLocation <= (FieldConstants.RightTrench.openingTopLeft).getY();
-        } else {
-            return false;
-        }
-    }
-
-    /** returns a list with all of the trench bounds */
-    public static final List<Translation2d> trenchSides() {
-        List<Translation2d> trenchLocations = List.of(FieldConstants.LeftTrench.redCloseCenterLeft,
-            FieldConstants.LeftTrench.redFarCenterLeft,
-            FieldConstants.LeftTrench.blueCloseCenterLeft,
-            FieldConstants.LeftTrench.blueFarCenterLeft,
-            FieldConstants.RightTrench.redCloseCenterRight,
-            FieldConstants.RightTrench.redFarCenterRight,
-            FieldConstants.RightTrench.blueFarCenterRight,
-            FieldConstants.RightTrench.blueCloseCenterRight);
-        return trenchLocations;
-    }
-
-    /** Returns the goal location of the robot */
-    public Translation2d goalTrenchPosition() {
-        Translation2d currentBotPos = state.getGlobalPoseEstimate().getTranslation();
-
-        return currentBotPos.nearest(trenchSides());
-    }
-
-    /** Command that moves the robot to the trench without going through */
-    public Command moveToTrench() {
-        return this.moveToPose()
-            .target(
-                () -> new Pose2d(goalTrenchPosition(), state.getGlobalPoseEstimate().getRotation()))
-            .autoRoutine(null).maxSpeed(Constants.Swerve.maxSpeed).flipForRed(false)
-            .translationTolerance(Constants.Trench.tolerance).rotationTolerance(Math.toRadians(2))
-            .finish().until(() -> this.inTrench());
-    }
-
-    private final PIDController pidYController =
-        new PIDController(Constants.SwerveTransformPID.translationP,
-            Constants.SwerveTransformPID.translationI, Constants.SwerveTransformPID.translationD);
-
-    /**
-     * Command that moves the robot through the trench, constraining Y movement to stay in the
-     * trench.
-     *
-     * @param driveSpeeds supplier of field-relative chassis speeds
-     * @return a command that drives the robot while scheduled
-     */
-    public Command moveThroughTrench(Supplier<ChassisSpeeds> driveSpeeds) {
-        double pidYVal = pidYController.calculate(
-            state.getGlobalPoseEstimate().getTranslation().getY(), goalTrenchPosition().getY());
-        return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(driveSpeeds.get().vxMetersPerSecond, pidYVal,
-                driveSpeeds.get().omegaRadiansPerSecond),
-            state.getGlobalPoseEstimate().getRotation()));
     }
 }
