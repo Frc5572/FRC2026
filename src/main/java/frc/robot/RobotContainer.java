@@ -227,6 +227,13 @@ public final class RobotContainer {
     }
 
     private void setupTuner() {
+        swerve.setDefaultCommand(swerve.driveUserRelative(
+            TeleopControls.teleopControls(() -> -tuner.getLeftY(), () -> -tuner.getLeftX(),
+                () -> -tuner.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
+                Constants.DriverControls.driverRotationalMaxSpeed)));
+
+        tuner.y().onTrue(swerve.setFieldRelativeOffset());
+
         double[] parameters = new double[] {60.0, 15.0, 0.0, 0.0};
         boolean[] select = new boolean[] {false};
         StringBuffer res = new StringBuffer();
