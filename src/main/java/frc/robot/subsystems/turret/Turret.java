@@ -110,6 +110,9 @@ public class Turret extends SubsystemBase {
         return true;
     }
 
+    /**
+     * Returns Angle within [minAngle, maxAngle] for the turret given a robot-relative direction.
+     */
     public static Angle getValidAngleForRotation(Rotation2d rotation) {
         var angle = normalize(rotation).getMeasure();
         if (angle.gt(Constants.Turret.maxAngle)) {
