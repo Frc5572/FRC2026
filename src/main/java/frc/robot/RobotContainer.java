@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
@@ -185,6 +186,13 @@ public final class RobotContainer {
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
         turret.setDefaultCommand(CommandFactory.followHub(turret, swerve));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
+        swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
+            () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
+            () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
+            () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
+            Constants.DriverControls.driverTranslationalMaxSpeed,
+            Constants.DriverControls.driverRotationalMaxSpeed)));
+
         // TRIGGERS
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
@@ -197,12 +205,18 @@ public final class RobotContainer {
         maybeController("Pit", pit, this::setupPit);
     }
 
-    private void setupDriver() {
-        swerve.setDefaultCommand(swerve.driveUserRelative(
-            TeleopControls.teleopControls(() -> -driver.getLeftY(), () -> -driver.getLeftX(),
-                () -> -driver.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
-                Constants.DriverControls.driverRotationalMaxSpeed)));
+    private double combineControllers(ToDoubleFunction<CommandXboxController> func,
+        CommandXboxController... controllers) {
+        double value = 0.0;
+        for (var controller : controllers) {
+            if (controller.isConnected()) {
+                value += func.applyAsDouble(controller);
+            }
+        }
+        return value;
+    }
 
+    private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
@@ -227,11 +241,6 @@ public final class RobotContainer {
     }
 
     private void setupTuner() {
-        swerve.setDefaultCommand(swerve.driveUserRelative(
-            TeleopControls.teleopControls(() -> -tuner.getLeftY(), () -> -tuner.getLeftX(),
-                () -> -tuner.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
-                Constants.DriverControls.driverRotationalMaxSpeed)));
-
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
         double[] parameters = new double[] {60.0, 15.0, 0.0, 0.0};
