@@ -128,6 +128,12 @@ public class FieldConstants {
          */
         public static final double oppAllianceZone =
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(10).get().getX();
+
+        /** close starting X cordinent of the fuel at the center of the field */
+        public static final double closeFuelXPosition = (fieldLength / 2) - 35.95;
+
+        /** Far x cordinent of the fuel */
+        public static final double farFuelXPosition = (fieldLength / 2) + 35.95;
     }
 
     /**
@@ -150,6 +156,7 @@ public class FieldConstants {
         /** Y at the far edge of the right bump (away from hub). */
         public static final double rightBumpEnd = rightBumpStart - RightBump.width;
 
+        public static final double centerRightBump = (rightBumpStart + rightBumpEnd) / 2;
         /**
          * Y at the start of the open area adjacent to the right trench.
          *
@@ -167,6 +174,7 @@ public class FieldConstants {
         /** Y at the far edge of the left bump (away from hub). */
         public static final double leftBumpStart = leftBumpEnd + LeftBump.width;
 
+        public static final double centerLeftBump = (leftBumpEnd + leftBumpStart) / 2;
         /**
          * Y at the end of the open area adjacent to the left trench.
          *
@@ -177,6 +185,18 @@ public class FieldConstants {
 
         /** Y at the start of the left trench open segment (field boundary). */
         public static final double leftTrenchOpenStart = fieldWidth;
+
+        /** Left y start position of the fuel in the center zone */
+        public static final double leftFuelYPosition = fieldWidth - 67.89; // distance between wall
+
+        /** Left y end position for intakin fuel */
+        public static final double leftFinalFuelYPosition = leftFuelYPosition - 45;
+
+        /** Right y start position of the fuel in the center zone */
+        public static final double rightFuelYPosition = 67.89;
+
+        /** right y end position for intaking fuel */
+        public static final double rightFinalFuelYPosition = rightFuelYPosition + 45;
     }
 
     /**

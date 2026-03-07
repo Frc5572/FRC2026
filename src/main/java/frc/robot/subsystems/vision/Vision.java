@@ -9,7 +9,6 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -125,15 +124,6 @@ public class Vision extends SubsystemBase {
             }
             Logger.recordOutput(cameraVizKeys[i], cameraViz[i]);
         }
-
-        boolean seesAprilTag = false;
-        for (boolean contributed : cameraContributed) {
-            if (contributed) {
-                seesAprilTag = true;
-                break;
-            }
-        }
-        SmartDashboard.putBoolean("Vision/seesAprilTag", seesAprilTag);
     }
 
     private Translation3d[] addTwo(Translation3d[] translations, Translation3d newTranslation1,

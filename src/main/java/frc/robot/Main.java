@@ -38,7 +38,6 @@ public final class Main {
      * @param args String args
      */
     public static void main(String... args) {
-        // drawImages();
         RobotBase.startRobot(Robot::new);
     }
 
