@@ -113,7 +113,8 @@ public final class RobotContainer {
                 break;
             case kSimulation:
                 // FuelSim.getInstance().spawnStartingFuel();
-                sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.fromDegrees(225)));
+                sim = new SimulatedRobotState(
+                    new Pose2d(2.0, 2.0, Rotation2d.fromDegrees(225).plus(Rotation2d.k180deg)));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
                     () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),

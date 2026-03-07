@@ -252,7 +252,7 @@ public class RobotState {
         if (!initted) {
             Transform3d robotToCamera_ = camera.robotToCamera;
             if (camera.isTurret) {
-                robotToCamera_ = getTurretRobotToCamera(camera.robotToCamera, Rotation2d.kZero);
+                robotToCamera_ = getTurretRobotToCamera(camera.robotToCamera, Rotation2d.k180deg);
             }
             final Transform3d robotToCamera = robotToCamera_;
             multiTag.ifPresent(multiTag_ -> {
@@ -261,21 +261,7 @@ public class RobotState {
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
                 Pose3d robotPose = cameraPose.plus(robotToCamera.inverse());
                 if (camera.isTurret) {
-                    var maybeReportedTurretRotationRobotFrame =
-                        currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
-                    if (!maybeReportedTurretRotationRobotFrame.isPresent()) {
-                        return;
-                    }
-                    var reportedTurretRotationRobotFrame =
-                        maybeReportedTurretRotationRobotFrame.get();
-                    var robotRotation = robotPose.getRotation().toRotation2d();
-                    var turretRotationFieldFrame = cameraPose.plus(camera.robotToCamera.inverse())
-                        .getRotation().toRotation2d();
-                    var turretRotationRobotFrame = turretRotationFieldFrame.minus(robotRotation);
-                    double calcOffset =
-                        angleDiff(turretRotationRobotFrame, reportedTurretRotationRobotFrame)
-                            .in(Rotations);
-                    this.turretOffset = calcOffset;
+                    this.turretOffset = 0.0;
                     if (turretOffsetUpdate != null) {
                         turretOffsetUpdate.accept(this.turretOffset);
                     }
@@ -329,8 +315,9 @@ public class RobotState {
                     var turretRotationRobotFrame = turretRotationFieldFrame.minus(robotRotation);
                     var turretAngle = Turret.getValidAngleForRotation(turretRotationRobotFrame);
 
-                    double calcOffset = turretRotationRobotFrame.getRotations()
-                        - reportedTurretRotationRobotFrame.getRotations();
+                    double calcOffset =
+                        angleDiff(turretRotationRobotFrame, reportedTurretRotationRobotFrame)
+                            .in(Rotations);
 
                     // Smooth mapping from [0, \infty) to [0, 1)
                     double alpha = Math.atan(rotationStdDev) / Math.PI * 2.0;

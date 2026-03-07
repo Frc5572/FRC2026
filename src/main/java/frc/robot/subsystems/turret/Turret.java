@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
@@ -52,11 +53,12 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
-        state.setTurretRawAngle(Timer.getTimestamp(), inputs.relativeAngle);
+        state.setTurretRawAngle(Timer.getTimestamp(), inputs.relativeAngle.plus(Degrees.of(180)));
     }
 
     public Rotation2d getTurretHeading() {
-        return new Rotation2d(this.inputs.relativeAngle).plus(Rotation2d.fromRotations(offset));
+        return new Rotation2d(this.inputs.relativeAngle).plus(Rotation2d.fromRotations(offset))
+            .plus(Rotation2d.k180deg);
     }
 
     /**
@@ -88,14 +90,15 @@ public class Turret extends SubsystemBase {
      */
     public boolean setGoalRobotRelative(Rotation2d targetAngle, AngularVelocity velocity) {
         var angle = getValidAngleForRotation(targetAngle);
-        io.setTargetAngle(angle.minus(Rotations.of(offset)), velocity);
+        Logger.recordOutput("Turret/targetAngleRobotRelative", angle);
+        io.setTargetAngle(angle.minus(Rotations.of(offset).minus(Degrees.of(180))), velocity);
         return true;
     }
 
     /** Set target angle relative to the field. */
     public boolean setGoalFieldRelative(Rotation2d targetAngle) {
         return this.setGoalRobotRelative(
-            targetAngle.minus(state.getGlobalPoseEstimate().getRotation()).plus(Rotation2d.k180deg),
+            targetAngle.minus(state.getGlobalPoseEstimate().getRotation()),
             RadiansPerSecond.of(-state.getFieldRelativeSpeeds().omegaRadiansPerSecond));
     }
 
@@ -115,8 +118,8 @@ public class Turret extends SubsystemBase {
      */
     public static Angle getValidAngleForRotation(Rotation2d rotation) {
         var angle = normalize(rotation).getMeasure();
-        if (angle.gt(Constants.Turret.maxAngle)) {
-            angle = angle.minus(Rotations.of(1));
+        if (angle.lt(Constants.Turret.minAngle)) {
+            angle = angle.plus(Rotations.of(1));
         }
         return angle;
     }
