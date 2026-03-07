@@ -78,7 +78,7 @@ public class SwerveRateLimiter implements Tunable {
      *
      * <p>
      * This method should be called once per control loop using velocity data from odometry or state
-     * estimation before calling {@link #limit(ChassisSpeeds, double)}.
+     * estimation before calling {@link #limit(ChassisSpeeds)}.
      *
      * @param robotRelative the current robot-relative chassis speeds
      */
