@@ -109,6 +109,7 @@ public class CommandFactory {
         }, shooter, turret, indexer, hood);
     }
 
+    /** Point turret at hub. */
     public static Command followHub(Turret turret, Swerve swerve) {
         return turret.goToAngleFieldRelative(() -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
