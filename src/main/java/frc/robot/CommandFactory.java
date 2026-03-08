@@ -16,7 +16,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.util.AllianceFlipUtil;
 
 /** Command Factory */
 public class CommandFactory {
@@ -55,10 +57,26 @@ public class CommandFactory {
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
         DoubleSupplier adjustUp, DoubleSupplier adjustRight) {
         return Commands.runEnd(() -> {
-            final Translation2d target = targetSupplier.get();
+            var lookahead = state.getFieldRelativeSpeeds().times(0.05);
+            final Translation2d target = targetSupplier.get()
+                .plus(new Translation2d(lookahead.vxMetersPerSecond, lookahead.vyMetersPerSecond));
             Translation2d adjustedTarget = target;
             double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble());
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
+            for (int i = 0; i < 20; i++) {
+                double distance =
+                    adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
+                        + adjustUpValue;
+                var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
+                    shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), false);
+                double tof = parameters.timeOfFlight();
+                var forward = state.getFieldRelativeSpeeds().times(tof);
+                adjustedTarget = target
+                    .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
+            }
+            Logger.recordOutput("AutoShoot/Target", target);
+            Logger.recordOutput("AutoShoot/AdjustedTarget", adjustedTarget);
+            Logger.recordOutput("AutoShoot/TargetDiff", adjustedTarget.minus(target));
             double distance =
                 adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
                     + adjustUpValue;
@@ -68,7 +86,8 @@ public class CommandFactory {
             hood.setTargetAngle(Degrees.of(MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0)));
             boolean turretFacing = turret.setGoalFieldRelative(
                 adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation()).getAngle()
-                    .plus(adjustRightValue));
+                    .plus(adjustRightValue)
+                    .plus(Rotation2d.fromRadians(lookahead.omegaRadiansPerSecond)));
             boolean isOkay = parameters.isOkayToShoot();
             Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
             Logger.recordOutput("AutoShoot/isOkay", isOkay);
@@ -76,7 +95,7 @@ public class CommandFactory {
             Logger.recordOutput("AutoShoot/hoodAngleDeg",
                 MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
-            if (isOkay && turretFacing) {
+            if (isOkay) {
                 indexer.setMagazineDutyCycle(0.7);
                 indexer.setSpindexerDutyCycle(0.5);
             } else {
@@ -88,5 +107,13 @@ public class CommandFactory {
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
         }, shooter, turret, indexer, hood);
+    }
+
+    /** Point turret at hub. */
+    public static Command followHub(Turret turret, Swerve swerve) {
+        return turret.goToAngleFieldRelative(() -> {
+            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
+                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
+        });
     }
 }

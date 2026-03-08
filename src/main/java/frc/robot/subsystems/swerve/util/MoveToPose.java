@@ -8,12 +8,14 @@ import org.jspecify.annotations.Nullable;
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.typestate.AltMethod;
@@ -56,6 +58,7 @@ public class MoveToPose extends Command {
     private final boolean flipForRed;
     private final double translationTolerance;
     private final double rotationTolerance;
+    private final boolean flipY;
 
     private boolean isActive = false;
     private boolean isCompleted = false;
@@ -87,7 +90,8 @@ public class MoveToPose extends Command {
                 value = "() -> maxSpeedConst")) DoubleSupplier maxSpeed,
         @OptionalField("true") boolean flipForRed,
         @OptionalField("0.5") double translationTolerance,
-        @OptionalField("edu.wpi.first.math.util.Units.degreesToRadians(5)") double rotationTolerance) {
+        @OptionalField("edu.wpi.first.math.util.Units.degreesToRadians(5)") double rotationTolerance,
+        @OptionalField("false") boolean flipY) {
         this.autoRoutine = autoRoutine;
         if (autoRoutine == null) {
             this.eventLoop = CommandScheduler.getInstance().getDefaultButtonLoop();
@@ -101,6 +105,7 @@ public class MoveToPose extends Command {
         this.flipForRed = flipForRed;
         this.translationTolerance = translationTolerance;
         this.rotationTolerance = rotationTolerance;
+        this.flipY = flipY;
     }
 
     /**
@@ -146,6 +151,10 @@ public class MoveToPose extends Command {
         target = this.pose2dSupplier.get();
         if (flipForRed) {
             target = AllianceFlipUtil.apply(target);
+        }
+        if (flipY) {
+            target = new Pose2d(target.getX(), FieldConstants.fieldWidth - target.getY(),
+                target.getRotation().plus(Rotation2d.k180deg));
         }
         ChassisSpeeds ctrlEffort = Constants.Swerve.holonomicDriveController
             .calculate(swerve.state.getGlobalPoseEstimate(), target, 0, target.getRotation());

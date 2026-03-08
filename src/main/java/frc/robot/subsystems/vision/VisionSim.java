@@ -2,6 +2,8 @@ package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Milliseconds;
+import java.util.HashMap;
+import java.util.Map;
 import org.jspecify.annotations.NullMarked;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -17,8 +19,10 @@ import frc.robot.Constants;
 @NullMarked
 public class VisionSim extends VisionReal {
 
-    private final VisionSystemSim visionSim;
-    private final VisionSystemSim turretVisionSim;
+    public final VisionSystemSim visionSim;
+    public final VisionSystemSim turretVisionSim;
+    public final Map<String, PhotonCameraSim> staticCameras = new HashMap<>();
+    public final Map<String, PhotonCameraSim> turretCameras = new HashMap<>();
 
     /** Simulation of vision using built-in PhotonVision simulator. */
     public VisionSim() {
@@ -39,8 +43,13 @@ public class VisionSim extends VisionReal {
             props.setAvgLatencyMs(constants[i].simLatency.in(Milliseconds));
             props.setLatencyStdDevMs(constants[i].simLatencyStdDev.in(Milliseconds));
             PhotonCameraSim cameraSim = new PhotonCameraSim(this.cameras[i], props);
-            (constants[i].isTurret ? turretVisionSim : visionSim).addCamera(cameraSim,
-                constants[i].robotToCamera);
+            if (constants[i].isTurret) {
+                turretVisionSim.addCamera(cameraSim, constants[i].robotToCamera);
+                turretCameras.put(constants[i].name, cameraSim);
+            } else {
+                visionSim.addCamera(cameraSim, constants[i].robotToCamera);
+                staticCameras.put(constants[i].name, cameraSim);
+            }
         }
     }
 
