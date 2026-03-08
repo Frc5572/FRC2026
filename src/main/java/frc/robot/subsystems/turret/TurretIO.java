@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 import org.littletonrobotics.junction.AutoLog;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -24,10 +23,10 @@ public interface TurretIO {
      */
     @AutoLog
     public static class TurretInputs {
-        public Rotation2d gear1AbsoluteAngle = Rotation2d.kZero;
-        public Rotation2d gear2AbsoluteAngle = Rotation2d.kZero;
+        public Angle gear1AbsoluteAngle = Rotations.of(0);
+        public Angle gear2AbsoluteAngle = Rotations.of(0);
         public double positionValue = 0.0;
-        public Angle relativeAngle = Rotations.of(0);
+        public double relativeAngle;
         public Voltage voltage = Volts.of(0);
         public Current current = Amps.of(0);
         public AngularVelocity velocity = RadiansPerSecond.of(0);
@@ -43,7 +42,7 @@ public interface TurretIO {
     /**
      * Commands the turret to move toward the specified target angle.
      */
-    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity);
+    public void setTargetAngle(Angle angle, AngularVelocity velocity);
 
     public void resetPosition(Angle angle);
 

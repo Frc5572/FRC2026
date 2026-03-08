@@ -1,0 +1,104 @@
+{
+  "hubs": [
+    {
+      "x": 66,
+      "y": 69,
+      "width": 1854,
+      "height": 1011,
+      "state": {
+        "sidebar": {
+          "width": 500,
+          "expanded": [
+            "/RealOutputs/Viz",
+            "/RealOutputs",
+            "/RealOutputs/Turret",
+            "/Turret",
+            "/RealOutputs/Fuel Simulation",
+            "/RealOutputs/FuelSim",
+            "/AdvantageKit/RealOutputs/ShotData",
+            "/AdvantageKit/RealOutputs/ShotData/Timings",
+            "/AdvantageKit/RealOutputs/Viz",
+            "/AdvantageKit/RealOutputs/Fuel Simulation",
+            "/AdvantageKit/RealOutputs/FuelSim",
+            "/AdvantageKit/RealOutputs/AutoShoot",
+            "/AdvantageKit/RealOutputs/ShotParameters",
+            "/AdvantageKit/RealOutputs/State",
+            "/AdvantageKit/RealOutputs/State/turretRotationFieldFrame",
+            "/AdvantageKit/RealOutputs/Viz/Cameras",
+            "/AdvantageKit/RealOutputs/Viz/Cameras/turretRight",
+            "/AdvantageKit/RealOutputs/AutoShoot/TargetDiff",
+            "/AdvantageKit/RealOutputs/Turret",
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/State/Camera",
+            "/AdvantageKit/RealOutputs/State/Camera/turretRight"
+          ]
+        },
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "m0lg15q1p5dzu3lvo8vleikn1pykvam4",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Viz/ActualPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "model": "Crazy Joe"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Viz/ActualState",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Fuel Simulation/Fuels",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
+                  }
+                ],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "brubv8mec7k11rj3k7kuq8oz37921e9d",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -11.529834908580598,
+                  9.61020207275783,
+                  0.10464933210398994
+                ],
+                "cameraTarget": [
+                  -3.9422251004979882,
+                  0.4380147968936031,
+                  0.05957522038689175
+                ]
+              },
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "26.0.0"
+}

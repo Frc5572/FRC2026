@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
@@ -56,7 +57,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.DeviceDebug;
 import frc.robot.viz.RobotViz;
 
 
@@ -114,7 +114,8 @@ public final class RobotContainer {
                 break;
             case kSimulation:
                 // FuelSim.getInstance().spawnStartingFuel();
-                sim = new SimulatedRobotState(new Pose2d(2.0, 2.0, Rotation2d.kZero));
+                sim = new SimulatedRobotState(
+                    new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
                     () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),
@@ -160,14 +161,13 @@ public final class RobotContainer {
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
 
-        DeviceDebug.initialize();
-
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
         autoChooser.addCmd("Do Nothing", Commands::none);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
+        autoChooser.addRoutine("WilsonTest", autoCommandFactory::wilsonTest);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
@@ -184,11 +184,15 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(turret.goToAngleFieldRelative(() -> {
-            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
-                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
-        }));
+        turret.setDefaultCommand(CommandFactory.followHub(turret, swerve));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
+        swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
+            () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
+            () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
+            () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
+            Constants.DriverControls.driverTranslationalMaxSpeed,
+            Constants.DriverControls.driverRotationalMaxSpeed)));
+
         // TRIGGERS
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
@@ -201,12 +205,18 @@ public final class RobotContainer {
         maybeController("Pit", pit, this::setupPit);
     }
 
-    private void setupDriver() {
-        swerve.setDefaultCommand(swerve.driveUserRelative(
-            TeleopControls.teleopControls(() -> -driver.getLeftY(), () -> -driver.getLeftX(),
-                () -> -driver.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
-                Constants.DriverControls.driverRotationalMaxSpeed)));
+    private double combineControllers(ToDoubleFunction<CommandXboxController> func,
+        CommandXboxController... controllers) {
+        double value = 0.0;
+        for (var controller : controllers) {
+            if (controller.isConnected()) {
+                value += func.applyAsDouble(controller);
+            }
+        }
+        return value;
+    }
 
+    private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
@@ -222,24 +232,88 @@ public final class RobotContainer {
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
                 .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
+
+        driver.a().whileTrue(turret.characterization());
     }
 
     private void setupOperator() {
         operator.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
         operator.b()
             .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
+
+        operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
     }
 
     private void setupTuner() {
-        swerve.setDefaultCommand(swerve.driveUserRelative(
-            TeleopControls.teleopControls(() -> -tuner.getLeftY(), () -> -tuner.getLeftX(),
-                () -> -tuner.getRightX(), Constants.DriverControls.driverTranslationalMaxSpeed,
-                Constants.DriverControls.driverRotationalMaxSpeed)));
-
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
-        tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
-        tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
+        double[] parameters = new double[] {60.0, 15.0, 0.0, 0.0};
+        boolean[] select = new boolean[] {false};
+        StringBuffer res = new StringBuffer();
+
+        tuner.rightTrigger()
+            .whileTrue(shooter.shoot(() -> parameters[0])
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(parameters[1]))))
+            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0)),
+                Commands.runOnce(() -> {
+                    parameters[2] =
+                        Units.metersToFeet(swerve.state.getTurretCenterFieldFrame().getTranslation()
+                            .getDistance(AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)));
+                })));
+        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.5, 0.7));
+
+        tuner.x().onTrue(Commands.runOnce(() -> {
+            select[0] = !select[0];
+        }));
+        tuner.a().onTrue(Commands.runOnce(() -> {
+            parameters[3] = shooter.timeSinceLastShot();
+            Logger.recordOutput("Tuner/Parameters", parameters);
+        }));
+        tuner.b().onTrue(Commands.runOnce(() -> {
+            res.append("new ShotEntry(");
+            res.append(parameters[2]);
+            res.append(",");
+            res.append(parameters[0]);
+            res.append(",");
+            res.append(parameters[1]);
+            res.append(",");
+            res.append(parameters[3]);
+            res.append("),\n");
+            Logger.recordOutput("Tuner/Code", res.toString());
+        }));
+
+        tuner.povUp().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] += 5.0;
+            } else {
+                parameters[1] += 2.0;
+            }
+            Logger.recordOutput("Tuner/Parameters", parameters);
+        }));
+        tuner.povDown().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] -= 5.0;
+            } else {
+                parameters[1] -= 2.0;
+            }
+            Logger.recordOutput("Tuner/Parameters", parameters);
+        }));
+        tuner.povRight().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] += 0.5;
+            } else {
+                parameters[1] += 0.2;
+            }
+            Logger.recordOutput("Tuner/Parameters", parameters);
+        }));
+        tuner.povLeft().onTrue(Commands.runOnce(() -> {
+            if (select[0]) {
+                parameters[0] -= 0.5;
+            } else {
+                parameters[1] -= 0.2;
+            }
+            Logger.recordOutput("Tuner/Parameters", parameters);
+        }));
     }
 
     private void setupPit() {
