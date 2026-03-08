@@ -241,6 +241,12 @@ public class RobotState {
         PhotonPipelineResult pipelineResult) {
         var multiTag = pipelineResult.getMultiTagResult();
         Transform3d robotToCamera_ = camera.robotToCamera;
+        double translationSpeed =
+            Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
+        double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
+        if (translationSpeed > 0.3 || rotationSpeed > 0.5) {
+            return false;
+        }
         if (camera.isTurret) {
             var maybeTurretRotation =
                 currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
@@ -267,9 +273,6 @@ public class RobotState {
             });
             return initted;
         } else {
-            double translationSpeed =
-                Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
-            double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
             double velocityStdDev = camera.simLatencyStdDev.in(Seconds);
             double velocityTranslationError = translationSpeed * velocityStdDev;
             double velocityRotationError = rotationSpeed * velocityStdDev;

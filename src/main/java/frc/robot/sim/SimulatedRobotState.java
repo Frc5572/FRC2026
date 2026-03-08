@@ -76,7 +76,7 @@ public class SimulatedRobotState {
                     adjustableHood.hood.position + 0.02 * random.nextFloat() - 0.01;
                 double effectiveTurretAngle = this.swerveDrive.mapleSim.getSimulatedDriveTrainPose()
                     .getRotation().getRadians() + turret.turrentAngle.position
-                    + 0.02 * random.nextFloat() - 0.01 + Math.PI;
+                    + 0.02 * random.nextFloat() - 0.01;
 
                 var entry = ShotData.flywheelHood.query(new Translation2d(speedRotationsPerSecond,
                     Units.radiansToDegrees(effectiveHoodAngle))).value();
