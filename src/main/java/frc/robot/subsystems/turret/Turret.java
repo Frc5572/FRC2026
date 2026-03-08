@@ -69,6 +69,7 @@ public class Turret extends SubsystemBase {
         return new Rotation2d(rot.getCos(), rot.getSin());
     }
 
+    /** Set turret motor's output voltage. */
     public Command setVoltage(DoubleSupplier voltage) {
         return this.run(() -> {
             io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
