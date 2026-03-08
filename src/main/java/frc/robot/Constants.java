@@ -319,7 +319,7 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(-12.125),
                     Units.inchesToMeters(7.041), Units.inchesToMeters(12.868710)),
-                    new Rotation3d(Math.PI, 0, Degrees.of(180).in(Radians))))
+                    new Rotation3d(Math.PI, 0, Math.PI)))
                 .translationError(0.02)
                 .finish(),
             new CameraConstantsBuilder()
