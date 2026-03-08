@@ -91,17 +91,6 @@ public class AutoCommandFactory {
 
         AutoRoutine routine = autoFactory.newRoutine("Sweep to pickup and shoot");
         double maxX = 7.723;
-        Supplier<Pose2d> startpoint = () -> {
-            Pose2d pose = new Pose2d(FieldConstants.LinesVertical.starting,
-                FieldConstants.LinesHorizontal.rightBlueTrenchCenter.getY(), new Rotation2d());
-
-            if (swerve.getPose().getY() > FieldConstants.LinesVertical.center) {
-                pose = new Pose2d(pose.getX(),
-                    FieldConstants.LinesHorizontal.leftBlueTrenchCenter.getY(), new Rotation2d());
-            }
-            return pose;
-        };
-
 
         Supplier<Pose2d> sweepStart = () -> {
             Pose2d pose =
@@ -141,16 +130,15 @@ public class AutoCommandFactory {
         };
 
         Supplier<Pose2d> end = () -> {
-            Pose2d pose = startpoint.get();
-            pose = new Pose2d(pose.getX(), pose.getY(), Rotation2d.fromDegrees(-90));
+            Pose2d pose = new Pose2d(FieldConstants.LinesVertical.starting,
+                FieldConstants.LinesHorizontal.rightBlueTrenchCenter.getY(),
+                Rotation2d.fromDegrees(90));
             if (swerve.getPose().getY() > FieldConstants.LinesVertical.center) {
-                pose = new Pose2d(pose.getX(), pose.getY(), Rotation2d.fromDegrees(90));
+                pose = new Pose2d(pose.getX(), pose.getY(), Rotation2d.fromDegrees(-90));
             }
             return pose;
         };
 
-        MoveToPose moveToStart =
-            swerve.moveToPose().target(startpoint).autoRoutine(routine).finish();
         MoveToPose moveToSweepStart =
             swerve.moveToPose().target(sweepStart).autoRoutine(routine).finish();
         MoveToPose moveSweep = swerve.moveToPose().target(sweepEnd).autoRoutine(routine).finish();
@@ -160,8 +148,7 @@ public class AutoCommandFactory {
         MoveToPose moveToEnd = swerve.moveToPose().target(end).autoRoutine(routine).finish();
 
 
-        routine.active().onTrue(moveToStart).onTrue(Commands.print("Running Move To Start"));
-        moveToStart.done().onTrue(moveToSweepStart)
+        routine.active().onTrue(moveToSweepStart)
             .onTrue(Commands.print("Running Move To Sweep Start"));
         moveToSweepStart.active().debounce(2).onTrue(intake.extendAndIntake());
         moveToSweepStart.done().onTrue(moveSweep);
