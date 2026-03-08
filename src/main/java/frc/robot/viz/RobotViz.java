@@ -158,9 +158,9 @@ public class RobotViz {
         Distance climberHeight, Distance intakeOut, Rotation2d[] modules) {
         out[hoodIndex] = new Pose3d()
             .rotateAround(hoodRotationCenter, new Rotation3d(0, hoodAngle.in(Radians), 0))
-            .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians() + Math.PI));
-        out[turretIndex] = new Pose3d().rotateAround(turretCenter,
-            new Rotation3d(0, 0, turretAngle.getRadians() + Math.PI));
+            .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
+        out[turretIndex] =
+            new Pose3d().rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
 
         out[hooksIndex] =
             new Pose3d(0, 0, climberHeight.in(Meters) - hooksDown.in(Meters), Rotation3d.kZero)

@@ -95,7 +95,7 @@ public class CommandFactory {
             Logger.recordOutput("AutoShoot/hoodAngleDeg",
                 MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
-            if (isOkay && turretFacing) {
+            if (isOkay) {
                 indexer.setMagazineDutyCycle(0.7);
                 indexer.setSpindexerDutyCycle(0.5);
             } else {

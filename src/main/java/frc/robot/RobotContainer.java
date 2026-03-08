@@ -232,12 +232,16 @@ public final class RobotContainer {
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
                 .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
+
+        driver.a().whileTrue(turret.characterization());
     }
 
     private void setupOperator() {
         operator.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
         operator.b()
             .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
+
+        operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
     }
 
     private void setupTuner() {
@@ -284,6 +288,7 @@ public final class RobotContainer {
             } else {
                 parameters[1] += 2.0;
             }
+            Logger.recordOutput("Tuner/Parameters", parameters);
         }));
         tuner.povDown().onTrue(Commands.runOnce(() -> {
             if (select[0]) {
@@ -291,6 +296,7 @@ public final class RobotContainer {
             } else {
                 parameters[1] -= 2.0;
             }
+            Logger.recordOutput("Tuner/Parameters", parameters);
         }));
         tuner.povRight().onTrue(Commands.runOnce(() -> {
             if (select[0]) {
@@ -298,6 +304,7 @@ public final class RobotContainer {
             } else {
                 parameters[1] += 0.2;
             }
+            Logger.recordOutput("Tuner/Parameters", parameters);
         }));
         tuner.povLeft().onTrue(Commands.runOnce(() -> {
             if (select[0]) {
@@ -305,6 +312,7 @@ public final class RobotContainer {
             } else {
                 parameters[1] -= 0.2;
             }
+            Logger.recordOutput("Tuner/Parameters", parameters);
         }));
     }
 

@@ -122,7 +122,7 @@ public class AutoCommandFactory {
     private Command wilsonTestSide(boolean left) {
         double shootingTime = 6.0;
         return Commands
-            .sequence(sweep(left, true, 8.076),
+            .sequence(sweep(left, true, 7.076),
                 CommandFactory
                     .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
                         turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
@@ -150,23 +150,32 @@ public class AutoCommandFactory {
                     swerve.moveToPose()
                         .target(new Pose2d(5.7, 0.622,
                             isFirst ? Rotation2d.kCCW_90deg : Rotation2d.kZero))
-                        .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
+                            left)
+                        .finish(),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
-                    swerve.moveToPose().target(
-                        new Pose2d(xMeters, 3.586, Rotation2d.kCCW_90deg)).translationTolerance(
-                            0.5)
-                        .rotationTolerance(15).flipY(left).finish(),
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
+                            left)
+                        .finish(),
+                    swerve.moveToPose().target(new Pose2d(xMeters, 3.586, Rotation2d.kCCW_90deg))
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
+                            left)
+                        .finish(),
+                    swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(
+                            15)
+                        .flipY(left).finish(),
                     swerve
                         .moveToPose().target(
-                            new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
-                    swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kZero))
+                            new Pose2d(5.7, 0.622, Rotation2d.kZero))
+                        .maxSpeed(
+                            1.5)
                         .translationTolerance(0.1).rotationTolerance(15).flipY(left).finish()),
-                Commands.sequence(
-                    swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
-                        .translationTolerance(0.1).rotationTolerance(5).flipY(left).finish(),
-                    swerve.stop()).deadlineFor(shooter.shoot(60.0)))
+                Commands
+                    .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
+                        .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
+                        .finish(), swerve.stop())
+                    .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve));
     }
 }

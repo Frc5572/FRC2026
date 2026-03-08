@@ -296,14 +296,11 @@ public final class Constants {
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
         public static final Pose3d turretCenter =
-            new Pose3d(new Translation3d(-0.1651, 0, 0), Rotation3d.kZero);
+            new Pose3d(new Translation3d(-Units.inchesToMeters(8.5), 0, 0), Rotation3d.kZero);
 
-        /** TODO: meausre on bot */
-        public static final Pose3d turretLeft =
-            new Pose3d(Inches.of(-7.972), Inches.of(5.274), Inches.of(20.56), Rotation3d.kZero);
-        public static final Pose3d turretRight =
-            new Pose3d(Inches.of(-7.972), Inches.of(-5.274), Inches.of(20.56), Rotation3d.kZero)
-                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.k180deg));
+        public static final Pose3d turretRight = new Pose3d(Inches.of(-10), Inches.of(-5.274),
+            Inches.of(21.56), new Rotation3d(0.0, Units.degreesToRadians(-22.115), 0.0))
+                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -333,8 +330,8 @@ public final class Constants {
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(0.5)
-                .rotationError(0.5)
+                .translationError(6.5)
+                .rotationError(6.5)
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
@@ -527,11 +524,9 @@ public final class Constants {
 
     /** Turret Constants */
     public static final class Turret {
-        public static final double motorGearing = 32.32;
-        public static final double gear1Gearing = 1.0 / 10.77333;
-        public static final Rotation2d gear1Offset = Rotation2d.fromRotations(-0.295410);
-        public static final double gear2Gearing = 1.0 / 7.76923076923;
-        public static final Rotation2d gear2Offset = Rotation2d.fromRotations(-0.284912);
+        public static final double gear1Gearing = 5.689 * 2.0;
+        public static final double gear2Gearing = 24.511 / 2.0 * 0.622;
+        public static final double motorGearing = 17.0732 * 2.0;
 
         public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;
@@ -553,7 +548,7 @@ public final class Constants {
         public static final SensorDirectionValue canCoder1Invert =
             SensorDirectionValue.Clockwise_Positive;
         public static final SensorDirectionValue canCoder2Invert =
-            SensorDirectionValue.CounterClockwise_Positive;
+            SensorDirectionValue.Clockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
 
         public static final Angle maxAngle = Degrees.of(270);
