@@ -1,14 +1,16 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -37,10 +39,6 @@ public class Turret extends SubsystemBase {
         super("Turret");
         this.io = io;
         this.state = state;
-        this.state.setTurretOffsetUpdate(newOffset -> {
-            Logger.recordOutput("Turret/offset", newOffset);
-            this.offset = newOffset;
-        });
     }
 
     @Override
@@ -50,24 +48,15 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
-        state.setTurretRawAngle(Timer.getTimestamp(), inputs.relativeAngle);
+        Logger.recordOutput("Turret/CancoderAngle",
+            inputs.gear2AbsoluteAngle.div(Constants.Turret.gear2Gearing).in(Degrees));
+
+        state.setTurretRawAngle(Timer.getTimestamp(), Rotations.of(inputs.relativeAngle));
     }
 
     public Rotation2d getTurretHeading() {
-        return new Rotation2d(this.inputs.relativeAngle).plus(Rotation2d.fromRotations(offset));
-    }
-
-    /**
-     * Computes the expected gear encoder angle for a given turret rotation.
-     *
-     * @param rotation Absolute turret rotation
-     * @param gearing Gear ratio between turret and encoder
-     * @param offset Encoder offset applied during calibration
-     * @return Normalized expected encoder angle
-     */
-    public static Rotation2d getGearAnglesFromTurret(Angle rotation, double gearing,
-        Rotation2d offset) {
-        return normalize(new Rotation2d(rotation.div(gearing).plus(offset.getMeasure())));
+        return Rotation2d.fromRotations(this.inputs.relativeAngle)
+            .plus(Rotation2d.fromRotations(offset));
     }
 
     /**
@@ -80,57 +69,34 @@ public class Turret extends SubsystemBase {
         return new Rotation2d(rot.getCos(), rot.getSin());
     }
 
+    /** Set turret motor's output voltage. */
+    public Command setVoltage(DoubleSupplier voltage) {
+        return this.run(() -> {
+            io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
+        });
+    }
+
     /**
      *
      * @param targetAngle gets the goal angle
      */
     public boolean setGoalRobotRelative(Rotation2d targetAngle, AngularVelocity velocity) {
-        targetAngle = normalize(targetAngle);
-        if (isValidAngle(targetAngle) || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(1)))
-            || isValidAngle(targetAngle.plus(Rotation2d.fromRotations(-1)))) {
-            io.setTargetAngle(targetAngle.minus(Rotation2d.fromRotations(offset)), velocity);
-            Logger.recordOutput("Turret/InRange", true);
-            Logger.recordOutput("Turret/ActualTarget", targetAngle);
-            return true;
+        var normalized = normalize(targetAngle).getMeasure();
+        if (normalized.lt(Constants.Turret.minAngle)) {
+            normalized = normalized.plus(Rotations.of(1));
         }
-        Logger.recordOutput("Turret/InRange", false);
-        double minAngleDiff =
-            fmod((targetAngle.getDegrees() - Constants.Turret.minAngle.getDegrees()) + 180, 360)
-                - 180;
-        double maxAngleDiff =
-            fmod((targetAngle.getDegrees() - Constants.Turret.maxAngle.getDegrees()) + 180, 360)
-                - 180;
-        if (Math.abs(minAngleDiff) < Math.abs(maxAngleDiff)) {
-            io.setTargetAngle(Constants.Turret.minAngle.minus(Rotation2d.fromRotations(offset)),
-                RotationsPerSecond.of(0));
-            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.minAngle);
-        } else {
-            io.setTargetAngle(Constants.Turret.maxAngle.minus(Rotation2d.fromRotations(offset)),
-                RotationsPerSecond.of(0));
-            Logger.recordOutput("Turret/ActualTarget", Constants.Turret.maxAngle);
+        if (normalized.gt(Constants.Turret.maxAngle)) {
+            normalized = normalized.minus(Rotations.of(1));
         }
-        return false;
+        io.setTargetAngle(normalized, velocity);
+        return true;
     }
 
     /** Set target angle relative to the field. */
     public boolean setGoalFieldRelative(Rotation2d targetAngle) {
         return this.setGoalRobotRelative(
-            targetAngle.minus(state.getGlobalPoseEstimate().getRotation()).plus(Rotation2d.k180deg),
+            targetAngle.minus(state.getGlobalPoseEstimate().getRotation()),
             RadiansPerSecond.of(-state.getFieldRelativeSpeeds().omegaRadiansPerSecond));
-    }
-
-    private boolean isValidAngle(Rotation2d targetAngle) {
-        if (targetAngle.getRadians() > Constants.Turret.maxAngle.getRadians()) {
-            return false;
-        }
-        if (targetAngle.getRadians() < Constants.Turret.minAngle.getRadians()) {
-            return false;
-        }
-        return true;
-    }
-
-    private static double fmod(double a, double n) {
-        return a - Math.floor(a / n) * n;
     }
 
     /** Aim turret in robot frame */
