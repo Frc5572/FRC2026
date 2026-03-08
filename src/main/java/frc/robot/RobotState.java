@@ -190,7 +190,7 @@ public class RobotState {
         Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
 
         Transform3d robotToTurret =
-            new Transform3d(Constants.Vision.turretCenter.getTranslation().unaryMinus(), rotate);
+            new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
 
         Transform3d robotToCamera = robotToTurret.plus(turretToCamera);
 
@@ -240,11 +240,16 @@ public class RobotState {
     public boolean addVisionObservation(CameraConstants camera,
         PhotonPipelineResult pipelineResult) {
         var multiTag = pipelineResult.getMultiTagResult();
-        if (!initted) {
-            Transform3d robotToCamera_ = camera.robotToCamera;
-            if (camera.isTurret) {
-                robotToCamera_ = getTurretRobotToCamera(robotToCamera_, Rotation2d.kZero);
+        Transform3d robotToCamera_ = camera.robotToCamera;
+        if (camera.isTurret) {
+            var maybeTurretRotation =
+                currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
+            if (maybeTurretRotation.isEmpty()) {
+                return false;
             }
+            robotToCamera_ = getTurretRobotToCamera(robotToCamera_, maybeTurretRotation.get());
+        }
+        if (!initted) {
             final Transform3d robotToCamera = robotToCamera_;
             multiTag.ifPresent(multiTag_ -> {
                 Transform3d best = multiTag_.estimatedPose.best;
@@ -275,6 +280,9 @@ public class RobotState {
                 Transform3d best = multiTag.get().estimatedPose.best;
                 Pose3d cameraPose =
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
+                Logger.recordOutput("State/Camera/" + camera.name + "/cameraPose", cameraPose);
+                Pose3d estRobotPose = cameraPose.plus(robotToCamera_.inverse());
+                Logger.recordOutput("State/Camera/" + camera.name + "/estRobotPose", estRobotPose);
                 double stdDevMultiplier = stdDevMultiplier(pipelineResult.targets, cameraPose);
                 double translationStdDev =
                     stdDevMultiplier * velocityTranslationError + camera.translationError;
@@ -282,18 +290,8 @@ public class RobotState {
                     stdDevMultiplier * velocityRotationError + camera.rotationError;
                 Logger.recordOutput("State/stdDevMultipler", stdDevMultiplier);
                 Logger.recordOutput("State/stdDevTranslation", translationStdDev);
-                Transform3d robotToCamera = camera.robotToCamera;
-                if (camera.isTurret) {
-                    var maybeTurretRotation =
-                        currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
-                    if (maybeTurretRotation.isEmpty()) {
-                        return false;
-                    }
-                    robotToCamera =
-                        getTurretRobotToCamera(robotToCamera, maybeTurretRotation.get());
-                }
                 Logger.recordOutput("State/stdDevRotation", rotationStdDev);
-                addVisionObservation(cameraPose, robotToCamera, translationStdDev, rotationStdDev,
+                addVisionObservation(cameraPose, robotToCamera_, translationStdDev, rotationStdDev,
                     pipelineResult.getTimestampSeconds());
                 return true;
             }
