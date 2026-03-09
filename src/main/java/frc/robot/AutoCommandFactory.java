@@ -7,6 +7,7 @@ import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -110,34 +111,49 @@ public class AutoCommandFactory {
     /** moves the bot to the depot and intakes fuel */
     public AutoRoutine moveToDepot() {
         AutoRoutine routine = autoFactory.newRoutine("move to depot");
-        routine.active().onTrue(intakeFromDepot());
-        return routine;
-    }
-
-    private Command intakeFromDepot() {
-        return Commands
-            .sequence(
-                swerve.moveToPose()
-                    .target(new Pose2d(AllianceFlipUtil.apply(
-                        new Translation2d(FieldConstants.Depot.depotCenter.getX(),
-                            FieldConstants.Depot.depotCenter.getY())),
-                        Rotation2d.kZero))
-                    .finish(),
-                intake.extendHopper(0),
-                Commands
-                    .parallel(intake.intakeBalls(6),
+        Command depot =
+            Commands
+                .sequence(
+                    Commands.either(
                         swerve.moveToPose()
                             .target(new Pose2d(
-                                AllianceFlipUtil.apply(
-                                    new Translation2d(FieldConstants.Depot.depotCenter.getX() - 17,
-                                        FieldConstants.Depot.depotCenter.getY())),
+                                AllianceFlipUtil
+                                    .apply(new Translation2d(FieldConstants.Tower.frontFaceX + 0.2,
+                                        swerve.state.getGlobalPoseEstimate().getY())),
                                 Rotation2d.kZero))
+                            .finish(),
+                        Commands.none(),
+                        () -> swerve.state.getGlobalPoseEstimate()
+                            .getX() < FieldConstants.Tower.frontFaceX),
+                    swerve.moveToPose()
+                        .target(
+                            new Pose2d(
+                                AllianceFlipUtil.apply(new Translation2d(
+                                    FieldConstants.Depot.depotCenter.getX()
+                                        + Units.inchesToMeters(42),
+                                    FieldConstants.Depot.depotCenter.getY())),
+                                Rotation2d.fromDegrees(180)))
+                        .finish(),
+                    intake.extendHopper(0),
+                    Commands.parallel(intake.intakeBalls(6),
+                        swerve.moveToPose()
+                            .target(new Pose2d(
+                                AllianceFlipUtil.apply(new Translation2d(Units.inchesToMeters(24.5),
+                                    FieldConstants.Depot.depotCenter.getY())),
+                                Rotation2d.fromDegrees(180)))
                             .finish()),
-                swerve.moveToPose()
-                    .target(new Pose2d(AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.Depot.depotCenter.getX() + 5,
-                            FieldConstants.Depot.depotCenter.getY())),
-                        Rotation2d.kZero))
-                    .finish());
+                    swerve.moveToPose()
+                        .target(new Pose2d(AllianceFlipUtil.apply(new Translation2d(
+                            FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
+                            FieldConstants.Depot.depotCenter.getY())), Rotation2d.kZero))
+                        .finish(),
+                    Commands.parallel(shooter.shoot(65),
+                        Commands.sequence(Commands.waitSeconds(.6),
+                            indexer.setSpeedCommand(0.8, 0.8)),
+                        Commands.repeatingSequence(intake.jerkIntake())))
+                .withTimeout(15);
+        depot = depot.andThen(swerve.stop());
+        routine.active().onTrue(depot);
+        return routine;
     }
 }
