@@ -218,15 +218,31 @@ public final class RobotContainer {
 
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
+        driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
+
+        double[] offsets = {1.5, 0.0};
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             // TODO passing?
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0)
+        }, turret, shooter, indexer, adjustableHood, () -> offsets[0], () -> offsets[1])
             .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
                 () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
                 Constants.DriverControls.driverTranslationalShootSpeed,
                 Constants.DriverControls.driverRotationalShootSpeed))));
+
+        driver.povUp().onTrue(Commands.runOnce(() -> {
+            offsets[0] += 0.25;
+        }));
+        driver.povDown().onTrue(Commands.runOnce(() -> {
+            offsets[0] -= 0.25;
+        }));
+        driver.povLeft().onTrue(Commands.runOnce(() -> {
+            offsets[0] += 2.0;
+        }));
+        driver.povRight().onTrue(Commands.runOnce(() -> {
+            offsets[0] -= 2.0;
+        }));
 
         driver.leftTrigger()
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))

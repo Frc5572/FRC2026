@@ -63,6 +63,8 @@ public class CommandFactory {
             Translation2d adjustedTarget = target;
             double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble());
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
+            Logger.recordOutput("AutoShoot/AdjustUp", adjustUpValue);
+            Logger.recordOutput("AutoShoot/AdjustRight", adjustRightValue);
             for (int i = 0; i < 20; i++) {
                 double distance =
                     adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
