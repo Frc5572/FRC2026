@@ -103,4 +103,20 @@ public class AutoCommandFactory {
         moveToStart.done().onTrue(shooter.shoot(0));
         return routine;
     }
+
+    public AutoRoutine feedOnlyAuto() {
+        AutoRoutine routine = autoFactory.newRoutine("PassAuto");
+        MoveToPose moveToStart = swerve.moveToPose()
+            .target(new Pose2d(3.742058038711548, 0.5263999700546265, new Rotation2d()))
+            .autoRoutine(routine).finish();
+        AutoTrajectory path = routine.trajectory("Pass");
+        routine.active().onTrue(moveToStart);
+        moveToStart.done().onTrue(path.cmd());
+        routine.observe(path.atPose("Phase1", 0, 0)).onTrue(
+            intake.extendHopper(0).andThen(intake.intakeBalls()).alongWith(shooter.shoot(null)));
+        return routine;
+
+
+
+    }
 }
