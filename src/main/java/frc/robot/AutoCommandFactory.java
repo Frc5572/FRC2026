@@ -157,6 +157,8 @@ public class AutoCommandFactory {
         depot = depot.andThen(swerve.stop());
         routine.active().onTrue(depot);
         return routine;
+    }
+
     /** Test to make sure autos work. */
     public AutoRoutine wilsonTest() {
         AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
