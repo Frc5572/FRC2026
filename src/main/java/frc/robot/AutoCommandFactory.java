@@ -116,17 +116,6 @@ public class AutoCommandFactory {
         Command depot =
             Commands
                 .sequence(
-                    Commands.either(
-                        swerve.moveToPose()
-                            .target(new Pose2d(
-                                AllianceFlipUtil
-                                    .apply(new Translation2d(FieldConstants.Tower.frontFaceX + 0.2,
-                                        swerve.state.getGlobalPoseEstimate().getY())),
-                                Rotation2d.kZero))
-                            .finish(),
-                        Commands.none(),
-                        () -> swerve.state.getGlobalPoseEstimate()
-                            .getX() < FieldConstants.Tower.frontFaceX),
                     swerve.moveToPose()
                         .target(
                             new Pose2d(
