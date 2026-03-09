@@ -3,11 +3,10 @@ package frc.robot.subsystems.turret;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import java.util.Random;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
 import frc.robot.sim.SimPosition;
 import frc.robot.util.tunable.PIDConstants;
 
@@ -35,28 +34,22 @@ public class TurretSim implements TurretIO {
 
     private final Random random;
 
+    private static final double start = 0.0;
+
     public final SimPosition turrentAngle = new SimPosition(0.8, 4.0, 60.0);
-    private double turretTarget = 0.0;
+    private double turretTarget = start;
 
     public TurretSim(Random random) {
         this.random = random;
+        turrentAngle.position = start;
     }
 
     @Override
     public void updateInputs(TurretInputs inputs) {
         turrentAngle.update(turretTarget);
 
-        inputs.relativeAngle = Radians.of(turrentAngle.position);
+        inputs.relativeAngle = Units.radiansToRotations(turrentAngle.position - start);
         inputs.velocity = RadiansPerSecond.of(turrentAngle.velocity);
-
-        double noise1 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
-        inputs.gear1AbsoluteAngle =
-            Turret.getGearAnglesFromTurret(inputs.relativeAngle, Constants.Turret.gear1Gearing,
-                Constants.Turret.gear1Offset).plus(Rotation2d.fromDegrees(noise1));
-        double noise2 = (random.nextDouble() - 0.5) * 2.0 * 0.2;
-        inputs.gear2AbsoluteAngle =
-            Turret.getGearAnglesFromTurret(inputs.relativeAngle, Constants.Turret.gear2Gearing,
-                Constants.Turret.gear2Offset).plus(Rotation2d.fromDegrees(noise2));
     }
 
     @Override
@@ -64,8 +57,8 @@ public class TurretSim implements TurretIO {
 
 
     @Override
-    public void setTargetAngle(Rotation2d angle, AngularVelocity velocity) {
-        turretTarget = angle.getRadians();
+    public void setTargetAngle(Angle angle, AngularVelocity velocity) {
+        turretTarget = angle.in(Radians);
     }
 
     @Override
