@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
+import frc.robot.util.PhoenixSignals;
 
 /**
  * intake real implementation
@@ -59,6 +60,8 @@ public class IntakeReal implements IntakeIO {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         intakeMotor.getConfigurator().apply(config);
+
+        PhoenixSignals.registerSignals(false, rightMotorPosition, leftMotorPosition);
     }
 
 

@@ -2,7 +2,6 @@ package frc.robot.subsystems.climber;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -18,6 +17,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.PhoenixSignals;
 
 /**
  * Real hardware implementation of the climber subsystem.
@@ -87,6 +87,10 @@ public class ClimberReal implements ClimberIO {
         pivotMotor.getConfigurator().apply(pivotConfig);
         telecopeMotorLeft.getConfigurator().apply(telescopeConfig);
         telescopeMotorRight.getConfigurator().apply(telescopeConfig);
+
+        PhoenixSignals.registerSignals(false, pivotPosition, pivotCurrent, pivotPosition,
+            pivotVelocity, pivotVoltage, telescopeVelocity, telescopeVoltage, telescopeCurrent,
+            telescopePosition);
     }
 
     /**
@@ -101,7 +105,7 @@ public class ClimberReal implements ClimberIO {
 
     /**
      * Sets the target height for the telescope mechanism using pid
-     * 
+     *
      * @param height the desired height in any distance unit
      */
     @Override
@@ -140,8 +144,6 @@ public class ClimberReal implements ClimberIO {
      */
     @Override
     public void updateInputs(ClimberInputs inputs) {
-        BaseStatusSignal.refreshAll(pivotPosition, pivotCurrent, pivotPosition, pivotVelocity,
-            pivotVoltage, telescopeVelocity, telescopeVoltage, telescopeCurrent, telescopePosition);
         inputs.positionPivot = pivotPosition.getValue();
         inputs.velocityPivot = pivotVelocity.getValue();
         inputs.outputVoltagePivot = pivotVoltage.getValue();

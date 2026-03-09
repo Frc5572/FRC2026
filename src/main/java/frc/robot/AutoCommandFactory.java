@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
 import java.util.Set;
+import static edu.wpi.first.units.Units.Rotations;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
@@ -17,6 +18,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -147,5 +149,76 @@ public class AutoCommandFactory {
         routine.active().onTrue(moveToStart);
         moveToStart.done().onTrue(shooter.shoot(0));
         return routine;
+    }
+
+    /** Test to make sure autos work. */
+    public AutoRoutine wilsonTest() {
+        AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
+        routine.active()
+            .onTrue(new ConditionalCommand(wilsonTestSide(true), wilsonTestSide(false), () -> {
+                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0;
+            }));
+        return routine;
+    }
+
+    private Command wilsonTestSide(boolean left) {
+        double shootingTime = 6.0;
+        return Commands
+            .sequence(sweep(left, true, 7.076),
+                CommandFactory
+                    .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
+                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                    .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
+                Commands
+                    .sequence(adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 6.0),
+                        CommandFactory
+                            .shoot(swerve.state,
+                                () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                            .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
+                        adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076),
+                        CommandFactory
+                            .shoot(swerve.state,
+                                () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                            .alongWith(intake.jerkIntake()).withTimeout(shootingTime))
+                    .repeatedly());
+    }
+
+    private Command sweep(boolean left, boolean isFirst, double xMeters) {
+        return Commands
+            .sequence(
+                Commands.sequence(
+                    swerve.moveToPose()
+                        .target(new Pose2d(5.7, 0.622,
+                            isFirst ? Rotation2d.kCCW_90deg : Rotation2d.kZero))
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
+                            left)
+                        .finish(),
+                    swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
+                            left)
+                        .finish(),
+                    swerve.moveToPose().target(new Pose2d(xMeters, 3.586, Rotation2d.kCCW_90deg))
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
+                            left)
+                        .finish(),
+                    swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(
+                            15)
+                        .flipY(left).finish(),
+                    swerve
+                        .moveToPose().target(
+                            new Pose2d(5.7, 0.622, Rotation2d.kZero))
+                        .maxSpeed(
+                            1.5)
+                        .translationTolerance(0.1).rotationTolerance(15).flipY(left).finish()),
+                Commands
+                    .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
+                        .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
+                        .finish(), swerve.stop())
+                    .deadlineFor(shooter.shoot(60.0)))
+            .deadlineFor(CommandFactory.followHub(turret, swerve));
     }
 }

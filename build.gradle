@@ -90,7 +90,7 @@ dependencies {
     nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
     simulationRelease wpi.sim.enableRelease()
 
-    annotationProcessor 'com.github.Frc5572:RobotTools:v2.0'
+    annotationProcessor 'com.github.Frc5572:RobotTools:v2.1'
     implementation 'org.jspecify:jspecify:1.0.0'
 
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'

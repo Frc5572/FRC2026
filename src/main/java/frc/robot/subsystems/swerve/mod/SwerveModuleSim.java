@@ -30,7 +30,8 @@ public class SwerveModuleSim implements SwerveModuleIO {
     private double driveAppliedVolts = 0.0;
     private double turnAppliedVolts = 0.0;
 
-    private double kV = 1.0;
+    private double kV = 1.006 / 6.536;
+    private double kS = 0.026;
     private double targetVelocity = 0.0;
 
     /** Simulation implementation for Swerve Module */
@@ -42,7 +43,7 @@ public class SwerveModuleSim implements SwerveModuleIO {
         this.turnMotor =
             moduleSimulation.useGenericControllerForSteer().withCurrentLimit(Amps.of(20));
 
-        this.driveController = new PIDController(0.5, 0.0, 0.0);
+        this.driveController = new PIDController(0.8, 0.0, 0.0);
         this.turnController = new PIDController(8.0, 0.0, 0.0);
 
         // Enable wrapping for turn PID
@@ -59,7 +60,7 @@ public class SwerveModuleSim implements SwerveModuleIO {
                 driveAppliedVolts = driveFFVolts
                     + driveController.calculate(
                         moduleSimulation.getDriveWheelFinalSpeed().in(Units.RadiansPerSecond))
-                    + kV * targetVelocity;
+                    + kV * targetVelocity + kS * Math.signum(targetVelocity);
             }
         } else {
             driveController.reset();
