@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shot Data Helper</title>
+</head>
+
+<body>
+
+
+    <script type="module">
+        import { NT4_Client } from "./NT4.js";
+
+        let client = new NT4_Client(
+            window.location.hostname,
+            "shot-data-helper",
+            (topic) => {
+                // Topic announce
+            },
+            (topic) => {
+                // Topic unannounce
+            },
+            (topic, timestamp, value) => {
+                // Data
+            },
+            () => {
+                // Connected
+            },
+            () => {
+                // Disconnected
+            }
+        )
+    </script>
+</body>
+
+</html>

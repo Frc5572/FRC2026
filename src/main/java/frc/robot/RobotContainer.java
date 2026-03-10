@@ -13,6 +13,7 @@ import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
@@ -57,6 +58,7 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
 
 
@@ -263,73 +265,21 @@ public final class RobotContainer {
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
-        double[] parameters = new double[] {60.0, 15.0, 0.0, 0.0};
-        boolean[] select = new boolean[] {false};
-        StringBuffer res = new StringBuffer();
+        ShotDataHelper helper = new ShotDataHelper();
 
         tuner.rightTrigger()
-            .whileTrue(shooter.shoot(() -> parameters[0])
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(parameters[1]))))
-            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0)),
-                Commands.runOnce(() -> {
-                    parameters[2] =
-                        Units.metersToFeet(swerve.state.getTurretCenterFieldFrame().getTranslation()
-                            .getDistance(AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)));
-                })));
-        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.5, 0.7));
-
-        tuner.x().onTrue(Commands.runOnce(() -> {
-            select[0] = !select[0];
-        }));
-        tuner.a().onTrue(Commands.runOnce(() -> {
-            parameters[3] = shooter.timeSinceLastShot();
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.b().onTrue(Commands.runOnce(() -> {
-            res.append("new ShotEntry(");
-            res.append(parameters[2]);
-            res.append(",");
-            res.append(parameters[0]);
-            res.append(",");
-            res.append(parameters[1]);
-            res.append(",");
-            res.append(parameters[3]);
-            res.append("),\n");
-            Logger.recordOutput("Tuner/Code", res.toString());
-        }));
-
-        tuner.povUp().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] += 5.0;
-            } else {
-                parameters[1] += 2.0;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.povDown().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] -= 5.0;
-            } else {
-                parameters[1] -= 2.0;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.povRight().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] += 0.5;
-            } else {
-                parameters[1] += 0.2;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.povLeft().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] -= 0.5;
-            } else {
-                parameters[1] -= 0.2;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
+            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
+                adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle)),
+                swerve.moveToPose().target(() -> new Pose2d(
+                    FieldConstants.Hub.centerHub
+                        .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
+                            new Translation2d(-FieldConstants.Hub.centerHub.getX(),
+                                FieldConstants.Hub.centerHub.getY()).getAngle()))
+                        .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
+                    Rotation2d.kZero)).rotationTolerance(1)
+                    .translationTolerance(Units.inchesToMeters(1)).finish()))
+            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
+        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.7, 0.5));
     }
 
     private void setupPit() {
