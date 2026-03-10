@@ -244,9 +244,6 @@ public class RobotState {
         double translationSpeed =
             Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
         double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
-        if (translationSpeed > 0.3 || rotationSpeed > 0.5) {
-            return false;
-        }
         if (camera.isTurret) {
             var maybeTurretRotation =
                 currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
