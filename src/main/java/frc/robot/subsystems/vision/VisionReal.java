@@ -35,7 +35,7 @@ public class VisionReal implements VisionIO {
             .map((consts) -> consts.coProcessorName).toArray(String[]::new);
         for (String hostname : coprocessorNames) {
             System.out.println("PLACEHOLDER --- Uploading settings to Photon Vision: " + hostname);
-            // createSettingsUploadThread(hostname);
+            createSettingsUploadThread(hostname);
         }
     }
 
