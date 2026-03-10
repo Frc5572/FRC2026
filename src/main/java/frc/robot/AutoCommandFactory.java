@@ -129,7 +129,9 @@ public class AutoCommandFactory {
                     Commands.parallel(intake.intakeBalls(6),
                         swerve.moveToPose()
                             .target(new Pose2d(
-                                AllianceFlipUtil.apply(new Translation2d(Units.inchesToMeters(24.5),
+                                AllianceFlipUtil.apply(new Translation2d(
+                                    FieldConstants.Depot.depotCenter.getX()
+                                        - Units.inchesToMeters(2.5),
                                     FieldConstants.Depot.depotCenter.getY())),
                                 Rotation2d.fromDegrees(180)))
                             .finish()),
