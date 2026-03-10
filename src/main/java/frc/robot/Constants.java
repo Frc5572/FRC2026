@@ -305,8 +305,8 @@ public final class Constants {
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
             new CameraConstantsBuilder()
-                .coProcessorName("orangepi0")
-                .name("cam0")
+                .coProcessorName("orangepi1")
+                .name("magazine-camera")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -321,7 +321,7 @@ public final class Constants {
                 .translationError(0.02)
                 .finish(),
             new CameraConstantsBuilder()
-                .coProcessorName("orangepi1")
+                .coProcessorName("orangepi0")
                 .name("turretRight")
                 .height(800)
                 .width(1280)
