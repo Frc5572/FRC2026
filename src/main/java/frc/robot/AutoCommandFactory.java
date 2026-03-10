@@ -3,8 +3,8 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
-import java.util.Set;
 import static edu.wpi.first.units.Units.Rotations;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
@@ -74,24 +74,26 @@ public class AutoCommandFactory {
             return Commands
                 .sequence(
                     Commands.parallel(shooter.shoot(65),
-                        Commands.sequence(Commands.waitSeconds(1),
+                        Commands.sequence(Commands.waitSeconds(2),
                             indexer.setSpeedCommand(0.8, 0.4)),
-                        Commands.sequence(Commands.waitSeconds(4), moveToClimb)),
+                        Commands.sequence(Commands.waitSeconds(5), moveToClimb)),
                     climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0))));
-        }, Set.of(shooter, indexer, climber));
+        }, Set.of(climber));
 
         routine.active().onTrue(fullCommand);
+        moveToClimb.active().onTrue(shooter.shoot(0).alongWith(indexer.setSpeedCommand(0, 0)));
         moveToClimb.done().onTrue(swerve.stop());
         return routine;
     }
 
+    private static final Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
+        FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
+            - Units.inchesToMeters(0),
+        FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
+
     private MoveToPose moveToClimb(AutoRoutine routine) {
-        Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
-            FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
-                - Units.inchesToMeters(0),
-            FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
         Logger.recordOutput("AutoClimbPose", AllianceFlipUtil.apply(climbPose));
-        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(1.0).finish();
+        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(3.0).finish();
     }
 
     /**
