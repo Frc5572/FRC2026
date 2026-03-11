@@ -71,29 +71,29 @@ public class AutoCommandFactory {
         MoveToPose moveToClimb = moveToClimb(routine);
 
         Command fullCommand = Commands.defer(() -> {
-            return Commands
-                .sequence(
-                    Commands.parallel(shooter.shoot(65),
-                        Commands.sequence(Commands.waitSeconds(2),
-                            indexer.setSpeedCommand(0.8, 0.4)),
-                        Commands.sequence(Commands.waitSeconds(5), moveToClimb)),
-                    climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0))));
+            return Commands.sequence(
+                Commands.parallel(Commands.sequence(Commands.waitSeconds(4), moveToClimb)),
+                climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0))));
         }, Set.of(climber));
 
         routine.active().onTrue(fullCommand);
-        moveToClimb.active().onTrue(shooter.shoot(0).alongWith(indexer.setSpeedCommand(0, 0)));
+        routine.active().and(moveToClimb.active().negate().and(moveToClimb.done().negate()))
+            .whileTrue(CommandFactory.shoot(swerve.state, () -> {
+                return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+            }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0));
         moveToClimb.done().onTrue(swerve.stop());
         return routine;
     }
 
     private static final Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
         FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
-            - Units.inchesToMeters(0),
-        FieldConstants.Tower.centerPoint.getY(), Rotation2d.fromDegrees(180)));
+            + Units.inchesToMeters(1.2),
+        FieldConstants.Tower.centerPoint.getY() + Units.inchesToMeters(0.5),
+        Rotation2d.fromDegrees(0)));
 
     private MoveToPose moveToClimb(AutoRoutine routine) {
         Logger.recordOutput("AutoClimbPose", AllianceFlipUtil.apply(climbPose));
-        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(3.0).finish();
+        return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(2.5).finish();
     }
 
     /**
