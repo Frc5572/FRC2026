@@ -135,6 +135,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
+        CommandScheduler.getInstance().cancelAll();
         Elastic.selectTab("Teleoperated");
     }
 

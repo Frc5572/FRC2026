@@ -6,7 +6,6 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
@@ -69,31 +68,45 @@ public class AutoCommandFactory {
         AutoRoutine routine = autoFactory.newRoutine("Shoot Then Climb");
 
         MoveToPose moveToClimb = moveToClimb(routine);
+        MoveToPose alignToClimb = alignToClimb(routine);
 
         Command fullCommand = Commands.defer(() -> {
             return Commands.sequence(
-                Commands.parallel(Commands.sequence(Commands.waitSeconds(4), moveToClimb)),
-                climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0))));
+                Commands.parallel(Commands.sequence(Commands.waitSeconds(2.75), alignToClimb)),
+                climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0.526))));
         }, Set.of(climber));
 
         routine.active().onTrue(fullCommand);
-        routine.active().and(moveToClimb.active().negate().and(moveToClimb.done().negate()))
+        routine.active().and(alignToClimb.active().negate().and(alignToClimb.done().negate()))
+            .and(moveToClimb.active().negate().and(moveToClimb.done().negate()))
             .whileTrue(CommandFactory.shoot(swerve.state, () -> {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0));
-        moveToClimb.done().onTrue(swerve.stop());
+
+        alignToClimb.done().onTrue(swerve.stop().andThen(moveToClimb));
+        moveToClimb.done().onTrue(swerve.stop().andThen(Commands.waitSeconds(2.75),
+            climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0.4)))));
         return routine;
     }
 
     private static final Pose2d climbPose = AllianceFlipUtil.apply(new Pose2d(
         FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter)
-            + Units.inchesToMeters(1.2),
-        FieldConstants.Tower.centerPoint.getY() + Units.inchesToMeters(0.5),
+            - Units.inchesToMeters(0.3),
+        FieldConstants.Tower.centerPoint.getY() + Units.inchesToMeters(0),
+        Rotation2d.fromDegrees(0)));
+
+    private static final Pose2d alignClimbPose = AllianceFlipUtil.apply(new Pose2d(
+        FieldConstants.Tower.centerPoint.getX() + Constants.Swerve.bumperRight.in(Meter) + 0.55,
+        FieldConstants.Tower.centerPoint.getY() + Units.inchesToMeters(0),
         Rotation2d.fromDegrees(0)));
 
     private MoveToPose moveToClimb(AutoRoutine routine) {
-        Logger.recordOutput("AutoClimbPose", AllianceFlipUtil.apply(climbPose));
         return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(2.5).finish();
+    }
+
+    private MoveToPose alignToClimb(AutoRoutine routine) {
+        return swerve.moveToPose().target(alignClimbPose).autoRoutine(routine).maxSpeed(1.5)
+            .finish();
     }
 
     /**
