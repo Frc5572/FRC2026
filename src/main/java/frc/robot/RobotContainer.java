@@ -225,8 +225,13 @@ public final class RobotContainer {
         double[] offsets = {1.5, 0.0};
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
-            // TODO passing?
-            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getX() > FieldConstants.Hub.centerHub.getX()) {
+                return AllianceFlipUtil
+                    .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+            } else {
+                return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+            }
         }, turret, shooter, indexer, adjustableHood, () -> offsets[0], () -> offsets[1])
             .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
                 () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
@@ -250,8 +255,6 @@ public final class RobotContainer {
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
                 .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
-
-        driver.a().whileTrue(turret.characterization());
     }
 
     private void setupOperator() {
@@ -281,8 +284,14 @@ public final class RobotContainer {
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.7, 0.5));
 
-        tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
-        tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
+        tuner.a().whileTrue(Commands.run(() -> {
+            Logger.recordOutput("TunerAPressed", 1.0);
+        })).whileFalse(Commands.run(() -> {
+            Logger.recordOutput("TunerAPressed", 0.0);
+        }));
+
+        // tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
+        // tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }
 
     private void setupPit() {

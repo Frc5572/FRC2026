@@ -27,14 +27,15 @@ import frc.robot.viz.DrawColorMap;
 public class ShotDataHelper implements Tunable {
 
     /** Hood angle in degrees */
-    public double hoodAngle;
+    public double hoodAngle = 5.0;
     /** Flywheel speed in rotations per second */
-    public double flywheelSpeed;
+    public double flywheelSpeed = 60.0;
     /** Distance from target in feet */
-    public double distanceFromTarget;
+    public double distanceFromTarget = 10.0;
 
     private final DoublePublisher timeLastGenerated;
 
+    /** Create new helper. */
     public ShotDataHelper() {
         var nt = NetworkTableInstance.getDefault();
         timeLastGenerated = nt.getDoubleTopic("/ShotDataHelper/TimeLastGenerated").publish();
@@ -48,6 +49,7 @@ public class ShotDataHelper implements Tunable {
             initData[i * 4 + 2] = ShotData.entries[i].hoodAngleDeg();
             initData[i * 4 + 3] = ShotData.entries[i].timeOfFlight();
         }
+        generateImages(initData);
         topic.publish().accept(initData);
         nt.addListener(topic.subscribe(new double[0]),
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote), (ev) -> {
@@ -59,7 +61,7 @@ public class ShotDataHelper implements Tunable {
     private void generateImages(double[] data) {
         ShotData.ShotEntry[] entries = new ShotEntry[data.length / 4];
         for (int i = 0; i < data.length; i += 4) {
-            entries[i / 4] = new ShotEntry(data[0], data[1], data[2], data[3]);
+            entries[i / 4] = new ShotEntry(data[i + 0], data[i + 1], data[i + 2], data[i + 3]);
         }
         Interp2d<ShotData.ShotEntry> interp = new Interp2d<>(entries, ShotData.mulAdd,
             ShotData.ShotEntry::distanceFeet, ShotData.ShotEntry::flywheelSpeedRps);
@@ -115,8 +117,8 @@ public class ShotDataHelper implements Tunable {
 
         DecimalFormat df = new DecimalFormat("#.##");
 
-        try (var writer = new BufferedWriter(
-            new FileWriter(new File(Filesystem.getDeployDirectory(), name + ".svg")))) {
+        try (var writer = new BufferedWriter(new FileWriter(
+            new File(Filesystem.getDeployDirectory(), "shotdata/" + name + ".svg")))) {
             writer.write(svgTemplate.replaceAll("\\{b64Res\\}", b64Res)
                 .replaceAll("\\{b64Key\\}", b64Key).replaceAll("\\{xMin\\}", df.format(xMin))
                 .replaceAll("\\{xMax\\}", df.format(xMax)).replaceAll("\\{yMin\\}", df.format(yMin))

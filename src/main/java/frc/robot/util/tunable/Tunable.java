@@ -1,5 +1,6 @@
 package frc.robot.util.tunable;
 
+import java.lang.reflect.AccessFlag;
 import java.util.EnumSet;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableEvent.Kind;
@@ -16,6 +17,12 @@ public interface Tunable {
             try {
                 for (var item : clazz.getDeclaredFields()) {
                     if (item.getName().equals("name") || item.getName().equals("isDirty")) {
+                        continue;
+                    }
+                    if (item.accessFlags().contains(AccessFlag.FINAL)) {
+                        continue;
+                    }
+                    if (item.accessFlags().contains(AccessFlag.PRIVATE)) {
                         continue;
                     }
                     if (item.getType().equals(double.class)) {
