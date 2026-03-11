@@ -315,8 +315,8 @@ public final class Constants {
                 .simLatencyStdDev(0.02)
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
-                .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(-12.125),
-                    Units.inchesToMeters(7.041), Units.inchesToMeters(12.868710)),
+                .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(-13.25),
+                    Units.inchesToMeters(7.375), Units.inchesToMeters(11.75)),
                     new Rotation3d(Math.PI, 0, Math.PI)))
                 .translationError(0.02)
                 .finish(),
