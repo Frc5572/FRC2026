@@ -280,6 +280,9 @@ public final class RobotContainer {
                     .translationTolerance(Units.inchesToMeters(1)).finish()))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.7, 0.5));
+
+        tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
+        tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }
 
     private void setupPit() {

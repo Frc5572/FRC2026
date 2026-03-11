@@ -12,7 +12,7 @@ public class ModuleConstants implements Tunable {
 
     /** Constants for vendor swerve modules */
     public static enum ModuleKind {
-        Mk4i(6.75, 150.0 / 7.0), Mk4n(6.12, 18.75);
+        Mk4i(5.36, 150.0 / 7.0), Mk4n(5.36, 18.75);
 
         public final double driveGearRatio;
         public final double angleGearRatio;

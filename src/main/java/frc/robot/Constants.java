@@ -44,6 +44,8 @@ import frc.robot.util.tunable.PIDConstantsBuilder;
  */
 public final class Constants {
 
+    public static final double visionFudgeFactor = 0.41;
+
     public static final boolean tunable = true;
 
     /** Constants for driver controls */
@@ -123,7 +125,7 @@ public final class Constants {
         /** Distance between front and back wheels on robot */
         public static final double wheelBase = Units.inchesToMeters(21.8);
         /** Distance from the center of the wheel to the ground */
-        public static final Distance wheelRadius = Inches.of(2.678 / 2.0);
+        public static final Distance wheelRadius = Inches.of(1.906);
         /** Diameter of the wheels, twice the radius */
         public static final Distance wheelDiameter = wheelRadius.times(2);
         /** Circumference of the wheels */
@@ -299,7 +301,7 @@ public final class Constants {
             new Pose3d(new Translation3d(-Units.inchesToMeters(8.5), 0, 0), Rotation3d.kZero);
 
         public static final Pose3d turretRight = new Pose3d(Inches.of(-10), Inches.of(-5.274),
-            Inches.of(21.56), new Rotation3d(0.0, Units.degreesToRadians(-22.115), 0.0))
+            Inches.of(21.56), new Rotation3d(Math.PI, Units.degreesToRadians(-22.115), 0.0))
                 .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
         // @formatter:off

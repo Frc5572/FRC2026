@@ -98,8 +98,8 @@ public class CommandFactory {
                 MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
             if (isOkay) {
-                indexer.setMagazineDutyCycle(0.7);
-                indexer.setSpindexerDutyCycle(0.5);
+                indexer.setMagazineDutyCycle(1.0);
+                indexer.setSpindexerDutyCycle(0.7);
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(0.0);
