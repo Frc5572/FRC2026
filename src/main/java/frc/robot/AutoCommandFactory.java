@@ -81,7 +81,7 @@ public class AutoCommandFactory {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0));
 
-        moveToClimb.done().onTrue(swerve.stop().andThen(Commands.waitSeconds(2.8),
+        moveToClimb.done().onTrue(swerve.stop().andThen(Commands.waitSeconds(3),
             climber.moveTo(() -> new Tuple2<Angle, Distance>(Degrees.of(0), Meters.of(0.4)))));
         return routine;
     }
@@ -94,7 +94,7 @@ public class AutoCommandFactory {
 
     private MoveToPose moveToClimb(AutoRoutine routine) {
         return swerve.moveToPose().target(climbPose).autoRoutine(routine).maxSpeed(2.5)
-            .translationTolerance(0.1).finish();
+            .translationTolerance(0.05).finish();
     }
 
     /**
