@@ -188,3 +188,5 @@ compile_commands.json
 
 BuildConstants.java
 simgui-ds.json
+
+!src/main/deploy/localization/*.zip
