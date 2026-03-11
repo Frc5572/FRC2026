@@ -140,6 +140,8 @@ public final class RobotContainer {
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
 
+                SmartDashboard.putNumber("VisionFudge", 0.0);
+
                 break;
             default:
                 sim = null;
