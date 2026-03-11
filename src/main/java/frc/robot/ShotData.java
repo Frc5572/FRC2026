@@ -35,7 +35,7 @@ public class ShotData {
         new ShotEntry(12.0, 70.0, 7.0, 2.0),
 
         new ShotEntry(14.0, 60.0, 16.0, 1.40),
-        new ShotEntry(14.0, 55.0, 20.0, 1.18),
+        // new ShotEntry(14.0, 55.0, 20.0, 1.18),
         new ShotEntry(14.0, 70.0, 11.2, 1.72),
 
         new ShotEntry(16.0, 60.0, 20.0, 1.48),

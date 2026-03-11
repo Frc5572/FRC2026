@@ -285,7 +285,7 @@ public final class RobotContainer {
                     Rotation2d.kZero)).rotationTolerance(1)
                     .translationTolerance(Units.inchesToMeters(1)).finish()))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
-        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.7, 0.5));
+        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 0.7));
 
         tuner.a().whileTrue(Commands.run(() -> {
             Logger.recordOutput("TunerAPressed", 1.0);

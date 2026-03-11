@@ -12,6 +12,7 @@ import java.util.Base64;
 import java.util.EnumSet;
 import java.util.function.ToDoubleFunction;
 import javax.imageio.ImageIO;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -66,18 +67,25 @@ public class ShotDataHelper implements Tunable {
         Interp2d<ShotData.ShotEntry> interp = new Interp2d<>(entries, ShotData.mulAdd,
             ShotData.ShotEntry::distanceFeet, ShotData.ShotEntry::flywheelSpeedRps);
 
-        drawImage("hood_angle", interp, "distance (ft)", ShotEntry::distanceFeet,
+        drawImage("hood_angle", interp, "Distance (ft)", ShotEntry::distanceFeet,
             "Flywheel Speed (rps)", ShotEntry::flywheelSpeedRps, "Hood Angle (deg)",
             ShotEntry::hoodAngleDeg);
-        drawImage("time_of_flight", interp, "distance (ft)", ShotEntry::distanceFeet,
+        drawImage("time_of_flight", interp, "Distance (ft)", ShotEntry::distanceFeet,
             "Flywheel Speed (rps)", ShotEntry::flywheelSpeedRps, "Time of Flight (s)",
             ShotEntry::timeOfFlight);
-        drawImage("horizontal_velocity", interp, "distance (ft)", ShotEntry::distanceFeet,
+        drawImage("horizontal_velocity", interp, "Distance (ft)", ShotEntry::distanceFeet,
             "Flywheel Speed (rps)", ShotEntry::flywheelSpeedRps, "Horizontal Velocity (m/s)",
             ShotEntry::horizontalVelocity);
-        drawImage("vertical_velocity", interp, "distance (ft)", ShotEntry::distanceFeet,
+        drawImage("vertical_velocity", interp, "Distance (ft)", ShotEntry::distanceFeet,
             "Flywheel Speed (rps)", ShotEntry::flywheelSpeedRps, "Vertical Velocity (m/s)",
             ShotEntry::verticalVelocity);
+
+        Interp2d<ShotData.ShotEntry> simInterp = new Interp2d<>(entries, ShotData.mulAdd,
+            ShotData.ShotEntry::flywheelSpeedRps, ShotData.ShotEntry::hoodAngleDeg);
+
+        drawImage("exit_angle", simInterp, "Flywheel Speed (rps)", ShotEntry::flywheelSpeedRps,
+            "Hood Angle (deg)", ShotEntry::hoodAngleDeg, "Exit Angle (deg)", (x) -> Units
+                .radiansToDegrees(Math.atan2(x.verticalVelocity(), x.horizontalVelocity())));
 
         timeLastGenerated.accept(Timer.getFPGATimestamp());
     }
