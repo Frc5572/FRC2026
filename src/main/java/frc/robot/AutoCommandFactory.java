@@ -124,21 +124,23 @@ public class AutoCommandFactory {
         return Commands
             .sequence(sweep(left, true, 8.076),
                 CommandFactory
-                    .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                    .shoot(
+                        swerve.state, () -> AllianceFlipUtil
+                            .apply(FieldConstants.Hub.centerHub),
+                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
                     .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                 Commands
                     .sequence(adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 6.0),
                         CommandFactory
                             .shoot(swerve.state,
                                 () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
                             .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                         adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076),
                         CommandFactory
                             .shoot(swerve.state,
                                 () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
                             .alongWith(intake.jerkIntake()).withTimeout(shootingTime))
                     .repeatedly());
     }
