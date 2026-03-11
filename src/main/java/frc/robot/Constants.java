@@ -304,8 +304,25 @@ public final class Constants {
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
-             new CameraConstantsBuilder()
-                .name("cam0")
+            new CameraConstantsBuilder()
+                .coProcessorName("orangepi1")
+                .name("magazine-camera")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(-13.25),
+                    Units.inchesToMeters(7.375), Units.inchesToMeters(11.75)),
+                    new Rotation3d(Math.PI, 0, Math.PI)))
+                .translationError(0.02)
+                .finish(),
+            new CameraConstantsBuilder()
+                .coProcessorName("orangepi0")
+                .name("turretRight")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)

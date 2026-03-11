@@ -14,6 +14,7 @@ import frc.robot.util.typestate.TypeStateBuilder;
 @NullMarked
 public class CameraConstants {
 
+    public final String coProcessorName;
     public final String name;
     public final int height;
     public final int width;
@@ -31,8 +32,8 @@ public class CameraConstants {
 
     /** Constants for a camera */
     @TypeStateBuilder("CameraConstantsBuilder")
-    public CameraConstants(@RequiredField String name, @RequiredField int height,
-        @RequiredField int width,
+    public CameraConstants(@RequiredField String coProcessorName, @RequiredField String name,
+        @RequiredField int height, @RequiredField int width,
         @RequiredField(alt = @AltMethod(type = double.class, parameter_name = "degrees",
             value = "edu.wpi.first.math.geometry.Rotation2d.fromDegrees(degrees)")) Rotation2d horizontalFieldOfView,
         @RequiredField(alt = @AltMethod(type = double.class, parameter_name = "hz",
@@ -45,6 +46,7 @@ public class CameraConstants {
         @RequiredField Transform3d robotToCamera, @OptionalField("0.3") double translationError,
         @OptionalField("edu.wpi.first.math.util.Units.degreesToRadians(3)") double rotationError,
         @OptionalField("0.2") double singleTagError, @OptionalField("false") boolean isTurret) {
+        this.coProcessorName = coProcessorName;
         this.name = name;
         this.height = height;
         this.width = width;
