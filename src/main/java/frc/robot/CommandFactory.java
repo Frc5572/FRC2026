@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -107,6 +108,21 @@ public class CommandFactory {
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
         }, shooter, turret, indexer, hood);
+    }
+
+    /** Shoot at a given target. */
+    public static Command pass(Swerve swerve, Turret turret, Shooter shooter, Indexer indexer,
+        AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight) {
+        return CommandFactory.shoot(swerve.state, () -> {
+            return swerve.state.getGlobalPoseEstimate().getTranslation()
+                .nearest(Set.of(
+                    AllianceFlipUtil
+                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
+                            FieldConstants.LinesHorizontal.leftBumpStart)),
+                    AllianceFlipUtil
+                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
+                            FieldConstants.LinesHorizontal.rightBumpEnd))));
+        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight);
     }
 
     /** Point turret at hub. */

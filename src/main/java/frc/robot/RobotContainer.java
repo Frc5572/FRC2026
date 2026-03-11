@@ -219,14 +219,13 @@ public final class RobotContainer {
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
 
-        driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
-            // TODO passing?
-            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0)
-            .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
-                () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
-                Constants.DriverControls.driverTranslationalShootSpeed,
-                Constants.DriverControls.driverRotationalShootSpeed))));
+        driver.rightTrigger()
+            .whileTrue(CommandFactory
+                .pass(swerve, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0)
+                .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
+                    () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
+                    Constants.DriverControls.driverTranslationalShootSpeed,
+                    Constants.DriverControls.driverRotationalShootSpeed))));
 
         driver.leftTrigger()
             .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
