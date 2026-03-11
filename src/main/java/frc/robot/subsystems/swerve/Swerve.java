@@ -349,7 +349,7 @@ public final class Swerve extends SubsystemBase {
      */
     public Command resetFieldRelativeOffsetBasedOnPose() {
         return setFieldRelativeOffset(() -> state.getGlobalPoseEstimate().getRotation()
-            .plus(AllianceFlipUtil.shouldFlip() ? Rotation2d.kZero : Rotation2d.k180deg));
+            .plus(AllianceFlipUtil.shouldFlip() ? Rotation2d.k180deg : Rotation2d.kZero));
     }
 
     /**
