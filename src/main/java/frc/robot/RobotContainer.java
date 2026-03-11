@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -221,6 +222,18 @@ public final class RobotContainer {
         return value;
     }
 
+    private boolean combineControllers(Predicate<CommandXboxController> func,
+        CommandXboxController... controllers) {
+        for (var controller : controllers) {
+            if (controller.isConnected()) {
+                if (func.test(controller)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
         driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
@@ -235,7 +248,9 @@ public final class RobotContainer {
             } else {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }
-        }, turret, shooter, indexer, adjustableHood, () -> offsets[0], () -> offsets[1])
+        }, turret, shooter, indexer, adjustableHood, () -> offsets[0], () -> offsets[1],
+            () -> combineControllers((Predicate<CommandXboxController>) (x) -> x.a().getAsBoolean(),
+                driver, operator))
             .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
                 () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
                 Constants.DriverControls.driverTranslationalShootSpeed,

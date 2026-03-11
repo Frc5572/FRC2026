@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -55,7 +56,7 @@ public class CommandFactory {
     /** Shoot at a given target. */
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
-        DoubleSupplier adjustUp, DoubleSupplier adjustRight) {
+        DoubleSupplier adjustUp, DoubleSupplier adjustRight, BooleanSupplier disableTurret) {
         return Commands.runEnd(() -> {
             var lookahead = state.getFieldRelativeSpeeds().times(0.05);
             final Translation2d target = targetSupplier.get()
@@ -86,12 +87,16 @@ public class CommandFactory {
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
             hood.setTargetAngle(Degrees.of(MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0)));
-            boolean turretFacing = turret.setGoalFieldRelative(
-                adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation()).getAngle()
-                    .plus(adjustRightValue)
-                    .plus(Rotation2d.fromRadians(lookahead.omegaRadiansPerSecond)));
+            if (disableTurret.getAsBoolean()) {
+                turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
+            } else {
+                boolean turretFacing = turret.setGoalFieldRelative(
+                    adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation())
+                        .getAngle().plus(adjustRightValue)
+                        .plus(Rotation2d.fromRadians(lookahead.omegaRadiansPerSecond)));
+                Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
+            }
             boolean isOkay = parameters.isOkayToShoot();
-            Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
             Logger.recordOutput("AutoShoot/isOkay", isOkay);
             Logger.recordOutput("AutoShoot/desiredSpeed", parameters.desiredSpeed());
             Logger.recordOutput("AutoShoot/hoodAngleDeg",
