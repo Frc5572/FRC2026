@@ -27,8 +27,6 @@ public class Turret extends SubsystemBase {
     private final TurretIO io;
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     private final RobotState state;
-    // inputs.rotation + offset = actual rotation
-    private double offset = 0.0;
 
     /**
      * Creates a new Turret subsystem.
@@ -55,8 +53,7 @@ public class Turret extends SubsystemBase {
     }
 
     public Rotation2d getTurretHeading() {
-        return Rotation2d.fromRotations(this.inputs.relativeAngle)
-            .plus(Rotation2d.fromRotations(offset));
+        return Rotation2d.fromRotations(this.inputs.relativeAngle);
     }
 
     /**

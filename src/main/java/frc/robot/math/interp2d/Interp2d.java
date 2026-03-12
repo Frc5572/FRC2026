@@ -13,7 +13,7 @@ import io.github.jdiemke.triangulation.Vector2D;
 public class Interp2d<T> {
 
     private final MulAdd<T> mulAdd;
-    private final T[] data;
+    public final T[] data;
     private final Translation2d[] points;
     private final int[] triangles;
 

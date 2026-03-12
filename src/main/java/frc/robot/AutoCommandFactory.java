@@ -123,61 +123,61 @@ public class AutoCommandFactory {
     private Command wilsonTestSide(boolean left) {
         double shootingTime = 6.0;
         return Commands
-            .sequence(sweep(left, true, 7.076),
+            .sequence(sweep(left, true, 8.076),
                 CommandFactory
-                    .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                    .shoot(
+                        swerve.state, () -> AllianceFlipUtil
+                            .apply(FieldConstants.Hub.centerHub),
+                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
                     .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                 Commands
                     .sequence(adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 6.0),
                         CommandFactory
                             .shoot(swerve.state,
                                 () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
                             .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                         adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076),
                         CommandFactory
                             .shoot(swerve.state,
                                 () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0)
+                                shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
                             .alongWith(intake.jerkIntake()).withTimeout(shootingTime))
                     .repeatedly());
     }
 
     private Command sweep(boolean left, boolean isFirst, double xMeters) {
         return Commands
-            .sequence(
-                Commands.sequence(
+            .sequence(Commands
+                .sequence(
                     swerve.moveToPose()
                         .target(new Pose2d(5.7, 0.622,
                             isFirst ? Rotation2d.kCCW_90deg : Rotation2d.kZero))
-                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
-                            left)
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                         .finish(),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                        .finish().deadlineFor(intake.extendHopper(0.0)),
+                    swerve.moveToPose().target(new Pose2d(xMeters, 4.5, Rotation2d.kCCW_90deg))
                         .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
                             left)
-                        .finish(),
-                    swerve.moveToPose().target(new Pose2d(xMeters, 3.586, Rotation2d.kCCW_90deg))
-                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
-                            left)
-                        .finish(),
+                        .finish().deadlineFor(intake.intakeBalls()),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
                         .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(
                             15)
                         .flipY(left).finish(),
                     swerve
                         .moveToPose().target(
-                            new Pose2d(5.7, 0.622, Rotation2d.kZero))
+                            new Pose2d(6.0, 0.622, Rotation2d.kZero))
                         .maxSpeed(
                             1.5)
-                        .translationTolerance(0.1).rotationTolerance(15).flipY(left).finish()),
+                        .translationTolerance(0.1).rotationTolerance(5).flipY(left).finish()),
                 Commands
                     .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
                         .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
                         .finish(), swerve.stop())
                     .deadlineFor(shooter.shoot(60.0)))
-            .deadlineFor(CommandFactory.followHub(turret, swerve));
+            .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }
 
     public AutoRoutine passOnly() {

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -13,6 +14,7 @@ import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
@@ -57,6 +59,7 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
 
 
@@ -137,6 +140,8 @@ public final class RobotContainer {
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
 
+                SmartDashboard.putNumber("VisionFudge", 0.0);
+
                 break;
             default:
                 sim = null;
@@ -184,7 +189,7 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(CommandFactory.followHub(turret, swerve));
+        turret.setDefaultCommand(CommandFactory.followHub(turret, swerve, () -> trims[1]));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
@@ -196,6 +201,10 @@ public final class RobotContainer {
         // TRIGGERS
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
+        RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
+        RobotModeTriggers.teleop().whileTrue(Commands.run(() -> {
+            Logger.recordOutput("Trims", trims);
+        }));
         vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
 
         // BUTTON BINDINGS
@@ -216,24 +225,55 @@ public final class RobotContainer {
         return value;
     }
 
+    private boolean combineControllers(Predicate<CommandXboxController> func,
+        CommandXboxController... controllers) {
+        for (var controller : controllers) {
+            if (controller.isConnected()) {
+                if (func.test(controller)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private double[] trims = new double[] {0.0, 0.0};
+
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
+        driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
 
-        driver.rightTrigger()
-            .whileTrue(CommandFactory
-                .pass(swerve.state, turret, shooter, indexer, adjustableHood, intake, () -> 1.5,
-                    () -> 0.0)
-                .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
-                    () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
-                    Constants.DriverControls.driverTranslationalShootSpeed,
-                    Constants.DriverControls.driverRotationalShootSpeed))));
+        driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getX() > FieldConstants.Hub.centerHub.getX()) {
+                return AllianceFlipUtil
+                    .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+            } else {
+                return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+            }
+        }, turret, shooter, indexer, adjustableHood, () -> trims[0], () -> trims[1],
+            () -> combineControllers((Predicate<CommandXboxController>) (x) -> x.b().getAsBoolean(),
+                driver, operator))
+            .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
+                () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
+                Constants.DriverControls.driverTranslationalShootSpeed,
+                Constants.DriverControls.driverRotationalShootSpeed))));
 
-        driver.leftTrigger()
-            .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
-                .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
+        driver.povUp().onTrue(Commands.runOnce(() -> {
+            trims[0] += 0.50;
+        }));
+        driver.povDown().onTrue(Commands.runOnce(() -> {
+            trims[0] -= 0.50;
+        }));
+        driver.povLeft().onTrue(Commands.runOnce(() -> {
+            trims[1] += 2.0;
+        }));
+        driver.povRight().onTrue(Commands.runOnce(() -> {
+            trims[1] -= 2.0;
+        }));
+
+        driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
-
-        driver.a().whileTrue(turret.characterization());
     }
 
     private void setupOperator() {
@@ -242,78 +282,48 @@ public final class RobotContainer {
             .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
 
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
+
+        operator.povUp().onTrue(Commands.runOnce(() -> {
+            trims[0] += 0.50;
+        }));
+        operator.povDown().onTrue(Commands.runOnce(() -> {
+            trims[0] -= 0.50;
+        }));
+        operator.povLeft().onTrue(Commands.runOnce(() -> {
+            trims[1] += 2.0;
+        }));
+        operator.povRight().onTrue(Commands.runOnce(() -> {
+            trims[1] -= 2.0;
+        }));
     }
 
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
-        double[] parameters = new double[] {60.0, 15.0, 0.0, 0.0};
-        boolean[] select = new boolean[] {false};
-        StringBuffer res = new StringBuffer();
+        ShotDataHelper helper = new ShotDataHelper();
 
         tuner.rightTrigger()
-            .whileTrue(shooter.shoot(() -> parameters[0])
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(parameters[1]))))
-            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0)),
-                Commands.runOnce(() -> {
-                    parameters[2] =
-                        Units.metersToFeet(swerve.state.getTurretCenterFieldFrame().getTranslation()
-                            .getDistance(AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)));
-                })));
-        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(0.5, 0.7));
+            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
+                adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle)),
+                swerve.moveToPose().target(() -> new Pose2d(
+                    FieldConstants.Hub.centerHub
+                        .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
+                            new Translation2d(-FieldConstants.Hub.centerHub.getX(),
+                                FieldConstants.Hub.centerHub.getY()).getAngle()))
+                        .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
+                    Rotation2d.kZero)).rotationTolerance(1)
+                    .translationTolerance(Units.inchesToMeters(1)).finish()))
+            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
+        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 0.7));
 
-        tuner.x().onTrue(Commands.runOnce(() -> {
-            select[0] = !select[0];
-        }));
-        tuner.a().onTrue(Commands.runOnce(() -> {
-            parameters[3] = shooter.timeSinceLastShot();
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.b().onTrue(Commands.runOnce(() -> {
-            res.append("new ShotEntry(");
-            res.append(parameters[2]);
-            res.append(",");
-            res.append(parameters[0]);
-            res.append(",");
-            res.append(parameters[1]);
-            res.append(",");
-            res.append(parameters[3]);
-            res.append("),\n");
-            Logger.recordOutput("Tuner/Code", res.toString());
+        tuner.a().whileTrue(Commands.run(() -> {
+            Logger.recordOutput("TunerAPressed", 1.0);
+        })).whileFalse(Commands.run(() -> {
+            Logger.recordOutput("TunerAPressed", 0.0);
         }));
 
-        tuner.povUp().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] += 5.0;
-            } else {
-                parameters[1] += 2.0;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.povDown().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] -= 5.0;
-            } else {
-                parameters[1] -= 2.0;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.povRight().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] += 0.5;
-            } else {
-                parameters[1] += 0.2;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
-        tuner.povLeft().onTrue(Commands.runOnce(() -> {
-            if (select[0]) {
-                parameters[0] -= 0.5;
-            } else {
-                parameters[1] -= 0.2;
-            }
-            Logger.recordOutput("Tuner/Parameters", parameters);
-        }));
+        // tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
+        // tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }
 
     private void setupPit() {

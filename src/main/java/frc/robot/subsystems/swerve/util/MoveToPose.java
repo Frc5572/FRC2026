@@ -5,6 +5,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -156,6 +157,7 @@ public class MoveToPose extends Command {
             target = new Pose2d(target.getX(), FieldConstants.fieldWidth - target.getY(),
                 target.getRotation().plus(Rotation2d.k180deg));
         }
+        Logger.recordOutput("Swerve/MoveToPoseTarget", target);
         ChassisSpeeds ctrlEffort = Constants.Swerve.holonomicDriveController
             .calculate(swerve.state.getGlobalPoseEstimate(), target, 0, target.getRotation());
         double speed = Math.hypot(ctrlEffort.vxMetersPerSecond, ctrlEffort.vyMetersPerSecond);
