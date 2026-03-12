@@ -189,13 +189,13 @@ public class AutoCommandFactory {
                         .andThen(intake.extendHopper(0.7), intake.intakeBalls())
                         .finallyDo(() -> intake.retractHopper(0))),
                 CommandFactory.pass(swerve.state, turret, shooter, indexer, adjustableHood, intake,
-                    () -> 1.5, () -> 0, () -> 3),
+                    () -> 1.5, () -> 0, () -> 3, () -> false),
                 Commands.deadline(conditionalCollect(false, 8.076),
                     Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
                         .andThen(intake.extendHopper(0.7), intake.intakeBalls())
                         .finallyDo(() -> intake.retractHopper(0))),
                 CommandFactory.pass(swerve.state, turret, shooter, indexer, adjustableHood, intake,
-                    () -> 1.5, () -> 0, () -> 4));
+                    () -> 1.5, () -> 0, () -> 4, () -> false));
         }, Set.of(swerve));
         routine.active().onTrue(fullCommand);
         return routine;

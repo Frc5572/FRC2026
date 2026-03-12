@@ -130,9 +130,11 @@ public class CommandFactory {
      * @param adjustableHood Adjustable Hood Subsystem
      * @param adjustUp Supplier Containing the Up Offset of Passing Target
      * @param adjustRight Supplier Containing the Right Offset of Passing Target
+     * @param disableTurret Supplier Containing a Boolean to Disable Turret
      */
     public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
-        AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight) {
+        AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight,
+        BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
             return state.getGlobalPoseEstimate().getTranslation()
                 .nearest(Set.of(
@@ -142,7 +144,7 @@ public class CommandFactory {
                     AllianceFlipUtil
                         .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
                             FieldConstants.LinesHorizontal.rightBumpEnd))));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight);
+        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret);
     }
 
     /**
@@ -156,10 +158,11 @@ public class CommandFactory {
      * @param intake Intake Subsystem
      * @param adjustUp Supplier Containing the Up Offset of Passing Target
      * @param adjustRight Supplier Containing the Right Offset of Passing Target
+     * @param disableTurret Supplier Containing a Boolean to Disable Turret
      */
     public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
         AdjustableHood adjustableHood, Intake intake, DoubleSupplier adjustUp,
-        DoubleSupplier adjustRight) {
+        DoubleSupplier adjustRight, BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
             return state.getGlobalPoseEstimate().getTranslation()
                 .nearest(Set.of(
@@ -169,7 +172,7 @@ public class CommandFactory {
                     AllianceFlipUtil
                         .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
                             FieldConstants.LinesHorizontal.rightTrenchOpenStart))));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight)
+        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
             .alongWith(Commands.runEnd(() -> intake.jerkIntake(), () -> intake.stop(), intake));
     }
 
@@ -184,10 +187,11 @@ public class CommandFactory {
      * @param adjustUp Supplier Containing the Up Offset of Passing Target
      * @param adjustRight Supplier Containing the Right Offset of Passing Target
      * @param time Supplier Containing the Amount of Time to Run the Command
+     * @param disableTurret Supplier Containing a Boolean to Disable Turret
      */
     public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
         AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight,
-        DoubleSupplier time) {
+        DoubleSupplier time, BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
             return state.getGlobalPoseEstimate().getTranslation()
                 .nearest(Set.of(
@@ -197,7 +201,7 @@ public class CommandFactory {
                     AllianceFlipUtil
                         .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
                             FieldConstants.LinesHorizontal.rightBumpEnd))));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight)
+        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
             .withDeadline(Commands.waitSeconds(time.getAsDouble()));
     }
 
@@ -213,10 +217,11 @@ public class CommandFactory {
      * @param adjustUp Supplier Containing the Up Offset of Passing Target
      * @param adjustRight Supplier Containing the Right Offset of Passing Target
      * @param time Supplier Containing the Amount of Time to Run the Command
+     * @param disableTurret Supplier Containing a Boolean to Disable Turret
      */
     public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
         AdjustableHood adjustableHood, Intake intake, DoubleSupplier adjustUp,
-        DoubleSupplier adjustRight, DoubleSupplier time) {
+        DoubleSupplier adjustRight, DoubleSupplier time, BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
             return state.getGlobalPoseEstimate().getTranslation()
                 .nearest(Set.of(
@@ -226,7 +231,7 @@ public class CommandFactory {
                     AllianceFlipUtil
                         .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
                             FieldConstants.LinesHorizontal.rightBumpEnd))));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight)
+        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
             .alongWith(Commands.runEnd(() -> intake.jerkIntake(), () -> intake.stop(), intake))
             .withDeadline(Commands.waitSeconds(time.getAsDouble()));
     }
