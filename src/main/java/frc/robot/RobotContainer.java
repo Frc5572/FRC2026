@@ -282,7 +282,7 @@ public final class RobotContainer {
             .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
 
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
-
+        operator.y().onTrue(Commands.runOnce(() -> trims = new double[] {0.0, 0.0}));
         operator.povUp().onTrue(Commands.runOnce(() -> {
             trims[0] += 0.50;
         }));
