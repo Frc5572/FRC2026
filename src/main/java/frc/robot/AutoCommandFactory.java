@@ -180,6 +180,8 @@ public class AutoCommandFactory {
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }
 
+
+    /** Auto to Pass Fuel From the Neutral Zone into Alliance Zone */
     public AutoRoutine passOnly() {
         AutoRoutine routine = autoFactory.newRoutine("PassOnly");
         Command fullCommand = Commands.defer(() -> {
