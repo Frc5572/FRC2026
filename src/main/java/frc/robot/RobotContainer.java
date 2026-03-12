@@ -375,8 +375,8 @@ public final class RobotContainer {
      * Runs during disabled
      */
     public void disabledPeriodic() {
-        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
+        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 2);
+        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 4);
         autoShootLocation.setPose(x, y, new Rotation2d());
     }
 }

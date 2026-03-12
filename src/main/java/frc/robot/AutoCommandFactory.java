@@ -96,8 +96,7 @@ public class AutoCommandFactory {
             Pose2d hub =
                 AllianceFlipUtil.apply(new Pose2d(FieldConstants.Hub.centerHub, new Rotation2d()));
             Pose2d target = new Pose2d(x, y, new Rotation2d());
-            Rotation2d angle = hub.getTranslation().minus(target.getTranslation()).getAngle()
-                .plus(Rotation2d.fromDegrees(180));
+            Rotation2d angle = hub.getTranslation().minus(target.getTranslation()).getAngle();
             return new Pose2d(target.getX(), target.getY(), angle);
         };
 
