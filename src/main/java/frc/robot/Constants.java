@@ -339,6 +339,22 @@ public final class Constants {
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
+                //new CameraConstantsBuilder()
+                //     .name("turretRight")
+                //     .height(800)
+                //     .width(1280)
+                //     .horizontalFieldOfView(80)
+                //     .simFps(20)
+                //     .simLatency(0.3)
+                //     .simLatencyStdDev(0.02)
+                //     .calibrationErrorMean(0.8)
+                //     .calibrationErrorStdDev(0.08)
+                //     .robotToCamera(new Transform3d(turretCenter, turretRight))
+                //     .translationError(0.5)
+                //     .rotationError(0.5)
+                //     .singleTagError(0)
+                //     .isTurret(true)
+                //     .finish(),
         };
         // @formatter:on
     }
