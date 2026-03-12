@@ -8,6 +8,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -190,14 +191,20 @@ public class AutoCommandFactory {
                     Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
                         .andThen(intake.extendHopper(0.7), intake.intakeBalls())
                         .finallyDo(() -> intake.retractHopper(0))),
-                CommandFactory.pass(swerve.state, turret, shooter, indexer, adjustableHood, intake,
-                    () -> 1.5, () -> 0, () -> 3, () -> false),
+                CommandFactory.shoot(swerve.state, () -> {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+                }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
+                    .alongWith(intake.jerkIntake()).withDeadline(Commands.waitSeconds(3)),
                 Commands.deadline(conditionalCollect(false, 8.076),
                     Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
                         .andThen(intake.extendHopper(0.7), intake.intakeBalls())
                         .finallyDo(() -> intake.retractHopper(0))),
-                CommandFactory.pass(swerve.state, turret, shooter, indexer, adjustableHood, intake,
-                    () -> 1.5, () -> 0, () -> 4, () -> false));
+                CommandFactory.shoot(swerve.state, () -> {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+                }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
+                    .alongWith(intake.jerkIntake()).withDeadline(Commands.waitSeconds(4)));
         }, Set.of(swerve));
         routine.active().onTrue(fullCommand);
         return routine;

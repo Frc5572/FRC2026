@@ -2,7 +2,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -136,14 +135,7 @@ public class CommandFactory {
         AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight,
         BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
-            return state.getGlobalPoseEstimate().getTranslation()
-                .nearest(Set.of(
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.leftBumpStart)),
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.rightBumpEnd))));
+            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
         }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret);
     }
 
@@ -164,14 +156,7 @@ public class CommandFactory {
         AdjustableHood adjustableHood, Intake intake, DoubleSupplier adjustUp,
         DoubleSupplier adjustRight, BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
-            return state.getGlobalPoseEstimate().getTranslation()
-                .nearest(Set.of(
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.leftTrenchOpenEnd)),
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.rightTrenchOpenStart))));
+            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
         }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
             .alongWith(Commands.runEnd(() -> intake.jerkIntake(), () -> intake.stop(), intake));
     }
@@ -193,14 +178,7 @@ public class CommandFactory {
         AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight,
         DoubleSupplier time, BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
-            return state.getGlobalPoseEstimate().getTranslation()
-                .nearest(Set.of(
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.leftBumpStart)),
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.rightBumpEnd))));
+            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
         }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
             .withDeadline(Commands.waitSeconds(time.getAsDouble()));
     }
@@ -223,17 +201,11 @@ public class CommandFactory {
         AdjustableHood adjustableHood, Intake intake, DoubleSupplier adjustUp,
         DoubleSupplier adjustRight, DoubleSupplier time, BooleanSupplier disableTurret) {
         return CommandFactory.shoot(state, () -> {
-            return state.getGlobalPoseEstimate().getTranslation()
-                .nearest(Set.of(
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.leftBumpStart)),
-                    AllianceFlipUtil
-                        .apply(new Translation2d(FieldConstants.LinesVertical.allianceZone - 0.5,
-                            FieldConstants.LinesHorizontal.rightBumpEnd))));
+            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
         }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
             .alongWith(Commands.runEnd(() -> intake.jerkIntake(), () -> intake.stop(), intake))
             .withDeadline(Commands.waitSeconds(time.getAsDouble()));
+
     }
 
     /** Point turret at hub. */
