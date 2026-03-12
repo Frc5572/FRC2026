@@ -176,6 +176,6 @@ public class AutoCommandFactory {
                         .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
                         .finish(), swerve.stop())
                     .deadlineFor(shooter.shoot(60.0)))
-            .deadlineFor(CommandFactory.followHub(turret, swerve));
+            .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }
 }

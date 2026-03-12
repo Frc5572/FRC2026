@@ -1,7 +1,6 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Rotations;
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -43,7 +42,7 @@ public class IntakeReal implements IntakeIO {
         config.Slot0.kD = Constants.IntakeConstants.KD; // change for testing
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        config.CurrentLimits.SupplyCurrentLimitEnable = false;
         config.CurrentLimits.SupplyCurrentLimit = 40.0;
         config.CurrentLimits.StatorCurrentLimitEnable = false;
         config.CurrentLimits.StatorCurrentLimit = 30.0;
@@ -59,6 +58,10 @@ public class IntakeReal implements IntakeIO {
 
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.CurrentLimits.SupplyCurrentLimitEnable = false;
+        config.CurrentLimits.SupplyCurrentLimit = 40.0;
+        config.CurrentLimits.StatorCurrentLimitEnable = false;
+        config.CurrentLimits.StatorCurrentLimit = 30.0;
         intakeMotor.getConfigurator().apply(config);
 
         PhoenixSignals.registerSignals(false, rightMotorPosition, leftMotorPosition);
@@ -67,14 +70,11 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void runIntakeMotor(double speed) {
-        if (intakeConnected && intakeMotor != null) {
-            intakeMotor.setControl(new DutyCycleOut(speed));
-        }
+        intakeMotor.setControl(new DutyCycleOut(speed));
     }
 
     @Override
     public void updateInputs(IntakeInputs inputs) {
-        BaseStatusSignal.refreshAll(rightMotorPosition, leftMotorPosition);
         inputs.rightHopperPositionRotations = rightMotorPosition.getValue().in(Rotations);
         inputs.leftHopperPositionRotations = leftMotorPosition.getValue().in(Rotations);
         inputs.limitSwitch = limitSwitchMin.get();

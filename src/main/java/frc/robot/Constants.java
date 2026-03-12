@@ -44,7 +44,7 @@ import frc.robot.util.tunable.PIDConstantsBuilder;
  */
 public final class Constants {
 
-    public static final double visionFudgeFactor = 0.41;
+    public static final double visionFudgeFactor = 0.0;
 
     public static final boolean tunable = true;
 
@@ -332,8 +332,8 @@ public final class Constants {
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(6.5)
-                .rotationError(6.5)
+                .translationError(0.5)
+                .rotationError(0.5)
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),

@@ -217,10 +217,6 @@ public class RobotState {
         double translationStdDev, double rotationStdDev, double timestamp) {
         Pose2d robotPose = cameraPose.plus(robotToCamera.inverse()).toPose2d();
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
-        if (rotationStdDev > 100.0) {
-            robotPose = new Pose2d(robotPose.getTranslation(), before.getRotation());
-            rotationStdDev = 100.0;
-        }
         visionAdjustedOdometry.addVisionMeasurement(robotPose, timestamp,
             VecBuilder.fill(translationStdDev, translationStdDev, rotationStdDev));
         Pose2d after = visionAdjustedOdometry.getEstimatedPosition();
@@ -306,9 +302,12 @@ public class RobotState {
                     stdDevMultiplier * velocityTranslationError + camera.translationError;
                 double rotationStdDev =
                     stdDevMultiplier * velocityRotationError + camera.rotationError;
-                Logger.recordOutput("State/stdDevMultipler", stdDevMultiplier);
-                Logger.recordOutput("State/stdDevTranslation", translationStdDev);
-                Logger.recordOutput("State/stdDevRotation", rotationStdDev);
+                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevMultipler",
+                    stdDevMultiplier);
+                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevTranslation",
+                    translationStdDev);
+                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevRotation",
+                    rotationStdDev);
                 addVisionObservation(cameraPose, robotToCamera_, translationStdDev, rotationStdDev,
                     pipelineResult.getTimestampSeconds());
                 return true;

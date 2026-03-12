@@ -189,7 +189,7 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(CommandFactory.followHub(turret, swerve));
+        turret.setDefaultCommand(CommandFactory.followHub(turret, swerve, () -> trims[1]));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
@@ -202,6 +202,9 @@ public final class RobotContainer {
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
         RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
+        RobotModeTriggers.teleop().whileTrue(Commands.run(() -> {
+            Logger.recordOutput("Trims", trims);
+        }));
         vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
 
         // BUTTON BINDINGS
@@ -234,11 +237,11 @@ public final class RobotContainer {
         return false;
     }
 
+    private double[] trims = new double[] {0.0, 0.0};
+
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
         driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
-
-        double[] offsets = {1.5, 0.0};
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
@@ -248,8 +251,8 @@ public final class RobotContainer {
             } else {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }
-        }, turret, shooter, indexer, adjustableHood, () -> offsets[0], () -> offsets[1],
-            () -> combineControllers((Predicate<CommandXboxController>) (x) -> x.a().getAsBoolean(),
+        }, turret, shooter, indexer, adjustableHood, () -> trims[0], () -> trims[1],
+            () -> combineControllers((Predicate<CommandXboxController>) (x) -> x.b().getAsBoolean(),
                 driver, operator))
             .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
                 () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
@@ -257,21 +260,19 @@ public final class RobotContainer {
                 Constants.DriverControls.driverRotationalShootSpeed))));
 
         driver.povUp().onTrue(Commands.runOnce(() -> {
-            offsets[0] += 0.25;
+            trims[0] += 0.50;
         }));
         driver.povDown().onTrue(Commands.runOnce(() -> {
-            offsets[0] -= 0.25;
+            trims[0] -= 0.50;
         }));
         driver.povLeft().onTrue(Commands.runOnce(() -> {
-            offsets[0] += 2.0;
+            trims[1] += 2.0;
         }));
         driver.povRight().onTrue(Commands.runOnce(() -> {
-            offsets[0] -= 2.0;
+            trims[1] -= 2.0;
         }));
 
-        driver.leftTrigger()
-            .whileTrue(Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
-                .andThen(intake.extendHopper(0.7), intake.intakeBalls()))
+        driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
     }
 
@@ -281,6 +282,19 @@ public final class RobotContainer {
             .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
 
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
+
+        operator.povUp().onTrue(Commands.runOnce(() -> {
+            trims[0] += 0.50;
+        }));
+        operator.povDown().onTrue(Commands.runOnce(() -> {
+            trims[0] -= 0.50;
+        }));
+        operator.povLeft().onTrue(Commands.runOnce(() -> {
+            trims[1] += 2.0;
+        }));
+        operator.povRight().onTrue(Commands.runOnce(() -> {
+            trims[1] -= 2.0;
+        }));
     }
 
     private void setupTuner() {

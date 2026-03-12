@@ -62,7 +62,9 @@ public class CommandFactory {
             final Translation2d target = targetSupplier.get()
                 .plus(new Translation2d(lookahead.vxMetersPerSecond, lookahead.vyMetersPerSecond));
             Translation2d adjustedTarget = target;
-            double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble());
+            Rotation2d currentTurret = turret.getTurretHeading();
+            double turretFudge = (-currentTurret.getCos() + 1) * 1.0;
+            double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble() + turretFudge + 1);
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
             Logger.recordOutput("AutoShoot/AdjustUp", adjustUpValue);
             Logger.recordOutput("AutoShoot/AdjustRight", adjustRightValue);
@@ -117,10 +119,11 @@ public class CommandFactory {
     }
 
     /** Point turret at hub. */
-    public static Command followHub(Turret turret, Swerve swerve) {
+    public static Command followHub(Turret turret, Swerve swerve, DoubleSupplier trimRight) {
         return turret.goToAngleFieldRelative(() -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
-                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
+                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle()
+                .plus(Rotation2d.fromDegrees(trimRight.getAsDouble()));
         });
     }
 }

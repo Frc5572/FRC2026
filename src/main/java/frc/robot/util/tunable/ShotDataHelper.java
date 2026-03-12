@@ -1,10 +1,7 @@
 package frc.robot.util.tunable;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -16,7 +13,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.ShotData;
 import frc.robot.ShotData.ShotEntry;
@@ -50,12 +46,12 @@ public class ShotDataHelper implements Tunable {
             initData[i * 4 + 2] = ShotData.entries[i].hoodAngleDeg();
             initData[i * 4 + 3] = ShotData.entries[i].timeOfFlight();
         }
-        generateImages(initData);
+        // generateImages(initData);
         topic.publish().accept(initData);
         nt.addListener(topic.subscribe(new double[0]),
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote), (ev) -> {
                 double[] data = ev.valueData.value.getDoubleArray();
-                generateImages(data);
+                // generateImages(data);
             });
     }
 
@@ -125,18 +121,18 @@ public class ShotDataHelper implements Tunable {
 
         DecimalFormat df = new DecimalFormat("#.##");
 
-        try (var writer = new BufferedWriter(new FileWriter(
-            new File(Filesystem.getDeployDirectory(), "shotdata/" + name + ".svg")))) {
-            writer.write(svgTemplate.replaceAll("\\{b64Res\\}", b64Res)
-                .replaceAll("\\{b64Key\\}", b64Key).replaceAll("\\{xMin\\}", df.format(xMin))
-                .replaceAll("\\{xMax\\}", df.format(xMax)).replaceAll("\\{yMin\\}", df.format(yMin))
-                .replaceAll("\\{yMax\\}", df.format(yMax)).replaceAll("\\{zMin\\}", df.format(zMin))
-                .replaceAll("\\{zMax\\}", df.format(zMax)).replaceAll("\\{xName\\}", xName)
-                .replaceAll("\\{yName\\}", yName).replaceAll("\\{zName\\}", zName)
-                .replaceAll("\\{circles\\}", builder.toString()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // try (var writer = new BufferedWriter(new FileWriter(
+        // new File("", "shotdata/" + name + ".svg")))) {
+        // writer.write(svgTemplate.replaceAll("\\{b64Res\\}", b64Res)
+        // .replaceAll("\\{b64Key\\}", b64Key).replaceAll("\\{xMin\\}", df.format(xMin))
+        // .replaceAll("\\{xMax\\}", df.format(xMax)).replaceAll("\\{yMin\\}", df.format(yMin))
+        // .replaceAll("\\{yMax\\}", df.format(yMax)).replaceAll("\\{zMin\\}", df.format(zMin))
+        // .replaceAll("\\{zMax\\}", df.format(zMax)).replaceAll("\\{xName\\}", xName)
+        // .replaceAll("\\{yName\\}", yName).replaceAll("\\{zName\\}", zName)
+        // .replaceAll("\\{circles\\}", builder.toString()));
+        // } catch (IOException e) {
+        // e.printStackTrace();
+        // }
     }
 
     private static String imageToBase64(BufferedImage image) {
