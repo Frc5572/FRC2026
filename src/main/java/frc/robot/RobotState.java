@@ -275,7 +275,7 @@ public class RobotState {
             Logger.recordOutput("State/velocityTranslationError", velocityTranslationError);
             Logger.recordOutput("State/velocityRotationError", velocityRotationError);
 
-            var bestTarget = pipelineResult.getBestTarget();
+            var bestTarget = pipelineResult.hasTargets() ? pipelineResult.getBestTarget() : null;
             if (bestTarget == null) {
                 return false;
             }
