@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.turret.Turret;
@@ -117,95 +116,6 @@ public class CommandFactory {
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
         }, shooter, turret, indexer, hood);
-    }
-
-    /**
-     * Pass to Alliance Zone
-     * 
-     * @param state The Robot State
-     * @param turret Turret Subsystem
-     * @param shooter Shooter Subsystem
-     * @param indexer Indexer Subsystem
-     * @param adjustableHood Adjustable Hood Subsystem
-     * @param adjustUp Supplier Containing the Up Offset of Passing Target
-     * @param adjustRight Supplier Containing the Right Offset of Passing Target
-     * @param disableTurret Supplier Containing a Boolean to Disable Turret
-     */
-    public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
-        AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight,
-        BooleanSupplier disableTurret) {
-        return CommandFactory.shoot(state, () -> {
-            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret);
-    }
-
-    /**
-     * Pass to Alliance Zone
-     * 
-     * @param state The Robot State
-     * @param turret Turret Subsystem
-     * @param shooter Shooter Subsystem
-     * @param indexer Indexer Subsystem
-     * @param adjustableHood Adjustable Hood Subsystem
-     * @param intake Intake Subsystem
-     * @param adjustUp Supplier Containing the Up Offset of Passing Target
-     * @param adjustRight Supplier Containing the Right Offset of Passing Target
-     * @param disableTurret Supplier Containing a Boolean to Disable Turret
-     */
-    public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
-        AdjustableHood adjustableHood, Intake intake, DoubleSupplier adjustUp,
-        DoubleSupplier adjustRight, BooleanSupplier disableTurret) {
-        return CommandFactory.shoot(state, () -> {
-            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
-            .alongWith(Commands.runEnd(() -> intake.jerkIntake(), () -> intake.stop(), intake));
-    }
-
-    /**
-     * Pass to Alliance Zone
-     * 
-     * @param state The Robot State
-     * @param turret Turret Subsystem
-     * @param shooter Shooter Subsystem
-     * @param indexer Indexer Subsystem
-     * @param adjustableHood Adjustable Hood Subsystem
-     * @param adjustUp Supplier Containing the Up Offset of Passing Target
-     * @param adjustRight Supplier Containing the Right Offset of Passing Target
-     * @param time Supplier Containing the Amount of Time to Run the Command
-     * @param disableTurret Supplier Containing a Boolean to Disable Turret
-     */
-    public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
-        AdjustableHood adjustableHood, DoubleSupplier adjustUp, DoubleSupplier adjustRight,
-        DoubleSupplier time, BooleanSupplier disableTurret) {
-        return CommandFactory.shoot(state, () -> {
-            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
-            .withDeadline(Commands.waitSeconds(time.getAsDouble()));
-    }
-
-    /**
-     * Pass to Alliance Zone
-     * 
-     * @param state The Robot State
-     * @param turret Turret Subsystem
-     * @param shooter Shooter Subsystem
-     * @param indexer Indexer Subsystem
-     * @param adjustableHood Adjustable Hood Subsystem
-     * @param intake Intake Subsystem
-     * @param adjustUp Supplier Containing the Up Offset of Passing Target
-     * @param adjustRight Supplier Containing the Right Offset of Passing Target
-     * @param time Supplier Containing the Amount of Time to Run the Command
-     * @param disableTurret Supplier Containing a Boolean to Disable Turret
-     */
-    public static Command pass(RobotState state, Turret turret, Shooter shooter, Indexer indexer,
-        AdjustableHood adjustableHood, Intake intake, DoubleSupplier adjustUp,
-        DoubleSupplier adjustRight, DoubleSupplier time, BooleanSupplier disableTurret) {
-        return CommandFactory.shoot(state, () -> {
-            return AllianceFlipUtil.apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
-        }, turret, shooter, indexer, adjustableHood, adjustUp, adjustRight, disableTurret)
-            .alongWith(Commands.runEnd(() -> intake.jerkIntake(), () -> intake.stop(), intake))
-            .withDeadline(Commands.waitSeconds(time.getAsDouble()));
-
     }
 
     /** Point turret at hub. */
