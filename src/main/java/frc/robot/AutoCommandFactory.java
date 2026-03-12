@@ -105,7 +105,7 @@ public class AutoCommandFactory {
         routine.active().onTrue(moveToStart);
         moveToStart.done().onTrue(CommandFactory.shoot(swerve.state, () -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 0, () -> 0, () -> true));
+        }, turret, shooter, indexer, adjustableHood, () -> 1.0, () -> 0, () -> true));
         return routine;
     }
 
