@@ -1,12 +1,14 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Rotations;
+import java.util.Set;
 import java.util.function.Supplier;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -177,5 +179,64 @@ public class AutoCommandFactory {
                         .finish(), swerve.stop())
                     .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
+    }
+
+
+    /** Auto to Pass Fuel From the Neutral Zone into Alliance Zone */
+    public AutoRoutine passOnly() {
+        AutoRoutine routine = autoFactory.newRoutine("PassOnly");
+        Command fullCommand = Commands.defer(() -> {
+            return Commands
+                .sequence(
+                    swerve.moveToPose().autoRoutine(routine)
+                        .target(new Pose2d(5.76,
+                            FieldConstants.RightTrench.blueTrenchCenterRight.getY(),
+                            swerve.state.getGlobalPoseEstimate().getRotation()))
+                        .flipY(AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                            .getY() > FieldConstants.fieldWidth / 2.0)
+                        .maxSpeed(2.0).translationTolerance(0.1).finish(),
+                    Commands.deadline(conditionalCollect(7.176),
+                        Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
+                            .andThen(intake.extendHopper(0.7), intake.intakeBalls())
+                            .finallyDo(() -> intake.retractHopper(0))),
+                    CommandFactory.shoot(swerve.state, () -> {
+                        return AllianceFlipUtil
+                            .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+                    }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
+                        .alongWith(intake.jerkIntake()).withDeadline(Commands.waitSeconds(3)),
+                    Commands.deadline(conditionalCollect(7.85),
+                        Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
+                            .andThen(intake.extendHopper(0.7), intake.intakeBalls())
+                            .finallyDo(() -> intake.retractHopper(0))),
+                    CommandFactory.shoot(swerve.state, () -> {
+                        return AllianceFlipUtil
+                            .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+                    }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
+                        .alongWith(intake.jerkIntake()).withDeadline(Commands.waitSeconds(4)));
+        }, Set.of(swerve, turret, shooter, indexer, adjustableHood));
+
+        routine.active().onTrue(fullCommand);
+        return routine;
+    }
+
+    private Command conditionalCollect(double xMeters) {
+        return new ConditionalCommand(collect(true, xMeters), collect(false, xMeters), () -> {
+            return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0;
+        });
+    }
+
+    private Command collect(boolean left, double xMeters) {
+        return Commands.sequence(
+            swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                .maxSpeed(2.0).translationTolerance(0.4).rotationTolerance(12.5).flipY(left)
+                .finish(),
+            swerve.moveToPose().target(new Pose2d(xMeters, 3.586, Rotation2d.kCCW_90deg))
+                .maxSpeed(2.0).translationTolerance(0.4).rotationTolerance(12.5).flipY(left)
+                .finish(),
+            swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                .maxSpeed(2.0).translationTolerance(0.4).rotationTolerance(12.5).flipY(left)
+                .finish(),
+            swerve.stop());
     }
 }
