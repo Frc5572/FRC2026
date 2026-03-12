@@ -19,21 +19,20 @@ public class ShotData {
     /** Raw data from testing. */
     // @formatter:off
     public static final ShotEntry[] entries = new ShotEntry[] {
-        new ShotEntry(20,70,20,1.4),
-        new ShotEntry(18,75,12,1.65),
-        new ShotEntry(18,65,20,1.27),
-        new ShotEntry(16,65,16,1.42),
-        new ShotEntry(16,70,13,1.62),
-        new ShotEntry(14,60,17,1.36),
-        new ShotEntry(14,70,9,1.64),
-        new ShotEntry(12,60,11,1.39),
-        new ShotEntry(12,65,8,1.46),
-        new ShotEntry(10,65,6,1.43),
-        new ShotEntry(10,60,7,1.42),
-        new ShotEntry(10,55,12,1.3),
-        new ShotEntry(8,60,7,1.53),
-        new ShotEntry(8,55,8,1.31),
-
+        new ShotEntry(20, 70, 20, 1.4),
+        new ShotEntry(18, 75, 12, 1.65),
+        new ShotEntry(18, 65, 20, 1.27),
+        new ShotEntry(16, 65, 16, 1.42),
+        new ShotEntry(16, 70, 13, 1.62),
+        new ShotEntry(14, 60, 17, 1.36),
+        new ShotEntry(14, 70, 9, 1.64),
+        new ShotEntry(12, 60, 11, 1.39),
+        new ShotEntry(12, 65, 8, 1.46),
+        new ShotEntry(10, 65, 6, 1.43),
+        new ShotEntry(10, 60, 7, 1.42),
+        new ShotEntry(10, 55, 12, 1.3),
+        new ShotEntry(8, 60, 7, 1.53),
+        new ShotEntry(8, 55, 8, 1.31)
     };
     // @formatter:on
 
