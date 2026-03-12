@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shot Data Helper</title>
+    <style>
+        img {
+            width: 40vw;
+        }
+    </style>
+</head>
+
+<body>
+    <img id="hood-img" src="hood_angle.svg" />
+    <img id="tof-img" src="time_of_flight.svg" />
+    <table>
+        <thead>
+            <tr>
+                <th>Distance (ft)</th>
+                <th>Flywheel Speed (rps)</th>
+                <th>Hood Angle (deg)</th>
+                <th>Time of Flight (s)</th>
+            </tr>
+        </thead>
+        <tbody id="shot-table"></tbody>
+        <tfoot>
+            <tr>
+                <th id="dist">0.0</td>
+                <th id="flywheel">0.0</td>
+                <th id="hood">0.0</td>
+                <td><input id="tof" type="number"> <button id="add-item">+</button></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <pre>
+        <code id="code-out">
+            
+        </code>
+    </pre>
+
+    <script type="module">
+        import { NT4_Client } from "./NT4.js";
+
+        let table = document.getElementById("shot-table");
+        let code = document.getElementById("code-out");
+        let dist = 0;
+        let hood = 0;
+        let flywheel = 0;
+
+        let data = [];
+        function generate_table() {
+            table.innerHTML = "";
+            code.innerText = "";
+            for (let i = 0; i < data.length; i += 4) {
+                let row = document.createElement("tr");
+                let v1 = document.createElement("td");
+                let v2 = document.createElement("td");
+                let v3 = document.createElement("td");
+                let v4 = document.createElement("td");
+
+                v1.innerText = data[i + 0];
+                v2.innerText = data[i + 1];
+                v3.innerText = data[i + 2];
+                v4.innerText = data[i + 3];
+
+                code.innerText += "        new ShotEntry(" + data[i + 0] + "," + data[i + 1] + "," + data[i + 2] + "," + data[i + 3] + "),\n";
+
+                row.appendChild(v1);
+                row.appendChild(v2);
+                row.appendChild(v3);
+                row.appendChild(v4);
+
+                table.appendChild(row);
+            }
+        }
+        generate_table();
+
+        let client = new NT4_Client(
+            window.location.hostname,
+            "shot-data-helper",
+            (topic) => {
+                // Topic announce
+            },
+            (topic) => {
+                // Topic unannounce
+            },
+            (topic, timestamp, value) => {
+                // Data
+                if (topic.name == "/ShotDataHelper/Regenerate") {
+                    data = value;
+                    generate_table();
+                } else if (topic.name == "/ShotDataHelper/distanceFromTarget") {
+                    dist = value;
+                    document.getElementById("dist").innerText = value;
+                } else if (topic.name == "/ShotDataHelper/flywheelSpeed") {
+                    flywheel = value;
+                    document.getElementById("flywheel").innerText = value;
+                } else if (topic.name == "/ShotDataHelper/hoodAngle") {
+                    hood = value;
+                    document.getElementById("hood").innerText = value;
+                } else if (topic.name == "/ShotDataHelper/TimeLastGenerated") {
+                    document.getElementById("hood-img").src = "hood_angle.svg?" + new Date().getTime();
+                    document.getElementById("tof-img").src = "time_of_flight.svg?" + new Date().getTime();
+                }
+            },
+            () => {
+                // Connected
+            },
+            () => {
+                // Disconnected
+            }
+        );
+
+        window.addEventListener("load", () => {
+            console.log("connecting")
+            client.connect();
+            client.subscribe(["/ShotDataHelper/Regenerate", "/ShotDataHelper/flywheelSpeed", "/ShotDataHelper/distanceFromTarget", "/ShotDataHelper/hoodAngle", "/ShotDataHelper/TimeLastGenerated"], false, true);
+            client.publishTopic("/ShotDataHelper/Regenerate", "double[]");
+            document.getElementById("add-item").addEventListener("click", () => {
+                let tof = document.getElementById("tof");
+                data.push(dist, flywheel, hood, parseFloat(tof.value));
+                console.log(data);
+                client.addSample("/ShotDataHelper/Regenerate", data);
+                generate_table();
+            });
+        });
+    </script>
+</body>
+
+</html>
