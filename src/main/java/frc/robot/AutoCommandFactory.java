@@ -79,7 +79,7 @@ public class AutoCommandFactory {
         routine.active().and(moveToClimb.active().negate().and(moveToClimb.done().negate()))
             .whileTrue(CommandFactory.shoot(swerve.state, () -> {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-            }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0)
+            }, turret, shooter, indexer, adjustableHood, () -> 1.5, () -> 0.0, () -> false)
                 .alongWith(intake.jerkIntake()).withTimeout(2.75));
 
         moveToClimb.done().onTrue(swerve.stop().andThen(Commands.waitSeconds(3),
