@@ -7,6 +7,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -104,7 +105,15 @@ public class AutoCommandFactory {
         AutoRoutine routine = autoFactory.newRoutine("Just Shoot");
         MoveToPose moveToStart = swerve.moveToPose().target(poseSup).autoRoutine(routine).finish();
         routine.active().onTrue(moveToStart);
-        moveToStart.done().onTrue(shooter.shoot(0));
+        moveToStart.done().onTrue(CommandFactory.shoot(swerve.state, () -> {
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getX() > FieldConstants.Hub.centerHub.getX()) {
+                return AllianceFlipUtil
+                    .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+            } else {
+                return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+            }
+        }, turret, shooter, indexer, adjustableHood, () -> 0, () -> 0, () -> true));
         return routine;
     }
 
