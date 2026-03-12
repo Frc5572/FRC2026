@@ -1,6 +1,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Rotations;
+import java.util.Set;
 import java.util.function.Supplier;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
@@ -177,5 +178,45 @@ public class AutoCommandFactory {
                         .finish(), swerve.stop())
                     .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve));
+    }
+
+    public AutoRoutine passOnly() {
+        AutoRoutine routine = autoFactory.newRoutine("PassOnly");
+        Command fullCommand = Commands.defer(() -> {
+            return Commands.sequence(
+                Commands.deadline(conditionalCollect(true, 7.076),
+                    Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
+                        .andThen(intake.extendHopper(0.7), intake.intakeBalls())
+                        .finallyDo(() -> intake.retractHopper(0))),
+                CommandFactory.pass(swerve.state, turret, shooter, indexer, adjustableHood, intake,
+                    () -> 1.5, () -> 0, () -> 3),
+                Commands.deadline(conditionalCollect(false, 8.076),
+                    Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
+                        .andThen(intake.extendHopper(0.7), intake.intakeBalls())
+                        .finallyDo(() -> intake.retractHopper(0))),
+                CommandFactory.pass(swerve.state, turret, shooter, indexer, adjustableHood, intake,
+                    () -> 1.5, () -> 0, () -> 4));
+        }, Set.of(swerve));
+        routine.active().onTrue(fullCommand);
+        return routine;
+    }
+
+    private Command conditionalCollect(boolean isFirst, double xMeters) {
+        return new ConditionalCommand(collect(true, isFirst, xMeters),
+            collect(false, isFirst, xMeters), () -> {
+                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0;
+            });
+    }
+
+    private Command collect(boolean left, boolean isFirst, double xMeters) {
+        return Commands.sequence(
+            swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
+            swerve.moveToPose().target(new Pose2d(xMeters, 3.586, Rotation2d.kCCW_90deg))
+                .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
+            swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                .finish());
     }
 }
