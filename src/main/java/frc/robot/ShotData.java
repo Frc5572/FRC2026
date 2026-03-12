@@ -19,29 +19,20 @@ public class ShotData {
     /** Raw data from testing. */
     // @formatter:off
     public static final ShotEntry[] entries = new ShotEntry[] {
-        new ShotEntry(6.0, 60.0, 6.0, 1.63),
-        new ShotEntry(6.0, 50.0, 10.0, 1.15),
-        new ShotEntry(6.0, 45.0, 10.0, 1.12),
-
-        new ShotEntry(8.0, 60.0, 8.0, 1.56),
-        new ShotEntry(8.0, 50.0, 15.0, 1.28),
-
-        new ShotEntry(10.0, 60.0, 10.0, 1.58),
-        new ShotEntry(10.0, 50.0, 20.0, 1.19),
-        new ShotEntry(10.0, 70.0, 5.0, 2.08),
-
-        new ShotEntry(12.0, 60.0, 12.0, 1.56),
-        new ShotEntry(12.0, 55.0, 15.0, 1.38),
-        new ShotEntry(12.0, 70.0, 7.0, 2.0),
-
-        new ShotEntry(14.0, 60.0, 16.0, 1.40),
-        new ShotEntry(14.0, 55.0, 20.0, 1.18),
-        new ShotEntry(14.0, 70.0, 11.2, 1.72),
-
-        new ShotEntry(16.0, 60.0, 20.0, 1.48),
-        new ShotEntry(16.0, 70.0, 17.0, 1.72),
-
-        new ShotEntry(18.0, 70.0, 26.0, 1.54),
+        new ShotEntry(20, 70, 20, 1.4),
+        new ShotEntry(18, 75, 12, 1.65),
+        new ShotEntry(18, 65, 20, 1.27),
+        new ShotEntry(16, 65, 16, 1.42),
+        new ShotEntry(16, 70, 13, 1.62),
+        new ShotEntry(14, 60, 17, 1.36),
+        new ShotEntry(14, 70, 9, 1.64),
+        new ShotEntry(12, 60, 11, 1.39),
+        new ShotEntry(12, 65, 8, 1.46),
+        new ShotEntry(10, 65, 6, 1.43),
+        new ShotEntry(10, 60, 7, 1.42),
+        new ShotEntry(10, 55, 12, 1.3),
+        new ShotEntry(8, 60, 7, 1.53),
+        new ShotEntry(8, 55, 8, 1.31)
     };
     // @formatter:on
 
@@ -123,7 +114,7 @@ public class ShotData {
         var q = distanceFlywheel.query(new Translation2d(distance, currentFlywheelSpeed));
         double hood = q.value().hoodAngleDeg();
         double tof = q.value().timeOfFlight();
-        double minSpeed = minFlywheelSpeed.get(distance);
+        double minSpeed = desiredSpeed - 10;
         boolean isOkayToShoot = q.sdf() < 0.02 || currentFlywheelSpeed > minSpeed;
         if (log) {
             Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);

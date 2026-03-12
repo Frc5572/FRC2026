@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -55,14 +56,18 @@ public class CommandFactory {
     /** Shoot at a given target. */
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
-        DoubleSupplier adjustUp, DoubleSupplier adjustRight) {
+        DoubleSupplier adjustUp, DoubleSupplier adjustRight, BooleanSupplier disableTurret) {
         return Commands.runEnd(() -> {
             var lookahead = state.getFieldRelativeSpeeds().times(0.05);
             final Translation2d target = targetSupplier.get()
                 .plus(new Translation2d(lookahead.vxMetersPerSecond, lookahead.vyMetersPerSecond));
             Translation2d adjustedTarget = target;
-            double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble());
+            Rotation2d currentTurret = turret.getTurretHeading();
+            double turretFudge = (-currentTurret.getCos() + 1) * 1.0;
+            double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble() + turretFudge + 1);
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
+            Logger.recordOutput("AutoShoot/AdjustUp", adjustUpValue);
+            Logger.recordOutput("AutoShoot/AdjustRight", adjustRightValue);
             for (int i = 0; i < 20; i++) {
                 double distance =
                     adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
@@ -84,20 +89,24 @@ public class CommandFactory {
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
             hood.setTargetAngle(Degrees.of(MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0)));
-            boolean turretFacing = turret.setGoalFieldRelative(
-                adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation()).getAngle()
-                    .plus(adjustRightValue)
-                    .plus(Rotation2d.fromRadians(lookahead.omegaRadiansPerSecond)));
+            if (disableTurret.getAsBoolean()) {
+                turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
+            } else {
+                boolean turretFacing = turret.setGoalFieldRelative(
+                    adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation())
+                        .getAngle().plus(adjustRightValue)
+                        .plus(Rotation2d.fromRadians(lookahead.omegaRadiansPerSecond)));
+                Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
+            }
             boolean isOkay = parameters.isOkayToShoot();
-            Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
             Logger.recordOutput("AutoShoot/isOkay", isOkay);
             Logger.recordOutput("AutoShoot/desiredSpeed", parameters.desiredSpeed());
             Logger.recordOutput("AutoShoot/hoodAngleDeg",
                 MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
             if (isOkay) {
-                indexer.setMagazineDutyCycle(0.7);
-                indexer.setSpindexerDutyCycle(0.5);
+                indexer.setMagazineDutyCycle(1.0);
+                indexer.setSpindexerDutyCycle(0.7);
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(0.0);
@@ -110,10 +119,11 @@ public class CommandFactory {
     }
 
     /** Point turret at hub. */
-    public static Command followHub(Turret turret, Swerve swerve) {
+    public static Command followHub(Turret turret, Swerve swerve, DoubleSupplier trimRight) {
         return turret.goToAngleFieldRelative(() -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
-                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle();
+                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle()
+                .plus(Rotation2d.fromDegrees(trimRight.getAsDouble()));
         });
     }
 }

@@ -114,7 +114,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeBalls() {
-        return intakeBalls(0.7);
+        return intakeBalls(1.0);
     }
 
     public Command jerkIntake() {
