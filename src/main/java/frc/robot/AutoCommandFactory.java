@@ -7,7 +7,6 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -92,8 +91,8 @@ public class AutoCommandFactory {
      */
     public AutoRoutine justShoot() {
         Supplier<Pose2d> poseSup = () -> {
-            double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-            double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
+            double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 2);
+            double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 2);
             Pose2d hub =
                 AllianceFlipUtil.apply(new Pose2d(FieldConstants.Hub.centerHub, new Rotation2d()));
             Pose2d target = new Pose2d(x, y, new Rotation2d());
@@ -106,13 +105,7 @@ public class AutoCommandFactory {
         MoveToPose moveToStart = swerve.moveToPose().target(poseSup).autoRoutine(routine).finish();
         routine.active().onTrue(moveToStart);
         moveToStart.done().onTrue(CommandFactory.shoot(swerve.state, () -> {
-            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
-                .getX() > FieldConstants.Hub.centerHub.getX()) {
-                return AllianceFlipUtil
-                    .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
-            } else {
-                return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-            }
+            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         }, turret, shooter, indexer, adjustableHood, () -> 0, () -> 0, () -> true));
         return routine;
     }
