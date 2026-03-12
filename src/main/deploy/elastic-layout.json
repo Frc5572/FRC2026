@@ -15,7 +15,7 @@
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
-              "topic": "/SmartDashboard/ActiveHub",
+              "topic": "/SmartDashboard/Dashboard/ActiveHub",
               "period": 0.06,
               "data_type": "boolean",
               "true_color": 4283215696,
@@ -66,7 +66,7 @@
             "height": 128.0,
             "type": "Match Time",
             "properties": {
-              "topic": "/SmartDashboard/TimeLeftInCurrentPhase",
+              "topic": "/SmartDashboard/Dashboard/TimeLeftInCurrentPhase",
               "period": 0.06,
               "data_type": "double",
               "time_display_mode": "Minutes and Seconds",

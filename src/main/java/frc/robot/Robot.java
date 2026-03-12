@@ -140,8 +140,10 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopPeriodic() {
-        SmartDashboard.putBoolean("ActiveHub", ActiveHub.currentHubIsActive());
-        SmartDashboard.putNumber("TimeLeftInCurrentPhase", ActiveHub.timeLeftInCurrentPhase());
+        SmartDashboard.putBoolean(Constants.DashboardValues.activeHub,
+            ActiveHub.currentHubIsActive());
+        SmartDashboard.putNumber(Constants.DashboardValues.timeLeft,
+            ActiveHub.timeLeftInCurrentPhase());
         Logger.recordOutput("ActiveHub", ActiveHub.currentHubIsActive());
     }
 
