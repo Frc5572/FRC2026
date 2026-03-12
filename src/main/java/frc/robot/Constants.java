@@ -98,14 +98,14 @@ public final class Constants {
      * MoveToPos Constants
      */
     public static class SwerveTransformPID {
-        public static final double translationP = 3.5;
+        public static final double translationP = 2.5;
         public static final double translationI = 0.0;
         public static final double translationD = 0.0;
-        public static final double rotationP = 4.0;
+        public static final double rotationP = 2.0;
         public static final double rotationI = 0.0;
         public static final double rotationD = 0.0;
 
-        public static final double maxAngularVelocity = 9.0;
+        public static final double maxAngularVelocity = 6.0;
         public static final double maxAngularAcceleration = 9 * 5;
     }
 
