@@ -127,7 +127,7 @@ public class AutoCommandFactory {
         double shootingTime = 3.0;
         double driveSpeed = 2.5;
         return Commands
-            .sequence(sweep(left, true, 8.076, driveSpeed),
+            .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
                 CommandFactory
                     .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
                         turret, shooter, indexer, adjustableHood, () -> 0.0, () -> left ? 5
@@ -164,7 +164,10 @@ public class AutoCommandFactory {
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
                         .flipY(left).finish().deadlineFor(intake.extendHopper(0.0)),
                     swerve.moveToPose()
-                        .target(new Pose2d(xMeters, 4.5 - Units.feetToMeters(4.5),
+                        .target(new Pose2d(xMeters,
+                            (FieldConstants.fieldWidth / 2.0) + Units.feetToMeters(
+                                SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                                    Constants.DashboardValues.feetPastCenterDefault)),
                             Rotation2d.kCCW_90deg))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(
                             left)

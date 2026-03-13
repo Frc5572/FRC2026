@@ -625,11 +625,15 @@ public final class Constants {
         public static final String autoChooser = "Dashboard/Auto/Auto Chooser";
         public static final String shootX = "Dashboard/Auto/Auto Shoot X";
         public static final String shootY = "Dashboard/Auto/Auto Shoot Y";
+        public static final String feetPastCenter = "Dashboard/Auto/Feet Past Center";
+        public static final double feetPastCenterDefault = 1.5;
         public static final double shootXDefault = 2.5;
         public static final double shootYDefault = 4.0;
         public static final String activeHub = "Dashboard/ActiveHub";
         public static final String timeLeft = "Dashboard/TimeLeftInCurrentPhase";
+    }
 
-
+    public static class Auto {
+        public static final double wilsonTestX = 8.076;
     }
 }

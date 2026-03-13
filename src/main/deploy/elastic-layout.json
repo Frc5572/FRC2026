@@ -137,7 +137,7 @@
             "title": "Auto Chooser",
             "x": 320.0,
             "y": 0.0,
-            "width": 320.0,
+            "width": 256.0,
             "height": 192.0,
             "type": "ComboBox Chooser",
             "properties": {
@@ -165,9 +165,9 @@
           },
           {
             "title": "Auto Shoot X",
-            "x": 640.0,
+            "x": 832.0,
             "y": 0.0,
-            "width": 320.0,
+            "width": 192.0,
             "height": 192.0,
             "type": "Text Display",
             "properties": {
@@ -179,9 +179,9 @@
           },
           {
             "title": "Auto Shoot Y",
-            "x": 960.0,
+            "x": 1024.0,
             "y": 0.0,
-            "width": 320.0,
+            "width": 192.0,
             "height": 192.0,
             "type": "Text Display",
             "properties": {
@@ -210,6 +210,20 @@
               "robot_color": 4294198070,
               "trajectory_color": 4294967295,
               "show_robot_outside_widget": true
+            }
+          },
+          {
+            "title": "Feet Past Center",
+            "x": 576.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 192.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Dashboard/Auto/Feet Past Center",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
             }
           }
         ]

@@ -94,7 +94,8 @@ public final class RobotContainer {
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     private final Field2d field = new Field2d();
-    private final FieldObject2d autoShootLocation = field.getObject("Auto Shoot Location");
+    private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot Location");
+    private final FieldObject2d autoStoppingPoint = field.getObject("Wilson Auto End Point");
 
     /**
      * Robot Container
@@ -164,6 +165,8 @@ public final class RobotContainer {
         SmartDashboard.putNumber(Constants.DashboardValues.shootY,
             Constants.DashboardValues.shootYDefault);
         SmartDashboard.putData(Constants.DashboardValues.field, field);
+        SmartDashboard.putNumber(Constants.DashboardValues.feetPastCenter,
+            Constants.DashboardValues.feetPastCenterDefault);
         // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
@@ -179,9 +182,9 @@ public final class RobotContainer {
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
         // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        // autoShootLocation.setPose(x, y, new Rotation2d());
+        // autoJustShootLocation.setPose(x, y, new Rotation2d());
         // // System.out.println("asdfasdasdf");
-        // // Logger.recordOutput("asdfadsf", autoShootLocation.getPose());
+        // // Logger.recordOutput("asdfadsf", autoJustShootLocation.getPose());
         // }));
         RobotModeTriggers.autonomous()
             .whileTrue(autoChooser.selectedCommandScheduler()
@@ -385,7 +388,12 @@ public final class RobotContainer {
             Constants.DashboardValues.shootXDefault);
         double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
             Constants.DashboardValues.shootYDefault);
-        autoShootLocation.setPose(x, y, new Rotation2d());
+        autoJustShootLocation.setPose(x, y, new Rotation2d());
+        autoStoppingPoint.setPose(new Pose2d(Constants.Auto.wilsonTestX,
+            (FieldConstants.fieldWidth / 2.0) + Units
+                .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                    Constants.DashboardValues.feetPastCenterDefault)),
+            Rotation2d.kCCW_90deg));
     }
 }
 
