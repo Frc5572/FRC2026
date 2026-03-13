@@ -3,6 +3,7 @@ package frc.robot.subsystems.indexer;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 /**
  * Indexer class
@@ -19,6 +20,10 @@ public class Indexer extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Indexer", inputs);
+
+        Constants.Indexer.constants.ifDirty(constants -> {
+            io.setConstants(constants);
+        });
     }
 
     public void setMagazineDutyCycle(double dutyCycle) {

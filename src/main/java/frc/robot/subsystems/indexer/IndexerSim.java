@@ -1,5 +1,7 @@
 package frc.robot.subsystems.indexer;
 
+import frc.robot.util.tunable.FlywheelConstants;
+
 /**
  * Indexer simulation class
  */
@@ -24,5 +26,8 @@ public class IndexerSim implements IndexerIO {
     public void addFuel() {
         numFuel++;
     }
+
+    @Override
+    public void setConstants(FlywheelConstants constants) {}
 
 }

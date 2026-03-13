@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
+import frc.robot.util.typestate.InitField;
 import frc.robot.util.typestate.RequiredField;
 import frc.robot.util.typestate.TypeStateBuilder;
 
@@ -20,9 +21,10 @@ public class FlywheelConstants implements LoggableInputs, Cloneable, Tunable {
 
     /** Create new Flywheel Constants */
     @TypeStateBuilder
-    public FlywheelConstants(@RequiredField double holdCurrent, @RequiredField double maxDutyCycle,
-        @RequiredField boolean isReversed, @RequiredField double velocityTolerance,
-        @RequiredField double atSpeedDebounce, @RequiredField PIDConstants pid) {
+    public FlywheelConstants(@InitField String name, @RequiredField double holdCurrent,
+        @RequiredField double maxDutyCycle, @RequiredField boolean isReversed,
+        @RequiredField double velocityTolerance, @RequiredField double atSpeedDebounce,
+        @RequiredField PIDConstants pid) {
         this.holdCurrent = holdCurrent;
         this.maxDutyCycle = maxDutyCycle;
         this.isReversed = isReversed;
@@ -32,7 +34,7 @@ public class FlywheelConstants implements LoggableInputs, Cloneable, Tunable {
 
         this.isDirty = false;
 
-        Tunable.setupTunable("/Flywheel", this, FlywheelConstants.class, () -> {
+        Tunable.setupTunable("/" + name, this, FlywheelConstants.class, () -> {
             this.isDirty = true;
         });
     }
