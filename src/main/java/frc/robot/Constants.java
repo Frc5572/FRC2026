@@ -539,7 +539,7 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants pid =
             new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
-                .kP(26.0)
+                .kP(32.0)
                 .kI(0.0)
                 .kD(0.0)
                 .kV(7.01)
