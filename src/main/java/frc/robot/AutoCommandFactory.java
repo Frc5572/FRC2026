@@ -91,8 +91,10 @@ public class AutoCommandFactory {
      */
     public AutoRoutine justShoot() {
         Supplier<Pose2d> poseSup = () -> {
-            double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 2);
-            double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 2);
+            double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
+                Constants.DashboardValues.shootXDefault);
+            double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
+                Constants.DashboardValues.shootYDefault);
             Pose2d hub =
                 AllianceFlipUtil.apply(new Pose2d(FieldConstants.Hub.centerHub, new Rotation2d()));
             Pose2d target = new Pose2d(x, y, new Rotation2d());
@@ -105,7 +107,7 @@ public class AutoCommandFactory {
         routine.active().onTrue(moveToStart);
         moveToStart.done().onTrue(CommandFactory.shoot(swerve.state, () -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 1.0, () -> 0, () -> true));
+        }, turret, shooter, indexer, adjustableHood, () -> 0, () -> 0, () -> true));
         return routine;
     }
 
@@ -173,7 +175,7 @@ public class AutoCommandFactory {
                             new Pose2d(6.0, 0.622, Rotation2d.kZero))
                         .maxSpeed(
                             driveSpeed)
-                        .translationTolerance(0.1).rotationTolerance(5).flipY(left).finish()),
+                        .translationTolerance(0.2).rotationTolerance(8).flipY(left).finish()),
                 Commands
                     .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
                         .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)

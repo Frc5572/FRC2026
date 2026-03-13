@@ -159,8 +159,10 @@ public final class RobotContainer {
         }
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
-        SmartDashboard.putNumber(Constants.DashboardValues.shootX, 0.0);
-        SmartDashboard.putNumber(Constants.DashboardValues.shootY, 0.0);
+        SmartDashboard.putNumber(Constants.DashboardValues.shootX,
+            Constants.DashboardValues.shootXDefault);
+        SmartDashboard.putNumber(Constants.DashboardValues.shootY,
+            Constants.DashboardValues.shootYDefault);
         SmartDashboard.putData(Constants.DashboardValues.field, field);
         // END DASHBOARD STUFF
 
@@ -375,8 +377,10 @@ public final class RobotContainer {
      * Runs during disabled
      */
     public void disabledPeriodic() {
-        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 2);
-        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 4);
+        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
+            Constants.DashboardValues.shootXDefault);
+        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
+            Constants.DashboardValues.shootYDefault);
         autoShootLocation.setPose(x, y, new Rotation2d());
     }
 }
