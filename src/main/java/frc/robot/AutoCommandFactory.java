@@ -129,9 +129,9 @@ public class AutoCommandFactory {
             .sequence(sweep(left, true, 8.076, driveSpeed),
                 CommandFactory
                     .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> left ? 5
+                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> left ? 5
                             : -5,
-                        () -> 0.0, () -> false)
+                        () -> false)
                     .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                 Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
                     sweep(left, false, 6.0, driveSpeed),
