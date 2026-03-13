@@ -173,19 +173,18 @@ public class AutoCommandFactory {
                             left)
                         .finish().deadlineFor(intake.intakeBalls()),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(
-                            left)
-                        .finish(),
+                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(
+                            15)
+                        .flipY(left).finish(),
                     swerve
                         .moveToPose().target(
                             new Pose2d(6.0, 0.622, Rotation2d.kZero))
-                        .maxSpeed(
-                            driveSpeed)
-                        .translationTolerance(0.2).rotationTolerance(8).flipY(left).finish()),
+                        .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(8)
+                        .flipY(left).finish().withTimeout(3.5)),
                 Commands
                     .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
                         .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
-                        .finish(), swerve.stop())
+                        .finish().withTimeout(3.5), swerve.stop())
                     .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }

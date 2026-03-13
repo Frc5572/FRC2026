@@ -247,6 +247,7 @@ public final class RobotContainer {
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
         driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
+        driver.x().whileTrue(swerve.wheelsIn());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
