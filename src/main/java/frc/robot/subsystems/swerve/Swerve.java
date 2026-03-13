@@ -470,7 +470,7 @@ public final class Swerve extends SubsystemBase {
                 new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
                 new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
                 new SwerveModuleState(0, Rotation2d.fromDegrees(-135))};
-        return runOnce(() -> {
+        return run(() -> {
             for (int i = 0; i < modules.length; i++) {
                 modules[i].setDesiredState(states[i]);
             }
