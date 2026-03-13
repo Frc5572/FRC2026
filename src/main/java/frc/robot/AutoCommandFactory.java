@@ -7,6 +7,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -151,18 +152,20 @@ public class AutoCommandFactory {
 
     private Command sweep(boolean left, boolean isFirst, double xMeters, double driveSpeed) {
         return Commands
-            .sequence(Commands
-                .sequence(
-                    swerve
-                        .moveToPose()
+            .sequence(
+                Commands.sequence(
+                    swerve.moveToPose()
                         .target(new Pose2d(5.7, 0.622,
                             isFirst ? Rotation2d.kCCW_90deg : Rotation2d.kZero))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
                         .flipY(left).finish(),
-                    swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                    swerve
+                        .moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
                         .flipY(left).finish().deadlineFor(intake.extendHopper(0.0)),
-                    swerve.moveToPose().target(new Pose2d(xMeters, 4.5, Rotation2d.kCCW_90deg))
+                    swerve.moveToPose()
+                        .target(new Pose2d(xMeters, 4.5 - Units.feetToMeters(4.5),
+                            Rotation2d.kCCW_90deg))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(
                             left)
                         .finish().deadlineFor(intake.intakeBalls()),
