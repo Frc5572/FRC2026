@@ -311,7 +311,7 @@ public final class RobotContainer {
                     FieldConstants.Hub.centerHub
                         .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
                             new Translation2d(-FieldConstants.Hub.centerHub.getX(),
-                                FieldConstants.Hub.centerHub.getY()).getAngle()))
+                                -FieldConstants.Hub.centerHub.getY()).getAngle()))
                         .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
                     Rotation2d.kZero)).rotationTolerance(1)
                     .translationTolerance(Units.inchesToMeters(1)).finish()))

@@ -63,8 +63,8 @@ public class CommandFactory {
                 .plus(new Translation2d(lookahead.vxMetersPerSecond, lookahead.vyMetersPerSecond));
             Translation2d adjustedTarget = target;
             Rotation2d currentTurret = turret.getTurretHeading();
-            double turretFudge = (-currentTurret.getCos() + 1) * 1.0;
-            double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble() + turretFudge + 2);
+            // double turretFudge = (-currentTurret.getCos() + 1) * 1.0;
+            double adjustUpValue = Units.feetToMeters(adjustUp.getAsDouble());
             Rotation2d adjustRightValue = Rotation2d.fromDegrees(adjustRight.getAsDouble());
             Logger.recordOutput("AutoShoot/AdjustUp", adjustUpValue);
             Logger.recordOutput("AutoShoot/AdjustRight", adjustRightValue);
