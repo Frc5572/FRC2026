@@ -107,7 +107,7 @@ public class CommandFactory {
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
             if (isOkay) {
                 indexer.setMagazineDutyCycle(1.0);
-                indexer.setSpindexerDutyCycle(0.7);
+                indexer.setSpindexerDutyCycle(6.0);
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(0.0);
