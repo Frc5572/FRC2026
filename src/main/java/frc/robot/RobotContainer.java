@@ -299,10 +299,10 @@ public final class RobotContainer {
         }));
     }
 
+    private ShotDataHelper helper = new ShotDataHelper();
+
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
-
-        ShotDataHelper helper = new ShotDataHelper();
 
         tuner.rightTrigger()
             .whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
@@ -329,7 +329,10 @@ public final class RobotContainer {
     }
 
     private void setupPit() {
-
+        pit.rightTrigger()
+            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
+            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
     }
 
     private List<Runnable> controllerSetups = new ArrayList<>();
