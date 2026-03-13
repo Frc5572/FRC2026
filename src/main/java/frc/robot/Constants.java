@@ -94,10 +94,10 @@ public final class Constants {
         public static final int spinMotorSpeed = 0;
 
         public static final FlywheelConstants constants =
-            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(1.0)
+            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(6.0)
                 .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
                 .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
-                    .kP(0.0).kI(0.0).kD(0.0).kV(0.6).kS(0.0).kG(0.0).kA(0.0).finish())
+                    .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
                 .finish();
     }
 
