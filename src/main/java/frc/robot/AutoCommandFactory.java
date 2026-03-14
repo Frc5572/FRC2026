@@ -137,7 +137,7 @@ public class AutoCommandFactory {
                         () -> false)
                     .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                 Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
-                    sweep(left, false, 6.0, driveSpeed),
+                    sweep(left, false, 6.5, driveSpeed),
                     CommandFactory
                         .shoot(swerve.state,
                             () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
@@ -188,7 +188,7 @@ public class AutoCommandFactory {
                 Commands
                     .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
                         .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
-                        .finish().withTimeout(3.5), swerve.stop())
+                        .finish().withTimeout(3.5), swerve.emergencyStop())
                     .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }
