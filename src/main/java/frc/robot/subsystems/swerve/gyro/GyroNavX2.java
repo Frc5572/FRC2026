@@ -24,6 +24,7 @@ public class GyroNavX2 implements GyroIO {
     @Override
     public void updateInputs(GyroInputs inputs) {
         inputs.connected = gyro.isConnected();
+        System.out.println(inputs.connected);
 
         double invert = Constants.Swerve.invertGyro ? -1.0 : 1.0;
 
