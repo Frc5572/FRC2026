@@ -166,16 +166,16 @@ public class AutoCommandFactory {
                     swerve
                         .moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
-                        .flipY(left).finish().deadlineFor(intake.extendHopper(0.0)),
+                        .flipY(left).finish().alongWith(intake.extendHopper(0.0)),
                     swerve.moveToPose()
                         .target(new Pose2d(xMeters,
                             (FieldConstants.fieldWidth / 2.0) + Units.feetToMeters(
                                 SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
                                     Constants.DashboardValues.feetPastCenterDefault)),
                             Rotation2d.kCCW_90deg))
-                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
-                            left)
-                        .finish().deadlineFor(intake.intakeBalls()),
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                        .finish().deadlineFor(intake.extendHopper(1.0)
+                            .andThen(intake.intakeBalls())),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(
                             15)
