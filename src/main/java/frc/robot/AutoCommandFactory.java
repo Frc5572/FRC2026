@@ -126,13 +126,14 @@ public class AutoCommandFactory {
     private Command wilsonTestSide(boolean left) {
         double shootingTime = 3.0;
         double driveSpeed = 2.5;
-        double turretFudge = 2.5;
+        double turretFudge = 3.8;
         return Commands
             .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
                 CommandFactory
                     .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> left ? 3.8
-                            : -3.8,
+                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> left
+                            ? turretFudge
+                            : -turretFudge,
                         () -> false)
                     .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                 Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
@@ -172,7 +173,7 @@ public class AutoCommandFactory {
                                 SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
                                     Constants.DashboardValues.feetPastCenterDefault)),
                             Rotation2d.kCCW_90deg))
-                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(
+                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(
                             left)
                         .finish().deadlineFor(intake.intakeBalls()),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
