@@ -11,8 +11,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.math.geometry.Rectangle;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Field geometry and reference points for path planning, vision, and alignment.
@@ -782,7 +780,6 @@ public class FieldConstants {
      * <p>
      * The {@link #jsonFolder} maps to a subdirectory under deploy/apriltags/.
      */
-    @RequiredArgsConstructor
     public enum FieldType {
         /** Field built from AndyMark elements. */
         ANDYMARK("andymark"),
@@ -792,8 +789,25 @@ public class FieldConstants {
         ROSBOT("rosbot");
 
         /** Deploy folder name containing JSON layouts for this field type. */
-        @Getter
         private final String jsonFolder;
+
+        /**
+         * Creates a new FieldType with the specified JSON folder name.
+         *
+         * @param jsonFolder the deploy folder name
+         */
+        FieldType(String jsonFolder) {
+            this.jsonFolder = jsonFolder;
+        }
+
+        /**
+         * Gets the deploy folder name for this field type.
+         *
+         * @return the JSON folder name
+         */
+        public String getJsonFolder() {
+            return jsonFolder;
+        }
     }
 
     /**
@@ -812,6 +826,11 @@ public class FieldConstants {
         private volatile AprilTagFieldLayout layout;
         private volatile String layoutString;
 
+        /**
+         * Creates a new AprilTagLayoutType with the specified name.
+         *
+         * @param name the name of the layout
+         */
         AprilTagLayoutType(String name) {
             this.name = name;
         }
