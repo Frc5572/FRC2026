@@ -11,8 +11,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.math.geometry.Rectangle;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Field geometry and reference points for path planning, vision, and alignment.
@@ -782,7 +780,6 @@ public class FieldConstants {
      * <p>
      * The {@link #jsonFolder} maps to a subdirectory under deploy/apriltags/.
      */
-    @RequiredArgsConstructor
     public enum FieldType {
         /** Field built from AndyMark elements. */
         ANDYMARK("andymark"),
@@ -792,8 +789,11 @@ public class FieldConstants {
         ROSBOT("rosbot");
 
         /** Deploy folder name containing JSON layouts for this field type. */
-        @Getter
-        private final String jsonFolder;
+        public final String jsonFolder;
+
+        FieldType(String jsonFolder_) {
+            this.jsonFolder = jsonFolder_;
+        }
     }
 
     /**

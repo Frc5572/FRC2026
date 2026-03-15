@@ -1,7 +1,9 @@
+import org.frc5572.BuildConstantsGen
+
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
-    id "com.peterabeles.gversion" version "1.10"
+    id("com.dorongold.task-tree") version "4.0.1"
 }
 
 java {
@@ -66,12 +68,6 @@ task(replayWatch, type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 dependencies {
-    compileOnly("org.projectlombok:lombok:1.18.42")
-	annotationProcessor("org.projectlombok:lombok:1.18.42")
-
-	testCompileOnly("org.projectlombok:lombok:1.18.42")
-	testAnnotationProcessor("org.projectlombok:lombok:1.18.42")
-
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
@@ -147,15 +143,15 @@ javadoc {
 }
 
 // Create version file
-project.compileJava.dependsOn(createVersionFile)
-gversion {
-    srcDir       = "src/main/java/"
-    classPackage = "frc.robot"
-    className    = "BuildConstants"
-    dateFormat   = "yyyy-MM-dd HH:mm:ss z"
-    timeZone     = "America/Chicago"
-    indent       = "  "
-}
+// project.compileJava.dependsOn(createVersionFile)
+// gversion {
+//     srcDir       = "src/main/java/"
+//     classPackage = "frc.robot"
+//     className    = "BuildConstants"
+//     dateFormat   = "yyyy-MM-dd HH:mm:ss z"
+//     timeZone     = "America/Chicago"
+//     indent       = "  "
+// }
 // Create commit with working changes on event branches
 task(eventDeploy) {
     doLast {
@@ -187,4 +183,9 @@ task(eventDeploy) {
         }
     }
 }
-createVersionFile.dependsOn(eventDeploy)
+project.compileJava.dependsOn(eventDeploy)
+
+task build_constants(type: BuildConstantsGen) {}
+
+build_constants.dependsOn(project.classes)
+project.jar.dependsOn(build_constants)
