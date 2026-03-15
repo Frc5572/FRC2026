@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.util.GenerateEmptyIO;
+import frc.robot.util.tunable.FlywheelConstants;
 
 /**
  * indexer interface
@@ -26,5 +27,7 @@ public interface IndexerIO {
     public void setMagazineDutyCycle(double dutyCycle);
 
     public void setSpindexerMotorDutyCycle(double dutyCycle);
+
+    public void setConstants(FlywheelConstants constants);
 
 }

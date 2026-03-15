@@ -94,7 +94,8 @@ public final class RobotContainer {
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     private final Field2d field = new Field2d();
-    private final FieldObject2d autoShootLocation = field.getObject("Auto Shoot Location");
+    private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot Location");
+    private final FieldObject2d autoStoppingPoint = field.getObject("Wilson Auto End Point");
 
     /**
      * Robot Container
@@ -158,9 +159,13 @@ public final class RobotContainer {
         }
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
-        SmartDashboard.putNumber(Constants.DashboardValues.shootX, 0.0);
-        SmartDashboard.putNumber(Constants.DashboardValues.shootY, 0.0);
+        SmartDashboard.putNumber(Constants.DashboardValues.shootX,
+            Constants.DashboardValues.shootXDefault);
+        SmartDashboard.putNumber(Constants.DashboardValues.shootY,
+            Constants.DashboardValues.shootYDefault);
         SmartDashboard.putData(Constants.DashboardValues.field, field);
+        SmartDashboard.putNumber(Constants.DashboardValues.feetPastCenter,
+            Constants.DashboardValues.feetPastCenterDefault);
         // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
@@ -177,9 +182,9 @@ public final class RobotContainer {
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
         // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        // autoShootLocation.setPose(x, y, new Rotation2d());
+        // autoJustShootLocation.setPose(x, y, new Rotation2d());
         // // System.out.println("asdfasdasdf");
-        // // Logger.recordOutput("asdfadsf", autoShootLocation.getPose());
+        // // Logger.recordOutput("asdfadsf", autoJustShootLocation.getPose());
         // }));
         RobotModeTriggers.autonomous()
             .whileTrue(autoChooser.selectedCommandScheduler()
@@ -242,6 +247,7 @@ public final class RobotContainer {
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
         driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
+        driver.x().whileTrue(swerve.wheelsIn());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
@@ -282,7 +288,7 @@ public final class RobotContainer {
             .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
 
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
-
+        operator.y().onTrue(Commands.runOnce(() -> trims = new double[] {0.0, 0.0}));
         operator.povUp().onTrue(Commands.runOnce(() -> {
             trims[0] += 0.50;
         }));
@@ -297,10 +303,10 @@ public final class RobotContainer {
         }));
     }
 
+    private ShotDataHelper helper = new ShotDataHelper();
+
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
-
-        ShotDataHelper helper = new ShotDataHelper();
 
         tuner.rightTrigger()
             .whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
@@ -309,7 +315,7 @@ public final class RobotContainer {
                     FieldConstants.Hub.centerHub
                         .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
                             new Translation2d(-FieldConstants.Hub.centerHub.getX(),
-                                FieldConstants.Hub.centerHub.getY()).getAngle()))
+                                -FieldConstants.Hub.centerHub.getY()).getAngle()))
                         .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
                     Rotation2d.kZero)).rotationTolerance(1)
                     .translationTolerance(Units.inchesToMeters(1)).finish()))
@@ -327,7 +333,11 @@ public final class RobotContainer {
     }
 
     private void setupPit() {
-
+        pit.rightTrigger()
+            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
+            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
+        pit.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 1.0));
     }
 
     private List<Runnable> controllerSetups = new ArrayList<>();
@@ -375,9 +385,16 @@ public final class RobotContainer {
      * Runs during disabled
      */
     public void disabledPeriodic() {
-        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        autoShootLocation.setPose(x, y, new Rotation2d());
+        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
+            Constants.DashboardValues.shootXDefault);
+        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
+            Constants.DashboardValues.shootYDefault);
+        autoJustShootLocation.setPose(x, y, new Rotation2d());
+        autoStoppingPoint.setPose(new Pose2d(Constants.Auto.wilsonTestX,
+            (FieldConstants.fieldWidth / 2.0) + Units
+                .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                    Constants.DashboardValues.feetPastCenterDefault)),
+            Rotation2d.kCCW_90deg));
     }
 }
 

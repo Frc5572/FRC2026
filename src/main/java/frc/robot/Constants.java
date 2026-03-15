@@ -92,20 +92,27 @@ public final class Constants {
         public static final int spinMotorID = 9;
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
+
+        public static final FlywheelConstants constants =
+            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(6.0)
+                .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
+                .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
+                    .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
+                .finish();
     }
 
     /**
      * MoveToPos Constants
      */
     public static class SwerveTransformPID {
-        public static final double translationP = 3.5;
+        public static final double translationP = 2.5;
         public static final double translationI = 0.0;
         public static final double translationD = 0.0;
-        public static final double rotationP = 4.0;
+        public static final double rotationP = 2.0;
         public static final double rotationI = 0.0;
         public static final double rotationD = 0.0;
 
-        public static final double maxAngularVelocity = 9.0;
+        public static final double maxAngularVelocity = 6.0;
         public static final double maxAngularAcceleration = 9 * 5;
     }
 
@@ -334,8 +341,8 @@ public final class Constants {
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(0.5)
-                .rotationError(0.5)
+                .translationError(0.3)
+                .rotationError(100.0)
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
@@ -539,7 +546,7 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants pid =
             new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
-                .kP(26.0)
+                .kP(32.0)
                 .kI(0.0)
                 .kD(0.0)
                 .kV(7.01)
@@ -589,18 +596,18 @@ public final class Constants {
 
         // @formatter:off
         public static final FlywheelConstants constants =
-            new FlywheelConstantsBuilder()
+            new FlywheelConstantsBuilder("ShooterConstants")
                 .holdCurrent(40.0)
                 .maxDutyCycle(1.0)
                 .isReversed(true)
                 .velocityTolerance(8)
                 .atSpeedDebounce(0.1)
-                .pid(new PIDConstantsBuilder("Flywheel", GravityTypeValue.Elevator_Static)
-                    .kP(0.0)
+                .pid(new PIDConstantsBuilder("ShooterConstantsPID", GravityTypeValue.Elevator_Static)
+                    .kP(0.5)
                     .kI(0.0)
                     .kD(0.0)
-                    .kV(0.1135)
-                    .kS(0.0)
+                    .kV(0.122)
+                    .kS(0.02)
                     .kG(0.0)
                     .kA(0.0)
                     .finish())
@@ -625,7 +632,16 @@ public final class Constants {
         public static final String autoChooser = "Dashboard/Auto/Auto Chooser";
         public static final String shootX = "Dashboard/Auto/Auto Shoot X";
         public static final String shootY = "Dashboard/Auto/Auto Shoot Y";
+        public static final String feetPastCenter = "Dashboard/Auto/Feet Past Center";
+        public static final double feetPastCenterDefault = -1.7;
+        public static final double shootXDefault = 2.5;
+        public static final double shootYDefault = 4.0;
+        public static final String activeHub = "Dashboard/ActiveHub";
+        public static final String timeLeft = "Dashboard/TimeLeftInCurrentPhase";
+    }
 
-
+    /** Auto constants */
+    public static class Auto {
+        public static final double wilsonTestX = 8.076;
     }
 }

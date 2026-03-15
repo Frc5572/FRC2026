@@ -1,6 +1,6 @@
 {
   "version": 1.0,
-  "grid_size": 128,
+  "grid_size": 64,
   "tabs": [
     {
       "name": "Teleoperated",
@@ -9,13 +9,13 @@
         "containers": [
           {
             "title": "Hub is Active",
-            "x": 0.0,
+            "x": 1216.0,
             "y": 256.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 320.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
-              "topic": "/SmartDashboard/ActiveHub",
+              "topic": "/SmartDashboard/Dashboard/ActiveHub",
               "period": 0.06,
               "data_type": "boolean",
               "true_color": 4283215696,
@@ -26,10 +26,10 @@
           },
           {
             "title": "Sees An AprilTag",
-            "x": 256.0,
+            "x": 320.0,
             "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 320.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Vision/seesAprilTag",
@@ -42,32 +42,11 @@
             }
           },
           {
-            "title": "Hood Angle (Deg)",
-            "x": 256.0,
-            "y": 512.0,
-            "width": 256.0,
-            "height": 256.0,
-            "type": "Radial Gauge",
-            "properties": {
-              "topic": "/SmartDashboard/AdjustableHood/ActualAngle (Deg)",
-              "period": 0.06,
-              "data_type": "double",
-              "start_angle": -180.0,
-              "end_angle": 0.0,
-              "min_value": 0.0,
-              "max_value": 35.0,
-              "number_of_labels": 5,
-              "wrap_value": false,
-              "show_pointer": false,
-              "show_ticks": true
-            }
-          },
-          {
             "title": "Hopper is Extended",
-            "x": 256.0,
-            "y": 256.0,
-            "width": 256.0,
-            "height": 256.0,
+            "x": 1216.0,
+            "y": 0.0,
+            "width": 320.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Intake/HopperExtended",
@@ -83,11 +62,11 @@
             "title": "Time Left In Phase",
             "x": 0.0,
             "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 320.0,
+            "height": 128.0,
             "type": "Match Time",
             "properties": {
-              "topic": "/SmartDashboard/TimeLeftInCurrentPhase",
+              "topic": "/SmartDashboard/Dashboard/TimeLeftInCurrentPhase",
               "period": 0.06,
               "data_type": "double",
               "time_display_mode": "Minutes and Seconds",
@@ -97,10 +76,10 @@
           },
           {
             "title": "Up To Speed",
-            "x": 0.0,
-            "y": 512.0,
-            "width": 256.0,
-            "height": 256.0,
+            "x": 1216.0,
+            "y": 128.0,
+            "width": 320.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Shooter/UpToSpeed",
@@ -114,10 +93,10 @@
           },
           {
             "title": "Field",
-            "x": 512.0,
-            "y": 640.0,
-            "width": 1024.0,
-            "height": 512.0,
+            "x": 0.0,
+            "y": 128.0,
+            "width": 640.0,
+            "height": 384.0,
             "type": "Field",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Field",
@@ -135,13 +114,13 @@
           },
           {
             "title": "Rear Camera",
-            "x": 512.0,
+            "x": 640.0,
             "y": 0.0,
-            "width": 1024.0,
-            "height": 640.0,
+            "width": 576.0,
+            "height": 512.0,
             "type": "Camera Stream",
             "properties": {
-              "topic": "/CameraPublisher/orangepi1_Port_1182_Output_MJPEG_Server",
+              "topic": "/CameraPublisher/orangepi1_Port_1181_Input_MJPEG_Server",
               "period": 0.06,
               "rotation_turns": 0
             }
@@ -156,10 +135,10 @@
         "containers": [
           {
             "title": "Auto Chooser",
-            "x": 256.0,
+            "x": 320.0,
             "y": 0.0,
-            "width": 384.0,
-            "height": 256.0,
+            "width": 256.0,
+            "height": 192.0,
             "type": "ComboBox Chooser",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Auto Chooser",
@@ -171,8 +150,8 @@
             "title": "See April Tag",
             "x": 0.0,
             "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 320.0,
+            "height": 192.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Vision/seesAprilTag",
@@ -186,10 +165,10 @@
           },
           {
             "title": "Auto Shoot X",
-            "x": 640.0,
+            "x": 832.0,
             "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 192.0,
+            "height": 192.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Auto Shoot X",
@@ -200,10 +179,10 @@
           },
           {
             "title": "Auto Shoot Y",
-            "x": 896.0,
+            "x": 1024.0,
             "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
+            "width": 192.0,
+            "height": 192.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Auto Shoot Y",
@@ -215,9 +194,9 @@
           {
             "title": "Field",
             "x": 0.0,
-            "y": 256.0,
-            "width": 1408.0,
-            "height": 768.0,
+            "y": 192.0,
+            "width": 1280.0,
+            "height": 512.0,
             "type": "Field",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Field",
@@ -231,6 +210,20 @@
               "robot_color": 4294198070,
               "trajectory_color": 4294967295,
               "show_robot_outside_widget": true
+            }
+          },
+          {
+            "title": "Feet Past Center",
+            "x": 576.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 192.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Dashboard/Auto/Feet Past Center",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
             }
           }
         ]

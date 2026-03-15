@@ -463,4 +463,18 @@ public final class Swerve extends SubsystemBase {
             modules[i].setDesiredState(desiredStates[i]);
         }
     }
+
+    /** X the wheels. */
+    public Command wheelsIn() {
+        SwerveModuleState[] states =
+            new SwerveModuleState[] {new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(-135))};
+        return run(() -> {
+            for (int i = 0; i < modules.length; i++) {
+                modules[i].setDesiredState(states[i]);
+            }
+        });
+    }
 }

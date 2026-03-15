@@ -3,8 +3,7 @@ package frc.robot.subsystems.indexer;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.revrobotics.RelativeEncoder;
@@ -14,6 +13,7 @@ import com.revrobotics.spark.config.EncoderConfig;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.Constants;
 import frc.robot.util.PhoenixSignals;
+import frc.robot.util.tunable.FlywheelConstants;
 
 /**
  * real implementation of indexer
@@ -24,7 +24,9 @@ public class IndexerReal implements IndexerIO {
     public RelativeEncoder encoder;
     private final StatusSignal<AngularVelocity> spinMotorVelocity = spindexer.getVelocity();
     public EncoderConfig magazineConfig;
-    private VelocityDutyCycle velocityDutyCycleRequest = new VelocityDutyCycle(0);
+    private VelocityVoltage velocityVoltage = new VelocityVoltage(0);
+    private TalonFXConfiguration spindexerConfig = new TalonFXConfiguration();
+    private double desiredSpeed = 3.0;
 
     private boolean magazineConnected = false;
 
@@ -43,9 +45,9 @@ public class IndexerReal implements IndexerIO {
         } catch (Exception e) {
             System.out.println("magazine initialization failed: " + e.getMessage());
         }
-        TalonFXConfiguration config = new TalonFXConfiguration();
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        spindexer.getConfigurator().apply(config);
+
+        spindexerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        setConstants(Constants.Indexer.constants);
         PhoenixSignals.registerSignals(false, spinMotorVelocity);
     }
 
@@ -64,7 +66,7 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setSpindexerMotorDutyCycle(double dutyCycle) {
-        spindexer.setControl(new DutyCycleOut(dutyCycle));
+        spindexer.setControl(velocityVoltage.withVelocity(dutyCycle * desiredSpeed));
     }
 
     @Override
@@ -72,5 +74,12 @@ public class IndexerReal implements IndexerIO {
         if (magazineConnected && magazine != null) {
             magazine.set(-dutyCycle);
         }
+    }
+
+    @Override
+    public void setConstants(FlywheelConstants constants) {
+        constants.pid.apply(spindexerConfig.Slot0);
+        spindexer.getConfigurator().apply(spindexerConfig);
+        desiredSpeed = constants.maxDutyCycle;
     }
 }
