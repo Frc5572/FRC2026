@@ -640,6 +640,7 @@ public final class Constants {
         public static final String timeLeft = "Dashboard/TimeLeftInCurrentPhase";
     }
 
+    /** Auto constants */
     public static class Auto {
         public static final double wilsonTestX = 8.076;
     }
