@@ -58,6 +58,9 @@ public class Indexer extends SubsystemBase {
         });
     }
 
+    /**
+     * Run characterization procedure
+     */
     public Command characterization() {
         List<Double> velocitySamples = new LinkedList<>();
         List<Double> voltageSamples = new LinkedList<>();
