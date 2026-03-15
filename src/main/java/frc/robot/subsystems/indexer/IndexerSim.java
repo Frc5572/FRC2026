@@ -1,5 +1,6 @@
 package frc.robot.subsystems.indexer;
 
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.tunable.FlywheelConstants;
 
 /**
@@ -29,5 +30,8 @@ public class IndexerSim implements IndexerIO {
 
     @Override
     public void setConstants(FlywheelConstants constants) {}
+
+    @Override
+    public void setVoltageSpindexer(Voltage volts) {}
 
 }

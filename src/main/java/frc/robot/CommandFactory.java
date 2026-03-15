@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
@@ -108,6 +109,15 @@ public class CommandFactory {
             if (isOkay) {
                 indexer.setMagazineDutyCycle(1.0);
                 indexer.setSpindexerDutyCycle(6.0);
+                Timer timer = new Timer();
+                timer.start();
+                if (timer.get() >= 2.0) {
+                    indexer.setMagazineDutyCycle(-6.0);
+                    timer.start();
+                    if (timer.get() >= 0.5) {
+                        indexer.setMagazineDutyCycle(6.0);
+                    }
+                }
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(0.0);

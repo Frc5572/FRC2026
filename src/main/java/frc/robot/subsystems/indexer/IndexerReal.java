@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.revrobotics.RelativeEncoder;
@@ -11,6 +12,7 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.EncoderConfig;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.util.PhoenixSignals;
 import frc.robot.util.tunable.FlywheelConstants;
@@ -27,6 +29,8 @@ public class IndexerReal implements IndexerIO {
     private VelocityVoltage velocityVoltage = new VelocityVoltage(0);
     private TalonFXConfiguration spindexerConfig = new TalonFXConfiguration();
     private double desiredSpeed = 3.0;
+    private final VoltageOut voltage = new VoltageOut(0.0);
+
 
     private boolean magazineConnected = false;
 
@@ -81,5 +85,10 @@ public class IndexerReal implements IndexerIO {
         constants.pid.apply(spindexerConfig.Slot0);
         spindexer.getConfigurator().apply(spindexerConfig);
         desiredSpeed = constants.maxDutyCycle;
+    }
+
+    @Override
+    public void setVoltageSpindexer(Voltage volts) {
+        spindexer.setControl(voltage.withOutput(volts));
     }
 }
