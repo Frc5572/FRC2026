@@ -77,15 +77,18 @@ public class BuildConstantsGen extends DefaultTask {
     private static int[] parseGitVersion(String text) {
         int[] version = new int[3];
 
-        if (text == null)
+        if (text == null) {
             return version;
+        }
         String[] words = text.split("\\s+");
-        if (words.length != 3)
+        if (words.length != 3) {
             return version;
+        }
 
         words = words[2].split("\\.");
-        if (words.length < 1)
+        if (words.length < 1) {
             return version;
+        }
 
         for (int i = 0; i < Math.min(version.length, words.length); i++) {
             version[i] = Integer.parseInt(words[i]);
@@ -94,6 +97,7 @@ public class BuildConstantsGen extends DefaultTask {
         return version;
     }
 
+    /** Main task for this plugin. */
     @TaskAction
     public void run() throws IOException, ParseException {
         var file = getProject().getLayout().getBuildDirectory()
