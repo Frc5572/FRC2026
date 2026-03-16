@@ -24,7 +24,7 @@ import frc.robot.subsystems.vision.VisionSim;
 /** Simulated state of the robot */
 public class SimulatedRobotState {
 
-    private static final double avgBallsPerSecond = 4.0;
+    private static final double avgBallsPerSecond = 9.0;
 
     private final Random random;
 

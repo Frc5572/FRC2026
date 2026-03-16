@@ -114,7 +114,7 @@ public class ShotData {
         var q = distanceFlywheel.query(new Translation2d(distance, currentFlywheelSpeed));
         double hood = q.value().hoodAngleDeg();
         double tof = q.value().timeOfFlight();
-        double minSpeed = desiredSpeed - 10;
+        double minSpeed = desiredSpeed - 5;
         boolean isOkayToShoot = q.sdf() < 0.02 || currentFlywheelSpeed > minSpeed;
         if (log) {
             Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);
