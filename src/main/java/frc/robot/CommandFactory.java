@@ -54,6 +54,9 @@ public class CommandFactory {
         }, shooter, turret);
     }
 
+    public static Timer spindexerTimer = new Timer();
+
+
     /** Shoot at a given target. */
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
@@ -109,12 +112,11 @@ public class CommandFactory {
             if (isOkay) {
                 indexer.setMagazineDutyCycle(1.0);
                 indexer.setSpindexerDutyCycle(6.0);
-                Timer timer = new Timer();
-                timer.start();
-                if (timer.get() >= 2.0) {
+                spindexerTimer.start();
+                if (spindexerTimer.advanceIfElapsed(6)) {
                     indexer.setMagazineDutyCycle(-6.0);
-                    timer.start();
-                    if (timer.get() >= 0.5) {
+                    spindexerTimer.restart();;
+                    if (spindexerTimer.advanceIfElapsed(0.5)) {
                         indexer.setMagazineDutyCycle(6.0);
                     }
                 }
