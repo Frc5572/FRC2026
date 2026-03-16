@@ -75,14 +75,14 @@ public class Indexer extends SubsystemBase {
             // Let indexer stop
             this.run(() -> {
                 io.setVoltageSpindexer(Volts.of(0.0));
-                Logger.recordOutput("Sysid/Turret/FF/appliedVoltage", 0.0);
+                Logger.recordOutput("Sysid/Indexer/Spindexer/FF/appliedVoltage", 0.0);
             }).withTimeout(1.5),
             // Start timer
             this.runOnce(timer::restart),
             // Accelerate and gather data
             this.run(() -> {
                 double voltage = timer.get() * 0.1;
-                Logger.recordOutput("Sysid/Turret/FF/appliedVoltage", voltage);
+                Logger.recordOutput("Sysid/Indexer/Spindexer/FF/appliedVoltage", voltage);
                 io.setVoltageSpindexer(Volts.of(voltage));
                 velocitySamples.add(inputs.spindexerVelocity.in(RotationsPerSecond));
                 voltageSamples.add(voltage);
@@ -101,8 +101,8 @@ public class Indexer extends SubsystemBase {
                 double kS = (sumY * sumX2 - sumX * sumXY) / (n * sumX2 - sumX * sumX);
                 double kV = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
 
-                Logger.recordOutput("Sysid/Turret/FF/kS", kS);
-                Logger.recordOutput("Sysid/Turret/FF/kV", kV);
+                Logger.recordOutput("Sysid/Indexer/Spindexer/FF/kS", kS);
+                Logger.recordOutput("Sysid/Indexer/Spindexer/FF/kV", kV);
             }));
     }
 
