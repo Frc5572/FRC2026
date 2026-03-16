@@ -17,11 +17,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.subsystems.vision.CameraConstants;
@@ -69,6 +71,7 @@ public class RobotState {
      */
     public RobotState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
         prevGyroReading = gyroYaw;
+        SmartDashboard.putNumber("VisionFudge", Constants.visionFudgeFactor);
         SwerveDriveOdometry swerveOdometry =
             new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
@@ -214,10 +217,6 @@ public class RobotState {
         double translationStdDev, double rotationStdDev, double timestamp) {
         Pose2d robotPose = cameraPose.plus(robotToCamera.inverse()).toPose2d();
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
-        if (rotationStdDev > 100.0) {
-            robotPose = new Pose2d(robotPose.getTranslation(), before.getRotation());
-            rotationStdDev = 100.0;
-        }
         visionAdjustedOdometry.addVisionMeasurement(robotPose, timestamp,
             VecBuilder.fill(translationStdDev, translationStdDev, rotationStdDev));
         Pose2d after = visionAdjustedOdometry.getEstimatedPosition();
@@ -244,9 +243,6 @@ public class RobotState {
         double translationSpeed =
             Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
         double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
-        if (translationSpeed > 0.3 || rotationSpeed > 0.5) {
-            return false;
-        }
         if (camera.isTurret) {
             var maybeTurretRotation =
                 currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
@@ -278,12 +274,27 @@ public class RobotState {
             double velocityRotationError = rotationSpeed * velocityStdDev;
             Logger.recordOutput("State/velocityTranslationError", velocityTranslationError);
             Logger.recordOutput("State/velocityRotationError", velocityRotationError);
+
+            var bestTarget = pipelineResult.hasTargets() ? pipelineResult.getBestTarget() : null;
+            if (bestTarget == null) {
+                return false;
+            }
+            var bestTagPose = Constants.Vision.fieldLayout.getTagPose(bestTarget.getFiducialId());
+            if (bestTagPose.isEmpty()) {
+                return false;
+            }
+
             if (multiTag.isPresent()) {
                 // Multi Tag
                 Transform3d best = multiTag.get().estimatedPose.best;
                 Pose3d cameraPose =
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
                 Logger.recordOutput("State/Camera/" + camera.name + "/cameraPose", cameraPose);
+                cameraPose = correctPose(cameraPose, bestTagPose.get().getTranslation(),
+                    Rotation2d.fromRadians(robotToCamera_.getRotation().getY()),
+                    SmartDashboard.getNumber("VisionFudge", Constants.visionFudgeFactor));
+                Logger.recordOutput("State/Camera/" + camera.name + "/correctedCameraPose",
+                    cameraPose);
                 Pose3d estRobotPose = cameraPose.plus(robotToCamera_.inverse());
                 Logger.recordOutput("State/Camera/" + camera.name + "/estRobotPose", estRobotPose);
                 double stdDevMultiplier = stdDevMultiplier(pipelineResult.targets, cameraPose);
@@ -291,9 +302,12 @@ public class RobotState {
                     stdDevMultiplier * velocityTranslationError + camera.translationError;
                 double rotationStdDev =
                     stdDevMultiplier * velocityRotationError + camera.rotationError;
-                Logger.recordOutput("State/stdDevMultipler", stdDevMultiplier);
-                Logger.recordOutput("State/stdDevTranslation", translationStdDev);
-                Logger.recordOutput("State/stdDevRotation", rotationStdDev);
+                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevMultipler",
+                    stdDevMultiplier);
+                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevTranslation",
+                    translationStdDev);
+                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevRotation",
+                    rotationStdDev);
                 addVisionObservation(cameraPose, robotToCamera_, translationStdDev, rotationStdDev,
                     pipelineResult.getTimestampSeconds());
                 return true;
@@ -322,6 +336,15 @@ public class RobotState {
         double diff = (b.getRotations() - a.getRotations() + 0.5);
         diff = diff - Math.floor(diff) - 0.5;
         return Rotations.of(diff < -0.5 ? diff + 1.0 : diff);
+    }
+
+    private static Pose3d correctPose(Pose3d badPose, Translation3d closestTag,
+        Rotation2d correctPitch, double distancePlus) {
+        Translation3d diff = badPose.getTranslation().minus(closestTag);
+        double distance = diff.getNorm();
+        Translation3d newDiff = diff.times((distance + distancePlus) / distance);
+
+        return new Pose3d(closestTag.plus(newDiff), badPose.getRotation());
     }
 
     /**

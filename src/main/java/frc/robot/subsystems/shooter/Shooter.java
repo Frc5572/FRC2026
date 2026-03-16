@@ -64,14 +64,7 @@ public final class Shooter extends SubsystemBase {
         } else {
             shooting = false;
         }
-        boolean inTolerance = Math.abs(inputs.shooterAngularVelocity1.in(RotationsPerSecond)
-            - velocity) <= Constants.Shooter.constants.velocityTolerance;
-        boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
-        if (torqueCurrentControl) {
-            io.runTorqueCurrentVelocity(velocity);
-        } else {
-            io.runDutyCycleVelocity(velocity);
-        }
+        io.runTorqueCurrentVelocity(velocity);
     }
 
     /** Shoot at a given velocity */
