@@ -7,11 +7,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
-import frc.robot.ShotData;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.IndexerSim;
@@ -78,19 +75,15 @@ public class SimulatedRobotState {
                     .getRotation().getRadians() + turret.turrentAngle.position
                     + 0.02 * random.nextFloat() - 0.01;
 
-                var entry = ShotData.flywheelHood.query(new Translation2d(speedRotationsPerSecond,
-                    Units.radiansToDegrees(effectiveHoodAngle))).value();
                 var speeds =
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
-                double vert = entry.verticalVelocity();
-                double horiz = entry.horizontalVelocity();
-                double x = Math.cos(effectiveTurretAngle) * horiz + speeds.vxMetersPerSecond;
-                double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
+                double x = Math.cos(effectiveTurretAngle) * 1.0 + speeds.vxMetersPerSecond;
+                double y = Math.sin(effectiveTurretAngle) * 1.0 + speeds.vyMetersPerSecond;
                 Translation3d initial =
                     new Pose3d(swerveDrive.mapleSim.getSimulatedDriveTrainPose())
                         .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
                         .getTranslation();
-                Translation3d velocity = new Translation3d(x, y, vert);
+                Translation3d velocity = new Translation3d(x, y, 1.0);
                 FuelSim.getInstance().spawnFuel(initial, velocity);
                 // this.indexer.numFuel--;
             }
