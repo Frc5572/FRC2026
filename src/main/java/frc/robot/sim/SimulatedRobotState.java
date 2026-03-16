@@ -74,7 +74,8 @@ public class SimulatedRobotState {
                 double effectiveTurretAngle = this.swerveDrive.mapleSim.getSimulatedDriveTrainPose()
                     .getRotation().getRadians() + turret.turrentAngle.position
                     + 0.02 * random.nextFloat() - 0.01;
-
+                // TODO:
+                // https://www.chiefdelphi.com/t/open-source-shoot-on-the-move-sotm-solver-ball-physics-sim-3-java-files-drop-in/516109
                 var speeds =
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
                 double x = Math.cos(effectiveTurretAngle) * 1.0 + speeds.vxMetersPerSecond;
