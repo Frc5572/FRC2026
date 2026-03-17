@@ -54,13 +54,14 @@ public class CommandFactory {
         }, shooter, turret);
     }
 
-    public static Timer spindexerTimer = new Timer();
 
 
     /** Shoot at a given target. */
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
         DoubleSupplier adjustUp, DoubleSupplier adjustLeft, BooleanSupplier disableTurret) {
+        Timer spindexerTimer = new Timer();
+        boolean[] reverse = {false};
         return Commands.runEnd(() -> {
             var lookahead = state.getFieldRelativeSpeeds().times(0.05);
             final Translation2d target = targetSupplier.get()
@@ -110,9 +111,24 @@ public class CommandFactory {
                 MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
             if (isOkay) {
-                indexer.setMagazineDutyCycle(1.0);
-                indexer.setSpindexerDutyCycle(6.0);
-                spindexerTimer.start();
+                if (spindexerTimer.isRunning()) {
+                    spindexerTimer.restart();
+                    reverse[0] = false;
+                } else if (!spindexerTimer.isRunning()) {
+                    spindexerTimer.start();
+                    reverse[0] = false;
+                }
+                if (!reverse[0]) {
+                    indexer.setMagazineDutyCycle(1.0);
+                    indexer.setSpindexerDutyCycle(6.0);
+                } else {
+                    indexer.setSpindexerDutyCycle(-6.0);
+                }
+                if (!reverse[0] && spindexerTimer.advanceIfElapsed(6)) {
+                    reverse[0] = true;
+                } else if (reverse[0] && spindexerTimer.advanceIfElapsed(0.5)) {
+                    reverse[0] = false;
+                }
                 if (spindexerTimer.advanceIfElapsed(6)) {
                     indexer.setMagazineDutyCycle(-6.0);
                     spindexerTimer.restart();;
