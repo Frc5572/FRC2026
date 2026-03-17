@@ -409,7 +409,7 @@ public final class RobotContainer {
             }
             autoStoppingPoint.setPose(pose);
         } else {
-            autoStoppingPoint.setPose(null);
+            autoStoppingPoint.setPoses(new ArrayList<Pose2d>());
         }
     }
 }
