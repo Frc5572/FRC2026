@@ -96,7 +96,7 @@ public final class RobotContainer {
     private final Field2d field = new Field2d();
     // private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot
     // Location");
-    private final FieldObject2d autoStoppingPoint = field.getObject("Wilson Auto End Point");
+    private final FieldObject2d autoStoppingPoint = field.getObject("Auto End Point");
 
     /**
      * Robot Container
@@ -175,9 +175,10 @@ public final class RobotContainer {
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
-        autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
-        autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
-        autoChooser.addRoutine("WilsonTest", autoCommandFactory::wilsonTest);
+        // autoChooser.addRoutine("Gather then Shoot (Left)",
+        // autoCommandFactory::gatherThenShootLeft);
+        autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
+        autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
@@ -387,16 +388,16 @@ public final class RobotContainer {
     public void disabledPeriodic() {
         String selectedAuto =
             SmartDashboard.getString(Constants.DashboardValues.autoChooser + "/active", "");
-        System.out.println(selectedAuto);
-        if (selectedAuto == "Just Shoot") {
+        // System.out.println(selectedAuto);
+        if (selectedAuto.equals(Constants.Auto.justShoot)) {
             double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
                 Constants.DashboardValues.shootXDefault);
             double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
                 Constants.DashboardValues.shootYDefault);
             autoStoppingPoint.setPose(AllianceFlipUtil.apply(new Pose2d(x, y, new Rotation2d())));
 
-        } else if (selectedAuto == "WilsonTest") {
-            System.out.println("asdf");
+        } else if (selectedAuto.equals(Constants.Auto.wilsonTest)) {
+            // System.out.println("asdf");
             Pose2d pose = AllianceFlipUtil.apply(new Pose2d(Constants.Auto.wilsonTestX,
                 (FieldConstants.fieldWidth / 2.0) + Units
                     .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
@@ -407,6 +408,8 @@ public final class RobotContainer {
                 pose = AllianceFlipUtil.flipY(pose);
             }
             autoStoppingPoint.setPose(pose);
+        } else {
+            autoStoppingPoint.setPose(null);
         }
     }
 }

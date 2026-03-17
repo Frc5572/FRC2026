@@ -630,8 +630,8 @@ public final class Constants {
     public static class DashboardValues {
         public static final String field = "Dashboard/Field";
         public static final String autoChooser = "Dashboard/Auto/Auto Chooser";
-        public static final String shootX = "Dashboard/Auto/Auto Shoot X";
-        public static final String shootY = "Dashboard/Auto/Auto Shoot Y";
+        public static final String shootX = "Dashboard/Auto/Just Shoot X";
+        public static final String shootY = "Dashboard/Auto/Just Shoot Y";
         public static final String feetPastCenter = "Dashboard/Auto/Feet Past Center";
         public static final double feetPastCenterDefault = -1.7;
         public static final double shootXDefault = 2.5;
@@ -643,5 +643,7 @@ public final class Constants {
     /** Auto constants */
     public static class Auto {
         public static final double wilsonTestX = 8.076;
+        public static final String wilsonTest = "Wilson Test";
+        public static final String justShoot = "Just Shoot";
     }
 }
