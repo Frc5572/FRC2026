@@ -60,7 +60,7 @@ public class CommandFactory {
         Command passCommand = Commands.runEnd(() -> {
             turret.goToAngleFieldRelative(() -> Rotation2d.fromDegrees(0));
             shooter.setVelocity(65);
-            hood.setTargetAngle(Degrees.of(45));
+            hood.setTargetAngle(Degrees.of(Constants.AdjustableHood.passingAngle));
 
             indexer.setMagazineDutyCycle(1.0);
             indexer.setSpindexerDutyCycle(6.0);
@@ -130,8 +130,8 @@ public class CommandFactory {
             indexer.setSpindexerDutyCycle(0.0);
         }, shooter, turret, indexer, hood);
 
-        return Commands.either(passCommand, autoShoot,
-            () -> state.getGlobalPoseEstimate().getX() > FieldConstants.Hub.farLeftCorner.getX());
+        return Commands.either(passCommand, autoShoot, () -> state.getGlobalPoseEstimate()
+            .getX() > AllianceFlipUtil.applyX(FieldConstants.Hub.farLeftCorner.getX()));
     }
 
     /** Point turret at hub. */
