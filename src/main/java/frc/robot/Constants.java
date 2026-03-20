@@ -394,7 +394,7 @@ public final class Constants {
 
         public static final double hoodTolerence = 0.05;
 
-        public static final double gearRatio = 79.0;
+        public static final double gearRatio = 34.0;
         public static final SensorDirectionValue hoodCANCoderInvert =
             SensorDirectionValue.Clockwise_Positive;
         public static final double hoodCANcoderDiscontinuity = 0.5;
