@@ -117,9 +117,8 @@ public final class RobotContainer {
 
                 break;
             case kSimulation:
-                // FuelSim.getInstance().spawnStartingFuel();
-                sim = new SimulatedRobotState(
-                    new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
+                FuelSim.getInstance().spawnStartingFuel();
+                sim = new SimulatedRobotState(new Pose2d(4.04, 0.7, Rotation2d.kCW_90deg));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
                     () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),
@@ -178,6 +177,7 @@ public final class RobotContainer {
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
         autoChooser.addRoutine("WilsonTest", autoCommandFactory::wilsonTest);
+        autoChooser.addRoutine("Just Pass", autoCommandFactory::passOnly);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
