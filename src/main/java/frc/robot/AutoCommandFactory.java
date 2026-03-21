@@ -7,6 +7,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -109,6 +110,46 @@ public class AutoCommandFactory {
         moveToStart.done().onTrue(CommandFactory.shoot(swerve.state, () -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         }, turret, shooter, indexer, adjustableHood, () -> 0, () -> 0, () -> true));
+        return routine;
+    }
+
+    /** moves the bot to the depot and intakes fuel */
+    public AutoRoutine moveToDepot() {
+        AutoRoutine routine = autoFactory.newRoutine("move to depot");
+        Command depot =
+            Commands
+                .sequence(
+                    swerve.moveToPose()
+                        .target(
+                            new Pose2d(
+                                AllianceFlipUtil.apply(new Translation2d(
+                                    FieldConstants.Depot.depotCenter.getX()
+                                        + Units.inchesToMeters(42),
+                                    FieldConstants.Depot.depotCenter.getY())),
+                                Rotation2d.fromDegrees(180)))
+                        .finish(),
+                    intake.extendHopper(0),
+                    Commands.parallel(intake.intakeBalls(6),
+                        swerve.moveToPose()
+                            .target(new Pose2d(
+                                AllianceFlipUtil.apply(new Translation2d(
+                                    FieldConstants.Depot.depotCenter.getX()
+                                        - Units.inchesToMeters(2.5),
+                                    FieldConstants.Depot.depotCenter.getY())),
+                                Rotation2d.fromDegrees(180)))
+                            .finish()),
+                    swerve.moveToPose()
+                        .target(new Pose2d(AllianceFlipUtil.apply(new Translation2d(
+                            FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
+                            FieldConstants.Depot.depotCenter.getY())), Rotation2d.kZero))
+                        .finish(),
+                    Commands.parallel(shooter.shoot(65),
+                        Commands.sequence(Commands.waitSeconds(.6),
+                            indexer.setSpeedCommand(0.8, 0.8)),
+                        Commands.repeatingSequence(intake.jerkIntake())))
+                .withTimeout(15);
+        depot = depot.andThen(swerve.stop());
+        routine.active().onTrue(depot);
         return routine;
     }
 
