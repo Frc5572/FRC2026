@@ -164,28 +164,28 @@
             }
           },
           {
-            "title": "Auto Shoot X",
+            "title": "Just Shoot X",
             "x": 832.0,
             "y": 0.0,
             "width": 192.0,
             "height": 192.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/SmartDashboard/Dashboard/Auto/Auto Shoot X",
+              "topic": "/SmartDashboard/Dashboard/Auto/Just Shoot X",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
             }
           },
           {
-            "title": "Auto Shoot Y",
+            "title": "Just Shoot Y",
             "x": 1024.0,
             "y": 0.0,
             "width": 192.0,
             "height": 192.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/SmartDashboard/Dashboard/Auto/Auto Shoot Y",
+              "topic": "/SmartDashboard/Dashboard/Auto/Just Shoot Y",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
