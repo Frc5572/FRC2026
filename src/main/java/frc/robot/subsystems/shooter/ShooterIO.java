@@ -30,9 +30,9 @@ public interface ShooterIO {
 
     public void updateInputs(ShooterInputs inputs);
 
-    public void runDutyCycleVelocity(double velocity);
+    public void runVolts(double volts);
 
-    public void runTorqueCurrentVelocity(double velocity);
+    public void runVelocity(double velocity);
 
     public void setConstants(FlywheelConstants constants);
 

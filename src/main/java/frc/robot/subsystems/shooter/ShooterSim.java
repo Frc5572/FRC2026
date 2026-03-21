@@ -22,12 +22,12 @@ public class ShooterSim implements ShooterIO {
     }
 
     @Override
-    public void runDutyCycleVelocity(double velocity) {
+    public void runVolts(double velocity) {
         flywheelTarget = velocity;
     }
 
     @Override
-    public void runTorqueCurrentVelocity(double velocity) {
+    public void runVelocity(double velocity) {
         flywheelTarget = velocity;
     }
 
