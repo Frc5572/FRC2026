@@ -399,7 +399,8 @@ public final class Constants {
             SensorDirectionValue.Clockwise_Positive;
         public static final double hoodCANcoderDiscontinuity = 0.5;
 
-        public static final double passingAngle = 0.0;
+        // TODO: find the max angle the hood can go without breaking
+        public static final double passingAngle = 45.0;
     }
 
     /**

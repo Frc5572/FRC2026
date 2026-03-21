@@ -57,7 +57,19 @@ public class CommandFactory {
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
         DoubleSupplier adjustUp, DoubleSupplier adjustLeft, BooleanSupplier disableTurret) {
-        return Commands.runEnd(() -> {
+        Command passCommand = Commands.runEnd(() -> {
+            turret.goToAngleFieldRelative(() -> Rotation2d.fromDegrees(0));
+            shooter.setVelocity(65);
+            hood.setTargetAngle(Degrees.of(Constants.AdjustableHood.passingAngle));
+
+            indexer.setMagazineDutyCycle(1.0);
+            indexer.setSpindexerDutyCycle(6.0);
+        }, () -> {
+            shooter.setVelocity(0.0);
+            indexer.setMagazineDutyCycle(0.0);
+            indexer.setSpindexerDutyCycle(0.0);
+        }, shooter, turret, indexer, hood);
+        Command autoShoot = Commands.runEnd(() -> {
             var lookahead = state.getFieldRelativeSpeeds().times(0.05);
             final Translation2d target = targetSupplier.get()
                 .plus(new Translation2d(lookahead.vxMetersPerSecond, lookahead.vyMetersPerSecond));
@@ -117,6 +129,9 @@ public class CommandFactory {
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
         }, shooter, turret, indexer, hood);
+
+        return Commands.either(passCommand, autoShoot, () -> state.getGlobalPoseEstimate()
+            .getX() > AllianceFlipUtil.applyX(FieldConstants.Hub.farLeftCorner.getX()));
     }
 
     /** Point turret at hub. */
