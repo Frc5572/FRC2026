@@ -322,11 +322,13 @@ public final class RobotContainer {
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 0.7));
 
-        tuner.a().whileTrue(Commands.run(() -> {
-            Logger.recordOutput("TunerAPressed", 1.0);
-        })).whileFalse(Commands.run(() -> {
-            Logger.recordOutput("TunerAPressed", 0.0);
-        }));
+        tuner.a().whileTrue(indexer.characterization());
+
+        // tuner.a().whileTrue(Commands.run(() -> {
+        // Logger.recordOutput("TunerAPressed", 1.0);
+        // })).whileFalse(Commands.run(() -> {
+        // Logger.recordOutput("TunerAPressed", 0.0);
+        // }));
 
         // tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         // tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());

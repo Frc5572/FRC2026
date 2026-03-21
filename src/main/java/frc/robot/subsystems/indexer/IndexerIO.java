@@ -3,6 +3,7 @@ package frc.robot.subsystems.indexer;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.GenerateEmptyIO;
 import frc.robot.util.tunable.FlywheelConstants;
 
@@ -29,5 +30,7 @@ public interface IndexerIO {
     public void setSpindexerMotorDutyCycle(double dutyCycle);
 
     public void setConstants(FlywheelConstants constants);
+
+    public void setVoltageSpindexer(Voltage volts);
 
 }
