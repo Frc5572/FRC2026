@@ -16,4 +16,6 @@ public @interface TypeStateBuilder {
      */
     public String value() default "";
 
+    public boolean linear() default false;
+
 }

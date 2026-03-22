@@ -192,3 +192,5 @@ simgui-ds.json
 !src/main/deploy/localization/*.zip
 
 *.wpilog
+
+/compile_times.csv
