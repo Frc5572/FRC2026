@@ -338,6 +338,7 @@ public final class RobotContainer {
                 .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         pit.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 1.0));
+        pit.a().whileTrue(shooter.characterization()).onFalse(shooter.shoot(0));
     }
 
     private List<Runnable> controllerSetups = new ArrayList<>();

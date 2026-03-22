@@ -4,8 +4,8 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -32,8 +32,7 @@ public final class ShooterReal implements ShooterIO {
     private final StatusSignal<Current> shooterCurrent2;
 
     private final VelocityDutyCycle velocityDutyCycle = new VelocityDutyCycle(0.0);
-    private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
-        new VelocityTorqueCurrentFOC(0.0);
+    private final VoltageOut voltageOut = new VoltageOut(0.0);
     private final VelocityVoltage velocityVoltage = new VelocityVoltage(0.0).withSlot(1);
 
     /** Create new shooter. */
@@ -56,12 +55,12 @@ public final class ShooterReal implements ShooterIO {
     }
 
     @Override
-    public void runDutyCycleVelocity(double velocity) {
-        shooterMotor1.setControl(velocityDutyCycle.withVelocity(velocity));
+    public void runVolts(double volts) {
+        shooterMotor1.setControl(voltageOut.withOutput(volts));
     }
 
     @Override
-    public void runTorqueCurrentVelocity(double velocity) {
+    public void runVelocity(double velocity) {
         shooterMotor1.setControl(velocityVoltage.withVelocity(velocity));
     }
 
