@@ -1,36 +1,12 @@
-package frc.robot;
+package frc.robot.shotdata;
 
 import static edu.wpi.first.units.Units.Meters;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
+import frc.robot.FieldConstants;
 
-/** Data for flywheel, distance, and hood angle that results in a successful shot. */
 public class ShotData {
 
-    public static final ShotEntry[] entries = new ShotEntry[] {};
-
-    public static final InterpolatingDoubleTreeMap distanceToFlywheel =
-        new InterpolatingDoubleTreeMap();
-    public static final InterpolatingDoubleTreeMap distanceToHoodAngle =
-        new InterpolatingDoubleTreeMap();
-    public static final InterpolatingDoubleTreeMap distanceToTimeOfFlight =
-        new InterpolatingDoubleTreeMap();
-    public static final InterpolatingDoubleTreeMap hoodAngleToExitAngle =
-        new InterpolatingDoubleTreeMap();
-
-    static {
-        for (ShotEntry entry : entries) {
-            distanceToFlywheel.put(entry.distanceFeet(), entry.flywheelSpeedRps());
-            distanceToHoodAngle.put(entry.distanceFeet(), entry.hoodAngleDeg());
-            distanceToTimeOfFlight.put(entry.distanceFeet(), entry.timeOfFlight());
-            hoodAngleToExitAngle.put(Units.degreesToRadians(entry.hoodAngleDeg()),
-                entry.exitAngle());
-            hoodAngleToExitAngle.put(Units.degreesToRadians(entry.hoodAngleDeg()),
-                entry.exitAngle());
-        }
-    }
-
-    /** Entry into the shot data table */
     public static final record ShotEntry(double distanceFeet, double flywheelSpeedRps,
         double hoodAngleDeg, double timeOfFlight) {
 
