@@ -242,7 +242,7 @@ public final class RobotContainer {
         return false;
     }
 
-    private double[] trims = new double[] {0.0, 0.0};
+    private double[] trims = new double[] {0.0, 0.1};
 
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());

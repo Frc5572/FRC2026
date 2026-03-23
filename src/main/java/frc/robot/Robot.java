@@ -80,6 +80,7 @@ public class Robot extends LoggedRobot {
             String logPath = findReplayLog();
             if (logPath == null) {
                 Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+                // Logger.addDataReceiver(new WPILOGWriter(".")); // Log to current directory
                 setUseTiming(true);
                 robotRunType = RobotRunType.kSimulation;
             } else {
