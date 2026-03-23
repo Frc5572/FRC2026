@@ -193,4 +193,5 @@ simgui-ds.json
 
 *.wpilog
 
+BuildConstants.java
 /compile_times.csv
