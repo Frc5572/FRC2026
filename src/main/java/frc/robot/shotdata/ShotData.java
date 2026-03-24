@@ -7,6 +7,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 
+/** Storage and interpolation for shooter parameters. */
 public class ShotData {
 
     private static final ShotEntry[] entries = new ShotEntry[] {
@@ -32,6 +33,7 @@ public class ShotData {
         }
     }
 
+    /** Parameters for a successful shot. */
     public static final record ShotEntry(double distanceFeet, double flywheelSpeedRps,
         double hoodAngleDeg, double timeOfFlight) {
 
