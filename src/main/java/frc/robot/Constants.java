@@ -99,6 +99,10 @@ public final class Constants {
                 .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
                     .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
                 .finish();
+
+        public static final double timeReversingDuringUnjam = 0.25;
+        public static final double timeBetweenUnjams = 1.0;
+        public static final double shooterNotShootingUnjamThreshold = 1.0;
     }
 
     /**
@@ -400,6 +404,8 @@ public final class Constants {
         public static final double hoodCANcoderDiscontinuity = 0.5;
 
         public static final double passingAngle = 0.0;
+
+        public static final double maxHoodAngleDeg = 30.0;
     }
 
     /**

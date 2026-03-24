@@ -1,11 +1,36 @@
 package frc.robot.shotdata;
 
 import static edu.wpi.first.units.Units.Meters;
+import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 
 public class ShotData {
+
+    private static final ShotEntry[] entries = new ShotEntry[] {
+        // @formatter:off
+
+        // @formatter:on
+    };
+
+    private static final InterpolatingDoubleTreeMap distanceToHoodAngle =
+        new InterpolatingDoubleTreeMap();
+    private static final InterpolatingDoubleTreeMap distanceToFlywheelSpeed =
+        new InterpolatingDoubleTreeMap();
+    private static final InterpolatingDoubleTreeMap distanceToTimeOfFlight =
+        new InterpolatingDoubleTreeMap();
+
+    static {
+        for (var entry : entries) {
+            distanceToHoodAngle.put(Units.feetToMeters(entry.distanceFeet()), entry.hoodAngleDeg());
+            distanceToFlywheelSpeed.put(Units.feetToMeters(entry.distanceFeet()),
+                entry.flywheelSpeedRps());
+            distanceToTimeOfFlight.put(Units.feetToMeters(entry.distanceFeet()),
+                entry.timeOfFlight());
+        }
+    }
 
     public static final record ShotEntry(double distanceFeet, double flywheelSpeedRps,
         double hoodAngleDeg, double timeOfFlight) {
@@ -44,8 +69,20 @@ public class ShotData {
     /** Get parameters for a given shot situation. */
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed,
         boolean log) {
-        // TODO
-        return new ShotParameters(0.0, 0.0, 0.0, true);
+        double desiredSpeed = distanceToFlywheelSpeed.get(distance);
+        double hood = distanceToHoodAngle.get(distance);
+        double tof = distanceToTimeOfFlight.get(distance);
+        double minSpeed = desiredSpeed - 10;
+        boolean isOkayToShoot = currentFlywheelSpeed > minSpeed;
+        if (log) {
+            Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);
+            Logger.recordOutput("ShotParameters/distance", distance);
+            Logger.recordOutput("ShotParameters/currentSpeed", currentFlywheelSpeed);
+            Logger.recordOutput("ShotParameters/hoodDeg", hood);
+            Logger.recordOutput("ShotParameters/tof", tof);
+            Logger.recordOutput("ShotParameters/isOkayToShoot", isOkayToShoot);
+        }
+        return new ShotParameters(desiredSpeed, hood, tof, isOkayToShoot);
     }
 
 }

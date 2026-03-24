@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -320,12 +321,23 @@ public final class RobotContainer {
                     Rotation2d.kZero)).rotationTolerance(1)
                     .translationTolerance(Units.inchesToMeters(1)).finish()))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
-        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 0.7));
+        boolean[] firstShotFlag = {false};
+        double[] firstShot = {0.0};
+        tuner.leftTrigger().onTrue(Commands.runOnce(() -> {
+            firstShotFlag[0] = true;
+        })).whileTrue(indexer.setSpeedCommand(1.0, 1.0));
+        new Trigger(() -> shooter.timeSinceLastShot() < 0.4).onTrue(Commands.runOnce(() -> {
+            if (firstShotFlag[0]) {
+                firstShot[0] = Timer.getFPGATimestamp() - shooter.timeSinceLastShot();
+                Logger.recordOutput("ShotTiming/firstShot", firstShot[0]);
+                firstShotFlag[0] = false;
+            }
+        }));
 
-        tuner.a().whileTrue(Commands.run(() -> {
-            Logger.recordOutput("TunerAPressed", 1.0);
-        })).whileFalse(Commands.run(() -> {
-            Logger.recordOutput("TunerAPressed", 0.0);
+        tuner.a().onTrue(Commands.runOnce(() -> {
+            double hitTarget = Timer.getFPGATimestamp();
+            Logger.recordOutput("ShotTiming/hitTarget", hitTarget);
+            Logger.recordOutput("ShotTiming/timeOfFlight", hitTarget - firstShot[0]);
         }));
 
         // tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());

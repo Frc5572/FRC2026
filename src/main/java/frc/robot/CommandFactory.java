@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.shotdata.ShotData;
@@ -58,7 +59,12 @@ public class CommandFactory {
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
         DoubleSupplier adjustUp, DoubleSupplier adjustLeft, BooleanSupplier disableTurret) {
-        return Commands.runEnd(() -> {
+        final Timer unjamTimer = new Timer();
+        boolean[] isReversing = new boolean[] {false};
+        return Commands.runOnce(() -> {
+            unjamTimer.start();
+            isReversing[0] = false;
+        }).alongWith(Commands.runEnd(() -> {
             var lookahead = state.getFieldRelativeSpeeds().times(0.05);
             final Translation2d target = targetSupplier.get()
                 .plus(new Translation2d(lookahead.vxMetersPerSecond, lookahead.vyMetersPerSecond));
@@ -87,7 +93,7 @@ public class CommandFactory {
             var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
-            hood.setTargetAngle(Degrees.of(MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0)));
+            hood.setTargetAngle(Degrees.of(parameters.hoodAngleDeg()));
             if (disableTurret.getAsBoolean()) {
                 turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
             } else {
@@ -104,17 +110,35 @@ public class CommandFactory {
                 MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
             if (isOkay) {
-                indexer.setMagazineDutyCycle(1.0);
-                indexer.setSpindexerDutyCycle(6.0);
+                if (shooter
+                    .timeSinceLastShot() > Constants.Indexer.shooterNotShootingUnjamThreshold) {
+                    if (isReversing[0] && unjamTimer
+                        .advanceIfElapsed(Constants.Indexer.timeReversingDuringUnjam)) {
+                        isReversing[0] = false;
+                    } else if (!isReversing[0]
+                        && unjamTimer.advanceIfElapsed(Constants.Indexer.timeBetweenUnjams)) {
+                        isReversing[0] = true;
+                    }
+                } else {
+                    isReversing[0] = false;
+                }
+                if (isReversing[0]) {
+                    indexer.setMagazineDutyCycle(1.0);
+                    indexer.setSpindexerDutyCycle(-1.0);
+                } else {
+                    indexer.setMagazineDutyCycle(1.0);
+                    indexer.setSpindexerDutyCycle(1.0);
+                }
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(0.0);
+                unjamTimer.reset();
             }
         }, () -> {
             shooter.setVelocity(0.0);
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
-        }, shooter, turret, indexer, hood);
+        }, shooter, turret, indexer, hood));
     }
 
     /** Point turret at hub. */
