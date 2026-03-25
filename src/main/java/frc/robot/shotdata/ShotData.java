@@ -12,7 +12,12 @@ public class ShotData {
 
     private static final ShotEntry[] entries = new ShotEntry[] {
         // @formatter:off
-
+        new ShotEntry(17.8, 90, 20, 1.8),
+        new ShotEntry(14.6, 62, 17, 1.43),
+        new ShotEntry(12.25, 55, 15, 1.28),
+        new ShotEntry(9.25, 47, 15, 1.03),
+        new ShotEntry(5.25, 45, 2, 1.11),
+        new ShotEntry(7.38, 47, 7, 1.14),
         // @formatter:on
     };
 

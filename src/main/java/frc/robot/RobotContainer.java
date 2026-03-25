@@ -309,22 +309,25 @@ public final class RobotContainer {
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
-        tuner.rightTrigger()
-            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
-                adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle)),
-                swerve.moveToPose().target(() -> new Pose2d(
-                    FieldConstants.Hub.centerHub
-                        .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
-                            new Translation2d(-FieldConstants.Hub.centerHub.getX(),
-                                -FieldConstants.Hub.centerHub.getY()).getAngle()))
-                        .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
-                    Rotation2d.kZero)).rotationTolerance(1)
-                    .translationTolerance(Units.inchesToMeters(1)).finish()))
-            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
+        tuner.rightTrigger().whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
+            .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))
+            // ,
+            // swerve.moveToPose().target(() -> new Pose2d(
+            // FieldConstants.Hub.centerHub
+            // .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
+            // new Translation2d(-FieldConstants.Hub.centerHub.getX(),
+            // -FieldConstants.Hub.centerHub.getY()).getAngle()))
+            // .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
+            // Rotation2d.kZero)).rotationTolerance(1)
+            // .translationTolerance(Units.inchesToMeters(1)).finish()
+            )).onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         boolean[] firstShotFlag = {false};
         double[] firstShot = {0.0};
         tuner.leftTrigger().onTrue(Commands.runOnce(() -> {
             firstShotFlag[0] = true;
+            Logger.recordOutput("ShotTiming/distance",
+                Units.metersToFeet(AllianceFlipUtil.apply(swerve.state.getTurretCenterFieldFrame())
+                    .getTranslation().getDistance(FieldConstants.Hub.centerHub)));
         })).whileTrue(indexer.setSpeedCommand(1.0, 1.0));
         new Trigger(() -> shooter.timeSinceLastShot() < 0.4).onTrue(Commands.runOnce(() -> {
             if (firstShotFlag[0]) {

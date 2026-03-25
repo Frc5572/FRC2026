@@ -69,7 +69,7 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
-        });
+        }).withTimeout(1.0);
     }
 
     /** Retracts hopper */
@@ -105,7 +105,7 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
-        });
+        }).withTimeout(1.0);
     }
 
     /** Run intake wheels */
