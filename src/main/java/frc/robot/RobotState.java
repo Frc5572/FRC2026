@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
@@ -249,7 +250,16 @@ public class RobotState {
         if (camera.isTurret) {
             var maybeTurretRotation =
                 currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
-            if (maybeTurretRotation.isEmpty()) {
+            var maybeTurretRotationM1 =
+                currentTurretAngle.getSample(pipelineResult.getTimestampSeconds() - 0.1);
+            var maybeTurretRotationP1 =
+                currentTurretAngle.getSample(pipelineResult.getTimestampSeconds() + 0.1);
+            if (maybeTurretRotation.isEmpty() || maybeTurretRotationM1.isEmpty()
+                || maybeTurretRotationP1.isEmpty()) {
+                return false;
+            }
+            if (Math.abs(angleDiff(maybeTurretRotationM1.get(), maybeTurretRotationP1.get())
+                .in(Degrees)) > 5) {
                 return false;
             }
             robotToCamera_ = getTurretRobotToCamera(robotToCamera_, maybeTurretRotation.get());

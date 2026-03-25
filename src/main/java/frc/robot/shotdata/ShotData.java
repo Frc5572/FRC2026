@@ -14,6 +14,7 @@ public class ShotData {
         // @formatter:off
         new ShotEntry(17.8, 90, 20, 1.8),
         new ShotEntry(14.6, 62, 17, 1.43),
+        // new ShotEntry(12.15, 65, 17, 1.38),
         new ShotEntry(12.25, 55, 15, 1.28),
         new ShotEntry(9.25, 47, 15, 1.03),
         new ShotEntry(5.25, 45, 2, 1.11),
@@ -76,10 +77,12 @@ public class ShotData {
     /** Get parameters for a given shot situation. */
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed,
         boolean log) {
-        double desiredSpeed = distanceToFlywheelSpeed.get(distance);
-        double hood = distanceToHoodAngle.get(distance);
+        // double desiredSpeed = distanceToFlywheelSpeed.get(distance);
+        // double hood = distanceToHoodAngle.get(distance);
+        double desiredSpeed = 67.2 - 6 * distance + 0.404 * distance * distance;
+        double hood = -15.3 + 4 * distance - 0.116 * distance * distance;
         double tof = distanceToTimeOfFlight.get(distance);
-        double minSpeed = desiredSpeed - 10;
+        double minSpeed = desiredSpeed - 6;
         boolean isOkayToShoot = currentFlywheelSpeed > minSpeed;
         if (log) {
             Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);
