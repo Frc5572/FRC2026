@@ -77,7 +77,7 @@ public class CommandFactory {
                 double distance =
                     adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
                         + adjustUpValue;
-                var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
+                var parameters = ShotData.getShotParameters(distance,
                     shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), false);
                 double tof = parameters.timeOfFlight();
                 var forward = state.getFieldRelativeSpeeds().times(tof);
@@ -90,7 +90,7 @@ public class CommandFactory {
             double distance =
                 adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
                     + adjustUpValue;
-            var parameters = ShotData.getShotParameters(Units.metersToFeet(distance),
+            var parameters = ShotData.getShotParameters(distance,
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
             hood.setTargetAngle(Degrees.of(parameters.hoodAngleDeg()));
@@ -110,25 +110,8 @@ public class CommandFactory {
                 MathUtil.clamp(parameters.hoodAngleDeg(), 0.0, 30.0));
             Logger.recordOutput("AutoShoot/distanceFeet", Units.metersToFeet(distance));
             if (isOkay) {
-                if (shooter
-                    .timeSinceLastShot() > Constants.Indexer.shooterNotShootingUnjamThreshold) {
-                    if (isReversing[0] && unjamTimer
-                        .advanceIfElapsed(Constants.Indexer.timeReversingDuringUnjam)) {
-                        isReversing[0] = false;
-                    } else if (!isReversing[0]
-                        && unjamTimer.advanceIfElapsed(Constants.Indexer.timeBetweenUnjams)) {
-                        isReversing[0] = true;
-                    }
-                } else {
-                    isReversing[0] = false;
-                }
-                if (isReversing[0]) {
-                    indexer.setMagazineDutyCycle(1.0);
-                    indexer.setSpindexerDutyCycle(-1.0);
-                } else {
-                    indexer.setMagazineDutyCycle(1.0);
-                    indexer.setSpindexerDutyCycle(1.0);
-                }
+                indexer.setMagazineDutyCycle(1.0);
+                indexer.setSpindexerDutyCycle(1.0);
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(0.0);

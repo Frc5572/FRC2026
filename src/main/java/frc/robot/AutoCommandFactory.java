@@ -131,7 +131,7 @@ public class AutoCommandFactory {
             .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
                 CommandFactory
                     .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> left
+                        turret, shooter, indexer, adjustableHood, () -> 1.0, () -> left
                             ? turretFudge
                             : -turretFudge,
                         () -> false)
@@ -141,14 +141,14 @@ public class AutoCommandFactory {
                     CommandFactory
                         .shoot(swerve.state,
                             () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 0.0,
+                            shooter, indexer, adjustableHood, () -> 1.0,
                             () -> left ? turretFudge : -turretFudge, () -> false)
                         .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                     adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076, driveSpeed),
                     CommandFactory
                         .shoot(swerve.state,
                             () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 0.0,
+                            shooter, indexer, adjustableHood, () -> 1.0,
                             () -> left ? turretFudge : -turretFudge, () -> false)
                         .alongWith(intake.jerkIntake()).withTimeout(shootingTime))
                     .repeatedly());
@@ -165,21 +165,32 @@ public class AutoCommandFactory {
                         .flipY(left).finish(),
                     swerve
                         .moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
-                        .flipY(left).finish().alongWith(intake.extendHopper(0.0)),
-                    swerve.moveToPose()
+                        .maxSpeed(
+                            driveSpeed)
+                        .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish()
+                        .alongWith(intake.extendHopper(0.0)),
+                    (swerve.moveToPose()
                         .target(new Pose2d(xMeters,
                             (FieldConstants.fieldWidth / 2.0) + Units.feetToMeters(
                                 SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
                                     Constants.DashboardValues.feetPastCenterDefault)),
                             Rotation2d.kCCW_90deg))
-                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                        .finish().deadlineFor(intake.extendHopper(1.0)
-                            .andThen(intake.intakeBalls())),
-                    swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(
-                            15)
-                        .flipY(left).finish(),
+                        .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                        .finish().andThen(
+                            swerve.moveToPose()
+                                .target(new Pose2d(7,
+                                    (FieldConstants.fieldWidth / 2.0)
+                                        + Units.feetToMeters(SmartDashboard.getNumber(
+                                            Constants.DashboardValues.feetPastCenter,
+                                            Constants.DashboardValues.feetPastCenterDefault)),
+                                    (xMeters > 7) ? Rotation2d.k180deg : Rotation2d.kZero))
+                                .maxSpeed(1.0).translationTolerance(1.0).rotationTolerance(15)
+                                .flipY(left).finish(),
+                            swerve.moveToPose().target(new Pose2d(7, 1.267, Rotation2d.kCW_90deg))
+                                .maxSpeed(1.0).translationTolerance(1.0).rotationTolerance(15)
+                                .flipY(left).finish()))
+                                    .deadlineFor(intake.extendHopper(1.0)
+                                        .andThen(intake.intakeBalls())),
                     swerve
                         .moveToPose().target(
                             new Pose2d(6.0, 0.622, Rotation2d.kZero))
