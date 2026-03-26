@@ -323,9 +323,6 @@ public class RobotState {
                     rotationStdDev);
                 addVisionObservation(cameraPose, robotToCamera_, translationStdDev, rotationStdDev,
                     pipelineResult.getTimestampSeconds());
-                if (camera.isTurret) {
-
-                }
                 return true;
             }
         }
