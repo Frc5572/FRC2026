@@ -3,10 +3,12 @@ package frc.robot.subsystems.adjustable_hood;
 import static edu.wpi.first.units.Units.Degrees;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 /**
  * Adjustable Hood Subsystem
@@ -41,7 +43,8 @@ public class AdjustableHood extends SubsystemBase {
     }
 
     public void setTargetAngle(Angle setAngle) {
-        io.setTargetAngle(setAngle);
+        io.setTargetAngle(Degrees
+            .of(MathUtil.clamp(setAngle.in(Degrees), 0, Constants.AdjustableHood.maxHoodAngleDeg)));
     }
 
     public Command setGoal(Angle setAngle) {
