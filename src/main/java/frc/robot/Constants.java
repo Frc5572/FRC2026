@@ -649,7 +649,7 @@ public final class Constants {
     /** Auto constants */
     public static class Auto {
         public static final double wilsonTestX = 8.076;
-        public static final String wilsonTest = "Wilson Test";
+        public static final String wilsonTest = "Peashooter";
         public static final String justShoot = "Just Shoot";
     }
 }
