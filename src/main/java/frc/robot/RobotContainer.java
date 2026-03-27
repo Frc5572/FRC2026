@@ -212,7 +212,7 @@ public final class RobotContainer {
         RobotModeTriggers.teleop().whileTrue(Commands.run(() -> {
             Logger.recordOutput("Trims", trims);
         }));
-        vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
+        vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
 
         // BUTTON BINDINGS
         maybeController("Driver", driver, this::setupDriver);
