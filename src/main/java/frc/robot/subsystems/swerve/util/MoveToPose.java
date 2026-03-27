@@ -9,14 +9,12 @@ import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.FieldConstants;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.typestate.AltMethod;
@@ -154,8 +152,7 @@ public class MoveToPose extends Command {
             target = AllianceFlipUtil.apply(target);
         }
         if (flipY) {
-            target = new Pose2d(target.getX(), FieldConstants.fieldWidth - target.getY(),
-                target.getRotation().plus(Rotation2d.k180deg));
+            target = AllianceFlipUtil.flipY(target);
         }
         Logger.recordOutput("Swerve/MoveToPoseTarget", target);
         ChassisSpeeds ctrlEffort = Constants.Swerve.holonomicDriveController
