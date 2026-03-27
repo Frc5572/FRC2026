@@ -124,14 +124,14 @@ public class AutoCommandFactory {
     }
 
     private Command wilsonTestSide(boolean left) {
-        double shootingTime = 3.0;
+        double shootingTime = 4.5;
         double driveSpeed = 2.5;
         double turretFudge = 3.8;
         return Commands
             .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
                 CommandFactory
                     .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> 0.0, () -> left
+                        turret, shooter, indexer, adjustableHood, () -> 1.0, () -> left
                             ? turretFudge
                             : -turretFudge,
                         () -> false)
@@ -141,16 +141,16 @@ public class AutoCommandFactory {
                     CommandFactory
                         .shoot(swerve.state,
                             () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 0.0,
+                            shooter, indexer, adjustableHood, () -> 1.0,
                             () -> left ? turretFudge : -turretFudge, () -> false)
                         .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                     adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076, driveSpeed),
                     CommandFactory
                         .shoot(swerve.state,
                             () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 0.0,
+                            shooter, indexer, adjustableHood, () -> 1.0,
                             () -> left ? turretFudge : -turretFudge, () -> false)
-                        .alongWith(intake.jerkIntake()).withTimeout(shootingTime))
+                        .alongWith(intake.jerkIntake()).withTimeout(shootingTime * 2))
                     .repeatedly());
     }
 
@@ -173,7 +173,7 @@ public class AutoCommandFactory {
                                 SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
                                     Constants.DashboardValues.feetPastCenterDefault)),
                             Rotation2d.kCCW_90deg))
-                        .maxSpeed(1.5).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                        .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                         .finish().deadlineFor(intake.extendHopper(1.0)
                             .andThen(intake.intakeBalls())),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))

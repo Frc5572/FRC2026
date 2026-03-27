@@ -76,6 +76,7 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
+
         });
         return extendHoldKickBar.andThen(extendAndIntake);
     }
@@ -113,7 +114,7 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
-        });
+        }).withTimeout(1.0);
     }
 
     /** Run intake wheels */

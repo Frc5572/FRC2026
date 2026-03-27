@@ -3,6 +3,7 @@ plugins {
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
     id("com.dorongold.task-tree") version "4.0.1"
     id "com.peterabeles.gversion" version "1.10"
+    id "eclipse"
 }
 
 java {
@@ -189,5 +190,4 @@ task(eventDeploy) {
         }
     }
 }
-project.compileJava.dependsOn(eventDeploy)
-
+createVersionFile.dependsOn(eventDeploy)

@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
@@ -17,6 +18,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -63,6 +65,8 @@ public class RobotState {
 
     private Rotation2d gyroOffset = Rotation2d.kZero;
     private Rotation2d prevGyroReading = Rotation2d.kZero;
+
+    private Translation2d empericalHubLocation;
 
     /**
      * Creates a new swerve state estimator.
@@ -246,7 +250,16 @@ public class RobotState {
         if (camera.isTurret) {
             var maybeTurretRotation =
                 currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
-            if (maybeTurretRotation.isEmpty()) {
+            var maybeTurretRotationM1 =
+                currentTurretAngle.getSample(pipelineResult.getTimestampSeconds() - 0.1);
+            var maybeTurretRotationP1 =
+                currentTurretAngle.getSample(pipelineResult.getTimestampSeconds() + 0.1);
+            if (maybeTurretRotation.isEmpty() || maybeTurretRotationM1.isEmpty()
+                || maybeTurretRotationP1.isEmpty()) {
+                return false;
+            }
+            if (Math.abs(angleDiff(maybeTurretRotationM1.get(), maybeTurretRotationP1.get())
+                .in(Degrees)) > 5) {
                 return false;
             }
             robotToCamera_ = getTurretRobotToCamera(robotToCamera_, maybeTurretRotation.get());

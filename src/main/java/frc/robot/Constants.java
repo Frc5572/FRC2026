@@ -99,6 +99,10 @@ public final class Constants {
                 .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
                     .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
                 .finish();
+
+        public static final double timeReversingDuringUnjam = 0.25;
+        public static final double timeBetweenUnjams = 1.0;
+        public static final double shooterNotShootingUnjamThreshold = 1.0;
     }
 
     /**
@@ -400,6 +404,8 @@ public final class Constants {
         public static final double hoodCANcoderDiscontinuity = 0.5;
 
         public static final double passingAngle = 0.0;
+
+        public static final double maxHoodAngleDeg = 30.0;
     }
 
     /**
@@ -633,7 +639,7 @@ public final class Constants {
         public static final String shootX = "Dashboard/Auto/Just Shoot X";
         public static final String shootY = "Dashboard/Auto/Just Shoot Y";
         public static final String feetPastCenter = "Dashboard/Auto/Feet Past Center";
-        public static final double feetPastCenterDefault = -1.7;
+        public static final double feetPastCenterDefault = 0.0;
         public static final double shootXDefault = 2.5;
         public static final double shootYDefault = 4.0;
         public static final String activeHub = "Dashboard/ActiveHub";
