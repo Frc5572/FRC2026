@@ -12,7 +12,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.shotdata.ShotData;
@@ -59,12 +58,7 @@ public class CommandFactory {
     public static Command shoot(RobotState state, Supplier<Translation2d> targetSupplier,
         Turret turret, Shooter shooter, Indexer indexer, AdjustableHood hood,
         DoubleSupplier adjustUp, DoubleSupplier adjustLeft, BooleanSupplier disableTurret) {
-        final Timer unjamTimer = new Timer();
-        boolean[] isReversing = new boolean[] {false};
-        return Commands.runOnce(() -> {
-            unjamTimer.start();
-            isReversing[0] = false;
-        }).alongWith(Commands.runEnd(() -> {
+        return Commands.runEnd(() -> {
             var lookahead = state.getFieldRelativeSpeeds().times(0.05);
             final Translation2d target = targetSupplier.get()
                 .plus(new Translation2d(lookahead.vxMetersPerSecond, lookahead.vyMetersPerSecond));
@@ -115,13 +109,12 @@ public class CommandFactory {
             } else {
                 indexer.setMagazineDutyCycle(0.0);
                 indexer.setSpindexerDutyCycle(0.0);
-                unjamTimer.reset();
             }
         }, () -> {
             shooter.setVelocity(0.0);
             indexer.setMagazineDutyCycle(0.0);
             indexer.setSpindexerDutyCycle(0.0);
-        }, shooter, turret, indexer, hood));
+        }, shooter, turret, indexer, hood);
     }
 
     /** Point turret at hub. */
