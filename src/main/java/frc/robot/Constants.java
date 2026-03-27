@@ -94,7 +94,7 @@ public final class Constants {
         public static final int spinMotorSpeed = 0;
 
         public static final FlywheelConstants constants =
-            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(6.0)
+            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(12.0)
                 .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
                 .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
                     .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
@@ -394,7 +394,7 @@ public final class Constants {
 
         public static final double hoodTolerence = 0.05;
 
-        public static final double gearRatio = 79.0;
+        public static final double gearRatio = 85.0;
         public static final SensorDirectionValue hoodCANCoderInvert =
             SensorDirectionValue.Clockwise_Positive;
         public static final double hoodCANcoderDiscontinuity = 0.5;
