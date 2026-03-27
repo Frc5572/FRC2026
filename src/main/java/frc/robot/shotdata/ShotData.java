@@ -30,14 +30,20 @@ public class ShotData {
     private static final InterpolatingDoubleTreeMap distanceToTimeOfFlight =
         new InterpolatingDoubleTreeMap();
 
+    private static final double maxDistance;
+
     static {
+        double maxDistance_ = 0.0;
         for (var entry : entries) {
-            distanceToHoodAngle.put(Units.feetToMeters(entry.distanceFeet()), entry.hoodAngleDeg());
-            distanceToFlywheelSpeed.put(Units.feetToMeters(entry.distanceFeet()),
-                entry.flywheelSpeedRps());
-            distanceToTimeOfFlight.put(Units.feetToMeters(entry.distanceFeet()),
-                entry.timeOfFlight());
+            double dist = Units.feetToMeters(entry.distanceFeet());
+            distanceToHoodAngle.put(dist, entry.hoodAngleDeg());
+            distanceToFlywheelSpeed.put(dist, entry.flywheelSpeedRps());
+            distanceToTimeOfFlight.put(dist, entry.timeOfFlight());
+            if (maxDistance_ < dist) {
+                maxDistance_ = dist;
+            }
         }
+        maxDistance = maxDistance_;
     }
 
     /** Parameters for a successful shot. */
@@ -84,6 +90,11 @@ public class ShotData {
         // double hood = -15.3 + 4 * distance - 0.116 * distance * distance;
         double tof = distanceToTimeOfFlight.get(distance);
         double minSpeed = desiredSpeed - 6;
+        if (distance > maxDistance) {
+            hood = 30.0;
+            desiredSpeed = 70.0;
+            minSpeed = 55.0;
+        }
         boolean isOkayToShoot = currentFlywheelSpeed > minSpeed;
         if (log) {
             Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);

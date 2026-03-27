@@ -254,7 +254,7 @@ public final class RobotContainer {
             if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
                 .getX() > FieldConstants.Hub.centerHub.getX()) {
                 return AllianceFlipUtil
-                    .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+                    .apply(new Translation2d(0, swerve.state.getGlobalPoseEstimate().getY()));
             } else {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }
