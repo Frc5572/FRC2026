@@ -91,7 +91,7 @@ public class ShotData {
         double tof = distanceToTimeOfFlight.get(distance);
         double minSpeed = desiredSpeed - 6;
         if (distance > maxDistance) {
-            hood = 30.0;
+            hood = 38.0;
             desiredSpeed = 70.0;
             minSpeed = 55.0;
         }
