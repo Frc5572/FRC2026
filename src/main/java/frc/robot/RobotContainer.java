@@ -254,8 +254,14 @@ public final class RobotContainer {
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
                 .getX() > FieldConstants.Hub.centerHub.getX()) {
-                return AllianceFlipUtil
-                    .apply(new Translation2d(0, swerve.state.getGlobalPoseEstimate().getY()));
+                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2) {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, (3 * FieldConstants.fieldWidth / 4)));
+                } else {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, (FieldConstants.fieldWidth / 4)));
+                }
             } else {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }
