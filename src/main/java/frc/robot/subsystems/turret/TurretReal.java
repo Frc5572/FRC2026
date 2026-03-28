@@ -26,7 +26,6 @@ public class TurretReal implements TurretIO {
     private TalonFX turretMotor = new TalonFX(Constants.Turret.TurretMotorID);
     private TalonFXConfiguration turretConfig = new TalonFXConfiguration();
 
-    private CANcoder turretCANcoder1 = new CANcoder(Constants.Turret.TurretCANcoderID1);
     private CANcoder turretCANcoder2 = new CANcoder(Constants.Turret.TurretCANcoderID2);
     private CANcoderConfiguration canCoder1Config = new CANcoderConfiguration();
     private CANcoderConfiguration canCoder2Config = new CANcoderConfiguration();
@@ -35,7 +34,6 @@ public class TurretReal implements TurretIO {
     private StatusSignal<Voltage> turretVoltage = turretMotor.getMotorVoltage();
     private StatusSignal<Current> turretCurrent = turretMotor.getStatorCurrent();
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
-    private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getPosition();
     private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getPosition();
     public final PositionVoltage mmVoltage = new PositionVoltage(0);
     private final VoltageOut voltage = new VoltageOut(0.0);
@@ -60,17 +58,16 @@ public class TurretReal implements TurretIO {
             Constants.Turret.motorGearing / Constants.Turret.gear2Gearing;
 
         turretMotor.getConfigurator().apply(turretConfig);
-        turretCANcoder1.getConfigurator().apply(canCoder1Config);
         turretCANcoder2.getConfigurator().apply(canCoder2Config);
 
         turretMotor.setNeutralMode(NeutralModeValue.Brake);
         resetPosition(Degree.of(0));
 
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
-            canCoder1Pos, canCoder2Pos);
+            canCoder2Pos);
         PhoenixSignals.registerSignals(false, turretPosition, turretVoltage, turretCurrent,
-            canCoder1Pos, canCoder2Pos);
-        ParentDevice.optimizeBusUtilizationForAll(turretCANcoder1, turretCANcoder2, turretMotor);
+            canCoder2Pos);
+        ParentDevice.optimizeBusUtilizationForAll(turretCANcoder2, turretMotor);
     }
 
     @Override
@@ -80,7 +77,6 @@ public class TurretReal implements TurretIO {
 
     @Override
     public void updateInputs(TurretInputs inputs) {
-        inputs.gear1AbsoluteAngle = canCoder1Pos.getValue();
         inputs.gear2AbsoluteAngle = canCoder2Pos.getValue();
 
         inputs.relativeAngle = turretPosition.getValue().unaryMinus().in(Rotations);
@@ -100,7 +96,6 @@ public class TurretReal implements TurretIO {
     @Override
     public void resetPosition(Angle angle) {
         turretMotor.setPosition(angle);
-        turretCANcoder1.setPosition(angle);
         turretCANcoder2.setPosition(angle);
     }
 

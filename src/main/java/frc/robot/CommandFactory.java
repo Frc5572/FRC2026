@@ -130,6 +130,6 @@ public class CommandFactory {
         return Commands.runOnce(() -> {
             swerve.state.resetInit();
             turret.resetTurret();
-        }).ignoringDisable(true)
+        }).ignoringDisable(true);
     }
 }
