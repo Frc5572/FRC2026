@@ -157,4 +157,8 @@ public class Turret extends SubsystemBase {
                 Logger.recordOutput("Sysid/Turret/FF/kV", kV);
             }));
     }
+
+    public void resetTurret() {
+        io.resetPosition(Degrees.of(0));
+    }
 }

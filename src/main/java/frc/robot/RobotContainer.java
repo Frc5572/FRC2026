@@ -291,7 +291,8 @@ public final class RobotContainer {
     }
 
     private void setupOperator() {
-        operator.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
+        operator.a().and(RobotModeTriggers.disabled())
+            .onTrue(CommandFactory.resetInit(swerve, turret));
         operator.b()
             .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
 

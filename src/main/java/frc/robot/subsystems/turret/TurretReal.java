@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -63,9 +64,7 @@ public class TurretReal implements TurretIO {
         turretCANcoder2.getConfigurator().apply(canCoder2Config);
 
         turretMotor.setNeutralMode(NeutralModeValue.Brake);
-        turretMotor.setPosition(0.0);
-        turretCANcoder1.setPosition(0.0);
-        turretCANcoder2.setPosition(0.0);
+        resetPosition(Degree.of(0));
 
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
             canCoder1Pos, canCoder2Pos);
@@ -101,7 +100,10 @@ public class TurretReal implements TurretIO {
     @Override
     public void resetPosition(Angle angle) {
         turretMotor.setPosition(angle);
+        turretCANcoder1.setPosition(angle);
+        turretCANcoder2.setPosition(angle);
     }
+
 
     @Override
     public void setPID(PIDConstants constants) {

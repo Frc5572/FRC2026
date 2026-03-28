@@ -125,4 +125,11 @@ public class CommandFactory {
                 .plus(Rotation2d.fromDegrees(trimRight.getAsDouble()));
         });
     }
+
+    public static Command resetInit(Swerve swerve, Turret turret) {
+        return Commands.runOnce(() -> {
+            swerve.state.resetInit();
+            turret.resetTurret();
+        }).ignoringDisable(true)
+    }
 }
