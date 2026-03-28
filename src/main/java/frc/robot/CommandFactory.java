@@ -87,7 +87,7 @@ public class CommandFactory {
             var parameters = ShotData.getShotParameters(distance,
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
-            hood.setTargetAngle(Degrees.of(parameters.hoodAngleDeg()));
+            hood.setTargetAngle(Degrees.of(parameters.hoodAngleDeg() + 2.5));
             if (disableTurret.getAsBoolean()) {
                 turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
             } else {
