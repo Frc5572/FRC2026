@@ -124,9 +124,9 @@ public class AutoCommandFactory {
     }
 
     private Command wilsonTestSide(boolean left) {
-        double shootingTime = 4.5;
+        double shootingTime = 5.5;
         double driveSpeed = 2.5;
-        double turretFudge = 3.8;
+        double turretFudge = 2.5;
         return Commands
             .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
                 CommandFactory
