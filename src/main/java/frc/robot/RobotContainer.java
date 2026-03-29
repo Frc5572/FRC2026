@@ -296,9 +296,7 @@ public final class RobotContainer {
     private void setupOperator() {
         operator.a().and(RobotModeTriggers.disabled())
             .onTrue(CommandFactory.resetInit(swerve, turret));
-        // operator.b()
-        // .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
-
+        operator.b().whileTrue(turret.setVoltage(() -> 0));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
         operator.y().onTrue(Commands.runOnce(() -> trims = new double[] {0.0, 0.0}));
         operator.povUp().onTrue(Commands.runOnce(() -> {
