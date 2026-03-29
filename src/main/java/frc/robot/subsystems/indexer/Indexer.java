@@ -1,5 +1,6 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -58,6 +59,22 @@ public class Indexer extends SubsystemBase {
      * @return Command
      */
     public Command spinWhileIntake() {
-        return setSpeedCommand(0, 0.4);
+        int[] counts = new int[] {0};
+        double[] prev = new double[] {0.0};
+        Command init = runOnce(() -> {
+            counts[0] = 0;
+        });
+        Command spinIndexer = setSpeedCommand(0, 0.4).until(() -> {
+            double vel = inputs.spindexerVelocity.in(RotationsPerSecond);
+            boolean spinStopped = vel == 0;
+            prev[0] = vel;
+            if (spinStopped) {
+                counts[0]++;
+            } else {
+                counts[0] = 0;
+            }
+            return counts[0] > 5;
+        });
+        return init.andThen(spinIndexer);
     }
 }
