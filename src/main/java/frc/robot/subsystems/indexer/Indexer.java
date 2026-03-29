@@ -51,4 +51,13 @@ public class Indexer extends SubsystemBase {
             setMagazineDutyCycle(0);
         });
     }
+
+    /**
+     * Spin indexer while intaking balls
+     *
+     * @return Command
+     */
+    public Command spinWhileIntake() {
+        return setSpeedCommand(0, 0.4);
+    }
 }

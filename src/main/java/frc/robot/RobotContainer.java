@@ -288,6 +288,9 @@ public final class RobotContainer {
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
+
+        driver.leftTrigger().and(driver.rightTrigger().negate())
+            .whileTrue(indexer.spinWhileIntake());
     }
 
     private void setupOperator() {

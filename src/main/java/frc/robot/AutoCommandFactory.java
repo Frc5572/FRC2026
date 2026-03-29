@@ -174,8 +174,9 @@ public class AutoCommandFactory {
                                     Constants.DashboardValues.feetPastCenterDefault)),
                             Rotation2d.kCCW_90deg))
                         .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                        .finish().deadlineFor(intake.extendHopper(1.0)
-                            .andThen(intake.intakeBalls())),
+                        .finish()
+                        .deadlineFor(intake.extendHopper(1.0).andThen(
+                            intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(
                             15)
