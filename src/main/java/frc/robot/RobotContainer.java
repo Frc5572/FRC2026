@@ -297,6 +297,8 @@ public final class RobotContainer {
         operator.a().and(RobotModeTriggers.disabled())
             .onTrue(CommandFactory.resetInit(swerve, turret));
         operator.b().whileTrue(turret.setVoltage(() -> 0));
+        turret.setDefaultCommand(Commands.either(turret.setVoltage(() -> 0),
+            CommandFactory.followHub(turret, swerve, () -> trims[1]), operator.b()));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
         operator.y().onTrue(Commands.runOnce(() -> trims = new double[] {0.0, 0.0}));
         operator.povUp().onTrue(Commands.runOnce(() -> {
