@@ -69,8 +69,12 @@ public class Turret extends SubsystemBase {
     /** Set turret motor's output voltage. */
     public Command setVoltage(DoubleSupplier voltage) {
         return this.run(() -> {
-            io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
+            setVoltage(voltage);
         });
+    }
+
+    public void setVoltageIO(DoubleSupplier voltage) {
+        io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
     }
 
     /**

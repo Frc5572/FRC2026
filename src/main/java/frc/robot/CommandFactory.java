@@ -89,7 +89,8 @@ public class CommandFactory {
             shooter.setVelocity(parameters.desiredSpeed());
             hood.setTargetAngle(Degrees.of(parameters.hoodAngleDeg() + 2.5));
             if (disableTurret.getAsBoolean()) {
-                turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
+                // turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
+                turret.setVoltageIO(() -> 0.0);
             } else {
                 boolean turretFacing = turret.setGoalFieldRelative(
                     adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation())
