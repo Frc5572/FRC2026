@@ -66,7 +66,7 @@ public class Indexer extends SubsystemBase {
         });
         Command spinIndexer = setSpeedCommand(0, 0.4).until(() -> {
             double vel = inputs.spindexerVelocity.in(RotationsPerSecond);
-            boolean spinStopped = vel == 0;
+            boolean spinStopped = vel < 0.1;
             prev[0] = vel;
             if (spinStopped) {
                 counts[0]++;
