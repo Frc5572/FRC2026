@@ -4,6 +4,7 @@ plugins {
     id("com.dorongold.task-tree") version "4.0.1"
     id "com.peterabeles.gversion" version "1.10"
     id "eclipse"
+    id "de.undercouch.download" version "5.7.0"
 }
 
 java {
@@ -191,3 +192,14 @@ task(eventDeploy) {
     }
 }
 createVersionFile.dependsOn(eventDeploy)
+
+task downloadD3(type: Download) {
+    src "https://d3js.org/d3.v7.min.js"
+    dest "src/main/deploy/scripts"
+    onlyIf {
+        !new File("src/main/deploy/scripts/d3.v7.min.js").exists()
+    }
+}
+
+deployfrcStaticFileDeployroborio.dependsOn(downloadD3)
+check.dependsOn(downloadD3)
