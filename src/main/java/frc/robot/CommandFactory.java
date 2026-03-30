@@ -127,6 +127,7 @@ public class CommandFactory {
         });
     }
 
+    /** Reset the init */
     public static Command resetInit(Swerve swerve, Turret turret) {
         return Commands.runOnce(() -> {
             swerve.state.resetInit();
