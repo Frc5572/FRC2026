@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
@@ -17,7 +19,8 @@ public class LEDs extends SubsystemBase {
     private final AddressableLED leds = new AddressableLED(Constants.LEDs.LED_PORT);
     private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(Constants.LEDs.LED_LENGTH);
 
-
+    private LEDPattern rainbow = LEDPattern.rainbow(255, 128);
+    private LEDPattern rainbowPattern = rainbow.scrollAtRelativeSpeed(Percent.per(Second).of(100));
 
     @Override
     public void periodic() {
@@ -95,6 +98,17 @@ public class LEDs extends SubsystemBase {
         LEDPattern base = LEDPattern.solid(color);
         LEDPattern breathe = base.breathe(Seconds.of(2));
         return run(() -> breathe.applyTo(buffer)).ignoringDisable(true);
+    }
+
+    /**
+     * Set rainbow pattern
+     *
+     * @return Command
+     */
+    public Command setRainbow() {
+        return run(() -> {
+            rainbowPattern.applyTo(buffer);
+        }).ignoringDisable(true);
     }
 
 }

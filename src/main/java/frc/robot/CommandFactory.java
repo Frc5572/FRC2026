@@ -87,9 +87,10 @@ public class CommandFactory {
             var parameters = ShotData.getShotParameters(distance,
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
             shooter.setVelocity(parameters.desiredSpeed());
-            hood.setTargetAngle(Degrees.of(parameters.hoodAngleDeg()));
+            hood.setTargetAngle(Degrees.of(parameters.hoodAngleDeg() + 2.5));
             if (disableTurret.getAsBoolean()) {
-                turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
+                // turret.setGoalRobotRelative(Rotation2d.kZero, RotationsPerSecond.of(0));
+                turret.setVoltageIO(() -> 0.0);
             } else {
                 boolean turretFacing = turret.setGoalFieldRelative(
                     adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation())
@@ -124,5 +125,13 @@ public class CommandFactory {
                 .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle()
                 .plus(Rotation2d.fromDegrees(trimRight.getAsDouble()));
         });
+    }
+
+    /** Reset the init */
+    public static Command resetInit(Swerve swerve, Turret turret) {
+        return Commands.runOnce(() -> {
+            swerve.state.resetInit();
+            turret.resetTurret();
+        }).ignoringDisable(true);
     }
 }

@@ -59,6 +59,8 @@ public class AdjustableHoodReal implements AdjustableHoodIO {
 
         hoodMotor.setNeutralMode(NeutralModeValue.Brake);
 
+        hoodMotor.setPosition(0.0);
+
         PhoenixSignals.tryUntilOk(5, () -> BaseStatusSignal.setUpdateFrequencyForAll(50, hoodAngle,
             hoodVoltage, hoodCurrent, hoodVelocity));
         PhoenixSignals.tryUntilOk(5, () -> ParentDevice.optimizeBusUtilizationForAll(hoodMotor));
