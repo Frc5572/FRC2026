@@ -201,5 +201,4 @@ task downloadD3(type: Download) {
     }
 }
 
-deployfrcStaticFileDeployroborio.dependsOn(downloadD3)
-check.dependsOn(downloadD3)
+jar.dependsOn(downloadD3)
