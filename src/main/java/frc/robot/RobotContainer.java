@@ -212,7 +212,7 @@ public final class RobotContainer {
         RobotModeTriggers.teleop().whileTrue(Commands.run(() -> {
             Logger.recordOutput("Trims", trims);
         }));
-        vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
+        vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
 
         // BUTTON BINDINGS
         maybeController("Driver", driver, this::setupDriver);
@@ -248,14 +248,20 @@ public final class RobotContainer {
 
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
-        driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
+        // driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
         driver.x().whileTrue(swerve.wheelsIn());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
                 .getX() > FieldConstants.Hub.centerHub.getX()) {
-                return AllianceFlipUtil
-                    .apply(new Translation2d(0, swerve.state.getGlobalPoseEstimate().getY()));
+                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2) {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, (3 * FieldConstants.fieldWidth / 4)));
+                } else {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, (FieldConstants.fieldWidth / 4)));
+                }
             } else {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }
@@ -282,13 +288,17 @@ public final class RobotContainer {
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
+
+        driver.leftTrigger().and(driver.rightTrigger().negate())
+            .whileTrue(indexer.spinWhileIntake());
     }
 
     private void setupOperator() {
-        operator.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
-        operator.b()
-            .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
-
+        operator.a().and(RobotModeTriggers.disabled())
+            .onTrue(CommandFactory.resetInit(swerve, turret));
+        operator.b().whileTrue(turret.setVoltage(() -> 0));
+        turret.setDefaultCommand(Commands.either(turret.setVoltage(() -> 0),
+            CommandFactory.followHub(turret, swerve, () -> trims[1]), operator.b()));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
         operator.y().onTrue(Commands.runOnce(() -> trims = new double[] {0.0, 0.0}));
         operator.povUp().onTrue(Commands.runOnce(() -> {

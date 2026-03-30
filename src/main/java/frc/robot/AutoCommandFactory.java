@@ -124,9 +124,9 @@ public class AutoCommandFactory {
     }
 
     private Command wilsonTestSide(boolean left) {
-        double shootingTime = 4.5;
+        double shootingTime = 5.5;
         double driveSpeed = 2.5;
-        double turretFudge = 3.8;
+        double turretFudge = 2.5;
         return Commands
             .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
                 CommandFactory
@@ -174,8 +174,9 @@ public class AutoCommandFactory {
                                     Constants.DashboardValues.feetPastCenterDefault)),
                             Rotation2d.kCCW_90deg))
                         .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                        .finish().deadlineFor(intake.extendHopper(1.0)
-                            .andThen(intake.intakeBalls())),
+                        .finish()
+                        .deadlineFor(intake.extendHopper(1.0).andThen(
+                            intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
                     swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
                         .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(
                             15)
