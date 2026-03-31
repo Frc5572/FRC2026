@@ -31,7 +31,7 @@ public class CameraConstants {
     public final boolean isTurret;
 
     /** Constants for a camera */
-    @TypeStateBuilder("CameraConstantsBuilder")
+    @TypeStateBuilder(value = "CameraConstantsBuilder", linear = true)
     public CameraConstants(@RequiredField String coProcessorName, @RequiredField String name,
         @RequiredField int height, @RequiredField int width,
         @RequiredField(alt = @AltMethod(type = double.class, parameter_name = "degrees",

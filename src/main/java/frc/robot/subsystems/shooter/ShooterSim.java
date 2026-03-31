@@ -33,8 +33,7 @@ public class ShooterSim implements ShooterIO {
 
     /** Simulate shooting one ball */
     public void shootOne() {
-        flywheel.position *= 0.9;
-        flywheel.velocity *= 0.9;
+        flywheel.position -= 1.0;
         numBallsShot++;
         Logger.recordOutput("FuelSim/BallsShot", numBallsShot);
     }

@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -94,8 +95,9 @@ public final class RobotContainer {
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     private final Field2d field = new Field2d();
-    private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot Location");
-    private final FieldObject2d autoStoppingPoint = field.getObject("Wilson Auto End Point");
+    // private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot
+    // Location");
+    private final FieldObject2d autoStoppingPoint = field.getObject("Auto End Point");
 
     /**
      * Robot Container
@@ -175,9 +177,11 @@ public final class RobotContainer {
             climber, intake, indexer, shooter, turret);
         autoChooser.addCmd("Do Nothing", Commands::none);
         autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
-        autoChooser.addRoutine("Just Shoot", autoCommandFactory::justShoot);
-        autoChooser.addRoutine("WilsonTest", autoCommandFactory::wilsonTest);
         autoChooser.addRoutine("Just Pass", autoCommandFactory::passOnly);
+        // autoChooser.addRoutine("Gather then Shoot (Left)",
+        // autoCommandFactory::gatherThenShootLeft);
+        autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
+        autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
@@ -210,7 +214,7 @@ public final class RobotContainer {
         RobotModeTriggers.teleop().whileTrue(Commands.run(() -> {
             Logger.recordOutput("Trims", trims);
         }));
-        vision.seesTwoAprilTags.whileTrue(leds.setLEDsSolid(Color.kChartreuse));
+        vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
 
         // BUTTON BINDINGS
         maybeController("Driver", driver, this::setupDriver);
@@ -242,18 +246,24 @@ public final class RobotContainer {
         return false;
     }
 
-    private double[] trims = new double[] {0.0, 0.0};
+    private double[] trims = new double[] {1.0, 0.0};
 
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
-        driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
+        // driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
         driver.x().whileTrue(swerve.wheelsIn());
 
         driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
             if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
                 .getX() > FieldConstants.Hub.centerHub.getX()) {
-                return AllianceFlipUtil
-                    .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
+                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2) {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, (3 * FieldConstants.fieldWidth / 4)));
+                } else {
+                    return AllianceFlipUtil
+                        .apply(new Translation2d(0, (FieldConstants.fieldWidth / 4)));
+                }
             } else {
                 return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
             }
@@ -280,13 +290,17 @@ public final class RobotContainer {
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
             .onFalse(intake.retractHopper(0));
+
+        driver.leftTrigger().and(driver.rightTrigger().negate())
+            .whileTrue(indexer.spinWhileIntake());
     }
 
     private void setupOperator() {
-        operator.a().onTrue(Commands.runOnce(() -> swerve.state.resetInit()).ignoringDisable(true));
-        operator.b()
-            .onTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero).until(operator.back()));
-
+        operator.a().and(RobotModeTriggers.disabled())
+            .onTrue(CommandFactory.resetInit(swerve, turret));
+        operator.b().whileTrue(turret.setVoltage(() -> 0));
+        turret.setDefaultCommand(Commands.either(turret.setVoltage(() -> 0),
+            CommandFactory.followHub(turret, swerve, () -> trims[1]), operator.b()));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
         operator.y().onTrue(Commands.runOnce(() -> trims = new double[] {0.0, 0.0}));
         operator.povUp().onTrue(Commands.runOnce(() -> {
@@ -308,24 +322,38 @@ public final class RobotContainer {
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
-        tuner.rightTrigger()
-            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed).alongWith(
-                adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle)),
-                swerve.moveToPose().target(() -> new Pose2d(
-                    FieldConstants.Hub.centerHub
-                        .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
-                            new Translation2d(-FieldConstants.Hub.centerHub.getX(),
-                                -FieldConstants.Hub.centerHub.getY()).getAngle()))
-                        .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
-                    Rotation2d.kZero)).rotationTolerance(1)
-                    .translationTolerance(Units.inchesToMeters(1)).finish()))
-            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
-        tuner.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 0.7));
+        tuner.rightTrigger().whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
+            .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))
+            // ,
+            // swerve.moveToPose().target(() -> new Pose2d(
+            // FieldConstants.Hub.centerHub
+            // .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
+            // new Translation2d(-FieldConstants.Hub.centerHub.getX(),
+            // -FieldConstants.Hub.centerHub.getY()).getAngle()))
+            // .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
+            // Rotation2d.kZero)).rotationTolerance(1)
+            // .translationTolerance(Units.inchesToMeters(1)).finish()
+            )).onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
+        boolean[] firstShotFlag = {false};
+        double[] firstShot = {0.0};
+        tuner.leftTrigger().onTrue(Commands.runOnce(() -> {
+            firstShotFlag[0] = true;
+            Logger.recordOutput("ShotTiming/distance",
+                Units.metersToFeet(AllianceFlipUtil.apply(swerve.state.getTurretCenterFieldFrame())
+                    .getTranslation().getDistance(FieldConstants.Hub.centerHub)));
+        })).whileTrue(indexer.setSpeedCommand(1.0, 1.0));
+        new Trigger(() -> shooter.timeSinceLastShot() < 0.4).onTrue(Commands.runOnce(() -> {
+            if (firstShotFlag[0]) {
+                firstShot[0] = Timer.getFPGATimestamp() - shooter.timeSinceLastShot();
+                Logger.recordOutput("ShotTiming/firstShot", firstShot[0]);
+                firstShotFlag[0] = false;
+            }
+        }));
 
-        tuner.a().whileTrue(Commands.run(() -> {
-            Logger.recordOutput("TunerAPressed", 1.0);
-        })).whileFalse(Commands.run(() -> {
-            Logger.recordOutput("TunerAPressed", 0.0);
+        tuner.a().onTrue(Commands.runOnce(() -> {
+            double hitTarget = Timer.getFPGATimestamp();
+            Logger.recordOutput("ShotTiming/hitTarget", hitTarget);
+            Logger.recordOutput("ShotTiming/timeOfFlight", hitTarget - firstShot[0]);
         }));
 
         // tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
@@ -339,6 +367,7 @@ public final class RobotContainer {
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         pit.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 1.0));
         pit.a().whileTrue(shooter.characterization()).onFalse(shooter.shoot(0));
+        pit.b().whileTrue(intake.intakeBalls());
     }
 
     private List<Runnable> controllerSetups = new ArrayList<>();
@@ -386,16 +415,31 @@ public final class RobotContainer {
      * Runs during disabled
      */
     public void disabledPeriodic() {
-        double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
-            Constants.DashboardValues.shootXDefault);
-        double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
-            Constants.DashboardValues.shootYDefault);
-        autoJustShootLocation.setPose(x, y, new Rotation2d());
-        autoStoppingPoint.setPose(new Pose2d(Constants.Auto.wilsonTestX,
-            (FieldConstants.fieldWidth / 2.0) + Units
-                .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
-                    Constants.DashboardValues.feetPastCenterDefault)),
-            Rotation2d.kCCW_90deg));
+        String selectedAuto =
+            SmartDashboard.getString(Constants.DashboardValues.autoChooser + "/active", "");
+        // System.out.println(selectedAuto);
+        if (selectedAuto.equals(Constants.Auto.justShoot)) {
+            double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
+                Constants.DashboardValues.shootXDefault);
+            double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
+                Constants.DashboardValues.shootYDefault);
+            autoStoppingPoint.setPose(AllianceFlipUtil.apply(new Pose2d(x, y, new Rotation2d())));
+
+        } else if (selectedAuto.equals(Constants.Auto.wilsonTest)) {
+            // System.out.println("asdf");
+            Pose2d pose = AllianceFlipUtil.apply(new Pose2d(Constants.Auto.wilsonTestX,
+                (FieldConstants.fieldWidth / 2.0) + Units
+                    .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                        Constants.DashboardValues.feetPastCenterDefault)),
+                Rotation2d.kCCW_90deg));
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0) {
+                pose = AllianceFlipUtil.flipY(pose);
+            }
+            autoStoppingPoint.setPose(pose);
+        } else {
+            autoStoppingPoint.setPoses(new ArrayList<Pose2d>());
+        }
     }
 }
 

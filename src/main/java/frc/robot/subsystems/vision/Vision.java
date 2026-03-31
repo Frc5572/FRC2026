@@ -104,7 +104,7 @@ public class Vision extends SubsystemBase {
                 .addVisionObservation(Constants.Vision.cameraConstants[result._0()], result._1());
             if (result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
-            } else if (result._0() == 0) {
+            } else if (result._0() == 1) {
                 seesMultitag = false;
             }
             for (int i = 0; i < result._1().targets.size(); i++) {

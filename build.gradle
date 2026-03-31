@@ -1,7 +1,9 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
+    id("com.dorongold.task-tree") version "4.0.1"
     id "com.peterabeles.gversion" version "1.10"
+    id "eclipse"
 }
 
 java {
@@ -66,12 +68,6 @@ task(replayWatch, type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 dependencies {
-    compileOnly("org.projectlombok:lombok:1.18.42")
-	annotationProcessor("org.projectlombok:lombok:1.18.42")
-
-	testCompileOnly("org.projectlombok:lombok:1.18.42")
-	testAnnotationProcessor("org.projectlombok:lombok:1.18.42")
-
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
@@ -90,7 +86,7 @@ dependencies {
     nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
     simulationRelease wpi.sim.enableRelease()
 
-    annotationProcessor 'com.github.Frc5572:RobotTools:v2.1'
+    annotationProcessor 'com.github.Frc5572:RobotTools:v2.2'
     implementation 'org.jspecify:jspecify:1.0.0'
 
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
@@ -145,6 +141,13 @@ javadoc {
             "</script>"
     }
 }
+
+// Add '/' at beginning of next line to enable output for each class compiling. Required to run `compile_times.py`.
+/*
+compileJava {
+    options.verbose = true
+}
+//*/
 
 // Create version file
 project.compileJava.dependsOn(createVersionFile)
