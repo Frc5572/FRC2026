@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=orangepi
-WorkingDirectory=/home/orangepi/coprocessor
-ExecStart=/home/orangepi/coprocessor/.venv/bin/python /home/orangepi/coprocessor/main.py
+User=frc5572
+WorkingDirectory=/home/frc5572/photonvision
+ExecStart=java -jar /home/frc5572/photonvision/photon-server/build/libs/photonvision-dev-Unknown-linuxarm64.jar
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

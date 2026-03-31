@@ -18,20 +18,17 @@ computes the yaw angle to the nearest detected pixel. Runs on [OPI zero 3](http:
 
 ## How to use
 
- 1. flash OPI zero 3 with [this image](https://drive.google.com/file/d/1FUmNojVQV_43UR_V6u-P9UFfAMIZdyGV/view?usp=drive_link)
- 2. scp code onto OPI
-    - `scp -r coprocessor orangepi@orangepi:/home/orangepi/`
- 3. create virtual environment `python3 -m venv .venv`
- 4. source venv 
-    - `source .venv/bin/activate`
- 5. install dependaces `pip install -r requirements.txt`
- 6. move `coprocessor.service` to `/etc/systemd/system/` 
+ 1. Make sure jetpack 6.2 is installed 
+ 2. compile https://github.com/FRC-Team-4143/GpuDetectorJNI then https://github.com/FRC-Team-4143/photonvision/tree/jetson-orin
+ 3. scp service onto jetson
+    - `scp -r coprocessor frc5572@192.168.1.134:/home/frc5572/` CHANGE TO HOSTNAME 
+ 4. move `coprocessor.service` to `/etc/systemd/system/` 
     - `mv coprocessor.service /etc/systemd/system/`
- 7. enable service<
+ 5. enable service<
     - `sudo systemctl daemon-reload`<br>
       `sudo systemctl enable coprocessor`<br>
       `sudo systemctl start coprocessor`
- 8. verify if running
+ 6. verify if running
     - `sudo systemctl status coprocessor`
 
 
