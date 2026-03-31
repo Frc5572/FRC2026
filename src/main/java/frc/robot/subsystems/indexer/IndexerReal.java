@@ -70,7 +70,7 @@ public class IndexerReal implements IndexerIO {
         if (Math.abs(dutyCycle) < 0.01) {
             spindexer.setControl(new DutyCycleOut(0.0));
         } else {
-            spindexer.setControl(velocityVoltage.withVelocity(dutyCycle * desiredSpeed));
+            spindexer.setControl(velocityVoltage.withVelocity(dutyCycle));
         }
     }
 

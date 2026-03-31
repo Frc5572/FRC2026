@@ -353,7 +353,7 @@ public final class RobotContainer {
             Logger.recordOutput("ShotTiming/hitTarget", hitTarget);
             Logger.recordOutput("ShotTiming/timeOfFlight", hitTarget - firstShot[0]);
         }));
-
+        tuner.b().whileTrue(indexer.setSpeedCommand(0.0, 6.0));
         // tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
         // tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }
