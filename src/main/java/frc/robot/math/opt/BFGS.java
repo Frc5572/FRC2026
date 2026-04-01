@@ -24,11 +24,18 @@ public class BFGS {
         double alpha;
         DMatrixRMaj d = new DMatrixRMaj(new double[N]);
         DMatrixRMaj s = new DMatrixRMaj(new double[N]);
+        DMatrixRMaj s_Ys = new DMatrixRMaj(new double[N]);
+        DMatrixRMaj sOuter = CommonOps_DDRM.identity(N);
         DMatrixRMaj y = new DMatrixRMaj(new double[N]);
         DMatrixRMaj v = new DMatrixRMaj(new double[N]);
+        DMatrixRMaj vOuter = CommonOps_DDRM.identity(N);
         DMatrixRMaj Hy = new DMatrixRMaj(new double[N]);
+        DMatrixRMaj Hy_yHy = new DMatrixRMaj(new double[N]);
+        DMatrixRMaj HyOuter = CommonOps_DDRM.identity(N);
         DMatrixRMaj gPrev = new DMatrixRMaj(new double[N]);
         DMatrixRMaj H = CommonOps_DDRM.identity(N);
+        DMatrixRMaj temp1 = CommonOps_DDRM.identity(N);
+        DMatrixRMaj temp2 = CommonOps_DDRM.identity(N);
 
         DMatrixRMaj x = new DMatrixRMaj(new double[N]);
         for (int i = 0; i < x0.length; i++) {
@@ -64,9 +71,36 @@ public class BFGS {
                 g = new DMatrixRMaj(func.gradient(x.getData()));
                 CommonOps_DDRM.subtract(g, gPrev, y);
 
-                // TODO:
-                // https://github.com/ceze/tspl/blob/e67bcb8667b2de6692d6afcb39986b772637dd65/include/bfgs-impl.h#L110
+                CommonOps_DDRM.mult(H, y, Hy);
+                ys = CommonOps_DDRM.dot(y, s);
+                yHy = CommonOps_DDRM.dot(y, Hy);
+                if ((ys < 1e-6) || (yHy < 1e-6)) {
+                    H = CommonOps_DDRM.identity(N);
+                } else {
+                    CommonOps_DDRM.scale(1.0 / ys, s, s_Ys);
+                    CommonOps_DDRM.scale(1.0 / yHy, Hy, Hy_yHy);
+                    CommonOps_DDRM.subtract(s_Ys, Hy_yHy, v);
+                    CommonOps_DDRM.scale(Math.sqrt(yHy), v);
+                    CommonOps_DDRM.multOuter(s, sOuter);
+                    CommonOps_DDRM.multOuter(Hy, HyOuter);
+                    CommonOps_DDRM.multOuter(v, vOuter);
+                    CommonOps_DDRM.add(1.0 / ys, sOuter, H, temp1);
+                    CommonOps_DDRM.add(-1.0 / yHy, HyOuter, vOuter, temp2);
+                    CommonOps_DDRM.add(temp1, temp2, H);
+                }
+                gnorm[k++] = NormOps_DDRM.fastNormF(g);
             }
+        }
+
+        xOpt = x.getData();
+        fMin = fx;
+        gradNorm = new double[k];
+        for (int i = 0; i < k; i++) {
+            gradNorm[i] = gnorm[i];
+        }
+        itrNum = k;
+        if (gradNorm[k - 1] > tol) {
+            this.success = false;
         }
     }
 
@@ -115,7 +149,7 @@ public class BFGS {
     }
 
     public void optimize(DiffFunc func, double[] x0, double tol) {
-        optimize(func, x0, tol, 100);
+        optimize(func, x0, tol, 10000);
     }
 
     public void optimize(DiffFunc func, double[] x0) {
@@ -136,6 +170,36 @@ public class BFGS {
 
     public double[] getGradNorm() {
         return gradNorm;
+    }
+
+    public int getNumFunctionCalls() {
+        return funcNum;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("BFGS{");
+        sb.append("ItrNum=");
+        sb.append(getItrNum());
+        sb.append(", FuncMin=");
+        sb.append(getFuncMin());
+        sb.append(", OptValue=[");
+        var opt = getOptValue();
+        for (int i = 0; i < opt.length; i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            sb.append(opt[i]);
+        }
+        sb.append("], Success=");
+        sb.append(success);
+        sb.append("}");
+        return sb.toString();
     }
 
 }
