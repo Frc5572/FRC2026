@@ -194,24 +194,24 @@ public class AutoCommandFactory {
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }
 
-    private Command toAllianceOverBump(boolean left, AutoRoutine routine) {
+    public Command toAllianceOverBump(boolean left, AutoRoutine routine) {
         return swerve.moveToPose()
             .target(
-                AllianceFlipUtil.apply(new Pose2d(
+                new Pose2d(
                     FieldConstants.LinesVertical.allianceZone - FieldConstants.RightBump.depth / 2,
                     FieldConstants.LinesHorizontal.rightBumpEnd
                         + FieldConstants.RightBump.width / 2,
-                    Rotation2d.fromDegrees(45))))
+                    Rotation2d.fromDegrees(45)))
             .autoRoutine(routine).maxSpeed(2.5).translationTolerance(0.5).rotationTolerance(10)
             .flipY(left).finish();
     }
 
-    private Command toNeutralOverBump(boolean left, AutoRoutine routine) {
+    public Command toNeutralOverBump(boolean left, AutoRoutine routine) {
         return swerve.moveToPose()
-            .target(AllianceFlipUtil.apply(new Pose2d(
+            .target(new Pose2d(
                 FieldConstants.LinesVertical.neutralZoneNear + FieldConstants.RightBump.depth / 2,
                 FieldConstants.LinesHorizontal.rightBumpEnd + FieldConstants.RightBump.width / 2,
-                Rotation2d.fromDegrees(45))))
+                Rotation2d.fromDegrees(45)))
             .autoRoutine(routine).maxSpeed(2.5).translationTolerance(0.5).rotationTolerance(10)
             .flipY(left).finish();
     }
