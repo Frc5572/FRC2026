@@ -193,4 +193,26 @@ public class AutoCommandFactory {
                     .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }
+
+    private Command toAllianceOverBump(boolean left, AutoRoutine routine) {
+        return swerve.moveToPose()
+            .target(
+                AllianceFlipUtil.apply(new Pose2d(
+                    FieldConstants.LinesVertical.allianceZone - FieldConstants.RightBump.depth / 2,
+                    FieldConstants.LinesHorizontal.rightBumpEnd
+                        + FieldConstants.RightBump.width / 2,
+                    Rotation2d.fromDegrees(45))))
+            .autoRoutine(routine).maxSpeed(2.5).translationTolerance(0.5).rotationTolerance(10)
+            .flipY(left).finish();
+    }
+
+    private Command toNeutralOverBump(boolean left, AutoRoutine routine) {
+        return swerve.moveToPose()
+            .target(AllianceFlipUtil.apply(new Pose2d(
+                FieldConstants.LinesVertical.neutralZoneNear + FieldConstants.RightBump.depth / 2,
+                FieldConstants.LinesHorizontal.rightBumpEnd + FieldConstants.RightBump.width / 2,
+                Rotation2d.fromDegrees(45))))
+            .autoRoutine(routine).maxSpeed(2.5).translationTolerance(0.5).rotationTolerance(10)
+            .flipY(left).finish();
+    }
 }
