@@ -69,7 +69,7 @@ public class CommandFactory {
             Logger.recordOutput("AutoShoot/AdjustLeft", adjustLeftValue);
             for (int i = 0; i < 20; i++) {
                 double distance =
-                    adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
+                    adjustedTarget.getDistance(state.getTurretGlobalPoseEstimate().getTranslation())
                         + adjustUpValue;
                 var parameters = ShotData.getShotParameters(distance,
                     shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), false);
@@ -82,7 +82,7 @@ public class CommandFactory {
             Logger.recordOutput("AutoShoot/AdjustedTarget", adjustedTarget);
             Logger.recordOutput("AutoShoot/TargetDiff", adjustedTarget.minus(target));
             double distance =
-                adjustedTarget.getDistance(state.getTurretCenterFieldFrame().getTranslation())
+                adjustedTarget.getDistance(state.getTurretGlobalPoseEstimate().getTranslation())
                     + adjustUpValue;
             var parameters = ShotData.getShotParameters(distance,
                 shooter.inputs.shooterAngularVelocity1.in(RotationsPerSecond), true);
@@ -93,7 +93,7 @@ public class CommandFactory {
                 turret.setVoltageIO(() -> 0.0);
             } else {
                 boolean turretFacing = turret.setGoalFieldRelative(
-                    adjustedTarget.minus(state.getTurretCenterFieldFrame().getTranslation())
+                    adjustedTarget.minus(state.getTurretGlobalPoseEstimate().getTranslation())
                         .getAngle().plus(adjustLeftValue)
                         .plus(Rotation2d.fromRadians(lookahead.omegaRadiansPerSecond)));
                 Logger.recordOutput("AutoShoot/turretFacing", turretFacing);
@@ -122,7 +122,7 @@ public class CommandFactory {
     public static Command followHub(Turret turret, Swerve swerve, DoubleSupplier trimRight) {
         return turret.goToAngleFieldRelative(() -> {
             return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)
-                .minus(swerve.state.getTurretCenterFieldFrame().getTranslation()).getAngle()
+                .minus(swerve.state.getTurretGlobalPoseEstimate().getTranslation()).getAngle()
                 .plus(Rotation2d.fromDegrees(trimRight.getAsDouble()));
         });
     }
@@ -133,5 +133,9 @@ public class CommandFactory {
             swerve.state.resetInit();
             turret.resetTurret();
         }).ignoringDisable(true);
+    }
+
+    public static Command followHubWileMoving(Turret turret, Swerve swerve, DoubleSupplier trims) {
+        return Commands.none();
     }
 }
