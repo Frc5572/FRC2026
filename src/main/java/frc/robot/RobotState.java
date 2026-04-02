@@ -285,11 +285,11 @@ public class RobotState {
         Pose2d bluePose = AllianceFlipUtil.apply(getGlobalPoseEstimate());
         if (bluePose.getX() > FieldConstants.Hub.centerHub.getX()) {
             if (bluePose.getY() > FieldConstants.fieldWidth / 2) {
-                shootingTarget = AllianceFlipUtil
-                    .apply(new Translation2d(0, (3 * FieldConstants.fieldWidth / 4)));
+                shootingTarget = AllianceFlipUtil.apply(new Translation2d(
+                    FieldConstants.Hub.centerHub.getX() / 2, (3 * FieldConstants.fieldWidth / 4)));
             } else {
-                shootingTarget =
-                    AllianceFlipUtil.apply(new Translation2d(0, (FieldConstants.fieldWidth / 4)));
+                shootingTarget = AllianceFlipUtil.apply(new Translation2d(
+                    FieldConstants.Hub.centerHub.getX() / 2, (FieldConstants.fieldWidth / 4)));
             }
             shootingTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         } else {
