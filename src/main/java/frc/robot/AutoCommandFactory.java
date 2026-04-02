@@ -219,9 +219,8 @@ public class AutoCommandFactory {
                             swerve.state.getGlobalPoseEstimate().getRotation()))
                         .flipY(left).maxSpeed(2.0).translationTolerance(0.1).finish(),
                     Commands.deadline(conditionalCollect(7.176),
-                        intake.extendHopper(0).withTimeout(0.3)
-                            .andThen(intake.extendHopper(0.7), intake.intakeBalls())
-                            .finallyDo(() -> intake.retractHopper(0))),
+                        intake.extendHopper(0).withTimeout(0.3).andThen(intake.extendHopper(0.7),
+                            intake.intakeBalls(), intake.retractHopper(0))),
                     CommandFactory.shoot(swerve.state, () -> {
                         return AllianceFlipUtil
                             .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
