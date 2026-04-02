@@ -17,7 +17,6 @@ import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.swerve.Swerve;
@@ -75,7 +74,6 @@ public class RobotViz {
     private final Turret turret;
     private final AdjustableHood hood;
     private final Intake intake;
-    private final Climber climber;
     private final Shooter shooter;
 
     /**
@@ -94,13 +92,12 @@ public class RobotViz {
      * @param climber climber subsystem
      */
     public RobotViz(@Nullable SimulatedRobotState sim, Swerve swerve, Turret turret,
-        AdjustableHood hood, Intake intake, Climber climber, Shooter shooter) {
+        AdjustableHood hood, Intake intake, Shooter shooter) {
         this.sim = sim;
         this.swerve = swerve;
         this.turret = turret;
         this.hood = hood;
         this.intake = intake;
-        this.climber = climber;
         this.shooter = shooter;
         if (sim != null) {
             gtState = new Pose3d[numPoses];
@@ -121,7 +118,6 @@ public class RobotViz {
         Pose3d robotPose = new Pose3d(swerve.state.getGlobalPoseEstimate());
         Logger.recordOutput("Viz/EstPose", robotPose);
         update(estState, turret.getTurretHeading(), hood.inputs.relativeAngle,
-            climber.inputs.positionPivot, climber.inputs.positionTelescope,
             intake.inputs.rightHopperPosition, Arrays.stream(swerve.modules)
                 .map(mod -> mod.inputs.anglePosition).toArray(Rotation2d[]::new));
         Logger.recordOutput("Viz/EstState", estState);
@@ -138,8 +134,7 @@ public class RobotViz {
         if (sim != null) {
             Logger.recordOutput("Viz/ActualPose", sim.getGroundTruthPose());
             update(gtState, Rotation2d.fromRadians(sim.turret.turrentAngle.position),
-                Radians.of(sim.adjustableHood.hood.position), climber.inputs.positionPivot,
-                climber.inputs.positionTelescope, intake.inputs.rightHopperPosition,
+                Radians.of(sim.adjustableHood.hood.position), intake.inputs.rightHopperPosition,
                 Arrays.stream(sim.swerveDrive.mapleSim.getModules())
                     .map(mod -> mod.getSteerAbsoluteFacing()).toArray(Rotation2d[]::new));
             Logger.recordOutput("Viz/ActualState", gtState);
@@ -154,20 +149,13 @@ public class RobotViz {
         }
     }
 
-    private void update(Pose3d[] out, Rotation2d turretAngle, Angle hoodAngle, Angle climberAngle,
-        Distance climberHeight, Distance intakeOut, Rotation2d[] modules) {
+    private void update(Pose3d[] out, Rotation2d turretAngle, Angle hoodAngle, Distance intakeOut,
+        Rotation2d[] modules) {
         out[hoodIndex] = new Pose3d()
             .rotateAround(hoodRotationCenter, new Rotation3d(0, hoodAngle.in(Radians), 0))
             .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
         out[turretIndex] =
             new Pose3d().rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
-
-        out[hooksIndex] =
-            new Pose3d(0, 0, climberHeight.in(Meters) - hooksDown.in(Meters), Rotation3d.kZero)
-                .rotateAround(climberRotationCenter,
-                    new Rotation3d(0, climberAngle.in(Radians), 0));
-        out[climberIndex] = new Pose3d().rotateAround(climberRotationCenter,
-            new Rotation3d(0, climberAngle.in(Radians), 0));
 
         double start = 0.26;
         double end = 0.37;

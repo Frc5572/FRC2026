@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
-import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.IndexerSim;
 import frc.robot.subsystems.intake.IntakeSim;
 import frc.robot.subsystems.shooter.ShooterSim;
@@ -32,7 +31,6 @@ public class SimulatedRobotState {
     public final ShooterSim shooter;
     public final IntakeSim intake;
     public final IndexerSim indexer;
-    public final ClimberSim climber;
     public final VisionSim visionSim;
     // Turret, intake, and hood state would go here too.
 
@@ -45,7 +43,6 @@ public class SimulatedRobotState {
         this.shooter = new ShooterSim();
         this.intake = new IntakeSim();
         this.indexer = new IndexerSim();
-        this.climber = new ClimberSim();
         this.visionSim = new VisionSim();
     }
 

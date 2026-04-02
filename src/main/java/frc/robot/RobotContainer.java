@@ -33,9 +33,6 @@ import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodIOEmpty;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodReal;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIOEmpty;
-import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIOEmpty;
 import frc.robot.subsystems.indexer.IndexerReal;
@@ -90,7 +87,6 @@ public final class RobotContainer {
     private final Turret turret;
     private final Shooter shooter;
     private final Intake intake;
-    private final Climber climber;
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
@@ -114,7 +110,6 @@ public final class RobotContainer {
                 turret = new Turret(new TurretReal(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
-                climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
 
                 break;
@@ -141,7 +136,6 @@ public final class RobotContainer {
                 turret = new Turret(sim.turret, swerve.state);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
-                climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
@@ -155,7 +149,6 @@ public final class RobotContainer {
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
-                climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
 
                 break;
@@ -171,11 +164,11 @@ public final class RobotContainer {
             Constants.DashboardValues.feetPastCenterDefault);
         // END DASHBOARD STUFF
 
-        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
+        viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, shooter);
 
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
-            climber, intake, indexer, shooter, turret);
+            intake, indexer, shooter, turret);
         // autoChooser.addRoutine("Gather then Shoot (Left)",
         // autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
