@@ -89,7 +89,6 @@ public class RobotViz {
      * @param turret live turret subsystem
      * @param hood adjustable hood subsystem
      * @param intake intake subsystem
-     * @param climber climber subsystem
      */
     public RobotViz(@Nullable SimulatedRobotState sim, Swerve swerve, Turret turret,
         AdjustableHood hood, Intake intake, Shooter shooter) {
