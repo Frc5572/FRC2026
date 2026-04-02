@@ -200,6 +200,16 @@ public class AutoCommandFactory {
     /** Auto to Pass Fuel From the Neutral Zone into Alliance Zone */
     public AutoRoutine passOnly() {
         AutoRoutine routine = autoFactory.newRoutine("PassOnly");
+
+        routine.active().onTrue(new ConditionalCommand(passOnlyCommand(true, routine),
+            passOnlyCommand(false, routine), () -> {
+                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0;
+            }));
+        return routine;
+    }
+
+    private Command passOnlyCommand(boolean left, AutoRoutine routine) {
         Command fullCommand = Commands.defer(() -> {
             return Commands
                 .sequence(
@@ -207,31 +217,27 @@ public class AutoCommandFactory {
                         .target(new Pose2d(5.76,
                             FieldConstants.RightTrench.blueTrenchCenterRight.getY(),
                             swerve.state.getGlobalPoseEstimate().getRotation()))
-                        .flipY(AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
-                            .getY() > FieldConstants.fieldWidth / 2.0)
-                        .maxSpeed(2.0).translationTolerance(0.1).finish(),
+                        .flipY(left).maxSpeed(2.0).translationTolerance(0.1).finish(),
                     Commands.deadline(conditionalCollect(7.176),
-                        Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
+                        intake.extendHopper(0).withTimeout(0.3)
                             .andThen(intake.extendHopper(0.7), intake.intakeBalls())
                             .finallyDo(() -> intake.retractHopper(0))),
                     CommandFactory.shoot(swerve.state, () -> {
                         return AllianceFlipUtil
                             .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
                     }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
-                        .alongWith(intake.jerkIntake()).withDeadline(Commands.waitSeconds(3)),
+                        .alongWith(intake.jerkIntake()).withTimeout(3),
                     Commands.deadline(conditionalCollect(7.85),
-                        Commands.race(intake.extendHopper(0), Commands.waitSeconds(0.3))
-                            .andThen(intake.extendHopper(0.7), intake.intakeBalls())
-                            .finallyDo(() -> intake.retractHopper(0))),
+                        intake.extendHopper(0).withTimeout(0.3).andThen(intake.extendHopper(0.7),
+                            intake.intakeBalls(), intake.retractHopper(0))),
                     CommandFactory.shoot(swerve.state, () -> {
                         return AllianceFlipUtil
                             .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
                     }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
-                        .alongWith(intake.jerkIntake()).withDeadline(Commands.waitSeconds(4)));
+                        .alongWith(intake.jerkIntake()).withTimeout(4));
         }, Set.of(swerve, turret, shooter, indexer, adjustableHood));
 
-        routine.active().onTrue(fullCommand);
-        return routine;
+        return fullCommand;
     }
 
     private Command conditionalCollect(double xMeters) {
