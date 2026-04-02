@@ -4,12 +4,9 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
-import java.util.Optional;
-import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,37 +16,17 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.subsystems.vision.CameraConstants;
+import frc.robot.util.AllianceFlipUtil;
 
-/**
- * Maintains and updates the robot's estimated global pose for a swerve drive by fusing wheel
- * odometry, gyro measurements, and delayed vision updates.
- *
- * <p>
- * This class tracks two related poses:
- * <ul>
- * <li><b>Odometry pose</b> - derived purely from wheel encoder deltas and gyro yaw</li>
- * <li><b>Estimated pose</b> - a filtered pose that incorporates vision corrections</li>
- * </ul>
- *
- * <p>
- * A time-interpolated pose buffer is maintained to allow vision measurements with latency to be
- * applied retroactively at the correct timestamp.
- *
- * <p>
- * This implementation resembles a lightweight pose estimator rather than a full Kalman filter,
- * using configurable standard deviations to weight vision updates against odometry uncertainty.
- */
-@NullMarked
+
 public class RobotState {
 
     /** Whether the pose estimator has been initialized from vision */
@@ -57,25 +34,22 @@ public class RobotState {
 
     private final PoseEstimator<SwerveModulePosition[]> visionAdjustedOdometry;
 
-    private final TimeInterpolatableBuffer<Rotation2d> rotationBuffer =
-        TimeInterpolatableBuffer.createBuffer(1.5);
-
-    private TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
+    private final TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
         TimeInterpolatableBuffer.createBuffer(1.5);
 
     private Rotation2d gyroOffset = Rotation2d.kZero;
     private Rotation2d prevGyroReading = Rotation2d.kZero;
 
-    private Translation2d empericalHubLocation;
+    private ChassisSpeeds currentSpeeds;
 
     /**
      * Creates a new swerve state estimator.
      *
      * @param wheelPositions the initial swerve module positions used to seed odometry
+     * @param gyroYaw the initial reported gyro yaw
      */
     public RobotState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
         prevGyroReading = gyroYaw;
-        SmartDashboard.putNumber("VisionFudge", Constants.visionFudgeFactor);
         SwerveDriveOdometry swerveOdometry =
             new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
@@ -110,28 +84,10 @@ public class RobotState {
      */
     public void resetPose(Pose2d pose) {
         this.visionAdjustedOdometry.resetPose(pose);
-        rotationBuffer.clear();
-        rotationBuffer.getInternalBuffer().clear();
     }
 
     public void resetInit() {
         this.initted = false;
-    }
-
-    private Optional<Rotation2d> sampleRotationAt(double timestampSeconds) {
-        if (rotationBuffer.getInternalBuffer().isEmpty()) {
-            return Optional.empty();
-        }
-
-        double oldestOdometryTimestamp = rotationBuffer.getInternalBuffer().firstKey();
-        double newestOdometryTimestamp = rotationBuffer.getInternalBuffer().lastKey();
-        if (oldestOdometryTimestamp > timestampSeconds) {
-            return Optional.empty();
-        }
-        timestampSeconds =
-            MathUtil.clamp(timestampSeconds, oldestOdometryTimestamp, newestOdometryTimestamp);
-
-        return rotationBuffer.getSample(timestampSeconds);
     }
 
     /**
@@ -148,42 +104,20 @@ public class RobotState {
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
         visionAdjustedOdometry.update(gyroYaw.minus(gyroOffset), wheelPositions);
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
-        rotationBuffer.addSample(timestamp, getGlobalPoseEstimate().getRotation());
     }
-
-    private ChassisSpeeds currentSpeeds;
 
     /**
      * Updates the robot's current chassis speeds.
      *
-     * <p>
-     * This method records the most recent robot-relative {@link ChassisSpeeds} command or measured
-     * velocity. The stored speeds may be used by future pose estimation or vision fusion logic to
-     * account for motion during sensor latency or to improve prediction accuracy.
-     *
-     * <p>
-     * This method does not directly affect the current pose estimate.
-     *
      * @param speeds the current robot-relative chassis speeds
      */
-    public void updateSpeeds(ChassisSpeeds speeds) {
-        currentSpeeds =
+    public void updateMeasuredSpeeds(ChassisSpeeds speeds) {
+        this.currentSpeeds =
             ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getGlobalPoseEstimate().getRotation());
     }
 
     /**
      * Forcibly initializes the pose estimator using a known robot pose.
-     *
-     * <p>
-     * This method sets the internal odometry/estimator state directly and marks the estimator as
-     * initialized, bypassing the normal vision-based initialization path. It is intended for
-     * situations where a trusted global pose is already known (for example, at the start of
-     * autonomous) or when a vision needs to be tested on a non-compliant field (for example, the
-     * practice field at district events).
-     *
-     * <p>
-     * After this method is called, subsequent vision updates will be treated as corrections rather
-     * than initialization measurements.
      *
      * @param pose the known robot pose in field coordinates to initialize the estimator with
      */
@@ -208,15 +142,6 @@ public class RobotState {
         currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
     }
 
-    /**
-     * Adds a vision measurement using an externally computed camera pose.
-     *
-     * @param cameraPose estimated camera pose in field coordinates
-     * @param robotToCamera transform from robot to camera frame
-     * @param translationStdDev translation measurement standard deviation (meters)
-     * @param rotationStdDev rotation measurement standard deviation (radians)
-     * @param timestamp measurement timestamp in seconds
-     */
     public void addVisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
         double translationStdDev, double rotationStdDev, double timestamp) {
         Pose2d robotPose = cameraPose.plus(robotToCamera.inverse()).toPose2d();
@@ -227,19 +152,8 @@ public class RobotState {
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);
         Logger.recordOutput("State/VisionRobotPose", robotPose);
-        rotationBuffer.clear();
     }
 
-    /**
-     * Adds a vision measurement from PhotonVision.
-     *
-     * <p>
-     * If the estimator has not yet been initialized, a valid multi-tag estimate will be used to
-     * seed the global pose.
-     *
-     * @param camera camera configuration constants
-     * @param pipelineResult latest PhotonVision pipeline result
-     */
     public boolean addVisionObservation(CameraConstants camera,
         PhotonPipelineResult pipelineResult) {
         var multiTag = pipelineResult.getMultiTagResult();
@@ -276,7 +190,6 @@ public class RobotState {
                 gyroOffset = prevGyroReading.minus(robotPose.toPose2d().getRotation());
                 visionAdjustedOdometry.resetPose(robotPose.toPose2d());
                 Logger.recordOutput("State/initPose", getGlobalPoseEstimate());
-                rotationBuffer.clear();
                 currentTurretAngle.clear();
                 initted = true;
             });
@@ -303,9 +216,6 @@ public class RobotState {
                 Pose3d cameraPose =
                     new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
                 Logger.recordOutput("State/Camera/" + camera.name + "/cameraPose", cameraPose);
-                cameraPose = correctPose(cameraPose, bestTagPose.get().getTranslation(),
-                    Rotation2d.fromRadians(robotToCamera_.getRotation().getY()),
-                    SmartDashboard.getNumber("VisionFudge", Constants.visionFudgeFactor));
                 Logger.recordOutput("State/Camera/" + camera.name + "/correctedCameraPose",
                     cameraPose);
                 Pose3d estRobotPose = cameraPose.plus(robotToCamera_.inverse());
@@ -351,15 +261,6 @@ public class RobotState {
         return Rotations.of(diff < -0.5 ? diff + 1.0 : diff);
     }
 
-    private static Pose3d correctPose(Pose3d badPose, Translation3d closestTag,
-        Rotation2d correctPitch, double distancePlus) {
-        Translation3d diff = badPose.getTranslation().minus(closestTag);
-        double distance = diff.getNorm();
-        Translation3d newDiff = diff.times((distance + distancePlus) / distance);
-
-        return new Pose3d(closestTag.plus(newDiff), badPose.getRotation());
-    }
-
     /**
      * Returns the current best estimate of the robot's global field pose.
      *
@@ -378,4 +279,27 @@ public class RobotState {
         return currentSpeeds;
     }
 
+    private Translation2d shootingTarget = FieldConstants.Hub.centerHub;
+
+    private void updateShootingTarget() {
+        Pose2d bluePose = AllianceFlipUtil.apply(getGlobalPoseEstimate());
+        if (bluePose.getX() > FieldConstants.Hub.centerHub.getX()) {
+            if (bluePose.getY() > FieldConstants.fieldWidth / 2) {
+                shootingTarget = AllianceFlipUtil
+                    .apply(new Translation2d(0, (3 * FieldConstants.fieldWidth / 4)));
+            } else {
+                shootingTarget =
+                    AllianceFlipUtil.apply(new Translation2d(0, (FieldConstants.fieldWidth / 4)));
+            }
+            shootingTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+        } else {
+            shootingTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+        }
+
+        Logger.recordOutput("State/ShootingTarget", shootingTarget);
+    }
+
+    public void updateTargeting() {
+        updateShootingTarget();
+    }
 }
