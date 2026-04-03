@@ -12,6 +12,15 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+sourceSets {
+    generate {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
@@ -202,3 +211,10 @@ task downloadD3(type: Download) {
 }
 
 jar.dependsOn(downloadD3)
+
+tasks.register('generateLUTs', JavaExec) {
+    group = 'Execution'
+    description = 'Generate LUTs'
+    classpath = sourceSets.generate.runtimeClasspath
+    mainClass = 'frc.gen.Main'
+}
