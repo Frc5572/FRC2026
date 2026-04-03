@@ -10,7 +10,7 @@ import frc.robot.FieldConstants;
 /** Storage and interpolation for shooter parameters. */
 public class ShotData {
 
-    private static final ShotEntry[] entries = new ShotEntry[] {
+    public static final ShotEntry[] entries = new ShotEntry[] {
         // @formatter:off
         new ShotEntry(16.5, 95, 17, 1.8),
         new ShotEntry(14.6, 62, 17, 1.43),

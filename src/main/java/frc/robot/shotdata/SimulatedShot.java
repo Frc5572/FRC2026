@@ -1,48 +1,64 @@
 package frc.robot.shotdata;
 
-import org.ejml.data.DMatrix6;
-import edu.wpi.first.math.geometry.Translation3d;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import org.ejml.data.DMatrix2;
+import org.ejml.data.DMatrix4;
+import org.ejml.dense.fixed.CommonOps_DDF2;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 public class SimulatedShot {
 
-    private static final double GRAVITY = 9.81; // m/s^2
-    private static final double AIR_DENSITY = 1.225; // kg/m^3, standard atmosphere
-    private static final double BALL_MASS = 0.215; // kg, game manual 5.10.1 midpoint
-    private static final double BALL_DIAMETER = 0.1501; // m, game manual 5.10.1
-    private static final double BALL_RADIUS = BALL_DIAMETER / 2.0;
-    private static final double BALL_CROSS_AREA = Math.PI * BALL_RADIUS * BALL_RADIUS;
-    private static final double BALL_MOMENT_OF_INERTIA =
-        0.4 * BALL_MASS * BALL_RADIUS * BALL_RADIUS; // 2/5 * m * r^2, solid sphere
+    private static final double g = 9.81; // m/s^2
+    private static final double rho = 1.225; // kg/m^3, standard atmosphere
+    private static final double m = 0.215; // kg, game manual 5.10.1 midpoint
+    private static final double r = 0.1501 / 2.0; // m, game manual 5.10.1
 
     // Aerodynamic coefficients
-    private static final double DEFAULT_CD = 0.47; // drag coefficient, smooth sphere
-    private static final double DEFAULT_CM = 0.2; // Magnus coefficient, conservative estimate
+    private static final double C_D = 0.47; // drag coefficient, smooth sphere
+    private static final double C_L = 0.2; // Magnus coefficient, conservative estimate
 
-    // Precomputed force factors (divided by mass to get acceleration factors)
-    private static final double DRAG_ACCEL_FACTOR =
-        0.5 * AIR_DENSITY * DEFAULT_CD * BALL_CROSS_AREA / BALL_MASS;
-    // Extra BALL_RADIUS factor converts the omega x v cross product to acceleration
-    private static final double MAGNUS_ACCEL_FACTOR =
-        0.5 * AIR_DENSITY * DEFAULT_CM * BALL_CROSS_AREA * BALL_RADIUS / BALL_MASS;
+    public final double omega;
+    public final DMatrix4 state = new DMatrix4();
+    private final DMatrix2 forces = new DMatrix2();
 
-    public double backspin;
-    public DMatrix6 state = new DMatrix6();
-    private DMatrix6 forces = new DMatrix6();
-
-    public Translation3d getPosition() {
-        return new Translation3d(state.a1, state.a2, state.a3);
-    }
-
-    private double horizontalVelocity() {
-        return Math.hypot(state.a4, state.a5);
-    }
+    private static final double MAGNUS_FACTOR = 0.5 * Math.pow(r, 3) * C_L * Math.PI * rho;
+    private static final double DRAG_FACTOR = -Math.pow(r, 2) * C_D * Math.PI * rho;
 
     private void updateForces() {
-        /*
-         * v = [exitVelocity * cos(angle), 0, exitVelocity * sin(angle)] ω = [0, -backspin, 0]
-         * magnus = ρ * π * r^3 * C_L * cross(ω, v) / 2 drag = [ρ * exitVelocity^2 * C_D * π * r^2 *
-         * -(v ./ exitVelocity)...] gravity = [0, 0, -m * g] return gravity .+ drag .+ magnus
-         */
+        double vx = state.a3;
+        double vz = state.a4;
+
+        double vmag = Math.hypot(vx, vz);
+
+        double magnus_x = MAGNUS_FACTOR * vz * omega;
+        double magnus_z = -MAGNUS_FACTOR * vx * omega;
+
+        double drag_x = DRAG_FACTOR * vx * vmag;
+        double drag_z = DRAG_FACTOR * vz * vmag;
+
+        forces.a1 = magnus_x + drag_x;
+        forces.a2 = magnus_z + drag_z - m * g;
+    }
+
+    public SimulatedShot(Angle exitAngle, LinearVelocity exitVelocity, AngularVelocity backspin) {
+        state.a1 = 0;
+        state.a2 = 0;
+        state.a3 = exitVelocity.in(MetersPerSecond) * Math.cos(exitAngle.in(Radians));
+        state.a4 = exitVelocity.in(MetersPerSecond) * Math.sin(exitAngle.in(Radians));
+        this.omega = backspin.in(RadiansPerSecond);
+    }
+
+    public void step(double dt) {
+        updateForces();
+        CommonOps_DDF2.scale(1.0 / m, forces);
+        state.a1 += dt * state.a3;
+        state.a2 += dt * state.a4;
+        state.a3 += dt * forces.a1;
+        state.a4 += dt * forces.a2;
     }
 
 }

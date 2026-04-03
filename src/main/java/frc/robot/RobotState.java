@@ -280,10 +280,12 @@ public class RobotState {
     }
 
     private Translation2d shootingTarget = FieldConstants.Hub.centerHub;
+    private boolean targetIsGround = false;
 
     private void updateShootingTarget() {
         Pose2d bluePose = AllianceFlipUtil.apply(getGlobalPoseEstimate());
         if (bluePose.getX() > FieldConstants.Hub.centerHub.getX()) {
+            targetIsGround = true;
             if (bluePose.getY() > FieldConstants.fieldWidth / 2) {
                 shootingTarget = AllianceFlipUtil.apply(new Translation2d(
                     FieldConstants.Hub.centerHub.getX() / 2, (3 * FieldConstants.fieldWidth / 4)));
@@ -293,10 +295,12 @@ public class RobotState {
             }
             shootingTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         } else {
+            targetIsGround = false;
             shootingTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         }
 
         Logger.recordOutput("State/ShootingTarget", shootingTarget);
+        Logger.recordOutput("State/TargetIsGround", targetIsGround);
     }
 
     public void updateTargeting() {
