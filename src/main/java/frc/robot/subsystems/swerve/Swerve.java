@@ -182,9 +182,11 @@ public final class Swerve extends SubsystemBase {
         ChassisSpeeds currentSpeeds =
             Constants.Swerve.swerveKinematics.toChassisSpeeds(wheelStates);
         limiter.update(currentSpeeds);
-        state.updateSpeeds(currentSpeeds);
+        state.updateMeasuredSpeeds(currentSpeeds);
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
+
+        state.updateTargeting();
     }
 
     /**
