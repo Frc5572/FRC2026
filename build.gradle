@@ -216,5 +216,6 @@ tasks.register('generateLUTs', JavaExec) {
     group = 'Execution'
     description = 'Generate LUTs'
     classpath = sourceSets.generate.runtimeClasspath
-    mainClass = 'frc.gen.Main'
+    mainClass = 'frc.gen.GenerateLUTs'
+    systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
 }
