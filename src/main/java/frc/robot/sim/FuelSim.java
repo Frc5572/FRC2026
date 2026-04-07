@@ -2238,6 +2238,7 @@ public class FuelSim {
         return config;
     }
 
+    /** Update physics config (e.g. to enable/disable features or change parameters). */
     public void setConfig(PhysicsConfig config) {
         this.config = config;
         if (config.deterministic) {
@@ -2305,11 +2306,13 @@ public class FuelSim {
         return fuels;
     }
 
+    /** Returns the number of sleeping fuels. */
     public int getSleepingFuelCount() {
         int count = 0;
         for (Fuel fuel : fuels) {
-            if (fuel.sleeping)
+            if (fuel.sleeping) {
                 count++;
+            }
         }
         return count;
     }
@@ -2350,6 +2353,7 @@ public class FuelSim {
         return COR_BALL_BALL;
     }
 
+    /** Resets all counters to their initial values. */
     public void resetCounters() {
         totalLaunched = 0;
         totalScored = 0;
