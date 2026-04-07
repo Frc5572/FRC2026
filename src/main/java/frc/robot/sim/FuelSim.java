@@ -90,7 +90,7 @@ public class FuelSim {
     // Coefficients of restitution (per-material, from field element build instructions)
     private static final double COR_CARPET = 0.65; // foam on low-pile carpet
     private static final double COR_WALL = 0.70; // foam on polycarbonate (alliance walls,
-                                                 // guardrails)
+    // guardrails)
     private static final double COR_STEEL = 0.72; // foam on powder-coated steel (tower, rungs)
     private static final double COR_HUB = 0.70; // foam on polycarbonate (hub body panels)
     private static final double COR_HDPE = 0.60; // foam on textured HDPE (bump ramps, 15deg)
@@ -209,7 +209,9 @@ public class FuelSim {
         new BumpSegment(FIELD_LENGTH - 4.524, BUMP_HEIGHT, FIELD_LENGTH - 3.96, 0, 1.88, 3.73),
         // Red upper bump ramp up/down
         new BumpSegment(FIELD_LENGTH - 5.088, 0, FIELD_LENGTH - 4.524, BUMP_HEIGHT, 4.32, 6.17),
-        new BumpSegment(FIELD_LENGTH - 4.524, BUMP_HEIGHT, FIELD_LENGTH - 3.96, 0, 4.32, 6.17),};
+        new BumpSegment(FIELD_LENGTH - 4.524, BUMP_HEIGHT, FIELD_LENGTH - 3.96, 0, 4.32, 6.17),
+
+    };
 
     // AABB obstacles
 
@@ -502,8 +504,9 @@ public class FuelSim {
 
         boolean didScore(Fuel fuel) {
             double dist2d = fuel.pos.toTranslation2d().getDistance(center);
-            if (dist2d > HUB_ENTRY_RADIUS)
+            if (dist2d > HUB_ENTRY_RADIUS) {
                 return false;
+            }
             double currZ = fuel.pos.getZ();
             double prevZ = fuel.prevPos.getZ();
             // Only count fuels falling through the opening (top-down entry)
@@ -528,7 +531,10 @@ public class FuelSim {
 
     /** Intake zone defined in robot-relative coordinates. Picks up fuels that enter the box. */
     static class IntakeZone {
-        final double xMin, xMax, yMin, yMax;
+        final double xMin;
+        final double xMax;
+        final double yMin;
+        final double yMax;
         final BooleanSupplier active;
         final Runnable callback;
 
@@ -543,8 +549,9 @@ public class FuelSim {
         }
 
         boolean shouldIntake(Fuel fuel, Pose2d robotPose, double bumperHeight) {
-            if (!active.getAsBoolean() || fuel.pos.getZ() > bumperHeight)
+            if (!active.getAsBoolean() || fuel.pos.getZ() > bumperHeight) {
                 return false;
+            }
             Translation2d relPos = new Pose2d(fuel.pos.toTranslation2d(), Rotation2d.kZero)
                 .relativeTo(robotPose).getTranslation();
             boolean inside = relPos.getX() >= xMin && relPos.getX() <= xMax && relPos.getY() >= yMin
@@ -768,8 +775,9 @@ public class FuelSim {
      * @param omega 3D angular velocity (rad/s)
      */
     public void launchFuel(Translation3d pos, Translation3d vel, Translation3d omega) {
-        if (fuels.size() >= MAX_BALLS)
+        if (fuels.size() >= MAX_BALLS) {
             return;
+        }
         Fuel onefuel = new Fuel(pos, vel, omega);
         fuels.add(onefuel);
         totalLaunched++;
@@ -786,15 +794,17 @@ public class FuelSim {
 
     /** Drop a fuel at this position, sitting on the ground. */
     public void spawnFuel(Translation3d pos) {
-        if (fuels.size() >= MAX_BALLS)
+        if (fuels.size() >= MAX_BALLS) {
             return;
+        }
         fuels.add(new Fuel(pos));
     }
 
     /** Drop a fuel with some initial velocity. */
     public void spawnFuel(Translation3d pos, Translation3d vel) {
-        if (fuels.size() >= MAX_BALLS)
+        if (fuels.size() >= MAX_BALLS) {
             return;
+        }
         fuels.add(new Fuel(pos, vel));
     }
 
@@ -850,8 +860,9 @@ public class FuelSim {
      * sim isn't enabled.
      */
     public void tick() {
-        if (!running)
+        if (!running) {
             return;
+        }
         long t0 = System.nanoTime();
         advancePhysics(PERIOD);
         lastPhysicsNanos = System.nanoTime() - t0;
@@ -884,10 +895,12 @@ public class FuelSim {
 
         for (int i = 0; i < fuels.size(); i++) {
             Fuel fuel = fuels.get(i);
-            if (fuel.intaked || fuel.outOfBounds)
+            if (fuel.intaked || fuel.outOfBounds) {
                 continue;
-            if (fuel.sleeping && config.sleepingEnabled)
+            }
+            if (fuel.sleeping && config.sleepingEnabled) {
                 continue;
+            }
 
             // Save previous state
             fuel.prevPos = fuel.pos;
@@ -911,10 +924,12 @@ public class FuelSim {
         if (config.ccdEnabled) {
             for (int i = 0; i < fuels.size(); i++) {
                 Fuel fuel = fuels.get(i);
-                if (fuel.intaked || fuel.outOfBounds)
+                if (fuel.intaked || fuel.outOfBounds) {
                     continue;
-                if (fuel.sleeping && config.sleepingEnabled)
+                }
+                if (fuel.sleeping && config.sleepingEnabled) {
                     continue;
+                }
                 if (fuel.vel.getNorm() > config.ccdSpeedThreshold) {
                     handleCCD(fuel);
                 }
@@ -934,10 +949,12 @@ public class FuelSim {
         // Simple wall/ground handling (direct impulse, not through solver)
         for (int i = 0; i < fuels.size(); i++) {
             Fuel fuel = fuels.get(i);
-            if (fuel.intaked || fuel.outOfBounds)
+            if (fuel.intaked || fuel.outOfBounds) {
                 continue;
-            if (fuel.sleeping && config.sleepingEnabled)
+            }
+            if (fuel.sleeping && config.sleepingEnabled) {
                 continue;
+            }
             handleWallBounce(fuel);
             handleGroundContact(fuel, subDt);
             handleBumpCollisions(fuel);
@@ -946,18 +963,21 @@ public class FuelSim {
         // Hub scoring
         for (int i = 0; i < fuels.size(); i++) {
             Fuel fuel = fuels.get(i);
-            if (fuel.intaked || fuel.outOfBounds)
+            if (fuel.intaked || fuel.outOfBounds) {
                 continue;
+            }
             handleHubScoring(fuel);
         }
 
         // Net collisions
         for (int i = 0; i < fuels.size(); i++) {
             Fuel fuel = fuels.get(i);
-            if (fuel.intaked || fuel.outOfBounds)
+            if (fuel.intaked || fuel.outOfBounds) {
                 continue;
-            if (fuel.sleeping && config.sleepingEnabled)
+            }
+            if (fuel.sleeping && config.sleepingEnabled) {
                 continue;
+            }
             handleNetCollision(fuel, blueHub);
             handleNetCollision(fuel, redHub);
         }
@@ -975,8 +995,9 @@ public class FuelSim {
 
             for (int i = 0; i < fuels.size(); i++) {
                 Fuel fuel = fuels.get(i);
-                if (fuel.intaked || fuel.outOfBounds)
+                if (fuel.intaked || fuel.outOfBounds) {
                     continue;
+                }
                 // Wake sleeping fuels near the robot so bumpers push them
                 if (fuel.sleeping && config.sleepingEnabled) {
                     double dx = fuel.pos.getX() - robotPose.getX();
@@ -989,8 +1010,9 @@ public class FuelSim {
                 }
                 // Intake first so fuels are consumed before bumper pushes them away
                 handleIntakePickup(fuel, robotPose);
-                if (fuel.intaked)
+                if (fuel.intaked) {
                     continue;
+                }
                 handleRobotCollision(fuel, robotPose, robotVel);
             }
         }
@@ -1037,7 +1059,9 @@ public class FuelSim {
     /** Compute acceleration: gravity + drag + Magnus lift. Magnus only kicks in when airborne. */
     private Translation3d computeAcceleration(Fuel fuel) {
         // Gravity always acts
-        double ax = 0, ay = 0, az = -GRAVITY;
+        double ax = 0;
+        double ay = 0;
+        double az = -GRAVITY;
 
         double speed = fuel.vel.getNorm();
         boolean airborne = fuel.pos.getZ() > BALL_RADIUS + 0.01;
@@ -1071,8 +1095,9 @@ public class FuelSim {
     private void handleCCD(Fuel fuel) {
         Translation3d delta = fuel.pos.minus(fuel.prevPos);
         double dist = delta.getNorm();
-        if (dist < 1e-6)
+        if (dist < 1e-6) {
             return;
+        }
 
         Translation3d dir = delta.div(dist);
 
@@ -1208,12 +1233,14 @@ public class FuelSim {
             tEnter = Math.max(tEnter, t1);
             tExit = Math.min(tExit, t2);
         } else {
-            if (origin.getZ() < minZ || origin.getZ() > maxZ)
+            if (origin.getZ() < minZ || origin.getZ() > maxZ) {
                 return -1;
+            }
         }
 
-        if (tEnter > tExit || tExit < 0)
+        if (tEnter > tExit || tExit < 0) {
             return -1;
+        }
         return tEnter > 0 ? tEnter : -1; // Already inside if tEnter <= 0
     }
 
@@ -1228,8 +1255,9 @@ public class FuelSim {
         // Include sleeping fuels so awake fuels can detect them for wake-on-collision
         for (int i = 0; i < fuels.size(); i++) {
             Fuel fuel = fuels.get(i);
-            if (fuel.intaked || fuel.outOfBounds)
+            if (fuel.intaked || fuel.outOfBounds) {
                 continue;
+            }
             int col = (int) (fuel.pos.getX() / CELL_SIZE);
             int row = (int) (fuel.pos.getY() / CELL_SIZE);
             if (col >= 0 && col < GRID_COLS && row >= 0 && row < GRID_ROWS) {
@@ -1243,10 +1271,12 @@ public class FuelSim {
     private void generateFuelFuelContacts() {
         for (int i = 0; i < fuels.size(); i++) {
             Fuel fuelA = fuels.get(i);
-            if (fuelA.intaked || fuelA.outOfBounds)
+            if (fuelA.intaked || fuelA.outOfBounds) {
                 continue;
-            if (fuelA.sleeping && config.sleepingEnabled)
+            }
+            if (fuelA.sleeping && config.sleepingEnabled) {
                 continue;
+            }
 
             int col = (int) (fuelA.pos.getX() / CELL_SIZE);
             int row = (int) (fuelA.pos.getY() / CELL_SIZE);
@@ -1255,15 +1285,18 @@ public class FuelSim {
                 for (int dj = -1; dj <= 1; dj++) {
                     int ci = col + di;
                     int cj = row + dj;
-                    if (ci < 0 || ci >= GRID_COLS || cj < 0 || cj >= GRID_ROWS)
+                    if (ci < 0 || ci >= GRID_COLS || cj < 0 || cj >= GRID_ROWS) {
                         continue;
+                    }
                     List<Integer> cell = grid[ci][cj];
                     for (int k = 0; k < cell.size(); k++) {
                         int j = cell.get(k);
-                        if (j == i)
+                        if (j == i) {
                             continue; // same fuel
-                        if (j < i && !(config.sleepingEnabled && fuels.get(j).sleeping))
+                        }
+                        if (j < i && !(config.sleepingEnabled && fuels.get(j).sleeping)) {
                             continue;
+                        }
 
                         Fuel fuelB = fuels.get(j);
                         double dx = fuelA.pos.getX() - fuelB.pos.getX();
@@ -1306,10 +1339,12 @@ public class FuelSim {
     private void generateFuelFieldContacts() {
         for (int i = 0; i < fuels.size(); i++) {
             Fuel fuel = fuels.get(i);
-            if (fuel.intaked || fuel.outOfBounds)
+            if (fuel.intaked || fuel.outOfBounds) {
                 continue;
-            if (fuel.sleeping && config.sleepingEnabled)
+            }
+            if (fuel.sleeping && config.sleepingEnabled) {
                 continue;
+            }
 
             // AABB obstacles
             for (AABB aabb : AABB_OBSTACLES) {
@@ -1508,8 +1543,9 @@ public class FuelSim {
      * Sequential impulse solver: resolve bounces, friction, and spin transfer across all contacts.
      */
     private void solveContacts() {
-        if (contacts.isEmpty())
+        if (contacts.isEmpty()) {
             return;
+        }
 
         // Compute restitution targets from initial approach velocities (before any solving)
         for (int i = 0; i < contacts.size(); i++) {
@@ -1634,8 +1670,9 @@ public class FuelSim {
         double beta = config.baumgarteBeta;
         double correction = Math.max(c.penetration - slop, 0) * beta;
 
-        if (correction < 1e-6)
+        if (correction < 1e-6) {
             return;
+        }
 
         Fuel fuelA = fuels.get(c.fuelIndexA);
         if (c.fuelIndexB >= 0) {
@@ -1826,11 +1863,13 @@ public class FuelSim {
 
     /** Hub net collision: catches overshots, but lets fuels pass through from behind. */
     private void handleNetCollision(Fuel fuel, ScoringTarget hub) {
-        if (fuel.pos.getZ() > NET_HEIGHT_MAX || fuel.pos.getZ() < NET_HEIGHT_MIN)
+        if (fuel.pos.getZ() > NET_HEIGHT_MAX || fuel.pos.getZ() < NET_HEIGHT_MIN) {
             return;
+        }
         if (fuel.pos.getY() > hub.center.getY() + NET_WIDTH / 2.0
-            || fuel.pos.getY() < hub.center.getY() - NET_WIDTH / 2.0)
+            || fuel.pos.getY() < hub.center.getY() - NET_WIDTH / 2.0) {
             return;
+        }
 
         double netX = hub.center.getX() + NET_OFFSET * hub.exitVelXSign;
         double distToNet = fuel.pos.getX() - netX;
@@ -1838,8 +1877,9 @@ public class FuelSim {
         if (Math.abs(distToNet) < BALL_RADIUS) {
             // Only block fuels moving toward the net
             boolean movingTowardNet = fuel.vel.getX() * hub.exitVelXSign > 0;
-            if (!movingTowardNet)
+            if (!movingTowardNet) {
                 return;
+            }
 
             // Push fuel out of net
             double pushDir = distToNet >= 0 ? 1 : -1;
@@ -1851,8 +1891,9 @@ public class FuelSim {
     }
 
     private void handleRobotCollision(Fuel fuel, Pose2d robotPose, Translation2d robotVel) {
-        if (fuel.pos.getZ() > bumperHeight)
+        if (fuel.pos.getZ() > bumperHeight) {
             return;
+        }
 
         Translation2d relPos = new Pose2d(fuel.pos.toTranslation2d(), Rotation2d.kZero)
             .relativeTo(robotPose).getTranslation();
@@ -2090,13 +2131,15 @@ public class FuelSim {
         List<Translation3d> inFlight = new ArrayList<>();
         int sleeping = 0;
         for (Fuel b : fuels) {
-            if (b.intaked || b.outOfBounds)
+            if (b.intaked || b.outOfBounds) {
                 continue;
+            }
             if (b.pos.getZ() > BALL_RADIUS + 0.1) {
                 inFlight.add(b.pos);
             }
-            if (b.sleeping)
+            if (b.sleeping) {
                 sleeping++;
+            }
         }
         inFlightPublisher.set(inFlight.toArray(new Translation3d[0]));
 
