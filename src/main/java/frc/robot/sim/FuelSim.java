@@ -828,8 +828,9 @@ public class FuelSim {
             double x = cx + (col - (nzCols - 1) * 0.5) * BALL_DIAMETER;
             for (int row = 0; row < nzRows; row++) {
                 double y = cy + (row - (nzRows - 1) * 0.5) * BALL_DIAMETER;
-                if (Math.abs(y - cy) < halfDivider)
+                if (Math.abs(y - cy) < halfDivider) {
                     continue;
+                }
                 spawnFuel(new Translation3d(x, y, BALL_RADIUS));
             }
         }
@@ -1199,8 +1200,9 @@ public class FuelSim {
             tEnter = Math.max(tEnter, t1);
             tExit = Math.min(tExit, t2);
         } else {
-            if (origin.getX() < minX || origin.getX() > maxX)
+            if (origin.getX() < minX || origin.getX() > maxX) {
                 return -1;
+            }
         }
 
         // Y slab
@@ -1216,8 +1218,9 @@ public class FuelSim {
             tEnter = Math.max(tEnter, t1);
             tExit = Math.min(tExit, t2);
         } else {
-            if (origin.getY() < minY || origin.getY() > maxY)
+            if (origin.getY() < minY || origin.getY() > maxY) {
                 return -1;
+            }
         }
 
         // Z slab
@@ -1318,7 +1321,7 @@ public class FuelSim {
                             c.fuelIndexB = j;
                             c.penetration = minDist - dist;
                             c.contactPoint = fuelA.pos.plus(fuelB.pos).div(2.0); // midpoint between
-                                                                                 // centers
+                            // centers
                             c.restitution = COR_BALL_BALL;
                             c.friction = config.frictionEnabled ? MU_BALL_BALL : 0;
                             c.normalImpulseAccum = 0;
@@ -1456,8 +1459,9 @@ public class FuelSim {
      * from the side. Falls back to nearest-face if the ray is degenerate (fuel spawned inside).
      */
     private Translation3d computeEntryFaceNormal(Translation3d from, Translation3d to, AABB aabb) {
-        if (from == null)
+        if (from == null) {
             return computeAABBNormal(to, aabb);
+        }
 
         double dx = to.getX() - from.getX();
         double dy = to.getY() - from.getY();
@@ -1502,8 +1506,9 @@ public class FuelSim {
     }
 
     private void generateSphereCylinderContact(int fuelIndex, Fuel fuel, CylinderObstacle cyl) {
-        if (cyl.abLenSq() < 1e-12)
+        if (cyl.abLenSq() < 1e-12) {
             return;
+        }
 
         // Find nearest point on line segment to fuel center
 
@@ -1808,15 +1813,17 @@ public class FuelSim {
     /** Handle collisions with the tent-shaped bump ramps. */
     private void handleBumpCollisions(Fuel fuel) {
         for (BumpSegment seg : BUMP_SEGMENTS) {
-            if (fuel.pos.getY() < seg.yStart() || fuel.pos.getY() > seg.yEnd())
+            if (fuel.pos.getY() < seg.yStart() || fuel.pos.getY() > seg.yEnd()) {
                 continue;
+            }
 
             // Parametric projection onto line segment
             double px = fuel.pos.getX() - seg.xStart();
             double pz = fuel.pos.getZ() - seg.zStart();
             double t = (px * seg.lineX() + pz * seg.lineZ()) / (seg.lineLen() * seg.lineLen());
-            if (t < 0 || t > 1)
+            if (t < 0 || t > 1) {
                 continue;
+            }
 
             // Distance from fuel center to nearest point on line (in XZ plane)
             double nearX = seg.xStart() + t * seg.lineX();
@@ -1826,7 +1833,8 @@ public class FuelSim {
             double dist = Math.sqrt(dx * dx + dz * dz);
 
             if (dist < BALL_RADIUS) {
-                double nx = seg.nx(), nz = seg.nz();
+                double nx = seg.nx();
+                double nz = seg.nz();
 
                 // Push out
                 fuel.pos = fuel.pos.plus(
@@ -1998,7 +2006,9 @@ public class FuelSim {
     private void computeConservationQuantities() {
         totalKE = 0;
         totalPE = 0;
-        double mx = 0, my = 0, mz = 0;
+        double mx = 0;
+        double my = 0;
+        double mz = 0;
 
         for (Fuel fuel : fuels) {
             double speed = fuel.vel.getNorm();
@@ -2030,10 +2040,12 @@ public class FuelSim {
 
     /** COR drops at higher impact speeds (fuels deform more and lose more energy). */
     private double velocityCOR(double e0, double impactSpeed) {
-        if (!config.velocityDependentCOR)
+        if (!config.velocityDependentCOR) {
             return e0;
-        if (impactSpeed <= COR_VREF)
+        }
+        if (impactSpeed <= COR_VREF) {
             return e0;
+        }
         return e0 * Math.pow(COR_VREF / impactSpeed, COR_EXPONENT);
     }
 
@@ -2047,8 +2059,9 @@ public class FuelSim {
 
     /** When a fuel hits a wall, friction changes its spin. This handles that. */
     private void applyWallSpinTransfer(Fuel fuel, Translation3d wallNormal) {
-        if (!config.spinTransferEnabled || !config.frictionEnabled)
+        if (!config.spinTransferEnabled || !config.frictionEnabled) {
             return;
+        }
 
         // Compute tangential velocity at contact point
         Translation3d rContact = wallNormal.times(-BALL_RADIUS);
@@ -2099,8 +2112,12 @@ public class FuelSim {
     private Translation3d[] predictArc(Translation3d pos, Translation3d vel, int steps, double dt) {
         List<Translation3d> arc = new ArrayList<>();
         arc.add(pos);
-        double px = pos.getX(), py = pos.getY(), pz = pos.getZ();
-        double vx = vel.getX(), vy = vel.getY(), vz = vel.getZ();
+        double px = pos.getX();
+        double py = pos.getY();
+        double pz = pos.getZ();
+        double vx = vel.getX();
+        double vy = vel.getY();
+        double vz = vel.getZ();
         for (int i = 0; i < steps; i++) {
             double speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
             double drag = config.dragEnabled && speed > 1e-6 ? DRAG_ACCEL_FACTOR * speed : 0;
@@ -2110,8 +2127,9 @@ public class FuelSim {
             px += vx * dt;
             py += vy * dt;
             pz += vz * dt;
-            if (pz < BALL_RADIUS)
+            if (pz < BALL_RADIUS) {
                 break;
+            }
             arc.add(new Translation3d(px, py, pz));
         }
         return arc.toArray(new Translation3d[0]);
@@ -2161,30 +2179,35 @@ public class FuelSim {
     }
 
 
-
+    /** Returns the number of fuels in the simulation. */
     public int getFuelCount() {
         return fuels.size();
     }
 
     // Only counts fuels above ground level + small margin
+    /** Returns the number of fuels currently in flight. */
     public int getFuelsInFlight() {
         int count = 0;
         for (Fuel fuel : fuels) {
-            if (fuel.pos.getZ() > BALL_RADIUS + 0.1)
+            if (fuel.pos.getZ() > BALL_RADIUS + 0.1) {
                 count++;
+            }
         }
         return count;
     }
 
+    /** Returns the number of fuels on the ground. */
     public int getFuelsOnGround() {
         int count = 0;
         for (Fuel fuel : fuels) {
-            if (fuel.pos.getZ() <= BALL_RADIUS + 0.1)
+            if (fuel.pos.getZ() <= BALL_RADIUS + 0.1) {
                 count++;
+            }
         }
         return count;
     }
 
+    /** Returns a list of all fuel positions. */
     public List<Translation3d> getFuelPositions() {
         List<Translation3d> positions = new ArrayList<>(fuels.size());
         for (Fuel fuel : fuels) {
@@ -2193,6 +2216,7 @@ public class FuelSim {
         return positions;
     }
 
+    /** Returns a list of all fuel velocities. */
     public List<Translation3d> getFuelVelocities() {
         List<Translation3d> velocities = new ArrayList<>(fuels.size());
         for (Fuel fuel : fuels) {
@@ -2201,6 +2225,7 @@ public class FuelSim {
         return velocities;
     }
 
+    /** Returns a list of all fuel angular velocities. */
     public List<Translation3d> getFuelOmegas() {
         List<Translation3d> omegas = new ArrayList<>(fuels.size());
         for (Fuel fuel : fuels) {
