@@ -694,7 +694,7 @@ public class FuelSim {
 
 
     /**
-     * Start the simulation. `updateSim` must still be called every loop
+     * Start the simulation. `tick` must still be called every loop
      */
     public void start() {
         running = true;
