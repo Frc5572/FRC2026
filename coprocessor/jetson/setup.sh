@@ -10,14 +10,14 @@ REMOTE_USER="orin"
 REMOTE_HOST="orin"
 DEST_PATH="/etc/systemd/system/"
 
-if scp -q -i ~/.ssh/id_rsa "$SOURCE_FILE" "$REMOTE_USER@$REMOTE_HOST:$DEST_PATH"; then
+if scp "$SOURCE_FILE" "$REMOTE_USER@$REMOTE_HOST:$DEST_PATH"; then
     echo "Transfer successful"
 else
     echo "Transfer failed"
     exit 1
 fi
 
-if scp -q -i ssh $REMOTE_USER@$REMOTE_HOST 'bash -s' < enable-service.sh; then
+if ssh $REMOTE_USER@$REMOTE_HOST 'bash -s' < enable-service.sh; then
     echo "Setup Successful"
 else
     echo "Setup Failed"
