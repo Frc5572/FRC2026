@@ -337,9 +337,8 @@ public final class RobotContainer {
         tuner.leftTrigger().onTrue(Commands.runOnce(() -> {
             firstShotFlag[0] = true;
             Logger.recordOutput("ShotTiming/distance",
-                Units
-                    .metersToFeet(AllianceFlipUtil.apply(swerve.state.getTurretGlobalPoseEstimate())
-                        .getTranslation().getDistance(FieldConstants.Hub.centerHub)));
+                Units.metersToFeet(AllianceFlipUtil.apply(swerve.state.getTurretCenterFieldFrame())
+                    .getTranslation().getDistance(FieldConstants.Hub.centerHub)));
         })).whileTrue(indexer.setSpeedCommand(1.0, 1.0));
         new Trigger(() -> shooter.timeSinceLastShot() < 0.4).onTrue(Commands.runOnce(() -> {
             if (firstShotFlag[0]) {
@@ -441,5 +440,4 @@ public final class RobotContainer {
         }
     }
 }
-
 

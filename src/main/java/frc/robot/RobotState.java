@@ -1,7 +1,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
@@ -16,6 +15,8 @@ import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -24,12 +25,10 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.subsystems.vision.CameraConstants;
-import frc.robot.util.AllianceFlipUtil;
 
 /**
  * Maintains and updates the robot's estimated global pose for a swerve drive by fusing wheel
@@ -57,9 +56,6 @@ public class RobotState {
     private boolean initted = false;
 
     private final PoseEstimator<SwerveModulePosition[]> visionAdjustedOdometry;
-    private final PoseEstimator<SwerveModulePosition[]> turretVisionAdjustedOdometry;
-    private Distance distanceFromHub = Meters.of(0.0);
-
 
     private final TimeInterpolatableBuffer<Rotation2d> rotationBuffer =
         TimeInterpolatableBuffer.createBuffer(1.5);
@@ -83,8 +79,6 @@ public class RobotState {
         SwerveDriveOdometry swerveOdometry =
             new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
-            swerveOdometry, VecBuilder.fill(0.1, 0.1, 0.1), VecBuilder.fill(0.9, 0.9, 0.9));
-        turretVisionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
             swerveOdometry, VecBuilder.fill(0.1, 0.1, 0.1), VecBuilder.fill(0.9, 0.9, 0.9));
     }
 
@@ -198,6 +192,18 @@ public class RobotState {
         initted = true;
     }
 
+    private static Transform3d getTurretRobotToCamera(Transform3d turretToCamera,
+        Rotation2d turretRotation) {
+        Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
+
+        Transform3d robotToTurret =
+            new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
+
+        Transform3d robotToCamera = robotToTurret.plus(turretToCamera);
+
+        return robotToCamera;
+    }
+
     public void setTurretRawAngle(double timestamp, Angle angle) {
         currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
     }
@@ -256,6 +262,7 @@ public class RobotState {
                 .in(Degrees)) > 5) {
                 return false;
             }
+            robotToCamera_ = getTurretRobotToCamera(robotToCamera_, maybeTurretRotation.get());
         }
         if (!initted) {
             final Transform3d robotToCamera = robotToCamera_;
@@ -314,43 +321,13 @@ public class RobotState {
                     translationStdDev);
                 Logger.recordOutput("State/Camera/" + camera.name + "/stdDevRotation",
                     rotationStdDev);
-                if (camera.isTurret) {
-                    addTurretVisionObservation(cameraPose, robotToCamera_, translationStdDev,
-                        rotationStdDev, pipelineResult.getTimestampSeconds());
-                } else {
-                    addVisionObservation(cameraPose, robotToCamera_, translationStdDev,
-                        rotationStdDev, pipelineResult.getTimestampSeconds());
-                }
+                addVisionObservation(cameraPose, robotToCamera_, translationStdDev, rotationStdDev,
+                    pipelineResult.getTimestampSeconds());
                 return true;
             }
         }
         return false;
     }
-
-    /**
-     * Adds a vision measurement using an externally computed camera pose.
-     *
-     * @param cameraPose estimated camera pose in field coordinates
-     * @param robotToCamera transform from robot to camera frame
-     * @param translationStdDev translation measurement standard deviation (meters)
-     * @param rotationStdDev rotation measurement standard deviation (radians)
-     * @param timestamp measurement timestamp in seconds
-     */
-    public void addTurretVisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
-        double translationStdDev, double rotationStdDev, double timestamp) {
-        Pose2d robotPose = cameraPose.plus(robotToCamera.inverse()).toPose2d();
-        Pose2d before = turretVisionAdjustedOdometry.getEstimatedPosition();
-        turretVisionAdjustedOdometry.addVisionMeasurement(robotPose, timestamp,
-            VecBuilder.fill(translationStdDev, translationStdDev, rotationStdDev));
-        Pose2d after = turretVisionAdjustedOdometry.getEstimatedPosition();
-        double correction = after.getTranslation().getDistance(before.getTranslation());
-        distanceFromHub = Meters.of(robotPose.getTranslation()
-            .getDistance(AllianceFlipUtil.apply(FieldConstants.Hub.centerHub)));
-        Logger.recordOutput("State/Turret/Correction", correction);
-        Logger.recordOutput("State/Turret/VisionPose", robotPose);
-        rotationBuffer.clear();
-    }
-
 
     private static double stdDevMultiplier(List<PhotonTrackedTarget> targets, Pose3d cameraPose) {
         double totalDistance = 0.0;
@@ -392,15 +369,13 @@ public class RobotState {
         return visionAdjustedOdometry.getEstimatedPosition();
     }
 
+    public Pose2d getTurretCenterFieldFrame() {
+        return getGlobalPoseEstimate().plus(new Transform2d(
+            Constants.Vision.turretCenter.toPose2d().getTranslation(), Rotation2d.kZero));
+    }
+
     public ChassisSpeeds getFieldRelativeSpeeds() {
         return currentSpeeds;
     }
 
-    public Pose2d getTurretGlobalPoseEstimate() {
-        return turretVisionAdjustedOdometry.getEstimatedPosition();
-    }
-
-    public Distance getDistanceFromHub() {
-        return distanceFromHub;
-    }
 }

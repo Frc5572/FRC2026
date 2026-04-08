@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=orin
-WorkingDirectory=/home/orin/orin-pv
-ExecStart=java -jar /home/orin/orin-pv/photon-server/build/libs/photonvision-dev-Unknown-linuxarm64.jar
+WorkingDirectory=/home/orin/
+ExecStart=java -jar /home/orin/pv-orin/photon-server/build/libs/photonvision-dev-Unknown-linuxarm64.jar
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
