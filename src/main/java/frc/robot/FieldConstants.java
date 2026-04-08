@@ -186,13 +186,13 @@ public class FieldConstants {
      */
     public static class Hub {
         /** Outer hub diameter/width in meters. */
-        public static final double width = Units.inchesToMeters(47.0);
+        public static final double width = Units.inchesToMeters(41.7);
 
         /** Outer hub height in meters (includes the catcher/top feature). */
         public static final double height = Units.inchesToMeters(72.0);
 
         /** Inner opening diameter/width in meters. */
-        public static final double innerWidth = Units.inchesToMeters(41.7);
+        public static final double innerWidth = Units.inchesToMeters(23.82);
 
         /** Inner opening height in meters. */
         public static final double innerHeight = Units.inchesToMeters(56.5);

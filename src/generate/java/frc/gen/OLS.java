@@ -46,6 +46,15 @@ public class OLS<T> {
             }
             return res;
         }
+
+        public double rmse() {
+            double res = 0.0;
+            for (var residual : residuals) {
+                res += residual * residual;
+            }
+            res /= residuals.length;
+            return res;
+        }
     }
 
     public OLSSolution<T> solve(ToDoubleFunction<T> outputFunc) {

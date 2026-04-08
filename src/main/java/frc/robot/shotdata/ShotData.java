@@ -22,11 +22,11 @@ public class ShotData {
 
     public static ShotEntry[] entries = new ShotEntry[] {
         // @formatter:off
-        new ShotEntry(14.37, 58, 22),
-        new ShotEntry(12.25, 55, 15),
-        new ShotEntry(9.25, 47, 15),
-        new ShotEntry(5.25, 45, 2),
-        new ShotEntry(7.38, 47, 7),
+        new ShotEntry(14.37, 58, 22, 0),
+        new ShotEntry(12.25, 55, 15, 0),
+        new ShotEntry(9.25, 47, 15, 0),
+        new ShotEntry(5.25, 45, 2, 0),
+        new ShotEntry(7.38, 47, 7, 0),
         // @formatter:on
     };
 
@@ -34,10 +34,11 @@ public class ShotData {
         FieldConstants.Hub.topCenterPoint.getMeasureZ().minus(Constants.Shooter.shooterHeight);
 
     public static record ShotEntry(Distance targetDistance, AngularVelocity flywheelSpeed,
-        Angle exitAngle) {
-        public ShotEntry(double distanceFeet, double flywheelSpeed, double hoodAngleDeg) {
+        Angle exitAngle, Time tof) {
+        public ShotEntry(double distanceFeet, double flywheelSpeed, double hoodAngleDeg,
+            double tof) {
             this(Feet.of(distanceFeet), RotationsPerSecond.of(flywheelSpeed),
-                Degrees.of(90 - 12.695 - hoodAngleDeg));
+                Degrees.of(90 - 12.695 - hoodAngleDeg), Seconds.of(tof));
         }
 
         public LinearVelocity theoreticalExitVelocity() {

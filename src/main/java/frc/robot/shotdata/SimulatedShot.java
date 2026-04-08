@@ -12,6 +12,10 @@ import edu.wpi.first.units.measure.LinearVelocity;
 
 public class SimulatedShot {
 
+    public final Angle exitAngle;
+    public final LinearVelocity exitVelocity;
+    public final AngularVelocity backspin;
+
     private static final double g = 9.81; // m/s^2
     private static final double rho = 1.225; // kg/m^3, standard atmosphere
     private static final double m = 0.215; // kg, game manual 5.10.1 midpoint
@@ -45,6 +49,9 @@ public class SimulatedShot {
     }
 
     public SimulatedShot(Angle exitAngle, LinearVelocity exitVelocity, AngularVelocity backspin) {
+        this.exitAngle = exitAngle;
+        this.exitVelocity = exitVelocity;
+        this.backspin = backspin;
         state.a1 = 0;
         state.a2 = 0;
         state.a3 = exitVelocity.in(MetersPerSecond) * Math.cos(exitAngle.in(Radians));
