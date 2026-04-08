@@ -10,6 +10,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.function.Function;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.math.opt.BFGS;
 import frc.robot.math.opt.FiniteDifference;
@@ -49,6 +50,12 @@ public class GenerateLUTs {
             trajectories[i] = traj;
         }
 
+        InterpolatingDoubleTreeMap hub = new InterpolatingDoubleTreeMap();
+        hub.put(-FieldConstants.Hub.width / 2.0, FieldConstants.Hub.height);
+        hub.put(FieldConstants.Hub.width / 2.0, FieldConstants.Hub.height);
+        hub.put(-FieldConstants.Hub.innerWidth / 2.0, FieldConstants.Hub.innerHeight);
+        hub.put(FieldConstants.Hub.innerWidth / 2.0, FieldConstants.Hub.innerHeight);
+
         NumberFormat formatter = new DecimalFormat("#0.000");
         try (FileWriter writer = new FileWriter(new File("trajectories.txt"))) {
             for (double x = min; x < max; x += 0.01) {
@@ -59,7 +66,8 @@ public class GenerateLUTs {
                 }
                 writer.write('\t');
                 if (Math.abs(x) < FieldConstants.Hub.width / 2.0) {
-                    writer.write(formatter.format(ShotData.shooterToTargetHeightDiff.in(Meters)));
+                    writer.write(
+                        formatter.format(hub.get(x) - Constants.Shooter.shooterHeight.in(Meters)));
                 }
                 writer.write('\n');
             }
