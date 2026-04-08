@@ -9,6 +9,8 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
+import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -16,6 +18,8 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.math.interp2d.Interp2d;
+import frc.robot.math.interp2d.MulAdd;
 
 /** Storage and interpolation for shooter parameters. */
 public class ShotData {
@@ -48,6 +52,11 @@ public class ShotData {
                         * Math.pow(Math.cos(exitAngle.in(Radians)), 2.0))));
         }
 
+        public LinearVelocity backtracedExitVelocity() {
+            return MetersPerSecond.of(
+                targetDistance.in(Meters) / Math.cos(exitAngle.in(Radians)) / tof().in(Seconds));
+        }
+
         public Time theoreticalTimeOfFlight() {
             return Seconds.of(targetDistance.in(Meters) / Math.cos(exitAngle.in(Radians))
                 / theoreticalExitVelocity().in(MetersPerSecond));
@@ -62,6 +71,30 @@ public class ShotData {
         }
     }
 
+    public static final MulAdd<ShotEntry> mulAdd = new MulAdd<ShotEntry>() {
+
+        @Override
+        public ShotEntry mul(ShotEntry a, double b) {
+            return new ShotEntry(a.targetDistance.times(b), a.flywheelSpeed.times(b),
+                a.exitAngle.times(b), a.tof.times(b));
+        }
+
+        @Override
+        public ShotEntry add(ShotEntry a, ShotEntry b) {
+            return new ShotEntry(a.targetDistance.plus(b.targetDistance),
+                a.flywheelSpeed.plus(b.flywheelSpeed), a.exitAngle.plus(b.exitAngle),
+                a.tof.plus(b.tof));
+        }
+
+    };
+
+    private static final Interp2d<ShotEntry> shootFunc = new Interp2d<>(GeneratedLUTs.hubEntries,
+        mulAdd, x -> x.targetDistance.in(Meters), y -> y.flywheelSpeed.in(RotationsPerSecond));
+    private static final Interp2d<ShotEntry> passFunc = new Interp2d<>(GeneratedLUTs.hubEntries,
+        mulAdd, x -> x.targetDistance.in(Meters), y -> y.flywheelSpeed.in(RotationsPerSecond));
+    public static final Interp2d<ShotEntry> simFunc = new Interp2d<>(GeneratedLUTs.hubEntries,
+        mulAdd, x -> x.hoodAngle().in(Degrees), y -> y.flywheelSpeed.in(RotationsPerSecond));
+
     /** Parameters for a single instance of shooting. */
     public static record ShotParameters(double desiredSpeed, double hoodAngleDeg,
         double timeOfFlight, boolean isOkayToShoot) {
@@ -70,7 +103,39 @@ public class ShotData {
     /** Get parameters for a given shot situation. */
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed,
         boolean log) {
-        return null;
+        var res = shootFunc.query(new Translation2d(distance, currentFlywheelSpeed));
+        double desiredSpeed = GeneratedLUTs.desiredFlywheelSpeed(distance);
+        double hoodAngleDeg = res.value().hoodAngle().in(Degrees);
+        double tof = res.value().tof().in(Seconds);
+        boolean isOkay = res.sdf() < 0.5;
+        if (log) {
+            Logger.recordOutput("ShotParameters/distance", distance);
+            Logger.recordOutput("ShotParameters/currentSpeed", currentFlywheelSpeed);
+            Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);
+            Logger.recordOutput("ShotParameters/hoodAngleDeg", hoodAngleDeg);
+            Logger.recordOutput("ShotParameters/tof", tof);
+            Logger.recordOutput("ShotParameters/isOkay", isOkay);
+        }
+        return new ShotParameters(desiredSpeed, hoodAngleDeg, tof, isOkay);
+    }
+
+    /** Get parameters for a given shot situation. */
+    public static ShotParameters getPassParameters(double distance, double currentFlywheelSpeed,
+        boolean log) {
+        var res = passFunc.query(new Translation2d(distance, currentFlywheelSpeed));
+        double desiredSpeed = GeneratedLUTs.desiredFlywheelSpeed(distance);
+        double hoodAngleDeg = res.value().hoodAngle().in(Degrees);
+        double tof = res.value().tof().in(Seconds);
+        boolean isOkay = currentFlywheelSpeed > desiredSpeed - 10;
+        if (log) {
+            Logger.recordOutput("ShotParameters/distance", distance);
+            Logger.recordOutput("ShotParameters/currentSpeed", currentFlywheelSpeed);
+            Logger.recordOutput("ShotParameters/desiredSpeed", desiredSpeed);
+            Logger.recordOutput("ShotParameters/hoodAngleDeg", hoodAngleDeg);
+            Logger.recordOutput("ShotParameters/tof", tof);
+            Logger.recordOutput("ShotParameters/isOkay", isOkay);
+        }
+        return new ShotParameters(desiredSpeed, hoodAngleDeg, tof, isOkay);
     }
 
 }

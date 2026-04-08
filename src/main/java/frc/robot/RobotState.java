@@ -21,6 +21,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.units.measure.Angle;
+import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.subsystems.vision.CameraConstants;
@@ -281,6 +282,10 @@ public class RobotState {
 
     private Translation2d shootingTarget = FieldConstants.Hub.centerHub;
     private boolean targetIsGround = false;
+    private double desiredFlywheelSpeed = 0.0;
+    private double desiredHoodAngleDeg = 0.0;
+    private boolean okayToShoot = false;
+    private Rotation2d desiredTurretHeadingFieldRelative = Rotation2d.kZero;
 
     private void updateShootingTarget() {
         Pose2d bluePose = AllianceFlipUtil.apply(getGlobalPoseEstimate());
@@ -305,5 +310,53 @@ public class RobotState {
 
     public void updateTargeting() {
         updateShootingTarget();
+
+        double flywheelSpeed = 0.0;
+
+        Translation2d adjustedTarget = shootingTarget;
+        if (flywheelSpeed > 10.0) {
+            for (int i = 0; i < 5; i++) {
+                double distance =
+                    adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation());
+                var parameters =
+                    targetIsGround ? ShotData.getPassParameters(distance, flywheelSpeed, false)
+                        : ShotData.getShotParameters(distance, flywheelSpeed, false);
+                double tof = parameters.timeOfFlight();
+                var forward = getFieldRelativeSpeeds().times(tof);
+                adjustedTarget = shootingTarget
+                    .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
+            }
+        } else {
+            adjustedTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+        }
+        Logger.recordOutput("State/AdjustedShootingTarget", adjustedTarget);
+        double distance = adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation());
+        var parameters = targetIsGround ? ShotData.getPassParameters(distance, flywheelSpeed, false)
+            : ShotData.getShotParameters(distance, flywheelSpeed, true);
+        this.desiredFlywheelSpeed = parameters.desiredSpeed();
+        this.desiredHoodAngleDeg = parameters.hoodAngleDeg();
+        this.okayToShoot = parameters.isOkayToShoot();
+        this.desiredTurretHeadingFieldRelative =
+            adjustedTarget.minus(getTurretCenterFieldFrame().getTranslation()).getAngle();
+    }
+
+    public boolean isInitted() {
+        return initted;
+    }
+
+    public double getDesiredFlywheelSpeed() {
+        return desiredFlywheelSpeed;
+    }
+
+    public double getDesiredHoodAngleDeg() {
+        return desiredHoodAngleDeg;
+    }
+
+    public boolean isOkayToShoot() {
+        return okayToShoot;
+    }
+
+    public Rotation2d getDesiredTurretHeadingFieldRelative() {
+        return desiredTurretHeadingFieldRelative;
     }
 }

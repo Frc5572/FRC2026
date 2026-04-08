@@ -14,7 +14,6 @@ import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -196,7 +195,8 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(CommandFactory.followHub(turret, swerve, () -> trims[1]));
+        turret.setDefaultCommand(turret
+            .goToAngleFieldRelative(() -> swerve.state.getDesiredTurretHeadingFieldRelative()));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
@@ -204,6 +204,7 @@ public final class RobotContainer {
             () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
             Constants.DriverControls.driverTranslationalMaxSpeed,
             Constants.DriverControls.driverRotationalMaxSpeed)));
+        shooter.setDefaultCommand(shooter.shoot(0.0));
 
         // TRIGGERS
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
@@ -251,27 +252,10 @@ public final class RobotContainer {
         // driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
         driver.x().whileTrue(swerve.wheelsIn());
 
-        driver.rightTrigger().whileTrue(CommandFactory.shoot(swerve.state, () -> {
-            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
-                .getX() > FieldConstants.Hub.centerHub.getX()) {
-                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
-                    .getY() > FieldConstants.fieldWidth / 2) {
-                    return AllianceFlipUtil
-                        .apply(new Translation2d(0, (3 * FieldConstants.fieldWidth / 4)));
-                } else {
-                    return AllianceFlipUtil
-                        .apply(new Translation2d(0, (FieldConstants.fieldWidth / 4)));
-                }
-            } else {
-                return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-            }
-        }, turret, shooter, indexer, adjustableHood, () -> trims[0], () -> trims[1],
-            () -> combineControllers((Predicate<CommandXboxController>) (x) -> x.b().getAsBoolean(),
-                driver, operator))
-            .alongWith(swerve.driveUserRelative(TeleopControls.teleopControls(
-                () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
-                Constants.DriverControls.driverTranslationalShootSpeed,
-                Constants.DriverControls.driverRotationalShootSpeed))));
+        driver.rightTrigger().whileTrue(
+            Commands.parallel(shooter.shoot(() -> swerve.state.getDesiredFlywheelSpeed()),
+                adjustableHood.setGoal(() -> Degrees.of(swerve.state.getDesiredHoodAngleDeg())),
+                indexer.runSpindexer(() -> swerve.state.isOkayToShoot())));
 
         driver.povUp().onTrue(Commands.runOnce(() -> {
             trims[0] += 0.50;
