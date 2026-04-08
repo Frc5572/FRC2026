@@ -1,98 +1,65 @@
 package frc.gen;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Arrays;
-import java.util.OptionalDouble;
-import java.util.function.DoubleUnaryOperator;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.CommonOps_DDRM;
-import edu.wpi.first.math.util.Units;
-import frc.robot.math.opt.Bisection;
+import java.util.function.Function;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import frc.robot.FieldConstants;
+import frc.robot.math.opt.BFGS;
+import frc.robot.math.opt.FiniteDifference;
 import frc.robot.shotdata.ShotData;
+import frc.robot.shotdata.ShotData.ShotEntry;
+import frc.robot.shotdata.SimulatedShot;
 
 public class GenerateLUTs {
 
     public static void main(String[] argv) {
-        NumberFormat formatter = new DecimalFormat("#0.00");
+        BFGS bfgs = new BFGS();
+        Function<double[], Function<ShotEntry, SimulatedShot>> entryToShotOpt =
+            x -> entry -> new SimulatedShot(entry.exitAngle(),
+                entry.noSlipExitVelocity().times(x[0]),
+                RotationsPerSecond.of(x[1] + x[2] * entry.hoodAngle().in(Degrees)));
+        var func = new FiniteDifference(x -> {
+            return rmse(entryToShotOpt.apply(x));
+        }, 1e-3);
+        bfgs.optimize(func, new double[] {0.44, 5.0, 0.0}, 1e-2);
+        var entryToShot = entryToShotOpt.apply(bfgs.getOptValue());
 
-        double slipRatio = 0.0;
-        for (var entry : ShotData.entries) {
-            slipRatio += entry.theoreticalExitVelocity().in(MetersPerSecond)
-                / entry.noSlipExitVelocity().in(MetersPerSecond);
-        }
-        slipRatio /= ShotData.entries.length;
-
-        OptionalDouble[][] data = new OptionalDouble[20][];
-        double[] distances = new double[20];
-        double[] flywheelSpeeds = new double[20];
-        for (int i = 0; i < 20; i++) {
-            distances[i] = Units.feetToMeters(2) + Units.feetToMeters(1) * i;
-            flywheelSpeeds[i] = (45.0 + (95.0 - 45.0) / 20.0 * i);
-        }
-        int numValid = 0;
-        for (int i = 0; i < 20; i++) {
-            double distance = distances[i];
-            data[i] = new OptionalDouble[20];
-            for (int j = 0; j < 20; j++) {
-                double flywheelSpeed = flywheelSpeeds[j];
-                double exitSpeed =
-                    Units.rotationsToRadians(flywheelSpeed) * Units.inchesToMeters(2) * slipRatio;
-                data[i][j] = solveForAngle(distance, exitSpeed);
-                if (data[i][j].isPresent()) {
-                    numValid++;
-                }
+        InterpolatingDoubleTreeMap[] trajectories =
+            new InterpolatingDoubleTreeMap[ShotData.entries.length];
+        double min = 0.0;
+        double max = 0.0;
+        for (int i = 0; i < ShotData.entries.length; i++) {
+            InterpolatingDoubleTreeMap traj = new InterpolatingDoubleTreeMap();
+            SimulatedShot shot = entryToShot.apply(ShotData.entries[i]);
+            shot.state.a1 = -ShotData.entries[i].targetDistance().in(Meters);
+            while (shot.state.a2 >= 0.0) {
+                traj.put(shot.state.a1, shot.state.a2);
+                min = Math.min(min, shot.state.a1);
+                max = Math.max(max, shot.state.a1);
+                shot.step(0.001);
             }
-        }
-        DMatrixRMaj a = new DMatrixRMaj(numValid, 6);
-        DMatrixRMaj b = new DMatrixRMaj(numValid, 1);
-        int idx = 0;
-        for (int i = 0; i < 20; i++) {
-            double distance = distances[i];
-            for (int j = 0; j < 20; j++) {
-                double flywheelSpeed = flywheelSpeeds[j];
-                if (data[i][j].isPresent()) {
-                    a.set(idx, 0, 1.0);
-                    a.set(idx, 1, distance);
-                    a.set(idx, 2, flywheelSpeed);
-                    a.set(idx, 3, distance * flywheelSpeed);
-                    a.set(idx, 4, distance * distance);
-                    a.set(idx, 5, flywheelSpeed * flywheelSpeed);
-                    b.set(idx, 90 - Units.radiansToDegrees(data[i][j].getAsDouble()) - 12.695);
-                    idx++;
-                }
-            }
+            traj.put(shot.state.a1, 0.0);
+            trajectories[i] = traj;
         }
 
-        DMatrixRMaj temp1 = new DMatrixRMaj(numValid, numValid);
-        DMatrixRMaj temp2 = new DMatrixRMaj(numValid, numValid);
-        DMatrixRMaj res = new DMatrixRMaj(6, 1);
-        CommonOps_DDRM.multTransA(a, a, temp1);
-        CommonOps_DDRM.invert(temp1, temp2);
-        CommonOps_DDRM.multTransB(temp2, a, temp1);
-        CommonOps_DDRM.mult(temp1, b, res);
-
-        System.out.println(Arrays.toString(res.getData()));
-
-        try (FileWriter writer = new FileWriter(new File("test.txt"))) {
-            for (int i = 0; i < 20; i++) {
-                writer.write('\t');
-                writer.write(formatter.format(flywheelSpeeds[i]));
-            }
-            writer.write('\n');
-            for (int i = 0; i < 20; i++) {
-                writer.write(formatter.format(Units.metersToFeet(distances[i])));
-                for (int j = 0; j < 20; j++) {
+        NumberFormat formatter = new DecimalFormat("#0.000");
+        try (FileWriter writer = new FileWriter(new File("trajectories.txt"))) {
+            for (double x = min; x < max; x += 0.01) {
+                writer.write(formatter.format(x));
+                for (var traj : trajectories) {
                     writer.write('\t');
-                    if (data[i][j].isPresent()) {
-                        writer.write(formatter.format(
-                            90 - Units.radiansToDegrees(data[i][j].getAsDouble()) - 12.695));
-                    }
+                    writer.write(formatter.format(traj.get(x)));
+                }
+                writer.write('\t');
+                if (Math.abs(x) < FieldConstants.Hub.width / 2.0) {
+                    writer.write(formatter.format(ShotData.shooterToTargetHeightDiff.in(Meters)));
                 }
                 writer.write('\n');
             }
@@ -101,27 +68,25 @@ public class GenerateLUTs {
         }
     }
 
-    private static OptionalDouble solveForAngle(double distance, double exitSpeed) {
-        double z = ShotData.shooterToTargetHeightDiff.in(Meters);
-        double v0 = exitSpeed;
-        double d = distance;
-        double g = 9.81;
-        System.out.println("z = " + z);
-        System.out.println("v0 = " + v0);
-        System.out.println("d = " + d);
-        System.out.println("g = " + g);
-        DoubleUnaryOperator y = (t) -> -z + v0 * Math.sin(t) * d / v0 / Math.cos(t)
-            - 0.5 * g * Math.pow(d / v0 / Math.cos(t), 2.0);
-        System.out.println("y(pi/4) = " + y.applyAsDouble(Math.PI / 4.0));
-        System.out.println("y(77.4 deg) = " + y.applyAsDouble(Units.degreesToRadians(90 - 12.695)));
-        if (y.applyAsDouble(Math.PI / 4.0) < 0.0) {
-            return OptionalDouble.empty();
+    private static double rmse(Function<ShotEntry, SimulatedShot> f) {
+        double res = 0.0;
+        for (var entry : ShotData.entries) {
+            var shot = f.apply(entry);
+            double err = trajectoryError(shot, entry);
+            res += err * err;
         }
-        if (y.applyAsDouble(Units.degreesToRadians(90 - 12.695)) > -1e-3) {
-            return OptionalDouble.empty();
+        return res / ShotData.entries.length;
+    }
+
+    private static double trajectoryError(SimulatedShot shot, ShotEntry entry) {
+        InterpolatingDoubleTreeMap past = new InterpolatingDoubleTreeMap();
+        while (shot.state.a1 < entry.targetDistance().in(Meters)) {
+            past.put(shot.state.a1, shot.state.a2);
+            shot.step(0.001);
         }
-        var x = Bisection.bisection(y, Math.PI / 4.0, Units.degreesToRadians(90 - 12.695));
-        return OptionalDouble.of(x);
+        past.put(shot.state.a1, shot.state.a2);
+        return ShotData.shooterToTargetHeightDiff.in(Meters)
+            - past.get(entry.targetDistance().in(Meters));
     }
 
 }

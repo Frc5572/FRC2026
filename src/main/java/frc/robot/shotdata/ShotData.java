@@ -41,10 +41,10 @@ public class ShotData {
         }
 
         public LinearVelocity theoreticalExitVelocity() {
-            return MetersPerSecond.of(1.0 / Math.cos(exitAngle.in(Radians))
-                * Math.sqrt((0.5 * 9.81 * Math.pow(targetDistance.in(Meters), 2))
-                    / (targetDistance.in(Meters) * Math.tan(exitAngle.in(Radians))
-                        - shooterToTargetHeightDiff.in(Meters))));
+            return MetersPerSecond.of(Math.sqrt(Math.pow(targetDistance.in(Meters), 2.0) * 9.81
+                / (targetDistance.in(Meters) * Math.sin(exitAngle.in(Radians) * 2.0)
+                    - 2.0 * ShotData.shooterToTargetHeightDiff.in(Meters)
+                        * Math.pow(Math.cos(exitAngle.in(Radians)), 2.0))));
         }
 
         public Time theoreticalTimeOfFlight() {
@@ -54,6 +54,10 @@ public class ShotData {
 
         public LinearVelocity noSlipExitVelocity() {
             return MetersPerSecond.of(flywheelSpeed.in(RadiansPerSecond) * Inches.of(2).in(Meters));
+        }
+
+        public Angle hoodAngle() {
+            return Degrees.of(90 - 12.695 - exitAngle.in(Degrees));
         }
     }
 
