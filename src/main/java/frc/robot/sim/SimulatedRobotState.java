@@ -92,8 +92,8 @@ public class SimulatedRobotState {
                         ? Math.cos(fixedEffectiveHoodAngle) * speedRotationsPerSecond
                             * Units.inchesToMeters(2)
                         : 0.0;
-                double x = Math.cos(effectiveTurretAngle) * horiz;
-                double y = Math.sin(effectiveTurretAngle) * horiz;
+                double x = Math.cos(effectiveTurretAngle) * horiz + speeds.vxMetersPerSecond;
+                double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
                 Translation3d initial =
                     new Pose3d(swerveDrive.mapleSim.getSimulatedDriveTrainPose())
                         .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
