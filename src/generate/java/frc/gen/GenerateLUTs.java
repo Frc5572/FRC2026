@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import java.io.File;
@@ -44,12 +43,13 @@ public class GenerateLUTs {
             x -> entry -> new SimulatedShot(entry.exitAngle(),
                 entry.noSlipExitVelocity().times(x[0]),
                 RotationsPerSecond.of(x[1] + x[2] * entry.hoodAngle().in(Degrees)
-                    + x[3] * entry.noSlipExitVelocity().in(MetersPerSecond)));
+                    + x[3] * entry.flywheelSpeed().in(RotationsPerSecond)));
         var func = new FiniteDifference(x -> {
             return rmse(entryToShotOpt.apply(x));
         }, 1e-8);
-        bfgs.optimize(func, new double[] {0.44, 1.0, 0.0, 0.0}, 1e-5, 2000);
+        bfgs.optimize(func, new double[] {0.44, 1.0, 0.0, 1.0}, 1e-5, 2000);
         System.out.println(bfgs);
+        var optValue = bfgs.getOptValue();
         var entryToShot = entryToShotOpt.apply(bfgs.getOptValue());
 
         InterpolatingDoubleTreeMap[] trajectories =
@@ -295,6 +295,16 @@ public class GenerateLUTs {
             .returns(TypeName.DOUBLE).addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "distance").build())
             .addCode("return " + olsSoln.res() + ";").build());
+
+        classBuilder
+            .addMethod(MethodSpec.methodBuilder("estimatedBackspin").returns(TypeName.DOUBLE)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "hoodAngleDeg").build())
+                .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "flywheelSpeedRps").build())
+                .addCode("return " + formatter.format(optValue[1]) + " + "
+                    + formatter.format(optValue[2]) + " * hoodAngleDeg + "
+                    + formatter.format(optValue[3]) + " * flywheelSpeedRps;")
+                .build());
 
         try {
             JavaFile.builder("frc.robot.shotdata", classBuilder.build()).build()
