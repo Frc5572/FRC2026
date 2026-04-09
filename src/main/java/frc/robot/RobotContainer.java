@@ -145,7 +145,7 @@ public final class RobotContainer {
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
 
-                FuelSim.getInstance().spawnStartingFuel();
+                // FuelSim.getInstance().spawnStartingFuel();
 
                 break;
             default:

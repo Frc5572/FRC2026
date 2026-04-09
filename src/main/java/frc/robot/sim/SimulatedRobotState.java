@@ -84,13 +84,15 @@ public class SimulatedRobotState {
                     Units.degreesToRadians(-(effectiveHoodAngle - 77.4));
                 double vert =
                     fixedEffectiveHoodAngle > 0
-                        ? Math.sin(fixedEffectiveHoodAngle) * speedRotationsPerSecond
-                            * Units.inchesToMeters(2)
+                        ? Math.sin(fixedEffectiveHoodAngle)
+                            * Units.rotationsToRadians(speedRotationsPerSecond)
+                            * Units.inchesToMeters(2) * 0.48
                         : 0.0;
                 double horiz =
                     fixedEffectiveHoodAngle > 0
-                        ? Math.cos(fixedEffectiveHoodAngle) * speedRotationsPerSecond
-                            * Units.inchesToMeters(2)
+                        ? Math.cos(fixedEffectiveHoodAngle)
+                            * Units.rotationsToRadians(speedRotationsPerSecond)
+                            * Units.inchesToMeters(2) * 0.48
                         : 0.0;
                 double x = Math.cos(effectiveTurretAngle) * horiz + speeds.vxMetersPerSecond;
                 double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
@@ -99,10 +101,10 @@ public class SimulatedRobotState {
                         .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
                         .getTranslation();
                 Translation3d velocity = new Translation3d(x, y, vert);
-                Translation3d omega = new Translation3d(0, 0, 0);
+                Translation3d omega = new Translation3d(0, 0, -1);
 
                 FuelSim.getInstance().launchFuel(initial, velocity, omega);
-                this.indexer.numFuel--;
+                // this.indexer.numFuel--;
             }
         }
     }
