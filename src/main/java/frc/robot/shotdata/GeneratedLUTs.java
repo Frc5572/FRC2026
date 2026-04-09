@@ -1,6 +1,16 @@
 package frc.robot.shotdata;
 
+/**
+ * Auto-generated lookup tables (LUTs) and fitted model coefficients for shooter calculations.
+ *
+ * <p>
+ * This class is not meant to be instantiated or modified manually — values arederived from
+ * experimental shot data and curve-fitting.
+ */
 public final class GeneratedLUTs {
+    /**
+     * Pre-computed shot entries for hub-targeted shots.
+     */
     public static final ShotData.ShotEntry[] hubEntries =
         new ShotData.ShotEntry[] {new ShotData.ShotEntry(3.840, 42.000, 0.000, 0.889),
             new ShotData.ShotEntry(4.333, 44.000, 0.000, 0.964),
@@ -633,6 +643,9 @@ public final class GeneratedLUTs {
             new ShotData.ShotEntry(33.400, 96.000, 23.000, 1.483),
             new ShotData.ShotEntry(34.331, 98.000, 23.000, 1.506)};
 
+    /**
+     * Pre-computed shot entries for ground-pass trajectories.
+     */
     public static final ShotData.ShotEntry[] groundEntries =
         new ShotData.ShotEntry[] {new ShotData.ShotEntry(4.632, 40.000, 0.000, 1.144),
             new ShotData.ShotEntry(5.056, 42.000, 0.000, 1.197),
@@ -1685,12 +1698,23 @@ public final class GeneratedLUTs {
             new ShotData.ShotEntry(34.298, 96.000, 34.000, 1.241),
             new ShotData.ShotEntry(35.156, 98.000, 34.000, 1.255)};
 
+    /**
+     * Fraction of flywheel surface speed transferred to the ball as exit velocity.
+     */
     public static final double SPEED_TRANSFER_COEFF = 0.470;
 
+    /**
+     * Returns the desired flywheel speed in rotations per second for a given target distance, using
+     * a fitted quadratic model.
+     */
     public static double desiredFlywheelSpeed(double distance) {
         return 33.376 * 1.0 + 5.262 * distance + 0.098 * distance * distance;
     }
 
+    /**
+     * Estimates the backspin imparted on the ball in rotations per second, using a fitted linear
+     * model over hood angle and flywheel speed.
+     */
     public static double estimatedBackspin(double hoodAngleDeg, double flywheelSpeedRps) {
         return 0.930 + 2.590 * hoodAngleDeg + 0.103 * flywheelSpeedRps;
     }

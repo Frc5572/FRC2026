@@ -268,8 +268,11 @@ public class GenerateLUTs {
             init.append(')');
         }
         init.append(" }");
-        FieldSpec entriesField = FieldSpec.builder(ShotEntry[].class, "hubEntries", Modifier.PUBLIC,
-            Modifier.STATIC, Modifier.FINAL).initializer(init.toString()).build();
+        FieldSpec entriesField = FieldSpec
+            .builder(ShotEntry[].class, "hubEntries", Modifier.PUBLIC, Modifier.STATIC,
+                Modifier.FINAL)
+            .initializer(init.toString())
+            .addJavadoc("Pre-computed shot entries for hub-targeted shots.").build();
         classBuilder.addField(entriesField);
 
         init = new StringBuilder("new ShotData.ShotEntry[] {");
@@ -289,31 +292,45 @@ public class GenerateLUTs {
             init.append(')');
         }
         init.append(" }");
-        entriesField = FieldSpec.builder(ShotEntry[].class, "groundEntries", Modifier.PUBLIC,
-            Modifier.STATIC, Modifier.FINAL).initializer(init.toString()).build();
+        entriesField = FieldSpec
+            .builder(ShotEntry[].class, "groundEntries", Modifier.PUBLIC, Modifier.STATIC,
+                Modifier.FINAL)
+            .initializer(init.toString())
+            .addJavadoc("Pre-computed shot entries for ground-pass trajectories.").build();
         classBuilder.addField(entriesField);
 
         classBuilder.addMethod(MethodSpec.methodBuilder("desiredFlywheelSpeed")
             .returns(TypeName.DOUBLE).addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "distance").build())
+            .addJavadoc(
+                "Returns the desired flywheel speed in rotations per second for a given target distance, using a fitted quadratic model.")
             .addCode("return " + olsSoln.res() + ";").build());
 
-        classBuilder
-            .addMethod(MethodSpec.methodBuilder("estimatedBackspin").returns(TypeName.DOUBLE)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "hoodAngleDeg").build())
-                .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "flywheelSpeedRps").build())
-                .addCode("return " + formatter.format(optValue[1]) + " + "
-                    + formatter.format(optValue[2]) + " * hoodAngleDeg + "
-                    + formatter.format(optValue[3]) + " * flywheelSpeedRps;")
-                .build());
+        classBuilder.addMethod(MethodSpec.methodBuilder("estimatedBackspin")
+            .returns(TypeName.DOUBLE).addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "hoodAngleDeg").build())
+            .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "flywheelSpeedRps").build())
+            .addJavadoc(
+                "Estimates the backspin imparted on the ball in rotations per second, using a fitted linear model over hood angle and flywheel speed.")
+            .addCode(
+                "return " + formatter.format(optValue[1]) + " + " + formatter.format(optValue[2])
+                    + " * hoodAngleDeg + " + formatter.format(optValue[3]) + " * flywheelSpeedRps;")
+            .build());
 
-        classBuilder
-            .addField(
-                FieldSpec
-                    .builder(TypeName.DOUBLE, "SPEED_TRANSFER_COEFF", Modifier.PUBLIC,
-                        Modifier.STATIC, Modifier.FINAL)
-                    .initializer(formatter.format(optValue[0])).build());
+        classBuilder.addField(FieldSpec
+            .builder(TypeName.DOUBLE, "SPEED_TRANSFER_COEFF", Modifier.PUBLIC, Modifier.STATIC,
+                Modifier.FINAL)
+            .initializer(formatter.format(optValue[0]))
+            .addJavadoc(
+                "Fraction of flywheel surface speed transferred to the ball as exit velocity.")
+            .build());
+
+        classBuilder.addJavadoc(
+            "Auto-generated lookup tables (LUTs) and fitted model coefficients for shooter calculations.");
+        classBuilder.addJavadoc("");
+        classBuilder.addJavadoc(
+            "<p>This class is not meant to be instantiated or modified manually — values are");
+        classBuilder.addJavadoc("derived from experimental shot data and curve-fitting.");
 
         try {
             JavaFile.builder("frc.robot.shotdata", classBuilder.build()).build()
