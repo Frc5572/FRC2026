@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import java.io.File;
@@ -41,13 +42,14 @@ public class GenerateLUTs {
         BFGS bfgs = new BFGS();
         Function<double[], Function<ShotEntry, SimulatedShot>> entryToShotOpt =
             x -> entry -> new SimulatedShot(entry.exitAngle(),
-                entry.noSlipExitVelocity().times(x[0]),
+                MetersPerSecond.of(entry.noSlipExitVelocity().in(MetersPerSecond) * x[0]),
                 RotationsPerSecond.of(x[1] + x[2] * entry.hoodAngle().in(Degrees)
                     + x[3] * entry.flywheelSpeed().in(RotationsPerSecond)));
         var func = new FiniteDifference(x -> {
             return rmse(entryToShotOpt.apply(x));
         }, 1e-8);
-        bfgs.optimize(func, new double[] {0.44, 1.0, 0.0, 1.0}, 1e-5, 2000);
+        bfgs.optimize(func, new double[] {0.4701222994041102, 0.9300718478163617,
+            2.5900070262535433, 0.1028502153770187}, 1e-5, 100);
         System.out.println(bfgs);
         var optValue = bfgs.getOptValue();
         var entryToShot = entryToShotOpt.apply(bfgs.getOptValue());
@@ -305,6 +307,13 @@ public class GenerateLUTs {
                     + formatter.format(optValue[2]) + " * hoodAngleDeg + "
                     + formatter.format(optValue[3]) + " * flywheelSpeedRps;")
                 .build());
+
+        classBuilder
+            .addField(
+                FieldSpec
+                    .builder(TypeName.DOUBLE, "SPEED_TRANSFER_COEFF", Modifier.PUBLIC,
+                        Modifier.STATIC, Modifier.FINAL)
+                    .initializer(formatter.format(optValue[0])).build());
 
         try {
             JavaFile.builder("frc.robot.shotdata", classBuilder.build()).build()

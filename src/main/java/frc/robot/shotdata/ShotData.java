@@ -65,6 +65,10 @@ public class ShotData {
             return MetersPerSecond.of(flywheelSpeed.in(RadiansPerSecond) * Inches.of(2).in(Meters));
         }
 
+        public LinearVelocity speedTransferExitVelocity() {
+            return noSlipExitVelocity().times(GeneratedLUTs.SPEED_TRANSFER_COEFF);
+        }
+
         public Angle hoodAngle() {
             return Degrees.of(90 - 12.695 - exitAngle.in(Degrees));
         }
