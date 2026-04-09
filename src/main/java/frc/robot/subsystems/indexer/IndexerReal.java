@@ -51,7 +51,7 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
-        magazine.set(-dutyCycle);
+        magazine.set(dutyCycle);
     }
 
     @Override
