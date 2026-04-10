@@ -21,6 +21,7 @@ public class IndexerReal implements IndexerIO {
     private final StatusSignal<AngularVelocity> spinMotorVelocity = spindexer.getVelocity();
     public TalonFXConfiguration magazineConfig = new TalonFXConfiguration();
     private VelocityVoltage velocityVoltage = new VelocityVoltage(0);
+    private final DutyCycleOut dutyCycleOut = new DutyCycleOut(0.0);
     private TalonFXConfiguration spindexerConfig = new TalonFXConfiguration();
     private double desiredSpeed = 3.0;
 
@@ -40,8 +41,6 @@ public class IndexerReal implements IndexerIO {
         inputs.spindexerVelocity = spinMotorVelocity.getValue();
         inputs.magazineVelocity = magazineStatusVelocity.getValue();
     }
-
-    private final DutyCycleOut dutyCycleOut = new DutyCycleOut(0.0);
 
     @Override
     public void setSpindexerMotorDutyCycle(double dutyCycle) {
