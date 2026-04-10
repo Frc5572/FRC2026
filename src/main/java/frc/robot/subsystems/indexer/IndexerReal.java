@@ -28,8 +28,9 @@ public class IndexerReal implements IndexerIO {
     /** Real Indexer Implementation */
     public IndexerReal() {
         spindexerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        magazineConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        magazineConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         setConstants(Constants.Indexer.constants);
+        magazine.getConfigurator().apply(magazineConfig);
         PhoenixSignals.registerSignals(false, spinMotorVelocity);
         PhoenixSignals.registerSignals(false, magazineStatusVelocity);
     }
@@ -40,10 +41,12 @@ public class IndexerReal implements IndexerIO {
         inputs.magazineVelocity = magazineStatusVelocity.getValue();
     }
 
+    private final DutyCycleOut dutyCycleOut = new DutyCycleOut(0.0);
+
     @Override
     public void setSpindexerMotorDutyCycle(double dutyCycle) {
         if (Math.abs(dutyCycle) < 0.01) {
-            spindexer.setControl(new DutyCycleOut(0.0));
+            spindexer.setControl(dutyCycleOut.withOutput(dutyCycle));
         } else {
             spindexer.setControl(velocityVoltage.withVelocity(dutyCycle * desiredSpeed));
         }
@@ -51,14 +54,13 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
-        magazine.set(dutyCycle);
+        magazine.setControl(dutyCycleOut.withOutput(dutyCycle));
     }
 
     @Override
     public void setConstants(FlywheelConstants constants) {
         constants.pid.apply(spindexerConfig.Slot0);
         spindexer.getConfigurator().apply(spindexerConfig);
-        magazine.getConfigurator().apply(magazineConfig);
         desiredSpeed = constants.maxDutyCycle;
     }
 }
