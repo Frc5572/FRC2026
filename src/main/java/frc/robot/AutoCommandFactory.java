@@ -194,6 +194,7 @@ public class AutoCommandFactory {
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }
 
+    /** Returns a command to move the robot to the alliance zone over the bump */
     public Command toAllianceOverBump(boolean left, AutoRoutine routine) {
         return swerve.moveToPose()
             .target(
@@ -206,6 +207,7 @@ public class AutoCommandFactory {
             .flipY(left).finish();
     }
 
+    /** Returns a command to move the robot to the neutral zone over the bump */
     public Command toNeutralOverBump(boolean left, AutoRoutine routine) {
         return swerve.moveToPose()
             .target(new Pose2d(
