@@ -55,6 +55,7 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
+import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
@@ -110,7 +111,7 @@ public final class RobotContainer {
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
-                turret = new Turret(new TurretIOEmpty(), swerve.state);
+                turret = new Turret(new TurretReal(), swerve.state);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
