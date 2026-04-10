@@ -119,8 +119,8 @@ public final class RobotContainer {
 
                 break;
             case kSimulation:
-                FuelSim.getInstance().spawnStartingFuel();
-                sim = new SimulatedRobotState(new Pose2d(4.04, 0.7, Rotation2d.kCW_90deg));
+                sim = new SimulatedRobotState(
+                    new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
                     () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),
@@ -144,6 +144,8 @@ public final class RobotContainer {
                 indexer = new Indexer(sim.indexer);
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
+
+                // FuelSim.getInstance().spawnStartingFuel();
 
                 break;
             default:
@@ -401,9 +403,7 @@ public final class RobotContainer {
         queryControllers();
         if (sim != null) {
             SimulatedArena.getInstance().simulationPeriodic();
-            FuelSim.getInstance().updateSim();
-            Logger.recordOutput("FuelSim/RedScore", FuelSim.Hub.RED_HUB.getScore());
-            Logger.recordOutput("FuelSim/BlueScore", FuelSim.Hub.BLUE_HUB.getScore());
+            FuelSim.getInstance().tick();
             sim.update();
         }
         viz.periodic();
