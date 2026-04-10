@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
@@ -78,14 +79,31 @@ public class SimulatedRobotState {
                 // https://www.chiefdelphi.com/t/open-source-shoot-on-the-move-sotm-solver-ball-physics-sim-3-java-files-drop-in/516109
                 var speeds =
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
-                double x = Math.cos(effectiveTurretAngle) * 1.0 + speeds.vxMetersPerSecond;
-                double y = Math.sin(effectiveTurretAngle) * 1.0 + speeds.vyMetersPerSecond;
+
+                double fixedEffectiveHoodAngle =
+                    Units.degreesToRadians(-(effectiveHoodAngle - 77.4));
+                double vert =
+                    fixedEffectiveHoodAngle > 0
+                        ? Math.sin(fixedEffectiveHoodAngle)
+                            * Units.rotationsToRadians(speedRotationsPerSecond)
+                            * Units.inchesToMeters(2) * 0.48
+                        : 0.0;
+                double horiz =
+                    fixedEffectiveHoodAngle > 0
+                        ? Math.cos(fixedEffectiveHoodAngle)
+                            * Units.rotationsToRadians(speedRotationsPerSecond)
+                            * Units.inchesToMeters(2) * 0.48
+                        : 0.0;
+                double x = Math.cos(effectiveTurretAngle) * horiz + speeds.vxMetersPerSecond;
+                double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
                 Translation3d initial =
                     new Pose3d(swerveDrive.mapleSim.getSimulatedDriveTrainPose())
                         .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
                         .getTranslation();
-                Translation3d velocity = new Translation3d(x, y, 1.0);
-                FuelSim.getInstance().spawnFuel(initial, velocity);
+                Translation3d velocity = new Translation3d(x, y, vert);
+                Translation3d omega = new Translation3d(0, 0, -1);
+
+                FuelSim.getInstance().launchFuel(initial, velocity, omega);
                 // this.indexer.numFuel--;
             }
         }
