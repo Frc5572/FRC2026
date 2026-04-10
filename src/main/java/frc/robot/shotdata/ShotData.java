@@ -207,7 +207,7 @@ public class ShotData {
      */
     public static final SemiGriddedBilinearInterpolation<ShotEntry> simFunc =
         new SemiGriddedBilinearInterpolation<>(2.0, GeneratedLUTs.groundEntries, mulAdd,
-            x -> x.flywheelSpeed().in(RotationsPerSecond), x -> x.targetDistance().in(Meters));
+            x -> x.flywheelSpeed().in(RotationsPerSecond), x -> x.hoodAngle().in(Degrees));
 
     /**
      * Encapsulates the computed shooter parameters for a single shot instance.
