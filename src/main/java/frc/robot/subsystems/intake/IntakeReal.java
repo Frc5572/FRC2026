@@ -57,7 +57,7 @@ public class IntakeReal implements IntakeIO {
         rightMotorPosition.setUpdateFrequency(50);
 
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         config.CurrentLimits.SupplyCurrentLimitEnable = false;
         config.CurrentLimits.SupplyCurrentLimit = 40.0;
         config.CurrentLimits.StatorCurrentLimitEnable = false;

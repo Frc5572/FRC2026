@@ -128,7 +128,7 @@ public final class Constants {
         public static final boolean isCanviore = true;
 
         public static final NavXComType navXID = NavXComType.kMXP_SPI;
-        public static final boolean invertGyro = false;
+        public static final boolean invertGyro = true;
 
         /* Drivetrain Constants */
         /** Distance between right and left wheels on robot */
