@@ -111,7 +111,7 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
-                shooter = new Shooter(new ShooterReal());
+                shooter = new Shooter(new ShooterReal(), swerve.state);
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
@@ -137,7 +137,7 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, sim.visionSim);
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
-                shooter = new Shooter(sim.shooter);
+                shooter = new Shooter(sim.shooter, swerve.state);
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
@@ -153,7 +153,7 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
-                shooter = new Shooter(new ShooterIOEmpty());
+                shooter = new Shooter(new ShooterIOEmpty(), swerve.state);
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
