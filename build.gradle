@@ -204,16 +204,6 @@ task(eventDeploy) {
 }
 createVersionFile.dependsOn(eventDeploy)
 
-task downloadD3(type: Download) {
-    src "https://d3js.org/d3.v7.min.js"
-    dest "src/main/deploy/scripts"
-    onlyIf {
-        !new File("src/main/deploy/scripts/d3.v7.min.js").exists()
-    }
-}
-
-jar.dependsOn(downloadD3)
-
 tasks.register('generateLUTs', JavaExec) {
     group = 'Execution'
     description = 'Generate LUTs'

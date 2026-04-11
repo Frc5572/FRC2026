@@ -39,6 +39,29 @@ import frc.robot.shotdata.SimulatedShot;
 public class GenerateLUTs {
 
     public static void main(String[] argv) {
+        v1();
+        // try (Problem problem = new Problem()) {
+        // var exitAngle = problem.decisionVariable();
+        // var exitVelocity = problem.decisionVariable();
+        // var backspin = problem.decisionVariable();
+
+        // var shot = new SleipnirTrajectory(problem, exitAngle, exitVelocity, backspin, 30);
+
+        // problem.subjectTo(
+        // Constraints.eq(shot.finalState[1], ShotData.shooterToTargetHeightDiff.in(Meters)));
+        // problem.subjectTo(Constraints.gt(exitAngle, Units.degreesToRadians(90 - 12.695 - 30)));
+        // problem.subjectTo(Constraints.lt(exitAngle, Units.degreesToRadians(90 - 12.695)));
+        // problem.subjectTo(Constraints.gt(exitVelocity, 0.0));
+
+        // var err = shot.finalState[0].minus(Units.feetToMeters(12));
+        // problem.minimize(err.times(err).times(0.5));
+
+        // var exitStatus = problem.solve();
+        // System.out.println(exitStatus);
+        // }
+    }
+
+    private static void v1() {
         BFGS bfgs = new BFGS();
         Function<double[], Function<ShotEntry, SimulatedShot>> entryToShotOpt =
             x -> entry -> new SimulatedShot(entry.exitAngle(),
