@@ -308,34 +308,20 @@ public final class Constants {
         public static final AprilTagFieldLayout fieldLayout =
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
-        public static final Pose3d turretCenter =
-            new Pose3d(new Translation3d(-Units.inchesToMeters(8.5), 0, 0), Rotation3d.kZero);
+        public static final Pose3d turretCenter = new Pose3d(
+            new Translation3d(-Units.inchesToMeters(5.26), Units.inchesToMeters(-6.125), 0),
+            Rotation3d.kZero);
 
-        public static final Pose3d turretRight = new Pose3d(Inches.of(-10), Inches.of(-5.274),
-            Inches.of(21.56), new Rotation3d(Math.PI, Units.degreesToRadians(-22.115), 0.0))
-                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
+        public static final Pose3d turretRight =
+            new Pose3d(Inches.of(-10), Inches.of(-5.274), Inches.of(21.56),
+                new Rotation3d(Units.degreesToRadians(180), Units.degreesToRadians(-22.115), 0.0))
+                    .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
             new CameraConstantsBuilder()
-                .coProcessorName("orangepi1")
-                .name("magazine-camera")
-                .height(800)
-                .width(1280)
-                .horizontalFieldOfView(80)
-                .simFps(20)
-                .simLatency(0.3)
-                .simLatencyStdDev(0.02)
-                .calibrationErrorMean(0.8)
-                .calibrationErrorStdDev(0.08)
-                .robotToCamera(new Transform3d(new Translation3d(Units.inchesToMeters(-13.25),
-                    Units.inchesToMeters(7.375), Units.inchesToMeters(11.75)),
-                    new Rotation3d(Math.PI, 0, Math.PI)))
-                .translationError(0.02)
-                .finish(),
-            new CameraConstantsBuilder()
-                .coProcessorName("orangepi0")
-                .name("turretRight")
+                .coProcessorName("ubuntu")
+                .name("turret")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -349,6 +335,82 @@ public final class Constants {
                 .rotationError(100.0)
                 .singleTagError(0)
                 .isTurret(true)
+                .finish(),
+            new CameraConstantsBuilder()
+                .coProcessorName("skip")
+                .name("back")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(
+                    new Transform3d(
+                        Units.inchesToMeters(-9.029), 
+                        Units.inchesToMeters(12.359), 
+                        Units.inchesToMeters(8.187), 
+                        new Rotation3d(
+                            Degrees.of(180.0), 
+                            Degrees.of(-154.5), 
+                            Degrees.of(73.07 - 90))))
+                .translationError(0.3)
+                .translationError(0.3)
+                .rotationError(100.0)
+                .singleTagError(0)
+                .isTurret(false)
+                .finish(),
+            new CameraConstantsBuilder()
+                    .coProcessorName("skip")
+                .name("front-right")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(
+                    new Transform3d(
+                        Units.inchesToMeters(-4.625), 
+                        Units.inchesToMeters(12.357), 
+                        Units.inchesToMeters(6.473),
+                            new Rotation3d(
+                            Degrees.of(180.0), 
+                            Degrees.of(-154.5), 
+                            Degrees.of(39.062 + 180))))
+                .translationError(0.3)
+                .rotationError(100.0)
+                .singleTagError(0)
+                .isTurret(false)
+                .finish(),
+            new CameraConstantsBuilder()
+                .coProcessorName("skip")
+                .name("front-left")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(
+                    new Transform3d(
+                        Units.inchesToMeters(-2.161), 
+                        Units.inchesToMeters(-12.771), 
+                        Units.inchesToMeters(6.473), 
+                        new Rotation3d(
+                            Degrees.of(180.0), 
+                            Degrees.of(-154.5), 
+                            Degrees.of(39.062 + 90))))
+                .translationError(0.3)
+                .rotationError(100.0)
+                .singleTagError(0)
+                .isTurret(false)
                 .finish(),
         };
         // @formatter:on
