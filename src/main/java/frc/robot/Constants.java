@@ -319,8 +319,8 @@ public final class Constants {
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
             new CameraConstantsBuilder()
-                .coProcessorName("orangepi0")
-                .name("turretRight")
+                .coProcessorName("ubuntu")
+                .name("turret")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -336,8 +336,8 @@ public final class Constants {
                 .isTurret(true)
                 .finish(),
             new CameraConstantsBuilder()
-                .coProcessorName("orin")
-                .name("swerve")
+                .coProcessorName("skip")
+                .name("back")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -354,8 +354,8 @@ public final class Constants {
                 .isTurret(false)
                 .finish(),
             new CameraConstantsBuilder()
-                    .coProcessorName("orin")
-                .name("rackRight")
+                    .coProcessorName("skip")
+                .name("front-right")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
@@ -371,8 +371,8 @@ public final class Constants {
                 .isTurret(false)
                 .finish(),
             new CameraConstantsBuilder()
-                .coProcessorName("orin")
-                .name("rackLeft")
+                .coProcessorName("skip")
+                .name("front-left")
                 .height(800)
                 .width(1280)
                 .horizontalFieldOfView(80)
