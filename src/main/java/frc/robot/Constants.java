@@ -312,9 +312,10 @@ public final class Constants {
             new Translation3d(-Units.inchesToMeters(5.26), Units.inchesToMeters(-6.125), 0),
             Rotation3d.kZero);
 
-        public static final Pose3d turretRight = new Pose3d(Inches.of(-10), Inches.of(-5.274),
-            Inches.of(21.56), new Rotation3d(Math.PI, Units.degreesToRadians(-22.115), 0.0))
-                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
+        public static final Pose3d turretRight =
+            new Pose3d(Inches.of(-10), Inches.of(-5.274), Inches.of(21.56),
+                new Rotation3d(Units.degreesToRadians(180), Units.degreesToRadians(-22.115), 0.0))
+                    .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -352,7 +353,7 @@ public final class Constants {
                         Units.inchesToMeters(12.359), 
                         Units.inchesToMeters(8.187), 
                         new Rotation3d(
-                            Degrees.of(0.0), 
+                            Degrees.of(180.0), 
                             Degrees.of(-154.5), 
                             Degrees.of(73.07 - 90))))
                 .translationError(0.3)
@@ -378,7 +379,7 @@ public final class Constants {
                         Units.inchesToMeters(12.357), 
                         Units.inchesToMeters(6.473),
                             new Rotation3d(
-                            Degrees.of(0.0), 
+                            Degrees.of(180.0), 
                             Degrees.of(-154.5), 
                             Degrees.of(39.062 + 180))))
                 .translationError(0.3)
@@ -403,7 +404,7 @@ public final class Constants {
                         Units.inchesToMeters(-12.771), 
                         Units.inchesToMeters(6.473), 
                         new Rotation3d(
-                            Degrees.of(0.0), 
+                            Degrees.of(180.0), 
                             Degrees.of(-154.5), 
                             Degrees.of(39.062 + 90))))
                 .translationError(0.3)
