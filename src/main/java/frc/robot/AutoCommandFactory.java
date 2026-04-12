@@ -106,9 +106,8 @@ public class AutoCommandFactory {
         AutoRoutine routine = autoFactory.newRoutine("Just Shoot");
         MoveToPose moveToStart = swerve.moveToPose().target(poseSup).autoRoutine(routine).finish();
         routine.active().onTrue(moveToStart);
-        moveToStart.done().onTrue(CommandFactory.shoot(swerve.state, () -> {
-            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 0, () -> 0, () -> true));
+        moveToStart.done()
+            .onTrue(CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood));
         return routine;
     }
 
@@ -127,31 +126,21 @@ public class AutoCommandFactory {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
         double turretFudge = 2.5;
-        return Commands
-            .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
-                CommandFactory
-                    .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> 1.0, () -> left
-                            ? turretFudge
-                            : -turretFudge,
-                        () -> false)
-                    .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
-                Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
+        return Commands.sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed)
+            .alongWith(Commands.runOnce(() -> {
+                swerve.state.setTrims(1.0, left ? turretFudge : -turretFudge);
+            })),
+            CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
+            Commands
+                .sequence(adjustableHood.setGoal(Rotations.of(0)),
                     sweep(left, false, 6.5, driveSpeed),
-                    CommandFactory
-                        .shoot(swerve.state,
-                            () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 1.0,
-                            () -> left ? turretFudge : -turretFudge, () -> false)
+                    CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                         .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
                     adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076, driveSpeed),
-                    CommandFactory
-                        .shoot(swerve.state,
-                            () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 1.0,
-                            () -> left ? turretFudge : -turretFudge, () -> false)
+                    CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                         .alongWith(intake.jerkIntake()).withTimeout(shootingTime * 2))
-                    .repeatedly());
+                .repeatedly());
     }
 
     private Command sweep(boolean left, boolean isFirst, double xMeters, double driveSpeed) {

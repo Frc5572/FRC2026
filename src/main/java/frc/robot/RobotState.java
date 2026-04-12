@@ -1,7 +1,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
@@ -329,12 +328,6 @@ public class RobotState {
         return stddev;
     }
 
-    private static Angle angleDiff(Rotation2d a, Rotation2d b) {
-        double diff = (b.getRotations() - a.getRotations() + 0.5);
-        diff = diff - Math.floor(diff) - 0.5;
-        return Rotations.of(diff < -0.5 ? diff + 1.0 : diff);
-    }
-
     /**
      * Returns the current best estimate of the robot's global field pose.
      *
@@ -360,6 +353,20 @@ public class RobotState {
     private boolean okayToShoot = false;
     private Rotation2d desiredTurretHeadingFieldRelative = Rotation2d.kZero;
     private double currentFlywheelSpeed;
+    private double trimUp = 0.0;
+    private double trimLeft = 0.0;
+
+    /** Set trim values for autoshooting */
+    public void setTrims(double trimUp, double trimLeft) {
+        this.trimUp = trimUp;
+        this.trimLeft = trimLeft;
+    }
+
+    /** Increment trim values for autoshooting */
+    public void incTrims(double incUp, double incLeft) {
+        this.trimUp += incUp;
+        this.trimLeft += incLeft;
+    }
 
     private void updateShootingTarget() {
         Pose2d bluePose = AllianceFlipUtil.apply(getGlobalPoseEstimate());
@@ -405,7 +412,8 @@ public class RobotState {
         if (currentFlywheelSpeed > 10.0) {
             for (int i = 0; i < 5; i++) {
                 double distance =
-                    adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation());
+                    adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
+                        + Units.feetToMeters(trimUp);
                 var parameters = !targetIsGround
                     ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
                     : ShotData.getShotParameters(distance, currentFlywheelSpeed, false);
@@ -418,7 +426,8 @@ public class RobotState {
             adjustedTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         }
         Logger.recordOutput("State/AdjustedShootingTarget", adjustedTarget);
-        double distance = adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation());
+        double distance = adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
+            + Units.feetToMeters(trimUp);
         Logger.recordOutput("State/distance", distance);
         var parameters =
             !targetIsGround ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
@@ -427,7 +436,8 @@ public class RobotState {
         this.desiredHoodAngleDeg = targetIsGround ? 30.0 : parameters.hoodAngleDeg();
         this.okayToShoot = parameters.isOkayToShoot();
         this.desiredTurretHeadingFieldRelative =
-            adjustedTarget.minus(getTurretCenterFieldFrame().getTranslation()).getAngle();
+            adjustedTarget.minus(getTurretCenterFieldFrame().getTranslation()).getAngle()
+                .plus(Rotation2d.fromDegrees(trimLeft));
     }
 
     public boolean isInitted() {

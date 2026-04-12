@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
@@ -211,8 +210,8 @@ public final class RobotContainer {
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
         RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
-        RobotModeTriggers.teleop().whileTrue(Commands.run(() -> {
-            Logger.recordOutput("Trims", trims);
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
+            swerve.state.setTrims(0.0, 0.0);
         }));
         vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
 
@@ -234,29 +233,14 @@ public final class RobotContainer {
         return value;
     }
 
-    private boolean combineControllers(Predicate<CommandXboxController> func,
-        CommandXboxController... controllers) {
-        for (var controller : controllers) {
-            if (controller.isConnected()) {
-                if (func.test(controller)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private double[] trims = new double[] {1.0, 0.0};
-
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
         // driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
         driver.x().whileTrue(swerve.wheelsIn());
 
-        driver.rightTrigger().whileTrue(
-            Commands.parallel(shooter.shoot(() -> swerve.state.getDesiredFlywheelSpeed()),
-                adjustableHood.setGoal(() -> Degrees.of(swerve.state.getDesiredHoodAngleDeg())),
-                indexer.runSpindexer(() -> swerve.state.isOkayToShoot()),
+        driver.rightTrigger()
+            .whileTrue(Commands.parallel(
+                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood),
                 swerve.driveUserRelative(TeleopControls.teleopControls(
                     () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
                     () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
@@ -265,16 +249,16 @@ public final class RobotContainer {
                     Constants.DriverControls.driverRotationalShootSpeed))));
 
         driver.povUp().onTrue(Commands.runOnce(() -> {
-            trims[0] += 0.50;
+            swerve.state.incTrims(0.5, 0);
         }));
         driver.povDown().onTrue(Commands.runOnce(() -> {
-            trims[0] -= 0.50;
+            swerve.state.incTrims(-0.5, 0);
         }));
         driver.povLeft().onTrue(Commands.runOnce(() -> {
-            trims[1] += 2.0;
+            swerve.state.incTrims(0.0, 2.0);
         }));
         driver.povRight().onTrue(Commands.runOnce(() -> {
-            trims[1] -= 2.0;
+            swerve.state.incTrims(0.0, -2.0);
         }));
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
@@ -288,21 +272,19 @@ public final class RobotContainer {
         operator.a().and(RobotModeTriggers.disabled())
             .onTrue(CommandFactory.resetInit(swerve, turret));
         operator.b().whileTrue(turret.setVoltage(() -> 0));
-        turret.setDefaultCommand(Commands.either(turret.setVoltage(() -> 0),
-            CommandFactory.followHub(turret, swerve, () -> trims[1]), operator.b()));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
-        operator.y().onTrue(Commands.runOnce(() -> trims = new double[] {0.0, 0.0}));
+        operator.y().onTrue(Commands.runOnce(() -> swerve.state.setTrims(0.0, 0.0)));
         operator.povUp().onTrue(Commands.runOnce(() -> {
-            trims[0] += 0.50;
+            swerve.state.incTrims(0.5, 0);
         }));
         operator.povDown().onTrue(Commands.runOnce(() -> {
-            trims[0] -= 0.50;
+            swerve.state.incTrims(-0.5, 0);
         }));
         operator.povLeft().onTrue(Commands.runOnce(() -> {
-            trims[1] += 2.0;
+            swerve.state.incTrims(0.0, 2.0);
         }));
         operator.povRight().onTrue(Commands.runOnce(() -> {
-            trims[1] -= 2.0;
+            swerve.state.incTrims(0.0, -2.0);
         }));
     }
 
@@ -311,18 +293,10 @@ public final class RobotContainer {
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
-        tuner.rightTrigger().whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
-            .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))
-            // ,
-            // swerve.moveToPose().target(() -> new Pose2d(
-            // FieldConstants.Hub.centerHub
-            // .plus(new Translation2d(Units.feetToMeters(helper.distanceFromTarget),
-            // new Translation2d(-FieldConstants.Hub.centerHub.getX(),
-            // -FieldConstants.Hub.centerHub.getY()).getAngle()))
-            // .minus(Constants.Vision.turretCenter.getTranslation().toTranslation2d()),
-            // Rotation2d.kZero)).rotationTolerance(1)
-            // .translationTolerance(Units.inchesToMeters(1)).finish()
-            )).onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
+        tuner.rightTrigger()
+            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
+            .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         boolean[] firstShotFlag = {false};
         double[] firstShot = {0.0};
         tuner.leftTrigger().onTrue(Commands.runOnce(() -> {
@@ -344,9 +318,6 @@ public final class RobotContainer {
             Logger.recordOutput("ShotTiming/hitTarget", hitTarget);
             Logger.recordOutput("ShotTiming/timeOfFlight", hitTarget - firstShot[0]);
         }));
-
-        // tuner.a().whileTrue(swerve.wheelRadiusCharacterization()).onFalse(swerve.emergencyStop());
-        // tuner.b().whileTrue(swerve.feedforwardCharacterization()).onFalse(swerve.emergencyStop());
     }
 
     private void setupPit() {
