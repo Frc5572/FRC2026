@@ -9,15 +9,18 @@ import java.util.function.ToDoubleFunction;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.dense.row.CommonOps_DDRM;
 
+/** Ordinary Least Squares solver */
 public class OLS<T> {
 
     private final T[] data;
     private final List<OLSTerm<T>> terms = new ArrayList<>();
 
+    /** Create new solver */
     public OLS(T[] data) {
         this.data = data;
     }
 
+    /** Add term with given name and function mapping entries to a value */
     public OLS<T> term(String name, ToDoubleFunction<T> func) {
         this.terms.add(new OLSTerm<T>(name, func));
         return this;
@@ -26,6 +29,7 @@ public class OLS<T> {
     private static record OLSTerm<T>(String name, ToDoubleFunction<T> input) {
     }
 
+    /** Solution to an OLS solve */
     public static record OLSSolution<T>(String res, double[] terms, double[] residuals,
         OLS<T> ols) {
         @Override
@@ -39,6 +43,7 @@ public class OLS<T> {
             return sb.toString();
         }
 
+        /** Use solution to check value */
         public double evaluate(T t) {
             double res = 0.0;
             for (int i = 0; i < terms.length; i++) {
@@ -47,6 +52,7 @@ public class OLS<T> {
             return res;
         }
 
+        /** Root mean square error */
         public double rmse() {
             double res = 0.0;
             for (var residual : residuals) {
@@ -57,6 +63,7 @@ public class OLS<T> {
         }
     }
 
+    /** Solve OLS for a given output. */
     public OLSSolution<T> solve(ToDoubleFunction<T> outputFunc) {
         int numData = data.length;
         int numTerms = terms.size();

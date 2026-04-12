@@ -40,8 +40,10 @@ import frc.robot.shotdata.ShotData.ShotEntry;
 import frc.robot.shotdata.SimulatedShot;
 import frc.robot.util.Tuples.Tuple2;
 
+/** Generate lookup tables */
 public class GenerateLUTs {
 
+    /** Entrypoint for generateLUTs gradle task */
     public static void main(String[] argv) {
         // v1();
         NumberFormat formatter = new DecimalFormat("#0.000");
@@ -247,6 +249,13 @@ public class GenerateLUTs {
             .initializer(init.toString()).addJavadoc("Pre-computed shot entries for passing.")
             .build();
         classBuilder.addField(entriesField);
+
+        classBuilder.addJavadoc(
+            "Auto-generated lookup tables (LUTs) and fitted model coefficients for shooter calculations.");
+        classBuilder.addJavadoc("");
+        classBuilder.addJavadoc(
+            "<p>This class is not meant to be instantiated or modified manually — values are");
+        classBuilder.addJavadoc("derived from experimental shot data and curve-fitting.");
 
         try {
             JavaFile.builder("frc.robot.shotdata", classBuilder.build()).build()
@@ -520,20 +529,21 @@ public class GenerateLUTs {
         classBuilder.addMethod(MethodSpec.methodBuilder("desiredFlywheelSpeed")
             .returns(TypeName.DOUBLE).addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "distance").build())
-            .addJavadoc(
-                "Returns the desired flywheel speed in rotations per second for a given target distance, using a fitted quadratic model.")
+            .addJavadoc("Returns the desired flywheel speed in rotations per second for a given ")
+            .addJavadoc("target distance, using a fitted quadratic model.")
             .addCode("return " + olsSoln.res() + ";").build());
 
-        classBuilder.addMethod(MethodSpec.methodBuilder("estimatedBackspin")
-            .returns(TypeName.DOUBLE).addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-            .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "hoodAngleDeg").build())
-            .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "flywheelSpeedRps").build())
-            .addJavadoc(
-                "Estimates the backspin imparted on the ball in rotations per second, using a fitted linear model over hood angle and flywheel speed.")
-            .addCode(
-                "return " + formatter.format(optValue[1]) + " + " + formatter.format(optValue[2])
-                    + " * hoodAngleDeg + " + formatter.format(optValue[3]) + " * flywheelSpeedRps;")
-            .build());
+        classBuilder
+            .addMethod(MethodSpec.methodBuilder("estimatedBackspin").returns(TypeName.DOUBLE)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "hoodAngleDeg").build())
+                .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "flywheelSpeedRps").build())
+                .addJavadoc("Estimates the backspin imparted on the ball in rotations per second, ")
+                .addJavadoc("using a fitted linear model over hood angle and flywheel speed.")
+                .addCode("return " + formatter.format(optValue[1]) + " + "
+                    + formatter.format(optValue[2]) + " * hoodAngleDeg + "
+                    + formatter.format(optValue[3]) + " * flywheelSpeedRps;")
+                .build());
 
         classBuilder.addField(FieldSpec
             .builder(TypeName.DOUBLE, "SPEED_TRANSFER_COEFF", Modifier.PUBLIC, Modifier.STATIC,

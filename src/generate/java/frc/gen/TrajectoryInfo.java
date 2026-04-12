@@ -13,6 +13,7 @@ import frc.robot.FieldConstants;
 import frc.robot.shotdata.ShotData;
 import frc.robot.shotdata.SimulatedShot;
 
+/** Info regarding a simulated trajectory */
 public class TrajectoryInfo {
 
     public final Angle exitAngle;
@@ -29,6 +30,7 @@ public class TrajectoryInfo {
 
     private static final double dt = 0.001;
 
+    /** Simulate and aggregate info for trajectory */
     public TrajectoryInfo(Angle exitAngle, LinearVelocity exitVelocity, AngularVelocity backspin) {
         SimulatedShot shot = new SimulatedShot(exitAngle, exitVelocity, backspin);
         InterpolatingDoubleTreeMap past = new InterpolatingDoubleTreeMap();

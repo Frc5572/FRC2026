@@ -54,6 +54,7 @@ public class Indexer extends SubsystemBase {
         });
     }
 
+    /** Spin indexer if doSpin is true */
     public Command runSpindexer(BooleanSupplier doSpin) {
         return runEnd(() -> {
             boolean doSpin_ = doSpin.getAsBoolean();

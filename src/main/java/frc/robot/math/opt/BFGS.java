@@ -5,6 +5,7 @@ import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.dense.row.NormOps_DDRM;
 import edu.wpi.first.math.MathUtil;
 
+/** Broyden-Fletcher-Goldfarb-Shanno optimizer */
 public class BFGS {
 
     private int itrNum;
@@ -13,31 +14,32 @@ public class BFGS {
     private double[] xOpt;
     private double[] gradNorm;
 
+    /** Find the minimum of a function */
     public void optimize(DiffFunc func, double[] x0, double tol, int maxItr) {
         // https://github.com/ceze/tspl/blob/e67bcb8667b2de6692d6afcb39986b772637dd65/include/bfgs-impl.h#L54
         int k = 0;
         int cnt = 0;
-        int N = x0.length;
+        int _N = x0.length;
 
         double ys;
         double yHy;
         double alpha;
-        DMatrixRMaj d = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj s = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj s_Ys = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj sOuter = CommonOps_DDRM.identity(N);
-        DMatrixRMaj y = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj v = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj vOuter = CommonOps_DDRM.identity(N);
-        DMatrixRMaj Hy = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj Hy_yHy = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj HyOuter = CommonOps_DDRM.identity(N);
-        DMatrixRMaj gPrev = new DMatrixRMaj(new double[N]);
-        DMatrixRMaj H = CommonOps_DDRM.identity(N);
-        DMatrixRMaj temp1 = CommonOps_DDRM.identity(N);
-        DMatrixRMaj temp2 = CommonOps_DDRM.identity(N);
+        DMatrixRMaj d = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj s = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj s_Ys = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj sOuter = CommonOps_DDRM.identity(_N);
+        DMatrixRMaj y = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj v = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj vOuter = CommonOps_DDRM.identity(_N);
+        DMatrixRMaj _Hy = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj _Hy_yHy = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj _HyOuter = CommonOps_DDRM.identity(_N);
+        DMatrixRMaj gPrev = new DMatrixRMaj(new double[_N]);
+        DMatrixRMaj _H = CommonOps_DDRM.identity(_N);
+        DMatrixRMaj temp1 = CommonOps_DDRM.identity(_N);
+        DMatrixRMaj temp2 = CommonOps_DDRM.identity(_N);
 
-        DMatrixRMaj x = new DMatrixRMaj(new double[N]);
+        DMatrixRMaj x = new DMatrixRMaj(new double[_N]);
         for (int i = 0; i < x0.length; i++) {
             x.set(i, x0[i]);
         }
@@ -48,14 +50,14 @@ public class BFGS {
         gnorm[k++] = NormOps_DDRM.fastNormF(g);
 
         while ((gnorm[k - 1] > tol) && (k < maxItr)) {
-            CommonOps_DDRM.mult(-1.0, H, g, d);
+            CommonOps_DDRM.mult(-1.0, _H, g, d);
             alpha = this.getStep(func, x, d, 10);
             if (!this.success) {
                 if (NormOps_DDRM.fastNormF(
-                    CommonOps_DDRM.subtract(H, CommonOps_DDRM.identity(N), null)) < 1e-6) {
+                    CommonOps_DDRM.subtract(_H, CommonOps_DDRM.identity(_N), null)) < 1e-6) {
                     break;
                 } else {
-                    H = CommonOps_DDRM.identity(N);
+                    _H = CommonOps_DDRM.identity(_N);
                     cnt++;
                     if (cnt == maxItr) {
                         break;
@@ -71,22 +73,22 @@ public class BFGS {
                 g = new DMatrixRMaj(func.gradient(x.getData()));
                 CommonOps_DDRM.subtract(g, gPrev, y);
 
-                CommonOps_DDRM.mult(H, y, Hy);
+                CommonOps_DDRM.mult(_H, y, _Hy);
                 ys = CommonOps_DDRM.dot(y, s);
-                yHy = CommonOps_DDRM.dot(y, Hy);
+                yHy = CommonOps_DDRM.dot(y, _Hy);
                 if ((ys < 1e-6) || (yHy < 1e-6)) {
-                    H = CommonOps_DDRM.identity(N);
+                    _H = CommonOps_DDRM.identity(_N);
                 } else {
                     CommonOps_DDRM.scale(1.0 / ys, s, s_Ys);
-                    CommonOps_DDRM.scale(1.0 / yHy, Hy, Hy_yHy);
-                    CommonOps_DDRM.subtract(s_Ys, Hy_yHy, v);
+                    CommonOps_DDRM.scale(1.0 / yHy, _Hy, _Hy_yHy);
+                    CommonOps_DDRM.subtract(s_Ys, _Hy_yHy, v);
                     CommonOps_DDRM.scale(Math.sqrt(yHy), v);
                     CommonOps_DDRM.multOuter(s, sOuter);
-                    CommonOps_DDRM.multOuter(Hy, HyOuter);
+                    CommonOps_DDRM.multOuter(_Hy, _HyOuter);
                     CommonOps_DDRM.multOuter(v, vOuter);
-                    CommonOps_DDRM.add(1.0 / ys, sOuter, H, temp1);
-                    CommonOps_DDRM.add(-1.0 / yHy, HyOuter, vOuter, temp2);
-                    CommonOps_DDRM.add(temp1, temp2, H);
+                    CommonOps_DDRM.add(1.0 / ys, sOuter, _H, temp1);
+                    CommonOps_DDRM.add(-1.0 / yHy, _HyOuter, vOuter, temp2);
+                    CommonOps_DDRM.add(temp1, temp2, _H);
                 }
                 gnorm[k++] = NormOps_DDRM.fastNormF(g);
             }
@@ -102,6 +104,16 @@ public class BFGS {
         if (gradNorm[k - 1] > tol) {
             this.success = false;
         }
+    }
+
+    /** Find the minimum of a function */
+    public void optimize(DiffFunc func, double[] x0, double tol) {
+        optimize(func, x0, tol, 10000);
+    }
+
+    /** Find the minimum of a function */
+    public void optimize(DiffFunc func, double[] x0) {
+        optimize(func, x0, 1e-6);
     }
 
     private boolean success = false;
@@ -146,14 +158,6 @@ public class BFGS {
             success = true;
             return alpha;
         }
-    }
-
-    public void optimize(DiffFunc func, double[] x0, double tol) {
-        optimize(func, x0, tol, 10000);
-    }
-
-    public void optimize(DiffFunc func, double[] x0) {
-        optimize(func, x0, 1e-6);
     }
 
     public int getItrNum() {

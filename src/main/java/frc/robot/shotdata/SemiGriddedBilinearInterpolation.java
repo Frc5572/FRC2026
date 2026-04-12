@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.function.ToDoubleFunction;
 import frc.robot.math.interp2d.MulAdd;
 
+/**
+ * 2d interpolation table where one dimension is gridded, allowing for O(log(N)) lookups for M
+ * gridded and N non-gridded data points.
+ */
 public class SemiGriddedBilinearInterpolation<T> {
 
     public final double gridStep;
@@ -15,6 +19,7 @@ public class SemiGriddedBilinearInterpolation<T> {
     private final int minBin;
     private final int maxBin;
 
+    /** Create new 2d lookup */
     public SemiGriddedBilinearInterpolation(double gridStep, T[] data, MulAdd<T> mulAdd,
         ToDoubleFunction<T> xFunc, ToDoubleFunction<T> yFunc) {
         this.gridStep = gridStep;
@@ -41,6 +46,7 @@ public class SemiGriddedBilinearInterpolation<T> {
         }
     }
 
+    /** query point */
     public T interpolate(double x, double y) {
         int bin = calculateBin(x);
         int otherBin = calculateBin(x + gridStep / 2.0);

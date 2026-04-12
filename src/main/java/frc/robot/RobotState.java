@@ -30,7 +30,7 @@ import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.util.AllianceFlipUtil;
 
-
+/** Total state of the robot */
 public class RobotState {
 
     /** Whether the pose estimator has been initialized from vision */
@@ -140,6 +140,7 @@ public class RobotState {
         initted = true;
     }
 
+    /** Get robot to camera for camera mounted on the turret */
     public static Transform3d getTurretRobotToCamera(Transform3d turretToCamera,
         Rotation2d turretRotation) {
         Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
@@ -152,6 +153,7 @@ public class RobotState {
         return robotToCamera;
     }
 
+    /** Get robot to camera for camera mounted on the turret */
     public Optional<Transform3d> getTurretRobotToCamera(Transform3d turretToCamera,
         double timestamp) {
         var maybeRotation = currentTurretAngle.getSample(timestamp);
@@ -171,6 +173,7 @@ public class RobotState {
 
     private double prevAngle;
 
+    /** Set the current turret angle */
     public void setTurretRawAngle(double timestamp, Angle angle) {
         var angleDeg = angle.in(Degrees);
         if (Math.abs(angleDeg - prevAngle) > 1e-2) {
@@ -183,6 +186,7 @@ public class RobotState {
         currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
     }
 
+    /** Add potentially asequent observation from camera */
     public void addVisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
         double translationStdDev, double rotationStdDev, double timestamp) {
         Pose2d robotPose = cameraPose.plus(robotToCamera.inverse()).toPose2d();
@@ -195,6 +199,7 @@ public class RobotState {
         Logger.recordOutput("State/VisionRobotPose", robotPose);
     }
 
+    /** Add potentially asequent observation from camera */
     public boolean addVisionObservation(CameraConstants camera,
         PhotonPipelineResult pipelineResult) {
         var multiTag = pipelineResult.getMultiTagResult();
@@ -384,6 +389,7 @@ public class RobotState {
         Logger.recordOutput("State/TargetIsGround", targetIsGround);
     }
 
+    /** Update autoshoot target */
     public void updateTargeting() {
         updateShootingTarget();
 

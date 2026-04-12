@@ -2,11 +2,13 @@ package frc.robot.math.opt;
 
 import java.util.function.ToDoubleFunction;
 
+/** Create a differentiable function by way of finite difference. */
 public class FiniteDifference implements DiffFunc {
 
     private final ToDoubleFunction<double[]> func;
     private final double h;
 
+    /** Create a differentiable function by way of finite difference. */
     public FiniteDifference(ToDoubleFunction<double[]> func, double h) {
         this.func = func;
         this.h = h;

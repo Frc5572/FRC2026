@@ -2,8 +2,10 @@ package frc.robot.math.opt;
 
 import java.util.function.DoubleUnaryOperator;
 
+/** Root solver using bisection method */
 public class Bisection {
 
+    /** Root solver using bisection method */
     public static final double bisection(DoubleUnaryOperator f, double min, double max) {
         double fMin = f.applyAsDouble(min);
         double fMax = f.applyAsDouble(max);

@@ -10,6 +10,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 
+/** Simulated 2d trajectory incorporating drag and magnus effect */
 public class SimulatedShot {
 
     public final Angle exitAngle;
@@ -48,6 +49,7 @@ public class SimulatedShot {
         forces.a2 = magnus_z + drag_z - m * g;
     }
 
+    /** Create new simulated shots */
     public SimulatedShot(Angle exitAngle, LinearVelocity exitVelocity, AngularVelocity backspin) {
         this.exitAngle = exitAngle;
         this.exitVelocity = exitVelocity;
@@ -59,6 +61,7 @@ public class SimulatedShot {
         this.omega = backspin.in(RadiansPerSecond);
     }
 
+    /** Integrate forces using Euler's method */
     public void step(double dt) {
         updateForces();
         CommonOps_DDF2.scale(1.0 / m, forces);

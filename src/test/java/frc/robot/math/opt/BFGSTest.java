@@ -3,8 +3,11 @@ package frc.robot.math.opt;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
+/** Tests to ensure BFGS is correct */
 public class BFGSTest {
 
+
+    /** Use function with known minimum (rosenbrock in this case) */
     @Test
     public void rosenbrock() {
         BFGS bfgs = new BFGS();
