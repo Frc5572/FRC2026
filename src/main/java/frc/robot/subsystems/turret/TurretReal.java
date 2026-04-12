@@ -27,7 +27,6 @@ public class TurretReal implements TurretIO {
     private TalonFXConfiguration turretConfig = new TalonFXConfiguration();
 
     private CANcoder turretCANcoder2 = new CANcoder(Constants.Turret.TurretCANcoderID2);
-    private CANcoderConfiguration canCoder1Config = new CANcoderConfiguration();
     private CANcoderConfiguration canCoder2Config = new CANcoderConfiguration();
 
     private StatusSignal<Angle> turretPosition = turretMotor.getPosition();
@@ -44,18 +43,14 @@ public class TurretReal implements TurretIO {
 
         Constants.Turret.pid.apply(turretConfig.Slot0);
 
-        canCoder1Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder1Invert;
-        canCoder1Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
-            Constants.Turret.turretCANCoderDiscontinuity;
         canCoder2Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder2Invert;
         canCoder2Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
             Constants.Turret.turretCANCoderDiscontinuity;
 
         turretConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         turretConfig.Feedback.FeedbackRemoteSensorID = turretCANcoder2.getDeviceID();
-        turretConfig.Feedback.SensorToMechanismRatio = Constants.Turret.gear2Gearing;
-        turretConfig.Feedback.RotorToSensorRatio =
-            Constants.Turret.motorGearing / Constants.Turret.gear2Gearing;
+        turretConfig.Feedback.SensorToMechanismRatio = Constants.Turret.cancoderToTurretGearing;
+        turretConfig.Feedback.RotorToSensorRatio = Constants.Turret.motorToCancoder;
 
         turretMotor.getConfigurator().apply(turretConfig);
         turretCANcoder2.getConfigurator().apply(canCoder2Config);
@@ -77,7 +72,7 @@ public class TurretReal implements TurretIO {
 
     @Override
     public void updateInputs(TurretInputs inputs) {
-        inputs.gear2AbsoluteAngle = canCoder2Pos.getValue();
+        inputs.gear2AbsoluteAngle = canCoder2Pos.getValue().unaryMinus();
 
         inputs.relativeAngle = turretPosition.getValue().unaryMinus().in(Rotations);
         inputs.voltage = turretVoltage.getValue();

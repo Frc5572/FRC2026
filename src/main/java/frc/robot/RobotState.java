@@ -293,11 +293,11 @@ public class RobotState {
         if (bluePose.getX() > FieldConstants.Hub.centerHub.getX()) {
             targetIsGround = true;
             if (bluePose.getY() > FieldConstants.fieldWidth / 2) {
-                shootingTarget = AllianceFlipUtil.apply(new Translation2d(
-                    FieldConstants.Hub.centerHub.getX() / 2, (3 * FieldConstants.fieldWidth / 4)));
+                shootingTarget = AllianceFlipUtil
+                    .apply(new Translation2d(0.0, (3 * FieldConstants.fieldWidth / 4)));
             } else {
-                shootingTarget = AllianceFlipUtil.apply(new Translation2d(
-                    FieldConstants.Hub.centerHub.getX() / 2, (FieldConstants.fieldWidth / 4)));
+                shootingTarget =
+                    AllianceFlipUtil.apply(new Translation2d(0.0, (FieldConstants.fieldWidth / 4)));
             }
         } else {
             targetIsGround = false;
@@ -319,6 +319,14 @@ public class RobotState {
     public void updateTargeting() {
         updateShootingTarget();
 
+        Translation2d[] points = new Translation2d[20];
+        for (int i = 0; i < 20; i++) {
+            double rot = ((double) i) / 19.0;
+            points[i] = new Translation2d(0.15, Rotation2d.fromRotations(rot))
+                .plus(getTurretCenterFieldFrame().getTranslation());
+        }
+        Logger.recordOutput("State/turretEstPos", points);
+
         Translation2d adjustedTarget = shootingTarget;
         if (currentFlywheelSpeed > 10.0) {
             for (int i = 0; i < 5; i++) {
@@ -337,11 +345,12 @@ public class RobotState {
         }
         Logger.recordOutput("State/AdjustedShootingTarget", adjustedTarget);
         double distance = adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation());
+        Logger.recordOutput("State/distance", distance);
         var parameters =
             !targetIsGround ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
                 : ShotData.getShotParameters(distance, currentFlywheelSpeed, true);
         this.desiredFlywheelSpeed = parameters.desiredSpeed();
-        this.desiredHoodAngleDeg = parameters.hoodAngleDeg();
+        this.desiredHoodAngleDeg = targetIsGround ? 30.0 : parameters.hoodAngleDeg();
         this.okayToShoot = parameters.isOkayToShoot();
         this.desiredTurretHeadingFieldRelative =
             adjustedTarget.minus(getTurretCenterFieldFrame().getTranslation()).getAngle();

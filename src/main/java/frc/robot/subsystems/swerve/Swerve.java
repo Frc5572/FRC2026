@@ -202,7 +202,7 @@ public final class Swerve extends SubsystemBase {
     public Command driveRobotRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return this.run(() -> {
             ChassisSpeeds speeds = driveSpeeds.get();
-            // speeds = limiter.limit(speeds);
+            speeds = limiter.limit(speeds);
             setModuleStates(speeds);
         });
     }

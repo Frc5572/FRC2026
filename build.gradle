@@ -211,3 +211,19 @@ tasks.register('generateLUTs', JavaExec) {
     mainClass = 'frc.gen.GenerateLUTs'
     systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
 }
+
+project.ext.rioctlVersion = "1.0.2"
+
+task downloadRioctl(type: Download) {
+    src "https://github.com/Frc5572/rioctl/releases/download/v${rioctlVersion}/rioctl_${rioctlVersion}_windows_amd64.exe"
+    dest "build"
+    onlyIf {
+        !new File("build/rioctl_${rioctlVersion}_windows_amd64.exe").exists()
+    }
+}
+
+task downloadLogs(type: Exec) {
+    commandLine 'cmd', '/c', 'start', 'powershell', '-NoExit', layout.buildDirectory.file("rioctl_${rioctlVersion}_windows_amd64.exe").get(), 'logs', 'pull', '--team', '5572'
+}
+
+downloadLogs.dependsOn(downloadRioctl)

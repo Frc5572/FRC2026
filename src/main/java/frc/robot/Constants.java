@@ -94,7 +94,7 @@ public final class Constants {
         public static final int spinMotorSpeed = 0;
 
         public static final FlywheelConstants constants =
-            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(12.0)
+            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(24.0)
                 .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
                 .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
                     .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
@@ -309,11 +309,11 @@ public final class Constants {
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
         public static final Pose3d turretCenter = new Pose3d(
-            new Translation3d(-Units.inchesToMeters(5.26), Units.inchesToMeters(-6.125), 0),
+            new Translation3d(-Units.inchesToMeters(5.26), -Units.inchesToMeters(6.125), 0),
             Rotation3d.kZero);
 
         public static final Pose3d turretRight =
-            new Pose3d(Inches.of(-10), Inches.of(-5.274), Inches.of(21.56),
+            new Pose3d(Inches.of(-5.274), Inches.of(-10), Inches.of(21.56),
                 new Rotation3d(Units.degreesToRadians(180), Units.degreesToRadians(-22.115), 0.0))
                     .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
@@ -336,82 +336,82 @@ public final class Constants {
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
-            new CameraConstantsBuilder()
-                .coProcessorName("skip")
-                .name("back")
-                .height(800)
-                .width(1280)
-                .horizontalFieldOfView(80)
-                .simFps(20)
-                .simLatency(0.3)
-                .simLatencyStdDev(0.02)
-                .calibrationErrorMean(0.8)
-                .calibrationErrorStdDev(0.08)
-                .robotToCamera(
-                    new Transform3d(
-                        Units.inchesToMeters(-9.029), 
-                        Units.inchesToMeters(12.359), 
-                        Units.inchesToMeters(8.187), 
-                        new Rotation3d(
-                            Degrees.of(180.0), 
-                            Degrees.of(-154.5), 
-                            Degrees.of(73.07 - 90))))
-                .translationError(0.3)
-                .translationError(0.3)
-                .rotationError(100.0)
-                .singleTagError(0)
-                .isTurret(false)
-                .finish(),
-            new CameraConstantsBuilder()
-                    .coProcessorName("skip")
-                .name("front-right")
-                .height(800)
-                .width(1280)
-                .horizontalFieldOfView(80)
-                .simFps(20)
-                .simLatency(0.3)
-                .simLatencyStdDev(0.02)
-                .calibrationErrorMean(0.8)
-                .calibrationErrorStdDev(0.08)
-                .robotToCamera(
-                    new Transform3d(
-                        Units.inchesToMeters(-4.625), 
-                        Units.inchesToMeters(12.357), 
-                        Units.inchesToMeters(6.473),
-                            new Rotation3d(
-                            Degrees.of(180.0), 
-                            Degrees.of(-154.5), 
-                            Degrees.of(39.062 + 180))))
-                .translationError(0.3)
-                .rotationError(100.0)
-                .singleTagError(0)
-                .isTurret(false)
-                .finish(),
-            new CameraConstantsBuilder()
-                .coProcessorName("skip")
-                .name("front-left")
-                .height(800)
-                .width(1280)
-                .horizontalFieldOfView(80)
-                .simFps(20)
-                .simLatency(0.3)
-                .simLatencyStdDev(0.02)
-                .calibrationErrorMean(0.8)
-                .calibrationErrorStdDev(0.08)
-                .robotToCamera(
-                    new Transform3d(
-                        Units.inchesToMeters(-2.161), 
-                        Units.inchesToMeters(-12.771), 
-                        Units.inchesToMeters(6.473), 
-                        new Rotation3d(
-                            Degrees.of(180.0), 
-                            Degrees.of(-154.5), 
-                            Degrees.of(39.062 + 90))))
-                .translationError(0.3)
-                .rotationError(100.0)
-                .singleTagError(0)
-                .isTurret(false)
-                .finish(),
+            // new CameraConstantsBuilder()
+            //     .coProcessorName("skip")
+            //     .name("back")
+            //     .height(800)
+            //     .width(1280)
+            //     .horizontalFieldOfView(80)
+            //     .simFps(20)
+            //     .simLatency(0.3)
+            //     .simLatencyStdDev(0.02)
+            //     .calibrationErrorMean(0.8)
+            //     .calibrationErrorStdDev(0.08)
+            //     .robotToCamera(
+            //         new Transform3d(
+            //             Units.inchesToMeters(-9.029), 
+            //             Units.inchesToMeters(12.359), 
+            //             Units.inchesToMeters(8.187), 
+            //             new Rotation3d(
+            //                 Degrees.of(180.0), 
+            //                 Degrees.of(-154.5), 
+            //                 Degrees.of(73.07 - 90))))
+            //     .translationError(0.3)
+            //     .translationError(0.3)
+            //     .rotationError(0.3)
+            //     .singleTagError(0)
+            //     .isTurret(false)
+            //     .finish(),
+            // new CameraConstantsBuilder()
+            //         .coProcessorName("skip")
+            //     .name("front-right")
+            //     .height(800)
+            //     .width(1280)
+            //     .horizontalFieldOfView(80)
+            //     .simFps(20)
+            //     .simLatency(0.3)
+            //     .simLatencyStdDev(0.02)
+            //     .calibrationErrorMean(0.8)
+            //     .calibrationErrorStdDev(0.08)
+            //     .robotToCamera(
+            //         new Transform3d(
+            //             Units.inchesToMeters(-4.625), 
+            //             Units.inchesToMeters(12.357), 
+            //             Units.inchesToMeters(6.473),
+            //                 new Rotation3d(
+            //                 Degrees.of(180.0), 
+            //                 Degrees.of(-154.5), 
+            //                 Degrees.of(39.062 + 180))))
+            //     .translationError(0.3)
+            //     .rotationError(0.3)
+            //     .singleTagError(0)
+            //     .isTurret(false)
+            //     .finish(),
+            // new CameraConstantsBuilder()
+            //     .coProcessorName("skip")
+            //     .name("front-left")
+            //     .height(800)
+            //     .width(1280)
+            //     .horizontalFieldOfView(80)
+            //     .simFps(20)
+            //     .simLatency(0.3)
+            //     .simLatencyStdDev(0.02)
+            //     .calibrationErrorMean(0.8)
+            //     .calibrationErrorStdDev(0.08)
+            //     .robotToCamera(
+            //         new Transform3d(
+            //             Units.inchesToMeters(-2.161), 
+            //             Units.inchesToMeters(-12.771), 
+            //             Units.inchesToMeters(6.473), 
+            //             new Rotation3d(
+            //                 Degrees.of(180.0), 
+            //                 Degrees.of(-154.5), 
+            //                 Degrees.of(39.062 + 90))))
+            //     .translationError(0.3)
+            //     .rotationError(0.3)
+            //     .singleTagError(0)
+            //     .isTurret(false)
+            //     .finish(),
         };
         // @formatter:on
     }
@@ -603,9 +603,9 @@ public final class Constants {
 
     /** Turret Constants */
     public static final class Turret {
-        public static final double gear1Gearing = 5.689 * 2.0;
-        public static final double gear2Gearing = 24.511 / 2.0 * 0.622;
-        public static final double motorGearing = 17.0732 * 2.0;
+        public static final double motorToTurretGearing = 3.0 * 3.0 * 4.04;
+        public static final double cancoderToTurretGearing = 4.04;
+        public static final double motorToCancoder = 3.0 * 3.0;
 
         public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;
@@ -624,14 +624,12 @@ public final class Constants {
                 .finish();
         // @formatter:on
 
-        public static final SensorDirectionValue canCoder1Invert =
-            SensorDirectionValue.Clockwise_Positive;
         public static final SensorDirectionValue canCoder2Invert =
-            SensorDirectionValue.Clockwise_Positive;
+            SensorDirectionValue.CounterClockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
 
-        public static final Angle maxAngle = Degrees.of(270);
-        public static final Angle minAngle = Degrees.of(-90);
+        public static final Angle maxAngle = Degrees.of(90);
+        public static final Angle minAngle = Degrees.of(-270);
     }
 
     /** Shooter Constants */

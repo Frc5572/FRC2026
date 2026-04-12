@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -46,11 +47,16 @@ public class ShotData {
      */
     public static ShotEntry[] entries = new ShotEntry[] {
         // @formatter:off
-        new ShotEntry(14.37, 58, 22, 0),
-        new ShotEntry(12.25, 55, 15, 0),
-        new ShotEntry(9.25, 47, 15, 0),
-        new ShotEntry(5.25, 45, 2, 0),
-        new ShotEntry(7.38, 47, 7, 0),
+        new ShotEntry(7.21, 45, 18, 0),
+        new ShotEntry(8.0, 46, 20, 0),
+        new ShotEntry(9.05, 50, 20, 0),
+        new ShotEntry(10.13, 52, 20, 0),
+        new ShotEntry(11.10, 54, 20, 0),
+        new ShotEntry(12.05, 56, 20, 0),
+        new ShotEntry(12.82, 58, 20, 0),
+        new ShotEntry(13.87, 61, 21, 0),
+        new ShotEntry(15.01, 64, 22, 0),
+        new ShotEntry(16.14, 67, 23, 0),
         // @formatter:on
     };
 
@@ -209,6 +215,16 @@ public class ShotData {
         new SemiGriddedBilinearInterpolation<>(2.0, GeneratedLUTs.groundEntries, mulAdd,
             x -> x.flywheelSpeed().in(RotationsPerSecond), x -> x.hoodAngle().in(Degrees));
 
+    private static final InterpolatingTreeMap<Double, ShotEntry> shotMap =
+        new InterpolatingTreeMap<>((a, b, q) -> (q - a) / (b - a),
+            (a, b, t) -> mulAdd.add(mulAdd.mul(a, 1.0 - t), mulAdd.mul(b, t)));
+
+    static {
+        for (var entry : entries) {
+            shotMap.put(entry.targetDistance().in(Meters), entry);
+        }
+    }
+
     /**
      * Encapsulates the computed shooter parameters for a single shot instance.
      *
@@ -235,11 +251,11 @@ public class ShotData {
      */
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed,
         boolean log) {
-        var res = shootFunc.interpolate(currentFlywheelSpeed, distance);
-        double desiredSpeed = GeneratedLUTs.desiredFlywheelSpeed(distance);
+        var res = shotMap.get(distance);
+        double desiredSpeed = res.flywheelSpeed().in(RotationsPerSecond);
         double hoodAngleDeg = res.hoodAngle().in(Degrees);
         double tof = res.tof().in(Seconds);
-        boolean isOkay = currentFlywheelSpeed > desiredSpeed - 10;
+        boolean isOkay = currentFlywheelSpeed > desiredSpeed - 6;
         if (log) {
             Logger.recordOutput("ShotParameters/distance", distance);
             Logger.recordOutput("ShotParameters/currentSpeed", currentFlywheelSpeed);

@@ -46,8 +46,7 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
-        Logger.recordOutput("Turret/CancoderAngle",
-            inputs.gear2AbsoluteAngle.div(Constants.Turret.gear2Gearing).in(Degrees));
+        Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
 
         state.setTurretRawAngle(Timer.getTimestamp(), Rotations.of(inputs.relativeAngle));
     }

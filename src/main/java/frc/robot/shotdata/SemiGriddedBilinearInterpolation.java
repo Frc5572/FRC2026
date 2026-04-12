@@ -100,7 +100,6 @@ public class SemiGriddedBilinearInterpolation<T> {
         double startY = yFunc.applyAsDouble(ys.get(start));
         double endY = yFunc.applyAsDouble(ys.get(end));
         double t = (y - startY) / (endY - startY);
-        System.out.println(t);
         return mulAdd.add(mulAdd.mul(ys.get(start), 1 - t), mulAdd.mul(ys.get(end), t));
     }
 

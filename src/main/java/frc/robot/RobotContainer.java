@@ -256,7 +256,13 @@ public final class RobotContainer {
         driver.rightTrigger().whileTrue(
             Commands.parallel(shooter.shoot(() -> swerve.state.getDesiredFlywheelSpeed()),
                 adjustableHood.setGoal(() -> Degrees.of(swerve.state.getDesiredHoodAngleDeg())),
-                indexer.runSpindexer(() -> swerve.state.isOkayToShoot())));
+                indexer.runSpindexer(() -> swerve.state.isOkayToShoot()),
+                swerve.driveUserRelative(TeleopControls.teleopControls(
+                    () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
+                    () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
+                    () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
+                    Constants.DriverControls.driverTranslationalShootSpeed,
+                    Constants.DriverControls.driverRotationalShootSpeed))));
 
         driver.povUp().onTrue(Commands.runOnce(() -> {
             trims[0] += 0.50;
