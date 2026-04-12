@@ -22,7 +22,7 @@ public class SimulatedShot {
     private static final double r = 0.1501 / 2.0; // m, game manual 5.10.1
 
     // Aerodynamic coefficients
-    private static final double C_D = 0.47; // drag coefficient, smooth sphere
+    private static final double C_D = 0.63; // drag coefficient, smooth sphere
     private static final double C_L = 0.2; // Magnus coefficient, conservative estimate
 
     public final double omega;

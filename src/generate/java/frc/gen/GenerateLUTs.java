@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 import javax.lang.model.element.Modifier;
 import com.squareup.javapoet.FieldSpec;
@@ -27,6 +28,8 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.math.opt.BFGS;
@@ -35,30 +38,222 @@ import frc.robot.math.opt.FiniteDifference;
 import frc.robot.shotdata.ShotData;
 import frc.robot.shotdata.ShotData.ShotEntry;
 import frc.robot.shotdata.SimulatedShot;
+import frc.robot.util.Tuples.Tuple2;
 
 public class GenerateLUTs {
 
     public static void main(String[] argv) {
-        v1();
-        // try (Problem problem = new Problem()) {
-        // var exitAngle = problem.decisionVariable();
-        // var exitVelocity = problem.decisionVariable();
-        // var backspin = problem.decisionVariable();
+        // v1();
+        NumberFormat formatter = new DecimalFormat("#0.000");
 
-        // var shot = new SleipnirTrajectory(problem, exitAngle, exitVelocity, backspin, 30);
+        InterpolatingDoubleTreeMap[] trajectories =
+            new InterpolatingDoubleTreeMap[ShotData.entries.length];
+        List<ShotEntry> entries = new ArrayList<>();
+        List<ShotEntry> groundEntries = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        Tuple2<AngularVelocity, LinearVelocity>[] speedTransfer =
+            new Tuple2[ShotData.entries.length];
+        double min = 0.0;
+        double max = 0.0;
+        double maxHubDistance = 0.0;
+        double maxFlywheelSpeed = ShotData.entries[0].flywheelSpeed().in(RotationsPerSecond);
+        for (int i = 0; i < ShotData.entries.length; i++) {
+            var entry = ShotData.entries[i];
+            maxHubDistance = Math.max(maxHubDistance, entry.targetDistance().in(Meters));
+            double lower = 1.5;
+            double upper = 20.0;
+            DoubleUnaryOperator f = (exitSpeed) -> {
+                SimulatedShot shot = new SimulatedShot(entry.exitAngle(),
+                    MetersPerSecond.of(exitSpeed), RotationsPerSecond.of(5));
+                while (shot.state.a1 < entry.targetDistance().in(Meters)) {
+                    shot.step(0.001);
+                    if (shot.state.a3 < 0.2) {
+                        return -1000.0;
+                    }
+                }
+                return shot.state.a2 - ShotData.shooterToTargetHeightDiff.in(Meters);
+            };
+            double fUpper = f.applyAsDouble(upper);
+            for (int j = 0; j < 200; j++) {
+                double mid = (lower + upper) / 2.0;
+                double fMid = f.applyAsDouble(mid);
+                if (fMid * fUpper > 0) {
+                    upper = mid;
+                    fUpper = fMid;
+                } else {
+                    lower = mid;
+                }
+            }
 
-        // problem.subjectTo(
-        // Constraints.eq(shot.finalState[1], ShotData.shooterToTargetHeightDiff.in(Meters)));
-        // problem.subjectTo(Constraints.gt(exitAngle, Units.degreesToRadians(90 - 12.695 - 30)));
-        // problem.subjectTo(Constraints.lt(exitAngle, Units.degreesToRadians(90 - 12.695)));
-        // problem.subjectTo(Constraints.gt(exitVelocity, 0.0));
+            double res = (lower + upper) / 2.0;
+            speedTransfer[i] = new Tuple2<AngularVelocity, LinearVelocity>(entry.flywheelSpeed(),
+                MetersPerSecond.of(res));
+            SimulatedShot shot = new SimulatedShot(entry.exitAngle(), MetersPerSecond.of(res),
+                RotationsPerSecond.of(5));
+            shot.state.a1 = -entry.targetDistance().in(Meters);
+            InterpolatingDoubleTreeMap traj = new InterpolatingDoubleTreeMap();
+            double tof = 0.0;
+            double groundTof = 0.0;
+            while (shot.state.a2 >= 0.0) {
+                traj.put(shot.state.a1, shot.state.a2);
+                min = Math.min(min, shot.state.a1);
+                max = Math.max(max, shot.state.a1);
+                shot.step(0.001);
+                if (shot.state.a1 < 0.0) {
+                    tof += 0.001;
+                }
+                groundTof += 0.001;
+            }
+            traj.put(shot.state.a1, 0.0);
+            trajectories[i] = traj;
 
-        // var err = shot.finalState[0].minus(Units.feetToMeters(12));
-        // problem.minimize(err.times(err).times(0.5));
+            System.out.println(
+                formatter.format(entry.targetDistance().in(Meters)) + "\t" + formatter.format(tof));
 
-        // var exitStatus = problem.solve();
-        // System.out.println(exitStatus);
-        // }
+            entries.add(new ShotEntry(entry.targetDistance(), entry.flywheelSpeed(),
+                entry.exitAngle(), Seconds.of(tof)));
+
+            groundEntries
+                .add(new ShotEntry(Meters.of(entry.targetDistance().in(Meters) + shot.state.a1),
+                    entry.flywheelSpeed(), entry.exitAngle(), Seconds.of(groundTof)));
+        }
+
+        InterpolatingDoubleTreeMap hub = new InterpolatingDoubleTreeMap();
+        hub.put(-FieldConstants.Hub.width / 2.0, FieldConstants.Hub.height);
+        hub.put(FieldConstants.Hub.width / 2.0, FieldConstants.Hub.height);
+        hub.put(-FieldConstants.Hub.innerWidth / 2.0, FieldConstants.Hub.innerHeight);
+        hub.put(FieldConstants.Hub.innerWidth / 2.0, FieldConstants.Hub.innerHeight);
+
+        try (FileWriter writer = new FileWriter(new File("trajectories.txt"))) {
+            for (double x = min; x < max; x += 0.01) {
+                writer.write(formatter.format(x));
+                for (var traj : trajectories) {
+                    writer.write('\t');
+                    writer.write(formatter.format(traj.get(x)));
+                }
+                writer.write('\t');
+                if (Math.abs(x) < FieldConstants.Hub.width / 2.0) {
+                    writer.write(
+                        formatter.format(hub.get(x) - Constants.Shooter.shooterHeight.in(Meters)));
+                }
+                writer.write('\n');
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        OLS<Tuple2<AngularVelocity, LinearVelocity>> ols = new OLS<>(speedTransfer)
+            .term("1.0", _x -> 1.0).term("flywheelSpeed", x -> x._0().in(RotationsPerSecond)).term(
+                "flywheelSpeed * flywheelSpeed", x -> Math.pow(x._0().in(RotationsPerSecond), 2.0));
+
+        var olsRes = ols.solve(x -> x._1().in(MetersPerSecond));
+
+        OLS<ShotEntry> ols2 = new OLS<>(ShotData.entries).term("1.0", _x -> 1.0)
+            .term("distance", x -> x.targetDistance().in(Meters))
+            .term("distance * distance", x -> Math.pow(x.targetDistance().in(Meters), 2.0))
+            .term("distance * distance * distance",
+                x -> Math.pow(x.targetDistance().in(Meters), 3.0));
+
+        var ols2Res = ols2.solve(x -> x.hoodAngle().in(Degrees));
+        System.out.println(ols2Res);
+
+        try (FileWriter writer = new FileWriter(new File("targetToHood.txt"))) {
+            for (var entry : ShotData.entries) {
+                writer.write(formatter.format(entry.targetDistance().in(Meters)));
+                writer.write('\t');
+                writer.write(formatter.format(entry.hoodAngle().in(Degrees)));
+                writer.write('\t');
+                writer.write(formatter.format(ols2Res.evaluate(entry)));
+                writer.write('\n');
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
+            var hoodAngle = Degrees.of(90 - 12.695 - 25);
+            var shot = new SimulatedShot(hoodAngle,
+                MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
+                    RotationsPerSecond.of(flywheel), null))),
+                RotationsPerSecond.of(5));
+            double tof = 0.0;
+            double groundTof = 0.0;
+            double hubDistance = 0.0;
+            while (shot.state.a2 >= 0.0) {
+                shot.step(0.001);
+                if (shot.state.a4 >= 0.0
+                    || shot.state.a2 > ShotData.shooterToTargetHeightDiff.in(Meters)) {
+                    tof += 0.001;
+                    hubDistance = shot.state.a1;
+                }
+                groundTof += 0.001;
+            }
+            if (hubDistance < maxHubDistance) {
+                continue;
+            }
+            entries.add(new ShotEntry(Meters.of(hubDistance), RotationsPerSecond.of(flywheel),
+                hoodAngle, Seconds.of(tof)));
+
+            groundEntries.add(new ShotEntry(Meters.of(shot.state.a1),
+                RotationsPerSecond.of(flywheel), hoodAngle, Seconds.of(groundTof)));
+        }
+
+        TypeSpec.Builder classBuilder =
+            TypeSpec.classBuilder("GeneratedLUTs2").addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+
+        StringBuilder init = new StringBuilder("new ShotData.ShotEntry[] {");
+        for (int i = 0; i < entries.size(); i++) {
+            if (i != 0) {
+                init.append(',');
+            }
+            init.append(" new ShotData.ShotEntry(");
+            init.append(formatter.format(entries.get(i).targetDistance().in(Feet)));
+            init.append(", ");
+            init.append(formatter.format(entries.get(i).flywheelSpeed().in(RotationsPerSecond)));
+            init.append(", ");
+            init.append(formatter.format(entries.get(i).hoodAngle().in(Degrees)));
+            init.append(", ");
+            init.append(formatter.format(entries.get(i).tof().in(Seconds)));
+            init.append(')');
+        }
+        init.append(" }");
+        FieldSpec entriesField = FieldSpec
+            .builder(ShotEntry[].class, "hubEntries", Modifier.PUBLIC, Modifier.STATIC,
+                Modifier.FINAL)
+            .initializer(init.toString())
+            .addJavadoc("Pre-computed shot entries for hub-targeted shots.").build();
+        classBuilder.addField(entriesField);
+
+        init = new StringBuilder("new ShotData.ShotEntry[] {");
+        for (int i = 0; i < groundEntries.size(); i++) {
+            if (i != 0) {
+                init.append(',');
+            }
+            init.append(" new ShotData.ShotEntry(");
+            init.append(formatter.format(groundEntries.get(i).targetDistance().in(Feet)));
+            init.append(", ");
+            init.append(
+                formatter.format(groundEntries.get(i).flywheelSpeed().in(RotationsPerSecond)));
+            init.append(", ");
+            init.append(formatter.format(groundEntries.get(i).hoodAngle().in(Degrees)));
+            init.append(", ");
+            init.append(formatter.format(groundEntries.get(i).tof().in(Seconds)));
+            init.append(')');
+        }
+        init.append(" }");
+        entriesField = FieldSpec
+            .builder(ShotEntry[].class, "groundEntries", Modifier.PUBLIC, Modifier.STATIC,
+                Modifier.FINAL)
+            .initializer(init.toString()).addJavadoc("Pre-computed shot entries for passing.")
+            .build();
+        classBuilder.addField(entriesField);
+
+        try {
+            JavaFile.builder("frc.robot.shotdata", classBuilder.build()).build()
+                .writeTo(new File("src/main/java"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void v1() {

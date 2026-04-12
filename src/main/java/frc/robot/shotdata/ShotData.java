@@ -218,10 +218,16 @@ public class ShotData {
     private static final InterpolatingTreeMap<Double, ShotEntry> shotMap =
         new InterpolatingTreeMap<>((a, b, q) -> (q - a) / (b - a),
             (a, b, t) -> mulAdd.add(mulAdd.mul(a, 1.0 - t), mulAdd.mul(b, t)));
+    private static final InterpolatingTreeMap<Double, ShotEntry> passMap =
+        new InterpolatingTreeMap<>((a, b, q) -> (q - a) / (b - a),
+            (a, b, t) -> mulAdd.add(mulAdd.mul(a, 1.0 - t), mulAdd.mul(b, t)));
 
     static {
-        for (var entry : entries) {
+        for (var entry : GeneratedLUTs2.hubEntries) {
             shotMap.put(entry.targetDistance().in(Meters), entry);
+        }
+        for (var entry : GeneratedLUTs2.groundEntries) {
+            passMap.put(entry.targetDistance().in(Meters), entry);
         }
     }
 
@@ -252,7 +258,7 @@ public class ShotData {
     public static ShotParameters getShotParameters(double distance, double currentFlywheelSpeed,
         boolean log) {
         var res = shotMap.get(distance);
-        double desiredSpeed = res.flywheelSpeed().in(RotationsPerSecond);
+        double desiredSpeed = res.flywheelSpeed().in(RotationsPerSecond) + 1;
         double hoodAngleDeg = res.hoodAngle().in(Degrees);
         double tof = res.tof().in(Seconds);
         boolean isOkay = currentFlywheelSpeed > desiredSpeed - 6;
@@ -281,7 +287,7 @@ public class ShotData {
      */
     public static ShotParameters getPassParameters(double distance, double currentFlywheelSpeed,
         boolean log) {
-        var res = passFunc.interpolate(currentFlywheelSpeed, distance);
+        var res = passMap.get(distance);
         double desiredSpeed = GeneratedLUTs.desiredFlywheelSpeed(distance);
         double hoodAngleDeg = res.hoodAngle().in(Degrees);
         double tof = res.tof().in(Seconds);
