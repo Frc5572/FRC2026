@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
+import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,7 +24,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Timer;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
@@ -119,10 +119,14 @@ public class RobotState {
     public void updateMeasuredSpeeds(ChassisSpeeds speeds) {
         this.currentSpeeds =
             ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getGlobalPoseEstimate().getRotation());
+        Logger.recordOutput("State/currentSpeeds", this.currentSpeeds);
         if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 1e-2
             || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 1e-2
             || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > 1e-2) {
-            lastTimeMoved = Timer.getFPGATimestamp();
+            this.lastTimeMoved = MathSharedStore.getTimestamp();
+            Logger.recordOutput("State/stationary/speeds", true);
+        } else {
+            Logger.recordOutput("State/stationary/speeds", false);
         }
     }
 
@@ -170,7 +174,10 @@ public class RobotState {
     public void setTurretRawAngle(double timestamp, Angle angle) {
         var angleDeg = angle.in(Degrees);
         if (Math.abs(angleDeg - prevAngle) > 1e-2) {
-            lastTimeMoved = Timer.getFPGATimestamp();
+            Logger.recordOutput("State/stationary/turret", true);
+            this.lastTimeMoved = MathSharedStore.getTimestamp();
+        } else {
+            Logger.recordOutput("State/stationary/turret", false);
         }
         prevAngle = angleDeg;
         currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
@@ -259,7 +266,17 @@ public class RobotState {
                 double rotationStdDev =
                     stdDevMultiplier * velocityRotationError + camera.rotationError;
                 if (camera.isTurret) {
-                    if (lastTimeMoved + 0.1 > pipelineResult.getTimestampSeconds()) {
+                    boolean isStationary =
+                        this.lastTimeMoved + 0.5 < pipelineResult.getTimestampSeconds();
+                    Logger.recordOutput("State/Camera/" + camera.name + "/isStationary",
+                        isStationary);
+                    Logger.recordOutput("State/Camera/" + camera.name + "/stationaryValue",
+                        this.lastTimeMoved - pipelineResult.getTimestampSeconds());
+                    Logger.recordOutput("State/Camera/" + camera.name + "/lastMoved",
+                        this.lastTimeMoved);
+                    Logger.recordOutput("State/Camera/" + camera.name + "/timestamp",
+                        pipelineResult.getTimestampSeconds());
+                    if (!isStationary) {
                         rotationStdDev = 10000.0;
                     }
                 }
