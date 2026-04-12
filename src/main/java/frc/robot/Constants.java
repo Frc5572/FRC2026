@@ -308,14 +308,12 @@ public final class Constants {
         public static final AprilTagFieldLayout fieldLayout =
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
-        public static final Pose3d turretCenter = new Pose3d(
-            new Translation3d(-Units.inchesToMeters(5.26), -Units.inchesToMeters(6.125), 0),
-            Rotation3d.kZero);
+        public static final Pose3d turretCenter =
+            new Pose3d(new Translation3d(-0.155575, -0.13335, 0), Rotation3d.kZero);
 
-        public static final Pose3d turretRight =
-            new Pose3d(Inches.of(-5.274), Inches.of(-10), Inches.of(21.56),
-                new Rotation3d(Units.degreesToRadians(180), Units.degreesToRadians(-22.115), 0.0))
-                    .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
+        public static final Pose3d turretRight = new Pose3d(-0.18097, -0.27012, 0.51406,
+            new Rotation3d(0, Units.degreesToRadians(-22.115), 0.0))
+                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -332,86 +330,87 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
                 .translationError(0.3)
-                .rotationError(100.0)
+                .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
-            // new CameraConstantsBuilder()
-            //     .coProcessorName("skip")
-            //     .name("back")
-            //     .height(800)
-            //     .width(1280)
-            //     .horizontalFieldOfView(80)
-            //     .simFps(20)
-            //     .simLatency(0.3)
-            //     .simLatencyStdDev(0.02)
-            //     .calibrationErrorMean(0.8)
-            //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(
-            //         new Transform3d(
-            //             Units.inchesToMeters(-9.029), 
-            //             Units.inchesToMeters(12.359), 
-            //             Units.inchesToMeters(8.187), 
-            //             new Rotation3d(
-            //                 Degrees.of(180.0), 
-            //                 Degrees.of(-154.5), 
-            //                 Degrees.of(73.07 - 90))))
-            //     .translationError(0.3)
-            //     .translationError(0.3)
-            //     .rotationError(0.3)
-            //     .singleTagError(0)
-            //     .isTurret(false)
-            //     .finish(),
-            // new CameraConstantsBuilder()
-            //         .coProcessorName("skip")
-            //     .name("front-right")
-            //     .height(800)
-            //     .width(1280)
-            //     .horizontalFieldOfView(80)
-            //     .simFps(20)
-            //     .simLatency(0.3)
-            //     .simLatencyStdDev(0.02)
-            //     .calibrationErrorMean(0.8)
-            //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(
-            //         new Transform3d(
-            //             Units.inchesToMeters(-4.625), 
-            //             Units.inchesToMeters(12.357), 
-            //             Units.inchesToMeters(6.473),
-            //                 new Rotation3d(
-            //                 Degrees.of(180.0), 
-            //                 Degrees.of(-154.5), 
-            //                 Degrees.of(39.062 + 180))))
-            //     .translationError(0.3)
-            //     .rotationError(0.3)
-            //     .singleTagError(0)
-            //     .isTurret(false)
-            //     .finish(),
-            // new CameraConstantsBuilder()
-            //     .coProcessorName("skip")
-            //     .name("front-left")
-            //     .height(800)
-            //     .width(1280)
-            //     .horizontalFieldOfView(80)
-            //     .simFps(20)
-            //     .simLatency(0.3)
-            //     .simLatencyStdDev(0.02)
-            //     .calibrationErrorMean(0.8)
-            //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(
-            //         new Transform3d(
-            //             Units.inchesToMeters(-2.161), 
-            //             Units.inchesToMeters(-12.771), 
-            //             Units.inchesToMeters(6.473), 
-            //             new Rotation3d(
-            //                 Degrees.of(180.0), 
-            //                 Degrees.of(-154.5), 
-            //                 Degrees.of(39.062 + 90))))
-            //     .translationError(0.3)
-            //     .rotationError(0.3)
-            //     .singleTagError(0)
-            //     .isTurret(false)
-            //     .finish(),
+            new CameraConstantsBuilder()
+                .coProcessorName("skip")
+                .name("back")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(
+                    new Transform3d(
+                        Units.inchesToMeters(-9.029),
+                        Units.inchesToMeters(12.359),
+                        Units.inchesToMeters(8.187),
+                        new Rotation3d(
+                            Degrees.of(180.0),
+                            Degrees.of(-154.5),
+                            Degrees.of(73.07 - 90))))
+                .translationError(6.0)
+                .rotationError(0.3)
+                .singleTagError(0)
+                .isTurret(false)
+                .findConstants(true)
+                .finish(),
+            new CameraConstantsBuilder()
+                    .coProcessorName("skip")
+                .name("front-right")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(
+                    new Transform3d(
+                        -0.059,
+                        -0.31,
+                        0.161,
+                            new Rotation3d(
+                            Degrees.of(180.0),
+                            Degrees.of(-27.75),
+                            Degrees.of(-51.42))))
+                .translationError(6.0)
+                .rotationError(0.3)
+                .singleTagError(0)
+                .isTurret(false)
+                .findConstants(true)
+                .finish(),
+            new CameraConstantsBuilder()
+                .coProcessorName("skip")
+                .name("front-left")
+                .height(800)
+                .width(1280)
+                .horizontalFieldOfView(80)
+                .simFps(20)
+                .simLatency(0.3)
+                .simLatencyStdDev(0.02)
+                .calibrationErrorMean(0.8)
+                .calibrationErrorStdDev(0.08)
+                .robotToCamera(
+                    new Transform3d(
+                        -0.132,
+                        0.305,
+                        0.165,
+                        new Rotation3d(
+                            Degrees.of(180.0),
+                            Degrees.of(-27.85),
+                            Degrees.of(51.33))))
+                .translationError(6.0)
+                .rotationError(0.3)
+                .singleTagError(0)
+                .isTurret(false)
+                .finish(),
         };
         // @formatter:on
     }

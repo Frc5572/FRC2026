@@ -57,9 +57,8 @@ public class RobotViz {
     private static final int flIndex = 6;
     private static final int numPoses = 10;
 
-    private static final Translation3d turretCenter = new Translation3d(-0.1651, 0, 0.36772);
     private static final Translation3d hoodRotationCenter =
-        new Translation3d(-0.078322, 0, 0.494257);
+        new Translation3d(-0.052975, 0, 0.490041);
     private static final Translation3d intakeRotationCenter =
         new Translation3d(0.149203, 0, 0.245623);
     private static final Translation3d climberRotationCenter =
@@ -158,9 +157,10 @@ public class RobotViz {
         Distance climberHeight, Distance intakeOut, Rotation2d[] modules) {
         out[hoodIndex] = new Pose3d()
             .rotateAround(hoodRotationCenter, new Rotation3d(0, hoodAngle.in(Radians), 0))
-            .rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
-        out[turretIndex] =
-            new Pose3d().rotateAround(turretCenter, new Rotation3d(0, 0, turretAngle.getRadians()));
+            .rotateAround(Constants.Vision.turretCenter.getTranslation(),
+                new Rotation3d(0, 0, turretAngle.getRadians()));
+        out[turretIndex] = new Pose3d().rotateAround(Constants.Vision.turretCenter.getTranslation(),
+            new Rotation3d(0, 0, turretAngle.getRadians()));
 
         out[hooksIndex] =
             new Pose3d(0, 0, climberHeight.in(Meters) - hooksDown.in(Meters), Rotation3d.kZero)
