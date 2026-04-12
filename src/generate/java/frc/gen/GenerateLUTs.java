@@ -254,7 +254,7 @@ public class GenerateLUTs {
             "Auto-generated lookup tables (LUTs) and fitted model coefficients for shooter calculations.");
         classBuilder.addJavadoc("");
         classBuilder.addJavadoc(
-            "<p>This class is not meant to be instantiated or modified manually — values are");
+            "<p>This class is not meant to be instantiated or modified manually - values are");
         classBuilder.addJavadoc("derived from experimental shot data and curve-fitting.");
 
         try {
@@ -557,7 +557,7 @@ public class GenerateLUTs {
             "Auto-generated lookup tables (LUTs) and fitted model coefficients for shooter calculations.");
         classBuilder.addJavadoc("");
         classBuilder.addJavadoc(
-            "<p>This class is not meant to be instantiated or modified manually — values are");
+            "<p>This class is not meant to be instantiated or modified manually - values are");
         classBuilder.addJavadoc("derived from experimental shot data and curve-fitting.");
 
         try {

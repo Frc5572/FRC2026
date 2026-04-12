@@ -4,7 +4,7 @@ package frc.robot.shotdata;
  * Auto-generated lookup tables (LUTs) and fitted model coefficients for shooter calculations.
  *
  * <p>
- * This class is not meant to be instantiated or modified manually — values arederived from
+ * This class is not meant to be instantiated or modified manually - values arederived from
  * experimental shot data and curve-fitting.
  */
 public final class GeneratedLUTs2 {
