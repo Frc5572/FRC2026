@@ -569,11 +569,11 @@ public class GenerateLUTs {
     }
 
     private static record TrajectoryInputs(double flywheelSpeedRps, double hoodAngleDeg) {
-    };
+    }
 
     private static record TrajectoryOutputs(double flywheelSpeedRps, double hoodAngleDeg,
         TrajectoryInfo info) {
-    };
+    }
 
     private static double rmse(Function<ShotEntry, SimulatedShot> f) {
         double res = 0.0;
