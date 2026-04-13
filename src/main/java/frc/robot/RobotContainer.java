@@ -181,6 +181,14 @@ public final class RobotContainer {
         // autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
+        autoChooser.addCmd("Over Bump to Neutral",
+            () -> autoCommandFactory
+                .toNeutralOverBump(AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0, null));
+        autoChooser.addCmd("Over Bump to Alliance",
+            () -> autoCommandFactory
+                .toAllianceOverBump(AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0, null));
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
