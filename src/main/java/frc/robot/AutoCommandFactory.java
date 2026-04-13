@@ -159,18 +159,6 @@ public class AutoCommandFactory {
                 swerve.emergencyStop()));
     }
 
-    private Command jab(AutoRoutine routine, boolean left) {
-        return neutralZonePath(routine, left, "JabLeft");
-    }
-
-    private Command sweep(AutoRoutine routine, boolean left) {
-        return neutralZonePath(routine, left, "LeftSweep");
-    }
-
-    private Command sidewinder(AutoRoutine routine, boolean left) {
-        return neutralZonePath(routine, left, "LeftSidewinder");
-    }
-
     /** Test to make sure autos work. */
     public AutoRoutine wilsonTest() {
         AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
@@ -186,7 +174,7 @@ public class AutoCommandFactory {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
         double turretFudge = 2.5;
-        return Commands.sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed)
+        return Commands.sequence(wilsonTestSweep(left, true, Constants.Auto.wilsonTestX, driveSpeed)
             .alongWith(Commands.runOnce(() -> {
                 swerve.state.setTrims(1.0, left ? turretFudge : -turretFudge);
             })),
@@ -194,16 +182,18 @@ public class AutoCommandFactory {
                 .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
             Commands
                 .sequence(adjustableHood.setGoal(Rotations.of(0)),
-                    sweep(left, false, 6.5, driveSpeed),
+                    wilsonTestSweep(left, false, 6.5, driveSpeed),
                     CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                         .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
-                    adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076, driveSpeed),
+                    adjustableHood.setGoal(Rotations.of(0)),
+                    wilsonTestSweep(left, false, 8.076, driveSpeed),
                     CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                         .alongWith(intake.jerkIntake()).withTimeout(shootingTime * 2))
                 .repeatedly());
     }
 
-    private Command sweep(boolean left, boolean isFirst, double xMeters, double driveSpeed) {
+    private Command wilsonTestSweep(boolean left, boolean isFirst, double xMeters,
+        double driveSpeed) {
         return Commands
             .sequence(
                 Commands.sequence(
