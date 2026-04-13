@@ -57,6 +57,9 @@ public class VisionReal implements VisionIO {
      * @throws IOException IOException for HTTP request
      */
     public boolean uploadSettings(String hostname) throws IOException {
+        if (hostname == "skip") {
+            return true;
+        }
         System.out.println("Uploading ALL settings for PV: " + hostname);
         try (final CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost postReq = new HttpPost("http://" + hostname + ".local:5800/api/settings");
