@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.math.geometry.AABB;
 import frc.robot.math.geometry.Rectangle;
 
 /**
@@ -290,6 +291,17 @@ public class FieldConstants {
          */
         public static final Pose2d leftFace =
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(21).get().toPose2d();
+    }
+
+    /** Return true if pose is in the area of the bump. */
+    public static boolean isOnBump(Pose2d pose) {
+        AABB bumpArea = new AABB(Hub.centerHub, LeftBump.depth, LeftBump.width * 2 + 47.0);
+        AABB oppBumpArea =
+            new AABB(new Translation2d(fieldLength - Hub.centerHub.getX(), Hub.centerHub.getY()),
+                LeftBump.depth, LeftBump.width * 2 + 47.0);
+
+        return bumpArea.contains(pose.getTranslation())
+            || oppBumpArea.contains(pose.getTranslation());
     }
 
     /**

@@ -106,7 +106,13 @@ public class RobotState {
         double timestamp) {
         prevGyroReading = gyroYaw;
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
+        var before = getGlobalPoseEstimate();
         visionAdjustedOdometry.update(gyroYaw.minus(gyroOffset), wheelPositions);
+        var after = getGlobalPoseEstimate();
+        if (FieldConstants.isOnBump(before)) {
+            var diff = after.minus(before).times(0.6);
+            visionAdjustedOdometry.resetPose(before.plus(diff));
+        }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
     }
 

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -123,27 +124,51 @@ public class AutoCommandFactory {
     }
 
     private Command wilsonTest2Side(AutoRoutine routine, boolean left) {
-        return Commands.sequence(jab(routine, left),
-            CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood));
+        double turretFudge = 2.5;
+        String[] paths = new String[] {"LeftSweep", "LeftSidewinder", "LeftJab"};
+        Command c = new InstantCommand();
+        for (var path : paths) {
+            c = c.andThen(neutralZonePath(routine, left, path),
+                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                    .withTimeout(6.0).deadlineFor(
+                        Commands.waitSeconds(2.5).andThen(intake.retractHopper(0).withTimeout(0.5),
+                            Commands.waitSeconds(2.5), intake.retractHopper(0).withTimeout(0.5))));
+        }
+        return c.repeatedly().deadlineFor(
+            CommandFactory.followHub(turret, swerve, () -> left ? turretFudge : -turretFudge));
+    }
+
+    private Command neutralZonePath(AutoRoutine routine, boolean left, String name) {
+        AutoTrajectory test = routine.trajectory(name, 1);
+        var start = test.getRawTrajectory().getInitialSample(false).get();
+        Pose2d beforeEnter = test.getFinalPose().get();
+        Pose2d end = routine.trajectory(name, 2).getFinalPose().get();
+
+        return Commands.parallel(Commands.runOnce(() -> swerve.flipTrajectories(!left)),
+            Commands.sequence(
+                swerve.moveToPose().autoRoutine(routine).target(start.getPose()).maxSpeed(4.5)
+                    .flipY(!left).translationTolerance(0.5).ignoreRotation(true)
+                    .feedforward(Math.hypot(start.getChassisSpeeds().vxMetersPerSecond,
+                        start.getChassisSpeeds().vyMetersPerSecond))
+                    .flipForRed(true).finish(),
+                test.cmd(),
+                swerve.moveToPose().autoRoutine(routine).target(beforeEnter).maxSpeed(4.5)
+                    .flipY(!left).translationTolerance(0.2).rotationTolerance(5).finish(),
+                swerve.moveToPose().autoRoutine(routine).target(end).maxSpeed(4.5).flipY(!left)
+                    .translationTolerance(0.2).rotationTolerance(15).finish(),
+                swerve.emergencyStop()));
     }
 
     private Command jab(AutoRoutine routine, boolean left) {
-        AutoTrajectory test = routine.trajectory("LeftJab", 1);
-        Pose2d start = test.getInitialPose().get();
-        Pose2d beforeEnter = test.getFinalPose().get();
-        Pose2d end = routine.trajectory("LeftJab", 2).getFinalPose().get();
+        return neutralZonePath(routine, left, "JabLeft");
+    }
 
-        return Commands
-            .parallel(Commands.runOnce(() -> swerve.flipTrajectories(!left)),
-                Commands.sequence(
-                    swerve.moveToPose().autoRoutine(routine).target(start).maxSpeed(4.5)
-                        .flipY(!left).translationTolerance(0.5).ignoreRotation(true).finish(),
-                    test.cmd(),
-                    swerve.moveToPose().autoRoutine(routine).target(beforeEnter).maxSpeed(4.5)
-                        .flipY(!left).translationTolerance(0.2).rotationTolerance(5).finish(),
-                    swerve.moveToPose().autoRoutine(routine).target(end).maxSpeed(4.5).flipY(!left)
-                        .translationTolerance(0.5).rotationTolerance(15).finish(),
-                    swerve.emergencyStop()));
+    private Command sweep(AutoRoutine routine, boolean left) {
+        return neutralZonePath(routine, left, "LeftSweep");
+    }
+
+    private Command sidewinder(AutoRoutine routine, boolean left) {
+        return neutralZonePath(routine, left, "LeftSidewinder");
     }
 
     /** Test to make sure autos work. */

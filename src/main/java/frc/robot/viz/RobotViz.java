@@ -136,7 +136,7 @@ public class RobotViz {
         }
         if (sim != null) {
             Logger.recordOutput("Viz/ActualPose", sim.getGroundTruthPose());
-            update(gtState, Rotation2d.fromRadians(sim.turret.turrentAngle.position),
+            update(gtState, Rotation2d.fromRadians(sim.turret.turretTarget),
                 Radians.of(sim.adjustableHood.hood.position), climber.inputs.positionPivot,
                 climber.inputs.positionTelescope, intake.inputs.rightHopperPosition,
                 Arrays.stream(sim.swerveDrive.mapleSim.getModules())

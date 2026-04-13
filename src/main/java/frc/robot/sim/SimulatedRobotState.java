@@ -61,7 +61,7 @@ public class SimulatedRobotState {
 
     /** Update the simulation. Must be called once per iteration. */
     public void update() {
-        visionSim.updateState(getGroundTruthPose(), Radians.of(turret.turrentAngle.position));
+        visionSim.updateState(getGroundTruthPose(), Radians.of(turret.turretTarget));
 
         double avgBallsPerTick = avgBallsPerSecond * TimedRobot.kDefaultPeriod;
 
@@ -75,9 +75,9 @@ public class SimulatedRobotState {
                 shooter.shootOne();
                 double effectiveHoodAngle =
                     adjustableHood.hood.position + 0.02 * random.nextFloat() - 0.01;
-                double effectiveTurretAngle = this.swerveDrive.mapleSim.getSimulatedDriveTrainPose()
-                    .getRotation().getRadians() + turret.turrentAngle.position
-                    + 0.02 * random.nextFloat() - 0.01;
+                double effectiveTurretAngle =
+                    this.swerveDrive.mapleSim.getSimulatedDriveTrainPose().getRotation()
+                        .getRadians() + turret.turretTarget + 0.02 * random.nextFloat() - 0.01;
                 var speeds =
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
 
