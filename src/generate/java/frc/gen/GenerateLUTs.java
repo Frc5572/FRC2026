@@ -172,6 +172,7 @@ public class GenerateLUTs {
             e.printStackTrace();
         }
 
+        double maxGroundDistance = 0.0;
         for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
             var hoodAngle = Degrees.of(90 - 12.695 - 25);
             var shot = new SimulatedShot(hoodAngle,
@@ -193,9 +194,29 @@ public class GenerateLUTs {
             if (hubDistance < maxHubDistance) {
                 continue;
             }
+            maxGroundDistance = Math.max(maxGroundDistance, shot.state.a1);
             entries.add(new ShotEntry(Meters.of(hubDistance), RotationsPerSecond.of(flywheel),
                 hoodAngle, Seconds.of(tof)));
 
+            groundEntries.add(new ShotEntry(Meters.of(shot.state.a1),
+                RotationsPerSecond.of(flywheel), hoodAngle, Seconds.of(groundTof)));
+        }
+
+        for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
+            var hoodAngle = Degrees.of(90 - 12.695 - 35);
+            var shot = new SimulatedShot(hoodAngle,
+                MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
+                    RotationsPerSecond.of(flywheel), null))),
+                RotationsPerSecond.of(5));
+
+            double groundTof = 0.0;
+            while (shot.state.a2 >= 0.0) {
+                shot.step(0.001);
+                groundTof += 0.001;
+            }
+            if (shot.state.a1 < maxGroundDistance) {
+                continue;
+            }
             groundEntries.add(new ShotEntry(Meters.of(shot.state.a1),
                 RotationsPerSecond.of(flywheel), hoodAngle, Seconds.of(groundTof)));
         }

@@ -2,7 +2,6 @@ package frc.robot.shotdata;
 
 /**
  * Auto-generated lookup tables (LUTs) and fitted model coefficients for shooter calculations.
- *
  * <p>
  * This class is not meant to be instantiated or modified manually - values arederived from
  * experimental shot data and curve-fitting.
@@ -60,5 +59,8 @@ public final class GeneratedLUTs2 {
             new ShotData.ShotEntry(24.410, 83.000, 25.000, 1.518),
             new ShotData.ShotEntry(24.962, 85.000, 25.000, 1.538),
             new ShotData.ShotEntry(25.496, 87.000, 25.000, 1.557),
-            new ShotData.ShotEntry(26.023, 89.000, 25.000, 1.576)};
+            new ShotData.ShotEntry(26.023, 89.000, 25.000, 1.576),
+            new ShotData.ShotEntry(26.319, 85.000, 35.000, 1.321),
+            new ShotData.ShotEntry(26.902, 87.000, 35.000, 1.338),
+            new ShotData.ShotEntry(27.465, 89.000, 35.000, 1.354)};
 }
