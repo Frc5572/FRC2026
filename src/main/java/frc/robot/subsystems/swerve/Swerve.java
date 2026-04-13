@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.GyroInputsAutoLogged;
@@ -79,6 +80,8 @@ public final class Swerve extends SubsystemBase {
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
+    private boolean flipTrajectories = false;
+
     public final RobotState state;
 
     public AutoFactory autoFactory;
@@ -125,6 +128,13 @@ public final class Swerve extends SubsystemBase {
     }
 
     /**
+     * Set this to true to flip trajectories about the y axis (left/right) for auto paths.
+     */
+    public void flipTrajectories(boolean doFlip) {
+        this.flipTrajectories = doFlip;
+    }
+
+    /**
      * Follow a Choreo Trajectory
      *
      * @param sample SwerveSample of choreo tajectory
@@ -136,6 +146,11 @@ public final class Swerve extends SubsystemBase {
         PIDController yController = Constants.Swerve.holonomicDriveController.getYController();
         ProfiledPIDController thetaController =
             Constants.Swerve.holonomicDriveController.getThetaController();
+        if (flipTrajectories) {
+            sample = new SwerveSample(sample.t, sample.x, FieldConstants.fieldWidth - sample.y,
+                -sample.heading, sample.vx, -sample.vy, -sample.omega, sample.ax, -sample.ay,
+                -sample.alpha, sample.moduleForcesX(), sample.moduleForcesY());
+        }
         // Generate the next speeds for the robot
         ChassisSpeeds speeds =
             new ChassisSpeeds(sample.vx + xController.calculate(pose.getX(), sample.x),
@@ -277,10 +292,11 @@ public final class Swerve extends SubsystemBase {
      * @return a {@link MoveToPoseBuilder} for configuring pose targets
      */
     public MoveToPoseBuilder moveToPose() {
-        return new MoveToPoseBuilder(this, (speeds) -> {
-            // speeds = limiter.limit(speeds);
+        var builder = new MoveToPoseBuilder(this, (speeds) -> {
+            limiter.limit(speeds);
             setModuleStates(speeds);
         });
+        return builder;
     }
 
     /**

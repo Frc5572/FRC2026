@@ -112,6 +112,41 @@ public class AutoCommandFactory {
     }
 
     /** Test to make sure autos work. */
+    public AutoRoutine wilsonTest2() {
+        AutoRoutine routine = autoFactory.newRoutine("WilsonTest2");
+        routine.active().onTrue(new ConditionalCommand(wilsonTest2Side(routine, true),
+            wilsonTest2Side(routine, false), () -> {
+                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0;
+            }));
+        return routine;
+    }
+
+    private Command wilsonTest2Side(AutoRoutine routine, boolean left) {
+        return Commands.sequence(jab(routine, left),
+            CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood));
+    }
+
+    private Command jab(AutoRoutine routine, boolean left) {
+        AutoTrajectory test = routine.trajectory("LeftJab", 1);
+        Pose2d start = test.getInitialPose().get();
+        Pose2d beforeEnter = test.getFinalPose().get();
+        Pose2d end = routine.trajectory("LeftJab", 2).getFinalPose().get();
+
+        return Commands
+            .parallel(Commands.runOnce(() -> swerve.flipTrajectories(!left)),
+                Commands.sequence(
+                    swerve.moveToPose().autoRoutine(routine).target(start).maxSpeed(4.5)
+                        .flipY(!left).translationTolerance(0.5).ignoreRotation(true).finish(),
+                    test.cmd(),
+                    swerve.moveToPose().autoRoutine(routine).target(beforeEnter).maxSpeed(4.5)
+                        .flipY(!left).translationTolerance(0.2).rotationTolerance(5).finish(),
+                    swerve.moveToPose().autoRoutine(routine).target(end).maxSpeed(4.5).flipY(!left)
+                        .translationTolerance(0.5).rotationTolerance(15).finish(),
+                    swerve.emergencyStop()));
+    }
+
+    /** Test to make sure autos work. */
     public AutoRoutine wilsonTest() {
         AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
         routine.active()

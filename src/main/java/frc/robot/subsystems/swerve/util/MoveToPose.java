@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve.util;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -57,7 +58,8 @@ public class MoveToPose extends Command {
     private final boolean flipForRed;
     private final double translationTolerance;
     private final double rotationTolerance;
-    private final boolean flipY;
+    private final BooleanSupplier flipY;
+    private final boolean ignoreRotation;
 
     private boolean isActive = false;
     private boolean isCompleted = false;
@@ -90,7 +92,10 @@ public class MoveToPose extends Command {
         @OptionalField("true") boolean flipForRed,
         @OptionalField("0.5") double translationTolerance,
         @OptionalField("edu.wpi.first.math.util.Units.degreesToRadians(5)") double rotationTolerance,
-        @OptionalField("false") boolean flipY) {
+        @OptionalField(value = "() -> false",
+            alt = @AltMethod(type = boolean.class, parameter_name = "doFlip",
+                value = "() -> doFlip")) BooleanSupplier flipY,
+        @OptionalField("false") boolean ignoreRotation) {
         this.autoRoutine = autoRoutine;
         if (autoRoutine == null) {
             this.eventLoop = CommandScheduler.getInstance().getDefaultButtonLoop();
@@ -105,6 +110,7 @@ public class MoveToPose extends Command {
         this.translationTolerance = translationTolerance;
         this.rotationTolerance = rotationTolerance;
         this.flipY = flipY;
+        this.ignoreRotation = ignoreRotation;
     }
 
     /**
@@ -151,7 +157,7 @@ public class MoveToPose extends Command {
         if (flipForRed) {
             target = AllianceFlipUtil.apply(target);
         }
-        if (flipY) {
+        if (flipY.getAsBoolean()) {
             target = AllianceFlipUtil.flipY(target);
         }
         Logger.recordOutput("Swerve/MoveToPoseTarget", target);
@@ -163,6 +169,9 @@ public class MoveToPose extends Command {
             double mul = maxSpeed / speed;
             ctrlEffort.vxMetersPerSecond *= mul;
             ctrlEffort.vyMetersPerSecond *= mul;
+        }
+        if (ignoreRotation) {
+            ctrlEffort.omegaRadiansPerSecond = 0.0;
         }
         this.robotRelativeConsumer.accept(ctrlEffort);
     }
@@ -180,7 +189,7 @@ public class MoveToPose extends Command {
         final var eRotate = poseError.getRotation();
         return Math.abs(eTranslate.getX()) < translationTolerance
             && Math.abs(eTranslate.getY()) < translationTolerance
-            && Math.abs(eRotate.getDegrees()) < rotationTolerance;
+            && (Math.abs(eRotate.getDegrees()) < rotationTolerance || ignoreRotation);
     }
 
 }
