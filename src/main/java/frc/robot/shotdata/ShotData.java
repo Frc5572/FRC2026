@@ -78,7 +78,7 @@ public class ShotData {
      * rotations per second, degrees, seconds) for convenience.
      */
     public static record ShotEntry(Distance targetDistance, AngularVelocity flywheelSpeed,
-        Angle exitAngle, Time tof) {
+        Angle exitAngle, LinearVelocity exitVelocity, Time tof) {
         /**
          * Convenience constructor using raw primitive values.
          *
@@ -90,7 +90,7 @@ public class ShotData {
         public ShotEntry(double distanceFeet, double flywheelSpeed, double hoodAngleDeg,
             double tof) {
             this(Feet.of(distanceFeet), RotationsPerSecond.of(flywheelSpeed),
-                Degrees.of(90 - 12.695 - hoodAngleDeg), Seconds.of(tof));
+                Degrees.of(90 - 12.695 - hoodAngleDeg), MetersPerSecond.of(0.0), Seconds.of(tof));
         }
 
         /**
@@ -179,14 +179,14 @@ public class ShotData {
         @Override
         public ShotEntry mul(ShotEntry a, double b) {
             return new ShotEntry(a.targetDistance.times(b), a.flywheelSpeed.times(b),
-                a.exitAngle.times(b), a.tof.times(b));
+                a.exitAngle.times(b), a.exitVelocity.times(b), a.tof.times(b));
         }
 
         @Override
         public ShotEntry add(ShotEntry a, ShotEntry b) {
             return new ShotEntry(a.targetDistance.plus(b.targetDistance),
                 a.flywheelSpeed.plus(b.flywheelSpeed), a.exitAngle.plus(b.exitAngle),
-                a.tof.plus(b.tof));
+                a.exitVelocity.plus(b.exitVelocity), a.tof.plus(b.tof));
         }
 
     };
@@ -288,7 +288,7 @@ public class ShotData {
     public static ShotParameters getPassParameters(double distance, double currentFlywheelSpeed,
         boolean log) {
         var res = passMap.get(distance);
-        double desiredSpeed = GeneratedLUTs.desiredFlywheelSpeed(distance);
+        double desiredSpeed = res.flywheelSpeed().in(RotationsPerSecond);
         double hoodAngleDeg = res.hoodAngle().in(Degrees);
         double tof = res.tof().in(Seconds);
         boolean isOkay = currentFlywheelSpeed > desiredSpeed - 10;

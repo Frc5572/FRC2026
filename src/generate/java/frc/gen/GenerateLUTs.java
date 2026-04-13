@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 import javax.lang.model.element.Modifier;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -113,11 +114,11 @@ public class GenerateLUTs {
                 formatter.format(entry.targetDistance().in(Meters)) + "\t" + formatter.format(tof));
 
             entries.add(new ShotEntry(entry.targetDistance(), entry.flywheelSpeed(),
-                entry.exitAngle(), Seconds.of(tof)));
+                entry.exitAngle(), MetersPerSecond.of(res), Seconds.of(tof)));
 
-            groundEntries
-                .add(new ShotEntry(Meters.of(entry.targetDistance().in(Meters) + shot.state.a1),
-                    entry.flywheelSpeed(), entry.exitAngle(), Seconds.of(groundTof)));
+            groundEntries.add(new ShotEntry(
+                Meters.of(entry.targetDistance().in(Meters) + shot.state.a1), entry.flywheelSpeed(),
+                entry.exitAngle(), MetersPerSecond.of(res), Seconds.of(groundTof)));
         }
 
         InterpolatingDoubleTreeMap hub = new InterpolatingDoubleTreeMap();
@@ -175,10 +176,10 @@ public class GenerateLUTs {
         double maxGroundDistance = 0.0;
         for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
             var hoodAngle = Degrees.of(90 - 12.695 - 25);
-            var shot = new SimulatedShot(hoodAngle,
+            var exitVelocity =
                 MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
-                    RotationsPerSecond.of(flywheel), null))),
-                RotationsPerSecond.of(5));
+                    RotationsPerSecond.of(flywheel), null)));
+            var shot = new SimulatedShot(hoodAngle, exitVelocity, RotationsPerSecond.of(5));
             double tof = 0.0;
             double groundTof = 0.0;
             double hubDistance = 0.0;
@@ -196,18 +197,18 @@ public class GenerateLUTs {
             }
             maxGroundDistance = Math.max(maxGroundDistance, shot.state.a1);
             entries.add(new ShotEntry(Meters.of(hubDistance), RotationsPerSecond.of(flywheel),
-                hoodAngle, Seconds.of(tof)));
+                hoodAngle, exitVelocity, Seconds.of(tof)));
 
             groundEntries.add(new ShotEntry(Meters.of(shot.state.a1),
-                RotationsPerSecond.of(flywheel), hoodAngle, Seconds.of(groundTof)));
+                RotationsPerSecond.of(flywheel), hoodAngle, exitVelocity, Seconds.of(groundTof)));
         }
 
         for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
             var hoodAngle = Degrees.of(90 - 12.695 - 35);
-            var shot = new SimulatedShot(hoodAngle,
+            var exitVelocity =
                 MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
-                    RotationsPerSecond.of(flywheel), null))),
-                RotationsPerSecond.of(5));
+                    RotationsPerSecond.of(flywheel), null)));
+            var shot = new SimulatedShot(hoodAngle, exitVelocity, RotationsPerSecond.of(5));
 
             double groundTof = 0.0;
             while (shot.state.a2 >= 0.0) {
@@ -218,7 +219,7 @@ public class GenerateLUTs {
                 continue;
             }
             groundEntries.add(new ShotEntry(Meters.of(shot.state.a1),
-                RotationsPerSecond.of(flywheel), hoodAngle, Seconds.of(groundTof)));
+                RotationsPerSecond.of(flywheel), hoodAngle, exitVelocity, Seconds.of(groundTof)));
         }
 
         TypeSpec.Builder classBuilder =
@@ -229,15 +230,17 @@ public class GenerateLUTs {
             if (i != 0) {
                 init.append(',');
             }
-            init.append(" new ShotData.ShotEntry(");
-            init.append(formatter.format(entries.get(i).targetDistance().in(Feet)));
-            init.append(", ");
+            init.append(" new ShotData.ShotEntry(Meters.of(");
+            init.append(formatter.format(entries.get(i).targetDistance().in(Meters)));
+            init.append("), RotationsPerSecond.of(");
             init.append(formatter.format(entries.get(i).flywheelSpeed().in(RotationsPerSecond)));
-            init.append(", ");
-            init.append(formatter.format(entries.get(i).hoodAngle().in(Degrees)));
-            init.append(", ");
+            init.append("), Degrees.of(");
+            init.append(formatter.format(entries.get(i).exitAngle().in(Degrees)));
+            init.append("), MetersPerSecond.of(");
+            init.append(formatter.format(entries.get(i).exitVelocity().in(MetersPerSecond)));
+            init.append("), Seconds.of(");
             init.append(formatter.format(entries.get(i).tof().in(Seconds)));
-            init.append(')');
+            init.append("))");
         }
         init.append(" }");
         FieldSpec entriesField = FieldSpec
@@ -252,16 +255,18 @@ public class GenerateLUTs {
             if (i != 0) {
                 init.append(',');
             }
-            init.append(" new ShotData.ShotEntry(");
-            init.append(formatter.format(groundEntries.get(i).targetDistance().in(Feet)));
-            init.append(", ");
+            init.append(" new ShotData.ShotEntry(Meters.of(");
+            init.append(formatter.format(groundEntries.get(i).targetDistance().in(Meters)));
+            init.append("), RotationsPerSecond.of(");
             init.append(
                 formatter.format(groundEntries.get(i).flywheelSpeed().in(RotationsPerSecond)));
-            init.append(", ");
-            init.append(formatter.format(groundEntries.get(i).hoodAngle().in(Degrees)));
-            init.append(", ");
+            init.append("), Degrees.of(");
+            init.append(formatter.format(groundEntries.get(i).exitAngle().in(Degrees)));
+            init.append("), MetersPerSecond.of(");
+            init.append(formatter.format(groundEntries.get(i).exitVelocity().in(MetersPerSecond)));
+            init.append("), Seconds.of(");
             init.append(formatter.format(groundEntries.get(i).tof().in(Seconds)));
-            init.append(')');
+            init.append("))");
         }
         init.append(" }");
         entriesField = FieldSpec
@@ -279,7 +284,8 @@ public class GenerateLUTs {
         classBuilder.addJavadoc("derived from experimental shot data and curve-fitting.");
 
         try {
-            JavaFile.builder("frc.robot.shotdata", classBuilder.build()).build()
+            JavaFile.builder("frc.robot.shotdata", classBuilder.build())
+                .addStaticImport(ClassName.bestGuess("edu.wpi.first.units.Units"), "*").build()
                 .writeTo(new File("src/main/java"));
         } catch (IOException e) {
             e.printStackTrace();

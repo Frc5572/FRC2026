@@ -2,6 +2,8 @@ package frc.robot.sim;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.Random;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -84,7 +86,7 @@ public class SimulatedRobotState {
                 ShotEntry entry = ShotData.simFunc.interpolate(speedRotationsPerSecond,
                     Units.radiansToDegrees(effectiveHoodAngle));
 
-                double exitVelocity = entry.speedTransferExitVelocity().in(MetersPerSecond);
+                double exitVelocity = entry.backtracedExitVelocity().in(MetersPerSecond);
 
                 Logger.recordOutput("Sim/speedTransferExitVelocity",
                     entry.speedTransferExitVelocity().in(MetersPerSecond));
@@ -104,7 +106,7 @@ public class SimulatedRobotState {
                         .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
                         .getTranslation();
                 Translation3d velocity = new Translation3d(x, y, vert);
-                double backspin = entry.backspin();
+                double backspin = RotationsPerSecond.of(5).in(RadiansPerSecond);
 
                 Translation3d omega = new Translation3d(-backspin * Math.sin(effectiveTurretAngle),
                     backspin * Math.cos(effectiveTurretAngle), 0);

@@ -420,7 +420,7 @@ public class RobotState {
                 double distance =
                     adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
                         + Units.feetToMeters(trimUp);
-                var parameters = !targetIsGround
+                var parameters = targetIsGround
                     ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
                     : ShotData.getShotParameters(distance, currentFlywheelSpeed, false);
                 double tof = parameters.timeOfFlight();
@@ -436,7 +436,7 @@ public class RobotState {
             + Units.feetToMeters(trimUp);
         Logger.recordOutput("State/distance", distance);
         var parameters =
-            !targetIsGround ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
+            targetIsGround ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
                 : ShotData.getShotParameters(distance, currentFlywheelSpeed, true);
         this.desiredFlywheelSpeed = parameters.desiredSpeed();
         this.desiredHoodAngleDeg = targetIsGround ? 30.0 : parameters.hoodAngleDeg();
