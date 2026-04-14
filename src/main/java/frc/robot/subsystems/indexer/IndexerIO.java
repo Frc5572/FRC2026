@@ -28,6 +28,8 @@ public interface IndexerIO {
 
     public void setSpindexerMotorDutyCycle(double dutyCycle);
 
-    public void setConstants(FlywheelConstants constants);
+    public void setSpindexerConstants(FlywheelConstants constants);
+
+    public void setMagazineConstants(FlywheelConstants constants);
 
 }

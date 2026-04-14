@@ -50,7 +50,7 @@ public class ShotData {
         new ShotEntry(7.21, 45, 18, 0),
         new ShotEntry(8.0, 46, 20, 0),
         new ShotEntry(9.05, 50, 20, 0),
-        new ShotEntry(10.13, 52, 20, 0),
+        new ShotEntry(10.13, 51, 20, 0),
         new ShotEntry(11.10, 54, 20, 0),
         new ShotEntry(12.05, 56, 20, 0),
         new ShotEntry(12.82, 58, 20, 0),

@@ -23,8 +23,12 @@ public class Indexer extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Indexer", inputs);
 
-        Constants.Indexer.constants.ifDirty(constants -> {
-            io.setConstants(constants);
+        Constants.Indexer.spindexerConstants.ifDirty(constants -> {
+            io.setSpindexerConstants(constants);
+        });
+
+        Constants.Indexer.magazineConstants.ifDirty(constants -> {
+            io.setMagazineConstants(constants);
         });
     }
 

@@ -93,11 +93,20 @@ public final class Constants {
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
 
-        public static final FlywheelConstants constants =
+        public static final FlywheelConstants spindexerConstants =
             new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(24.0)
                 .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
                 .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
                     .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
+                .finish();
+
+
+
+        public static final FlywheelConstants magazineConstants =
+            new FlywheelConstantsBuilder("MagazineConstants").holdCurrent(40.0).maxDutyCycle(105)
+                .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
+                .pid(new PIDConstantsBuilder("MagazinePID", GravityTypeValue.Elevator_Static)
+                    .kP(0.8).kI(0.1).kD(0.0).kV(0.105).kS(0.11).kG(0.0).kA(0.0).finish())
                 .finish();
 
         public static final double timeReversingDuringUnjam = 0.25;
@@ -347,18 +356,18 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(
                     new Transform3d(
-                        Units.inchesToMeters(-9.029),
-                        Units.inchesToMeters(12.359),
-                        Units.inchesToMeters(8.187),
+                        -0.335,
+                        0.19,
+                        0.202,
                         new Rotation3d(
                             Degrees.of(180.0),
-                            Degrees.of(-154.5),
-                            Degrees.of(73.07 - 90))))
-                .translationError(6.0)
+                            Degrees.of(-26),
+                            Degrees.of(163))))
+                .translationError(0.3)
                 .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)
-                .findConstants(true)
+                // .findConstants(true)
                 .finish(),
             new CameraConstantsBuilder()
                     .coProcessorName("skip")
@@ -380,7 +389,7 @@ public final class Constants {
                             Degrees.of(180.0),
                             Degrees.of(-27.75),
                             Degrees.of(-51.42))))
-                .translationError(6.0)
+                .translationError(0.3)
                 .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)
@@ -406,7 +415,7 @@ public final class Constants {
                             Degrees.of(180.0),
                             Degrees.of(-27.85),
                             Degrees.of(51.33))))
-                .translationError(6.0)
+                .translationError(0.3)
                 .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)
@@ -627,8 +636,8 @@ public final class Constants {
             SensorDirectionValue.CounterClockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
 
-        public static final Angle maxAngle = Degrees.of(90);
-        public static final Angle minAngle = Degrees.of(-270);
+        public static final Angle maxAngle = Degrees.of(180);
+        public static final Angle minAngle = Degrees.of(-180);
     }
 
     /** Shooter Constants */

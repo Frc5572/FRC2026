@@ -181,7 +181,7 @@ public class RobotState {
     /** Set the current turret angle */
     public void setTurretRawAngle(double timestamp, Angle angle) {
         var angleDeg = angle.in(Degrees);
-        if (Math.abs(angleDeg - prevAngle) > 1e-2) {
+        if (Math.abs(angleDeg - prevAngle) > 1e-1) {
             Logger.recordOutput("State/stationary/turret", true);
             this.lastTimeMoved = MathSharedStore.getTimestamp();
         } else {
