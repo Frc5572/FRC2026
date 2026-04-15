@@ -212,7 +212,7 @@ tasks.register('generateLUTs', JavaExec) {
     systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
 }
 
-project.ext.rioctlVersion = "1.0.3"
+project.ext.rioctlVersion = "1.0.4"
 
 task downloadRioctl(type: Download) {
     src "https://github.com/Frc5572/rioctl/releases/download/v${rioctlVersion}/rioctl_${rioctlVersion}_windows_amd64.exe"
