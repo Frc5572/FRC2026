@@ -695,7 +695,7 @@ public final class Constants {
      */
     public static final class LEDs {
         public static final int LED_PORT = 9;
-        public static final int LED_LENGTH = 20; // needs to be checked
+        public static final int LED_LENGTH = 30; // needs to be checked
     }
 
     /**
