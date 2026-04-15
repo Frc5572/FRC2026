@@ -393,6 +393,7 @@ public final class Constants {
                 .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)
+                .findConstants(true)
                 .finish(),
             new CameraConstantsBuilder()
                 .coProcessorName("skip")
