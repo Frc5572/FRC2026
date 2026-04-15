@@ -158,7 +158,7 @@ public class SwerveRateLimiter implements Tunable {
         double wantedAccMagnitude = wantedAcc.a1 * currentVel.a1 / currentSpeed
             + wantedAcc.a2 * currentVel.a2 / currentSpeed;
         publish("wantedAccMagnitudeStep1", wantedAccMagnitude);
-        if (wantedAccMagnitude > maxForwardAccel) {
+        if (forwardLimit < 800 && wantedAccMagnitude > maxForwardAccel) {
             double mul = maxForwardAccel / wantedAccMagnitude;
             wantedAcc.a1 *= mul;
             wantedAcc.a2 *= mul;
@@ -167,16 +167,16 @@ public class SwerveRateLimiter implements Tunable {
 
         // Step 2: Robot may accelerate too fast and result in tilting. Limit directional
         // acceleration to prevent this.
-        if (wantedAcc.a1 > forwardTiltLimit) {
+        if (forwardTiltLimit < 800 && wantedAcc.a1 > forwardTiltLimit) {
             wantedAcc.a1 = forwardLimit;
         }
-        if (wantedAcc.a1 < -backTiltLimit) {
+        if (backTiltLimit < 800 && wantedAcc.a1 < -backTiltLimit) {
             wantedAcc.a1 = -backTiltLimit;
         }
-        if (wantedAcc.a2 > leftTiltLimit) {
+        if (leftTiltLimit < 800 && wantedAcc.a2 > leftTiltLimit) {
             wantedAcc.a2 = leftTiltLimit;
         }
-        if (wantedAcc.a2 < -rightTiltLimit) {
+        if (rightTiltLimit < 800 && wantedAcc.a2 < -rightTiltLimit) {
             wantedAcc.a2 = -rightTiltLimit;
         }
         publish("wantedAccStep2", wantedAcc);
@@ -185,7 +185,7 @@ public class SwerveRateLimiter implements Tunable {
         // magnitude of acceleration to prevent this.
         wantedAccMagnitude = Math.hypot(wantedAcc.a1, wantedAcc.a2);
         publish("wantedAccMagnitudeStep3", wantedAccMagnitude);
-        if (wantedAccMagnitude > skidLimit) {
+        if (skidLimit < 800 && wantedAccMagnitude > skidLimit) {
             double multiplier = skidLimit / wantedAccMagnitude;
             wantedAcc.a1 *= multiplier;
             wantedAcc.a2 *= multiplier;

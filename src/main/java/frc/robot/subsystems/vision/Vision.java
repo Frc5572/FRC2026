@@ -108,8 +108,16 @@ public class Vision extends SubsystemBase {
                 seesMultitag = false;
             }
             for (int i = 0; i < result._1().targets.size(); i++) {
-                var cameraPose = new Pose3d(state.getGlobalPoseEstimate())
-                    .plus(Constants.Vision.cameraConstants[result._0()].robotToCamera);
+                var robotToCamera = Constants.Vision.cameraConstants[result._0()].robotToCamera;
+                if (Constants.Vision.cameraConstants[result._0()].isTurret) {
+                    var maybeRobotToCamera = state.getTurretRobotToCamera(robotToCamera,
+                        result._1().getTimestampSeconds());
+                    if (maybeRobotToCamera.isEmpty()) {
+                        continue;
+                    }
+                    robotToCamera = maybeRobotToCamera.get();
+                }
+                var cameraPose = new Pose3d(state.getGlobalPoseEstimate()).plus(robotToCamera);
                 var target = result._1().targets.get(i);
                 Constants.Vision.fieldLayout.getTagPose(target.fiducialId).ifPresent(pose -> {
                     cameraViz[result._0()] = addTwo(cameraViz[result._0()],
