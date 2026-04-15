@@ -47,16 +47,31 @@ public class ShotData {
      */
     public static ShotEntry[] entries = new ShotEntry[] {
         // @formatter:off
-        new ShotEntry(7.21, 45, 18, 0),
-        new ShotEntry(8.0, 46, 20, 0),
-        new ShotEntry(9.05, 50, 20, 0),
-        new ShotEntry(10.13, 51, 20, 0),
-        new ShotEntry(11.10, 54, 20, 0),
-        new ShotEntry(12.05, 56, 20, 0),
-        new ShotEntry(12.82, 58, 20, 0),
-        new ShotEntry(13.87, 61, 21, 0),
-        new ShotEntry(15.01, 64, 22, 0),
-        new ShotEntry(16.14, 67, 23, 0),
+        // new ShotEntry(7.21, 45, 18, 0),
+        // new ShotEntry(8.0, 46, 20, 0),
+        // new ShotEntry(9.05, 50, 20, 0),
+        // new ShotEntry(10.13, 51, 20, 0),
+        // new ShotEntry(11.10, 54, 20, 0),
+        // new ShotEntry(12.05, 56, 20, 0),
+        // new ShotEntry(12.82, 58, 20, 0),
+        // new ShotEntry(13.87, 61, 21, 0),
+        // new ShotEntry(15.01, 64, 22, 0),
+        // new ShotEntry(16.14, 67, 23, 0),
+        new ShotEntry(7.04, 43, 15, 0),
+        new ShotEntry(8.00, 44, 15, 0),
+        new ShotEntry(9.18, 45, 15, 0),
+        new ShotEntry(10.6, 48, 20, 0),
+        new ShotEntry(12.46, 53, 20, 0),
+        new ShotEntry(13.67, 54, 22, 0),
+        new ShotEntry(14.45, 56, 24, 0),
+        new ShotEntry(15.75, 57, 24.5, 0),
+        new ShotEntry(16.49, 57.5, 28, 0),
+        new ShotEntry(18.15, 61, 28, 0),
+        new ShotEntry(19.10, 63, 28, 0),
+        new ShotEntry(20.2, 65, 28, 0),
+        new ShotEntry(21.3, 67, 28, 0),
+        new ShotEntry(22.5, 69, 28, 0),
+
         // @formatter:on
     };
 
