@@ -374,6 +374,14 @@ public class RobotState {
         this.trimLeft += incLeft;
     }
 
+    public double getTrimUp() {
+        return this.trimUp;
+    }
+
+    public double getTrimLeft() {
+        return this.trimLeft;
+    }
+
     private void updateShootingTarget() {
         Pose2d bluePose = AllianceFlipUtil.apply(getGlobalPoseEstimate());
         if (bluePose.getX() > FieldConstants.Hub.centerHub.getX()) {

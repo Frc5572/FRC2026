@@ -217,9 +217,9 @@ public final class RobotContainer {
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
         RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
-        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
-            swerve.state.setTrims(0.0, 0.0);
-        }));
+        // RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
+        // swerve.state.setTrims(0.0, swerve.state.getTrimLeft());
+        // }));
         vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
 
         // BUTTON BINDINGS
