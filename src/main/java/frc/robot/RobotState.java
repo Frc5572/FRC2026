@@ -428,18 +428,18 @@ public class RobotState {
 
         Translation2d adjustedTarget = shootingTarget;
         if (currentFlywheelSpeed > 10.0) {
-            for (int i = 0; i < 5; i++) {
-                double distance =
-                    adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
-                        + Units.feetToMeters(trimUp);
-                var parameters = targetIsGround
-                    ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
-                    : ShotData.getShotParameters(distance, currentFlywheelSpeed, false);
-                double tof = parameters.timeOfFlight();
-                var forward = getFieldRelativeSpeeds().times(tof);
-                adjustedTarget = shootingTarget
-                    .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
-            }
+            // for (int i = 0; i < 5; i++) {
+            // double distance =
+            // adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
+            // + Units.feetToMeters(trimUp);
+            // var parameters = targetIsGround
+            // ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
+            // : ShotData.getShotParameters(distance, currentFlywheelSpeed, false);
+            // double tof = parameters.timeOfFlight();
+            // var forward = getFieldRelativeSpeeds().times(tof);
+            // adjustedTarget = shootingTarget
+            // .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
+            // }
         } else {
             adjustedTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         }
