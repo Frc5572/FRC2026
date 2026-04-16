@@ -444,6 +444,8 @@ public class RobotState {
         this.desiredTurretHeadingFieldRelative =
             adjustedTarget.minus(getTurretCenterFieldFrame().getTranslation()).getAngle()
                 .plus(Rotation2d.fromDegrees(trimLeft));
+        Logger.recordOutput("State/Trim/TrimUp", trimUp);
+        Logger.recordOutput("State/Trim/TrimLeft", trimLeft);
     }
 
     public boolean isInitted() {
