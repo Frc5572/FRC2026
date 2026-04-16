@@ -185,8 +185,8 @@ public class AutoCommandFactory {
     private Command wilsonTestSide(boolean left, double sweepX) {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
-        // Positive turret trim towards driver station, negative towards net
-        double turretFudge = -5;
+        // Positive turret trim towards net, negative towards DS
+        double turretFudge = 5;
         return Commands.sequence(
             wilsonTestSweep(left, true, sweepX, driveSpeed).alongWith(Commands.runOnce(() -> {
                 swerve.state.setTrims(-1.5, left ? turretFudge : -turretFudge);
