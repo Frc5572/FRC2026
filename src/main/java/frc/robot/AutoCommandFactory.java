@@ -179,7 +179,7 @@ public class AutoCommandFactory {
         double turretFudge = 2.5;
         return Commands.sequence(wilsonTestSweep(left, true, Constants.Auto.wilsonTestX, driveSpeed)
             .alongWith(Commands.runOnce(() -> {
-                swerve.state.setTrims(0.0, left ? turretFudge : -turretFudge);
+                swerve.state.setTrims(-1.5, left ? turretFudge : -turretFudge);
             })),
             CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                 .alongWith(intake.jerkIntake(),
