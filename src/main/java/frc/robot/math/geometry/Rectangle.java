@@ -69,7 +69,7 @@ public class Rectangle implements ConvexShape {
             && Math.abs(relative.getY()) <= rect.width / 2.0;
     }
 
-    private Translation2d[] getCorners() {
+    public Translation2d[] getCorners() {
         updateVertices();
         Translation2d[] corners = new Translation2d[4];
         System.arraycopy(vertices, 0, corners, 0, 4);

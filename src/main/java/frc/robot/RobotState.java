@@ -1,9 +1,11 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -23,6 +25,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import frc.robot.math.geometry.Rectangle;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
@@ -114,6 +117,7 @@ public class RobotState {
             visionAdjustedOdometry.resetPose(before.plus(diff));
         }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
+        limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
     }
 
     /**
@@ -468,5 +472,34 @@ public class RobotState {
 
     public void setFlywheelSpeed(double flywheelSpeed) {
         this.currentFlywheelSpeed = flywheelSpeed;
+    }
+
+    private final Rectangle robotRect = new Rectangle("pose", Pose2d.kZero,
+        Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);;
+
+    public void limitPosition(Pose2d pose, Consumer<Pose2d> resetPose) {
+        robotRect.setPose(pose);
+        double offsetX = 0.0;
+        double offsetY = 0.0;
+        var corners = robotRect.getCorners();
+        for (var corner : corners) {
+            if (corner.getX() < 0) {
+                offsetX = Math.max(offsetX, -corner.getX());
+            }
+            if (corner.getX() > FieldConstants.fieldLength) {
+                offsetX = Math.min(offsetX, FieldConstants.fieldLength - corner.getX());
+            }
+            if (corner.getY() < 0) {
+                offsetY = Math.max(offsetY, -corner.getY());
+            }
+            if (corner.getY() > FieldConstants.fieldWidth) {
+                offsetY = Math.min(offsetY, FieldConstants.fieldWidth - corner.getY());
+            }
+        }
+
+        if (Math.abs(offsetX) > 1e-3 || Math.abs(offsetY) > 1e-3) {
+            resetPose.accept(
+                new Pose2d(pose.getX() + offsetX, pose.getY() + offsetY, pose.getRotation()));
+        }
     }
 }
