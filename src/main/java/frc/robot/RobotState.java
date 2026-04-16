@@ -193,6 +193,12 @@ public class RobotState {
         }
         prevAngle = angleDeg;
         currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
+        Translation2d[] turretDirection = new Translation2d[2];
+        turretDirection[0] = getTurretCenterFieldFrame().getTranslation();
+        turretDirection[1] =
+            getTurretCenterFieldFrame().getTranslation().plus(new Translation2d(2.0,
+                getGlobalPoseEstimate().getRotation().plus(new Rotation2d(angle))));
+        Logger.recordOutput("State/TurretDirection", turretDirection);
     }
 
     /** Add potentially asequent observation from camera */
