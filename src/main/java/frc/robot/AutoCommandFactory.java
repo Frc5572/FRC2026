@@ -186,10 +186,11 @@ public class AutoCommandFactory {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
         // Positive turret trim towards net, negative towards DS
-        double turretFudge = 10;
+        double turretFudge1 = 7;
+        double turretFudge2 = 10;
         return Commands.sequence(
             wilsonTestSweep(left, true, sweepX, driveSpeed).alongWith(Commands.runOnce(() -> {
-                swerve.state.setTrims(-1.5, left ? turretFudge : -turretFudge);
+                swerve.state.setTrims(-1.5, left ? turretFudge1 : -turretFudge1);
             })),
             CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                 .alongWith(intake.jerkIntake(),
@@ -198,6 +199,9 @@ public class AutoCommandFactory {
                 .withTimeout(shootingTime),
             Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
                 wilsonTestSweep(left, false, Constants.Auto.wilsonTestX2, driveSpeed),
+                Commands.runOnce(() -> {
+                    swerve.state.setTrims(-1.5, left ? turretFudge2 : -turretFudge2);
+                }),
                 CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                     .alongWith(intake.jerkIntake(),
                         turret.goToAngleFieldRelative(
