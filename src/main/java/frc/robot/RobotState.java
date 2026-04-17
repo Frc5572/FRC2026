@@ -464,6 +464,12 @@ public class RobotState {
                 .plus(Rotation2d.fromDegrees(trimLeft));
         Logger.recordOutput("State/Trim/TrimUp", trimUp);
         Logger.recordOutput("State/Trim/TrimLeft", trimLeft);
+
+        Translation2d[] turretDirection = new Translation2d[2];
+        turretDirection[0] = getTurretCenterFieldFrame().getTranslation();
+        turretDirection[1] = getTurretCenterFieldFrame().getTranslation()
+            .plus(new Translation2d(2.0, this.desiredTurretHeadingFieldRelative));
+        Logger.recordOutput("State/DesiredTurretDirection", turretDirection);
     }
 
     public boolean isInitted() {
