@@ -186,7 +186,7 @@ public class AutoCommandFactory {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
         // Positive turret trim towards net, negative towards DS
-        double turretFudge1 = 7;
+        double turretFudge1 = 9;
         double turretFudge2 = 10;
         return Commands.sequence(
             wilsonTestSweep(left, true, sweepX, driveSpeed).alongWith(Commands.runOnce(() -> {
