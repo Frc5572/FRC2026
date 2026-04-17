@@ -262,10 +262,10 @@ public final class RobotContainer {
             swerve.state.incTrims(-0.5, 0);
         }));
         driver.povLeft().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.0, 2.0);
+            // swerve.state.incTrims(0.0, 2.0);
         }));
         driver.povRight().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.0, -2.0);
+            // swerve.state.incTrims(0.0, -2.0);
         }));
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
