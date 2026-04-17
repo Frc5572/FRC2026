@@ -200,7 +200,7 @@ public class AutoCommandFactory {
             Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
                 wilsonTestSweep(left, false, Constants.Auto.wilsonTestX2, driveSpeed),
                 Commands.runOnce(() -> {
-                    swerve.state.setTrims(0.0, left ? turretFudge2 : -turretFudge2);
+                    swerve.state.setTrims(-0.7, left ? turretFudge2 : -turretFudge2);
                 }),
                 CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                     .alongWith(intake.jerkIntake(),
