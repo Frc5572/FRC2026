@@ -502,8 +502,8 @@ public class RobotState {
     /**
      * limits position of a given pose
      * 
-     * @param pose
-     * @param resetPose
+     * @param pose new pose of robot reactangle
+     * @param resetPose reset pose
      */
     public void limitPosition(Pose2d pose, Consumer<Pose2d> resetPose) {
         robotRect.setPose(pose);
