@@ -175,6 +175,9 @@ public final class RobotContainer {
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
+        autoChooser.addCmd("Do Nothing", Commands::none);
+        autoChooser.addRoutine("Gather then Shoot (Left)", autoCommandFactory::gatherThenShootLeft);
+        autoChooser.addRoutine("Just Pass", autoCommandFactory::passOnly);
         // autoChooser.addRoutine("Gather then Shoot (Left)",
         // autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
