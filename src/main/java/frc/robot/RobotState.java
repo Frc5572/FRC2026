@@ -23,6 +23,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
@@ -45,6 +46,17 @@ public class RobotState {
 
     private ChassisSpeeds currentSpeeds;
     private double lastTimeMoved = 0.0;
+
+    public Trigger nearOppTrench = new Trigger(() -> (getGlobalPoseEstimate().getTranslation()
+        .getDistance(new Translation2d(
+            FieldConstants.LinesHorizontal.leftTrenchOpenEnd
+                - FieldConstants.LinesHorizontal.leftTrenchOpenStart,
+            FieldConstants.LinesVertical.neutralZoneFar)) <= Units.feetToMeters(1)
+        || getGlobalPoseEstimate().getTranslation()
+            .getDistance(new Translation2d(
+                FieldConstants.LinesHorizontal.rightTrenchOpenEnd
+                    - FieldConstants.LinesHorizontal.rightTrenchOpenStart,
+                FieldConstants.LinesVertical.neutralZoneFar)) <= Units.feetToMeters(1)));
 
     /**
      * Creates a new swerve state estimator.

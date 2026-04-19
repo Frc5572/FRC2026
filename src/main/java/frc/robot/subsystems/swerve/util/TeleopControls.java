@@ -1,11 +1,14 @@
 package frc.robot.subsystems.swerve.util;
 
+import static edu.wpi.first.units.Units.Meters;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 
 /**
  * Control scheme utilities for teleoperated swerve driving.
@@ -66,4 +69,19 @@ public class TeleopControls {
         };
     }
 
+    public static Supplier<ChassisSpeeds> teleopTowerControls(DoubleSupplier forward,
+        DoubleSupplier right, double maxSpeed, Supplier<Pose2d> robotPose, double maxRotSpeed) {
+        return () -> {
+            double xaxis = right.getAsDouble();
+            double yaxis = forward.getAsDouble();
+            double raxis =
+                (robotPose.get().getMeasureY().in(Meters) > FieldConstants.LinesVertical.center) ? 1
+                    : -1;
+            yaxis = MathUtil.applyDeadband(yaxis, Constants.DriverControls.stickDeadband);
+            xaxis = MathUtil.applyDeadband(xaxis, Constants.DriverControls.stickDeadband);
+            xaxis *= xaxis * Math.signum(xaxis);
+            yaxis *= yaxis * Math.signum(yaxis);
+            return new ChassisSpeeds(yaxis * maxSpeed, xaxis * maxSpeed, raxis * maxRotSpeed);
+        };
+    }
 }

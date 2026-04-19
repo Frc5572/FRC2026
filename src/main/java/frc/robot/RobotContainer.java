@@ -215,6 +215,9 @@ public final class RobotContainer {
             swerve.state.setTrims(0.0, 0.0);
         }));
         vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
+        swerve.state.nearOppTrench
+            .whileTrue(adjustableHood.setGoal(Degrees.of(0)).alongWith(intake.retractHopper(1)
+                .alongWith(indexer.setSpeedCommand(0, 0)).alongWith(shooter.shoot(0))));
 
         // BUTTON BINDINGS
         maybeController("Driver", driver, this::setupDriver);
@@ -267,6 +270,14 @@ public final class RobotContainer {
 
         driver.leftTrigger().and(driver.rightTrigger().negate())
             .whileTrue(indexer.spinWhileIntake());
+        driver.leftBumper()
+            .whileTrue(swerve
+                .driveUserRelative(TeleopControls.teleopTowerControls(() -> driver.getLeftX(),
+                    () -> driver.getLeftY(), Constants.DriverControls.driverTranslationalShootSpeed,
+                    () -> swerve.state.getGlobalPoseEstimate(),
+                    Constants.DriverControls.driverRotationalShootSpeed))
+                .alongWith(intake.extendHopper(1.0).andThen(intake.intakeBalls())))
+            .onFalse(intake.retractHopper(0));
     }
 
     private void setupOperator() {
