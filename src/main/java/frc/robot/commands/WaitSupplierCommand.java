@@ -4,6 +4,7 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 
+/** Wait Supplier Command for delaying stuff */
 public class WaitSupplierCommand extends Command {
     private final DoubleSupplier timeSupplier;
     private final Timer timer = new Timer();

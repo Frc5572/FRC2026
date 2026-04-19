@@ -173,6 +173,7 @@ public class AutoCommandFactory {
         return wilsonTestBase(routine, Constants.Auto.wilsonTestX2);
     }
 
+    /** Base for auto routines. */
     public AutoRoutine wilsonTestBase(AutoRoutine routine, double sweepX) {
         routine.active().onTrue(new ConditionalCommand(wilsonTestSide(true, sweepX),
             wilsonTestSide(false, sweepX), () -> {

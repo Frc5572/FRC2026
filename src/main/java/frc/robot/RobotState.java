@@ -497,8 +497,14 @@ public class RobotState {
     }
 
     private final Rectangle robotRect = new Rectangle("pose", Pose2d.kZero,
-        Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);;
+        Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);
 
+    /**
+     * limits position of a given pose
+     * 
+     * @param pose
+     * @param resetPose
+     */
     public void limitPosition(Pose2d pose, Consumer<Pose2d> resetPose) {
         robotRect.setPose(pose);
         double offsetX = 0.0;
