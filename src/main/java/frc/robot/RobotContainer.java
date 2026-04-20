@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
+import frc.robot.commands.WaitSupplierCommand;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.LEDs;
@@ -168,6 +169,8 @@ public final class RobotContainer {
         SmartDashboard.putData(Constants.DashboardValues.field, field);
         SmartDashboard.putNumber(Constants.DashboardValues.feetPastCenter,
             Constants.DashboardValues.feetPastCenterDefault);
+        SmartDashboard.putNumber(Constants.DashboardValues.delay,
+            Constants.DashboardValues.delayDefault);
         // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
@@ -179,6 +182,7 @@ public final class RobotContainer {
         // autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
+        autoChooser.addRoutine(Constants.Auto.wilsonTestShort, autoCommandFactory::wilsonTestShort);
         autoChooser.addRoutine("wilsonTest2", autoCommandFactory::wilsonTest2);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
@@ -189,9 +193,11 @@ public final class RobotContainer {
         // // Logger.recordOutput("asdfadsf", autoJustShootLocation.getPose());
         // }));
         RobotModeTriggers.autonomous()
-            .whileTrue(autoChooser.selectedCommandScheduler()
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-                .andThen(Commands.runOnce(() -> swerve.stop())));
+            .whileTrue(new WaitSupplierCommand(() -> SmartDashboard
+                .getNumber(Constants.DashboardValues.delay, Constants.DashboardValues.delayDefault))
+                    .andThen(autoChooser.selectedCommandScheduler())
+                    .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                    .andThen(Commands.runOnce(() -> swerve.stop())));
         // END AUTO STUFF
 
         // DEFAULT COMMANDS
@@ -211,9 +217,9 @@ public final class RobotContainer {
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
         RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
-        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
-            swerve.state.setTrims(0.0, 0.0);
-        }));
+        // RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
+        // swerve.state.setTrims(0.0, swerve.state.getTrimLeft());
+        // }));
         vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
 
         // BUTTON BINDINGS
@@ -256,10 +262,10 @@ public final class RobotContainer {
             swerve.state.incTrims(-0.5, 0);
         }));
         driver.povLeft().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.0, 2.0);
+            // swerve.state.incTrims(0.0, 2.0);
         }));
         driver.povRight().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.0, -2.0);
+            // swerve.state.incTrims(0.0, -2.0);
         }));
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
@@ -387,6 +393,18 @@ public final class RobotContainer {
         } else if (selectedAuto.equals(Constants.Auto.wilsonTest)) {
             // System.out.println("asdf");
             Pose2d pose = AllianceFlipUtil.apply(new Pose2d(Constants.Auto.wilsonTestX,
+                (FieldConstants.fieldWidth / 2.0) + Units
+                    .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                        Constants.DashboardValues.feetPastCenterDefault)),
+                Rotation2d.kCCW_90deg));
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0) {
+                pose = AllianceFlipUtil.flipY(pose);
+            }
+            autoStoppingPoint.setPose(pose);
+        } else if (selectedAuto.equals(Constants.Auto.wilsonTestShort)) {
+            // System.out.println("asdf");
+            Pose2d pose = AllianceFlipUtil.apply(new Pose2d(Constants.Auto.wilsonTestX2,
                 (FieldConstants.fieldWidth / 2.0) + Units
                     .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
                         Constants.DashboardValues.feetPastCenterDefault)),
