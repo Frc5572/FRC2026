@@ -1,7 +1,8 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
@@ -13,7 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -88,6 +89,44 @@ public class AutoCommandFactory {
     }
 
     /**
+     * CMP Special
+     *
+     * @return AutoRoutine
+     */
+    public AutoRoutine cmpSpecial() {
+
+        AutoRoutine routine = autoFactory.newRoutine("CMP Special");
+
+        BooleanSupplier fieldSide = () -> {
+            return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0;
+        };
+        BooleanSupplier shootFirst = () -> SmartDashboard.getBoolean("Shoot First", false);
+        BooleanSupplier fullWidth = () -> SmartDashboard.getBoolean("Full Width", false);
+        DoubleSupplier x1 = () -> SmartDashboard.getNumber(Constants.DashboardValues.x1,
+            Constants.Auto.wilsonTestX);
+        DoubleSupplier x2 = () -> SmartDashboard.getNumber(Constants.DashboardValues.x2,
+            Constants.Auto.wilsonTestX2);
+        DoubleSupplier feetPastCenter =
+            () -> SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                Constants.DashboardValues.feetPastCenterDefault);
+
+
+        Command autoSequence = Commands.none();
+        Command shoot = Commands.none();
+        Command one = new ConditionalCommand(shoot, Commands.none(), shootFirst);
+        Command halfSweep =
+            new ConditionalCommand(wilsonTestSide(true), wilsonTestSide(false), fieldSide);
+        Command fullSweep = Commands.none();
+        Command sweep = new ConditionalCommand(fullSweep, halfSweep, fullWidth);
+
+        routine.active().onTrue(new SequentialCommandGroup(autoSequence, one, sweep));
+
+        return routine;
+    }
+
+
+    /**
      * Move to a specified X,Y and shoot
      *
      * @return AutoRoutine
@@ -113,54 +152,6 @@ public class AutoCommandFactory {
         return routine;
     }
 
-    /** Test to make sure autos work. */
-    public AutoRoutine wilsonTest2() {
-        AutoRoutine routine = autoFactory.newRoutine("WilsonTest2");
-        routine.active().onTrue(new ConditionalCommand(wilsonTest2Side(routine, true),
-            wilsonTest2Side(routine, false), () -> {
-                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
-                    .getY() > FieldConstants.fieldWidth / 2.0;
-            }));
-        return routine;
-    }
-
-    private Command wilsonTest2Side(AutoRoutine routine, boolean left) {
-        double turretFudge = 2.5;
-        String[] paths = new String[] {"LeftSweep", "LeftSidewinder", "LeftJab"};
-        Command c = new InstantCommand();
-        for (var path : paths) {
-            c = c.andThen(
-                neutralZonePath(routine, left, path)
-                    .deadlineFor(adjustableHood.setGoal(Degrees.of(0))),
-                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                    .withTimeout(6.0).deadlineFor(
-                        Commands.waitSeconds(2.5).andThen(intake.retractHopper(0).withTimeout(0.5),
-                            Commands.waitSeconds(2.5), intake.retractHopper(0).withTimeout(0.5))));
-        }
-        return c.repeatedly().deadlineFor(
-            CommandFactory.followHub(turret, swerve, () -> left ? turretFudge : -turretFudge));
-    }
-
-    private Command neutralZonePath(AutoRoutine routine, boolean left, String name) {
-        AutoTrajectory test = routine.trajectory(name, 1);
-        var start = test.getRawTrajectory().getInitialSample(false).get();
-        Pose2d beforeEnter = test.getFinalPose().get();
-        Pose2d end = routine.trajectory(name, 2).getFinalPose().get();
-
-        return Commands.parallel(Commands.runOnce(() -> swerve.flipTrajectories(!left)),
-            Commands.sequence(
-                swerve.moveToPose().autoRoutine(routine).target(start.getPose()).maxSpeed(4.5)
-                    .flipY(!left).translationTolerance(0.5).ignoreRotation(true)
-                    .feedforward(Math.hypot(start.getChassisSpeeds().vxMetersPerSecond,
-                        start.getChassisSpeeds().vyMetersPerSecond))
-                    .flipForRed(true).finish(),
-                test.cmd(),
-                swerve.moveToPose().autoRoutine(routine).target(beforeEnter).maxSpeed(4.5)
-                    .flipY(!left).translationTolerance(0.2).rotationTolerance(5).finish(),
-                swerve.moveToPose().autoRoutine(routine).target(end).maxSpeed(4.5).flipY(!left)
-                    .translationTolerance(0.2).rotationTolerance(15).finish(),
-                swerve.emergencyStop()));
-    }
 
     /** Test to make sure autos work. */
     public AutoRoutine wilsonTest() {

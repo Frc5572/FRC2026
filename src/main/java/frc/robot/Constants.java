@@ -707,6 +707,8 @@ public final class Constants {
         public static final String shootX = "Dashboard/Auto/Just Shoot X";
         public static final String shootY = "Dashboard/Auto/Just Shoot Y";
         public static final String feetPastCenter = "Dashboard/Auto/Feet Past Center";
+        public static final String x1 = "Dashboard/Auto/X1";
+        public static final String x2 = "Dashboard/Auto/X2";
         public static final double feetPastCenterDefault = 0.0;
         public static final double shootXDefault = 2.5;
         public static final double shootYDefault = 4.0;
@@ -717,6 +719,7 @@ public final class Constants {
     /** Auto constants */
     public static class Auto {
         public static final double wilsonTestX = 8.076;
+        public static final double wilsonTestX2 = 8.076;
         public static final String wilsonTest = "Peashooter";
         public static final String justShoot = "Just Shoot";
     }
