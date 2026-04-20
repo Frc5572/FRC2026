@@ -10,7 +10,6 @@ import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
-import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -77,7 +76,6 @@ public final class RobotContainer {
     public final CommandXboxController pit = new CommandXboxController(3);
 
     /* Auto utilities */
-    private final AutoChooser autoChooser = new AutoChooser();
     private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
@@ -160,7 +158,6 @@ public final class RobotContainer {
                 break;
         }
         // DASHBOARD STUFF
-        SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
         SmartDashboard.putNumber(Constants.DashboardValues.shootX,
             Constants.DashboardValues.shootXDefault);
         SmartDashboard.putNumber(Constants.DashboardValues.shootY,
@@ -175,21 +172,9 @@ public final class RobotContainer {
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
-        // autoChooser.addRoutine("Gather then Shoot (Left)",
-        // autoCommandFactory::gatherThenShootLeft);
-        autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
-        autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
-        autoChooser.addRoutine("wilsonTest2", autoCommandFactory::wilsonTest2);
-        // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
-        // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
-        // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-        // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        // autoJustShootLocation.setPose(x, y, new Rotation2d());
-        // // System.out.println("asdfasdasdf");
-        // // Logger.recordOutput("asdfadsf", autoJustShootLocation.getPose());
-        // }));
+
         RobotModeTriggers.autonomous()
-            .whileTrue(autoChooser.selectedCommandScheduler()
+            .whileTrue(autoCommandFactory.everything().cmd()
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
                 .andThen(Commands.runOnce(() -> swerve.stop())));
         // END AUTO STUFF
