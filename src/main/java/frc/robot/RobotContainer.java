@@ -169,8 +169,12 @@ public final class RobotContainer {
         SmartDashboard.putData(Constants.DashboardValues.field, field);
         SmartDashboard.putNumber(Constants.DashboardValues.feetPastCenter,
             Constants.DashboardValues.feetPastCenterDefault);
+        SmartDashboard.putNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
+        SmartDashboard.putNumber(Constants.DashboardValues.x2, Constants.Auto.wilsonTestX);
         SmartDashboard.putNumber(Constants.DashboardValues.delay,
             Constants.DashboardValues.delayDefault);
+        SmartDashboard.putBoolean(Constants.DashboardValues.fullWidth, false);
+        SmartDashboard.putBoolean(Constants.DashboardValues.shootFirst, false);
         // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
@@ -182,8 +186,10 @@ public final class RobotContainer {
         // autoCommandFactory::gatherThenShootLeft);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
-        autoChooser.addRoutine(Constants.Auto.wilsonTestShort, autoCommandFactory::wilsonTestShort);
-        autoChooser.addRoutine("wilsonTest2", autoCommandFactory::wilsonTest2);
+        autoChooser.addRoutine("CMP Special", autoCommandFactory::cmpSpecial);
+        // autoChooser.addRoutine(Constants.Auto.wilsonTestShort,
+        // autoCommandFactory::wilsonTestShort);
+        // autoChooser.addRoutine("wilsonTest2", autoCommandFactory::wilsonTest2);
         // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
         // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
         // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);

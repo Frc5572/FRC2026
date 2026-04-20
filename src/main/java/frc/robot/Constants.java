@@ -710,6 +710,8 @@ public final class Constants {
         public static final String x1 = "Dashboard/Auto/X1";
         public static final String x2 = "Dashboard/Auto/X2";
         public static final String delay = "Dashboard/Auto/Delay";
+        public static final String shootFirst = "Dashboard/Auto/Shoot First";
+        public static final String fullWidth = "Dashboard/Auto/Full Width";
         public static final double feetPastCenterDefault = 0.0;
         public static final double delayDefault = 0.0;
         public static final double shootXDefault = 2.5;
