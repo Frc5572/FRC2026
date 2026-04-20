@@ -120,7 +120,7 @@ test {
 
 // Simulation configuration (e.g. environment variables).
 wpi.sim.addGui().defaultEnabled = true
-wpi.sim.addDriverstation().defaultEnabled = true
+wpi.sim.addDriverstation().defaultEnabled = false
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
@@ -212,7 +212,7 @@ tasks.register('generateLUTs', JavaExec) {
     systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
 }
 
-project.ext.rioctlVersion = "1.0.3"
+project.ext.rioctlVersion = "1.0.4"
 
 task downloadRioctl(type: Download) {
     src "https://github.com/Frc5572/rioctl/releases/download/v${rioctlVersion}/rioctl_${rioctlVersion}_windows_amd64.exe"

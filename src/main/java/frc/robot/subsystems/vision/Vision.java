@@ -98,13 +98,12 @@ public class Vision extends SubsystemBase {
         for (int i = 0; i < Constants.Vision.cameraConstants.length; i++) {
             cameraViz[i] = new Translation3d[0];
         }
-
         for (var result : results) {
             cameraContributed[result._0()] = state
                 .addVisionObservation(Constants.Vision.cameraConstants[result._0()], result._1());
-            if (result._1().multitagResult.isPresent()) {
+            if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
-            } else if (result._0() == 1) {
+            } else if (result._0() == 0 && !result._1().multitagResult.isPresent()) {
                 seesMultitag = false;
             }
             for (int i = 0; i < result._1().targets.size(); i++) {

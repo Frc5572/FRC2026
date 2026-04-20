@@ -165,21 +165,33 @@ public class AutoCommandFactory {
     /** Test to make sure autos work. */
     public AutoRoutine wilsonTest() {
         AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
-        routine.active()
-            .onTrue(new ConditionalCommand(wilsonTestSide(true), wilsonTestSide(false), () -> {
+        return wilsonTestBase(routine, Constants.Auto.wilsonTestX);
+    }
+
+    public AutoRoutine wilsonTestShort() {
+        AutoRoutine routine = autoFactory.newRoutine("WilsonTestShort");
+        return wilsonTestBase(routine, Constants.Auto.wilsonTestX2);
+    }
+
+    /** Base for auto routines. */
+    public AutoRoutine wilsonTestBase(AutoRoutine routine, double sweepX) {
+        routine.active().onTrue(new ConditionalCommand(wilsonTestSide(true, sweepX),
+            wilsonTestSide(false, sweepX), () -> {
                 return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
                     .getY() > FieldConstants.fieldWidth / 2.0;
             }));
         return routine;
     }
 
-    private Command wilsonTestSide(boolean left) {
+    private Command wilsonTestSide(boolean left, double sweepX) {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
-        double turretFudge = 2.5;
-        return Commands.sequence(wilsonTestSweep(left, true, Constants.Auto.wilsonTestX, driveSpeed)
-            .alongWith(Commands.runOnce(() -> {
-                swerve.state.setTrims(0.0, left ? turretFudge : -turretFudge);
+        // Positive turret trim towards net, negative towards DS
+        double turretFudge1 = 9;
+        double turretFudge2 = 10;
+        return Commands.sequence(
+            wilsonTestSweep(left, true, sweepX, driveSpeed).alongWith(Commands.runOnce(() -> {
+                swerve.state.setTrims(-0.5, left ? turretFudge1 : -turretFudge1);
             })),
             CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                 .alongWith(intake.jerkIntake(),
@@ -187,14 +199,17 @@ public class AutoCommandFactory {
                         () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
                 .withTimeout(shootingTime),
             Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
-                wilsonTestSweep(left, false, 6.5, driveSpeed),
+                wilsonTestSweep(left, false, Constants.Auto.wilsonTestX2, driveSpeed),
+                Commands.runOnce(() -> {
+                    swerve.state.setTrims(-0.5, left ? turretFudge2 : -turretFudge2);
+                }),
                 CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                     .alongWith(intake.jerkIntake(),
                         turret.goToAngleFieldRelative(
                             () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
                     .withTimeout(shootingTime),
                 adjustableHood.setGoal(Rotations.of(0)),
-                wilsonTestSweep(left, false, 8.076, driveSpeed),
+                wilsonTestSweep(left, false, sweepX, driveSpeed),
                 CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                     .alongWith(intake.jerkIntake(),
                         turret.goToAngleFieldRelative(

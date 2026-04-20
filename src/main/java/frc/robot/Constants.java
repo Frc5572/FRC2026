@@ -338,7 +338,7 @@ public final class Constants {
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(0.3)
+                .translationError(Units.inchesToMeters(3))
                 .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(true)
@@ -695,7 +695,7 @@ public final class Constants {
      */
     public static final class LEDs {
         public static final int LED_PORT = 9;
-        public static final int LED_LENGTH = 20; // needs to be checked
+        public static final int LED_LENGTH = 30; // needs to be checked
     }
 
     /**
@@ -707,7 +707,9 @@ public final class Constants {
         public static final String shootX = "Dashboard/Auto/Just Shoot X";
         public static final String shootY = "Dashboard/Auto/Just Shoot Y";
         public static final String feetPastCenter = "Dashboard/Auto/Feet Past Center";
+        public static final String delay = "Dashboard/Auto/Delay";
         public static final double feetPastCenterDefault = 0.0;
+        public static final double delayDefault = 0.0;
         public static final double shootXDefault = 2.5;
         public static final double shootYDefault = 4.0;
         public static final String activeHub = "Dashboard/ActiveHub";
@@ -717,7 +719,9 @@ public final class Constants {
     /** Auto constants */
     public static class Auto {
         public static final double wilsonTestX = 8.076;
+        public static final double wilsonTestX2 = 6.5;
         public static final String wilsonTest = "Peashooter";
+        public static final String wilsonTestShort = "Peashooter Short";
         public static final String justShoot = "Just Shoot";
     }
 }
