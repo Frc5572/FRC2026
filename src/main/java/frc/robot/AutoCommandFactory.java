@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Rotations;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -114,14 +115,19 @@ public class AutoCommandFactory {
         AutoRoutine routine = autoFactory.newRoutine("CMP Special");
 
         Command autoSequence = Commands.none();
-        Command shoot = Commands.none();
-        Command one = new ConditionalCommand(shoot, Commands.none(), shootFirst);
-        Command halfSweep =
-            new ConditionalCommand(wilsonTestSide(true), wilsonTestSide(false), fieldSide);
-        Command fullSweep = Commands.none();
-        Command sweep = new ConditionalCommand(fullSweep, halfSweep, fullWidth);
+        Command shoot = CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+            .alongWith(intake.jerkIntake(),
+                turret.goToAngleFieldRelative(
+                    () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+            .withTimeout(3.3)
+            .andThen(adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25));
+        Command shootOrNot = Commands.either(shoot, Commands.none(), shootFirst);
+        Command halfSweep = Commands.either(wilsonTestSide(true), wilsonTestSide(false), fieldSide);
 
-        routine.active().onTrue(new SequentialCommandGroup(autoSequence, one, sweep));
+        Command fullsweep = Commands.either(fullSweep(true), fullSweep(false), fieldSide);
+        Command sweep = Commands.either(fullsweep, halfSweep, fullWidth);
+
+        routine.active().onTrue(new SequentialCommandGroup(autoSequence, shootOrNot, sweep));
 
         return routine;
     }
@@ -173,6 +179,38 @@ public class AutoCommandFactory {
                     .getY() > FieldConstants.fieldWidth / 2.0;
             }));
         return routine;
+    }
+
+    private Command fullSweep(boolean left) {
+        double shootingTime = 5.5;
+        double driveSpeed = 2.5;
+        // Positive turret trim towards net, negative towards DS
+        double turretFudge1 = 9;
+        double turretFudge2 = 10;
+
+        Command sequence = Commands
+            .sequence(
+                swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kCCW_90deg))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
+                    .flipY(left).finish(),
+                swerve.moveToPose().target(() -> new Pose2d(5.7, 1.267, Rotation2d.kCCW_90deg))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
+                    .flipY(!left).finish(),
+                swerve.moveToPose().target(() -> new Pose2d(5.7, 0.622, Rotation2d.kZero))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
+                    .flipY(!left).finish().alongWith(intake.extendHopper(0.0)),
+                swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero)).maxSpeed(1.5)
+                    .translationTolerance(0.1).rotationTolerance(5).flipY(!left).finish()
+                    .withTimeout(3.5),
+                swerve.emergencyStop())
+            .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0))
+            .andThen(CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                .alongWith(intake.jerkIntake(),
+                    turret.goToAngleFieldRelative(
+                        () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                .withTimeout(shootingTime));
+        return sequence;
+
     }
 
     private Command wilsonTestSide(boolean left) {
