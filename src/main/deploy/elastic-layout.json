@@ -135,7 +135,7 @@
         "containers": [
           {
             "title": "Auto Chooser",
-            "x": 320.0,
+            "x": 256.0,
             "y": 0.0,
             "width": 256.0,
             "height": 192.0,
@@ -150,7 +150,7 @@
             "title": "See April Tag",
             "x": 0.0,
             "y": 0.0,
-            "width": 320.0,
+            "width": 256.0,
             "height": 192.0,
             "type": "Boolean Box",
             "properties": {
@@ -165,7 +165,7 @@
           },
           {
             "title": "Just Shoot X",
-            "x": 832.0,
+            "x": 896.0,
             "y": 0.0,
             "width": 192.0,
             "height": 192.0,
@@ -179,7 +179,7 @@
           },
           {
             "title": "Just Shoot Y",
-            "x": 1024.0,
+            "x": 1088.0,
             "y": 0.0,
             "width": 192.0,
             "height": 192.0,
@@ -214,13 +214,27 @@
           },
           {
             "title": "Feet Past Center",
-            "x": 576.0,
+            "x": 704.0,
             "y": 0.0,
-            "width": 256.0,
+            "width": 192.0,
             "height": 192.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Feet Past Center",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Delay",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 192.0,
+            "height": 192.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Dashboard/Auto/Delay",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false

@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
-import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
-import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -78,21 +76,21 @@ public class Robot extends LoggedRobot {
             robotRunType = RobotRunType.kReal;
         } else {
             String logPath = findReplayLog();
-            if (logPath == null) {
-                Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-                // Logger.addDataReceiver(new WPILOGWriter(".")); // Log to current directory
-                setUseTiming(true);
-                robotRunType = RobotRunType.kSimulation;
-            } else {
-                // (or prompt the user)
-                Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
-                Logger
-                    .addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
-                // Save outputs to a new log
-                setUseTiming(false); // Run as fast as possible
-                robotRunType = RobotRunType.kReplay;
+            // if (logPath == null) {
+            Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+            // Logger.addDataReceiver(new WPILOGWriter(".")); // Log to current directory
+            setUseTiming(true);
+            robotRunType = RobotRunType.kSimulation;
+            // } else {
+            // // (or prompt the user)
+            // Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
+            // Logger
+            // .addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+            // // Save outputs to a new log
+            // setUseTiming(false); // Run as fast as possible
+            // robotRunType = RobotRunType.kReplay;
 
-            }
+            // }
         }
         // Logger.disableDeterministicTimestamps() // See "Deterministic Timestamps" in the
         // "Understanding Data Flow" page
