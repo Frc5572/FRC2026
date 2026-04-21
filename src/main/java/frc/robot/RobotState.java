@@ -462,6 +462,7 @@ public class RobotState {
         this.desiredTurretHeadingFieldRelative =
             adjustedTarget.minus(getTurretCenterFieldFrame().getTranslation()).getAngle()
                 .plus(Rotation2d.fromDegrees(trimLeft));
+        Logger.recordOutput("State/desiredTurretHeading", this.desiredTurretHeadingFieldRelative);
         Logger.recordOutput("State/Trim/TrimUp", trimUp);
         Logger.recordOutput("State/Trim/TrimLeft", trimLeft);
 
@@ -501,7 +502,7 @@ public class RobotState {
 
     /**
      * limits position of a given pose
-     * 
+     *
      * @param pose new pose of robot reactangle
      * @param resetPose reset pose
      */
