@@ -282,17 +282,23 @@ public class AutoCommandFactory {
                         .target(new Pose2d(5.76,
                             FieldConstants.RightTrench.blueTrenchCenterRight.getY(),
                             swerve.state.getGlobalPoseEstimate().getRotation()))
-                        .flipY(left).maxSpeed(2.0).translationTolerance(0.1).finish(),
+                        .flipY(left).maxSpeed(2.0).translationTolerance(5).finish(),
                     Commands.deadline(conditionalCollect(7.176),
                         intake.extendHopper(0).withTimeout(0.3).andThen(intake.extendHopper(0.7),
                             intake.intakeBalls(), intake.retractHopper(0))),
                     CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                        .alongWith(intake.jerkIntake()).withTimeout(3),
+                        .alongWith(intake.jerkIntake(),
+                            turret.goToAngleFieldRelative(
+                                () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                        .withTimeout(3),
                     Commands.deadline(conditionalCollect(7.85),
                         intake.extendHopper(0).withTimeout(0.3).andThen(intake.extendHopper(0.7),
                             intake.intakeBalls(), intake.retractHopper(0))),
                     CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                        .alongWith(intake.jerkIntake()).withTimeout(4));
+                        .alongWith(intake.jerkIntake(),
+                            turret.goToAngleFieldRelative(
+                                () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                        .withTimeout(4));
         }, Set.of(swerve, turret, shooter, indexer, adjustableHood));
 
         return fullCommand;
