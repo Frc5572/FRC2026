@@ -82,6 +82,7 @@ public class Turret extends SubsystemBase {
      * @param targetAngle gets the goal angle
      */
     public boolean setGoalRobotRelative(Rotation2d targetAngle, AngularVelocity velocity) {
+        Logger.recordOutput("Turret/targetAngle", targetAngle);
         var normalized = normalize(targetAngle).getMeasure();
         if (normalized.lt(Constants.Turret.minAngle)) {
             normalized = normalized.plus(Rotations.of(1));
