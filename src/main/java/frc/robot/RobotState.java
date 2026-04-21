@@ -125,9 +125,9 @@ public class RobotState {
         this.currentSpeeds =
             ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getGlobalPoseEstimate().getRotation());
         Logger.recordOutput("State/currentSpeeds", this.currentSpeeds);
-        if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 1e-2
-            || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 1e-2
-            || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > 1e-2) {
+        if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 0.1
+            || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 0.1
+            || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > Units.degreesToRadians(5)) {
             this.lastTimeMoved = MathSharedStore.getTimestamp();
             Logger.recordOutput("State/stationary/speeds", true);
         } else {
@@ -251,15 +251,6 @@ public class RobotState {
             Logger.recordOutput("State/velocityTranslationError", velocityTranslationError);
             Logger.recordOutput("State/velocityRotationError", velocityRotationError);
 
-            var bestTarget = pipelineResult.hasTargets() ? pipelineResult.getBestTarget() : null;
-            if (bestTarget == null) {
-                return false;
-            }
-            var bestTagPose = Constants.Vision.fieldLayout.getTagPose(bestTarget.getFiducialId());
-            if (bestTagPose.isEmpty()) {
-                return false;
-            }
-
             if (multiTag.isPresent()) {
                 // Multi Tag
                 Transform3d best = multiTag.get().estimatedPose.best;
@@ -277,7 +268,7 @@ public class RobotState {
                     stdDevMultiplier * velocityRotationError + camera.rotationError;
                 if (camera.isTurret) {
                     boolean isStationary =
-                        this.lastTimeMoved + 0.5 < pipelineResult.getTimestampSeconds();
+                        this.lastTimeMoved + 0.2 < pipelineResult.getTimestampSeconds();
                     Logger.recordOutput("State/Camera/" + camera.name + "/isStationary",
                         isStationary);
                     Logger.recordOutput("State/Camera/" + camera.name + "/stationaryValue",
@@ -286,8 +277,16 @@ public class RobotState {
                         this.lastTimeMoved);
                     Logger.recordOutput("State/Camera/" + camera.name + "/timestamp",
                         pipelineResult.getTimestampSeconds());
-                    if (!isStationary) {
-                        rotationStdDev = 10000.0;
+                    if (isStationary) {
+                        var estRobotPose2d = estRobotPose.toPose2d();
+                        if (estRobotPose2d.getTranslation()
+                            .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
+                                .pow(Units.inchesToMeters(3), 2)) {
+                            visionAdjustedOdometry.resetPose(estRobotPose.toPose2d());
+                            return true;
+                        } else {
+                            rotationStdDev = Units.degreesToRadians(2);
+                        }
                     }
                 }
                 Logger.recordOutput("State/Camera/" + camera.name + "/stdDevMultipler",

@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import java.io.File;
@@ -20,6 +21,10 @@ import java.util.Map.Entry;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 import javax.lang.model.element.Modifier;
+import org.wpilib.math.autodiff.Variable;
+import org.wpilib.math.optimization.Constraints;
+import org.wpilib.math.optimization.Problem;
+import org.wpilib.math.optimization.solver.Options;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -47,6 +52,44 @@ public class GenerateLUTs {
     /** Entrypoint for generateLUTs gradle task */
     public static void main(String[] argv) {
         // v1();
+        // v2();
+
+        v3();
+    }
+
+    private static void v3() {
+        try (Problem problem = new Problem()) {
+            Variable powerTransfer = problem.decisionVariable();
+            Variable cost = null;
+            ShooterBallistics[] shots = new ShooterBallistics[ShotData.entries.length];
+            for (int i = 0; i < ShotData.entries.length; i++) {
+                var entry = ShotData.entries[i];
+                shots[i] =
+                    new ShooterBallistics(problem, Constants.Shooter.shooterHeight.in(Meters),
+                        FieldConstants.Hub.height, entry.targetDistance().in(Meters));
+                problem.subjectTo(Constraints.eq(shots[i].exitVelocity,
+                    powerTransfer.times(entry.noSlipExitVelocity().in(MetersPerSecond))));
+                var costAdd =
+                    Variable.pow(shots[i].exitAngle.minus(entry.exitAngle().in(Radians)), 2.0);
+                if (cost == null) {
+                    cost = costAdd;
+                } else {
+                    cost = cost.plus(costAdd);
+                }
+            }
+            problem.minimize(cost);
+            var res = problem.solve(new Options().withDiagnostics(true));
+            System.out.println(res);
+
+            System.out.println("Power Transfer: " + powerTransfer.value());
+
+            for (var shot : shots) {
+                System.out.println(shot);
+            }
+        }
+    }
+
+    private static void v2() {
         NumberFormat formatter = new DecimalFormat("#0.000");
 
         InterpolatingDoubleTreeMap[] trajectories =

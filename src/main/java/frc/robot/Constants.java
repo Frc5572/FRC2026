@@ -338,8 +338,8 @@ public final class Constants {
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(0.3)
-                .rotationError(0.3)
+                .translationError(Units.inchesToMeters(2))
+                .rotationError(1000.0)
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
