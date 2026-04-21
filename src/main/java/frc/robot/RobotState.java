@@ -300,7 +300,7 @@ public class RobotState {
                         this.lastTimeMoved);
                     Logger.recordOutput("State/Camera/" + camera.name + "/timestamp",
                         pipelineResult.getTimestampSeconds());
-                    if (isStationary) {
+                    if (isStationary || FieldConstants.isOnBump(getGlobalPoseEstimate())) {
                         var estRobotPose2d = estRobotPose.toPose2d();
                         if (estRobotPose2d.getTranslation()
                             .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
