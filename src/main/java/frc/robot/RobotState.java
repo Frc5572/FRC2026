@@ -114,7 +114,8 @@ public class RobotState {
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
             Logger.recordOutput("State/isOnBump", true);
-            var diff = after.minus(before).times(0.6);
+            var diff = after.minus(before);
+            diff = new Transform2d(diff.getX() * 0.6, diff.getY(), diff.getRotation());
             visionAdjustedOdometry.resetPose(before.plus(diff));
         } else {
             Logger.recordOutput("State/isOnBump", false);
