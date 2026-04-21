@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
@@ -46,10 +47,9 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
-        Logger.recordOutput("Turret/CancoderAngle",
-            inputs.gear2AbsoluteAngle.div(Constants.Turret.gear2Gearing).in(Degrees));
+        Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
 
-        state.setTurretRawAngle(Timer.getTimestamp(), Rotations.of(inputs.relativeAngle));
+        state.setTurretRawAngle(MathSharedStore.getTimestamp(), Rotations.of(inputs.relativeAngle));
     }
 
     public Rotation2d getTurretHeading() {
@@ -82,6 +82,7 @@ public class Turret extends SubsystemBase {
      * @param targetAngle gets the goal angle
      */
     public boolean setGoalRobotRelative(Rotation2d targetAngle, AngularVelocity velocity) {
+        Logger.recordOutput("Turret/targetAngle", targetAngle);
         var normalized = normalize(targetAngle).getMeasure();
         if (normalized.lt(Constants.Turret.minAngle)) {
             normalized = normalized.plus(Rotations.of(1));

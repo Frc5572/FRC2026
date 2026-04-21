@@ -28,6 +28,9 @@ public class IndexerSim implements IndexerIO {
     }
 
     @Override
-    public void setConstants(FlywheelConstants constants) {}
+    public void setSpindexerConstants(FlywheelConstants constants) {}
+
+    @Override
+    public void setMagazineConstants(FlywheelConstants constants) {}
 
 }

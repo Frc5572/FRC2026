@@ -24,14 +24,15 @@ public class IndexerReal implements IndexerIO {
     private final DutyCycleOut dutyCycleOut = new DutyCycleOut(0.0);
     private TalonFXConfiguration spindexerConfig = new TalonFXConfiguration();
     private double desiredSpeed = 3.0;
+    private double magazineDesiredSpeed = 3.0;
 
 
     /** Real Indexer Implementation */
     public IndexerReal() {
         spindexerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         magazineConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        setConstants(Constants.Indexer.constants);
-        magazine.getConfigurator().apply(magazineConfig);
+        setSpindexerConstants(Constants.Indexer.spindexerConstants);
+        setMagazineConstants(Constants.Indexer.magazineConstants);
         PhoenixSignals.registerSignals(false, spinMotorVelocity);
         PhoenixSignals.registerSignals(false, magazineStatusVelocity);
     }
@@ -53,13 +54,24 @@ public class IndexerReal implements IndexerIO {
 
     @Override
     public void setMagazineDutyCycle(double dutyCycle) {
-        magazine.setControl(dutyCycleOut.withOutput(dutyCycle));
+        if (Math.abs(dutyCycle) < 0.01) {
+            magazine.setControl(dutyCycleOut.withOutput(dutyCycle));
+        } else {
+            magazine.setControl(velocityVoltage.withVelocity(dutyCycle * magazineDesiredSpeed));
+        }
     }
 
     @Override
-    public void setConstants(FlywheelConstants constants) {
+    public void setSpindexerConstants(FlywheelConstants constants) {
         constants.pid.apply(spindexerConfig.Slot0);
         spindexer.getConfigurator().apply(spindexerConfig);
         desiredSpeed = constants.maxDutyCycle;
+    }
+
+    @Override
+    public void setMagazineConstants(FlywheelConstants constants) {
+        constants.pid.apply(magazineConfig.Slot0);
+        magazine.getConfigurator().apply(magazineConfig);
+        magazineDesiredSpeed = constants.maxDutyCycle;
     }
 }

@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotState;
 
 
 /**
@@ -23,6 +24,7 @@ import frc.robot.Constants;
 public final class Shooter extends SubsystemBase {
     private final ShooterIO io;
     public final ShooterInputsAutoLogged inputs = new ShooterInputsAutoLogged();
+    private final RobotState state;
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.1, DebounceType.kFalling);
 
     private LinearFilter flywheelSpeedFilter = LinearFilter.movingAverage(10);
@@ -34,8 +36,9 @@ public final class Shooter extends SubsystemBase {
      *
      * @param io Shooter IO implementation
      */
-    public Shooter(ShooterIO io) {
+    public Shooter(ShooterIO io, RobotState state) {
         this.io = io;
+        this.state = state;
     }
 
     @Override
@@ -49,6 +52,7 @@ public final class Shooter extends SubsystemBase {
             torqueCurrentDebouncer =
                 new Debouncer(constants.atSpeedDebounce, DebounceType.kFalling);
         });
+        state.setFlywheelSpeed(inputs.shooterAngularVelocity1.in(RotationsPerSecond));
         if (shooting && inputs.shooterAngularVelocity1.in(RotationsPerSecond) < flywheelSpeedFilter
             .calculate(inputs.shooterAngularVelocity1.in(RotationsPerSecond)) - 3.0) {
             lastShot = Timer.getFPGATimestamp();
