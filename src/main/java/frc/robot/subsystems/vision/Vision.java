@@ -98,18 +98,25 @@ public class Vision extends SubsystemBase {
         for (int i = 0; i < Constants.Vision.cameraConstants.length; i++) {
             cameraViz[i] = new Translation3d[0];
         }
-
         for (var result : results) {
             cameraContributed[result._0()] = state
                 .addVisionObservation(Constants.Vision.cameraConstants[result._0()], result._1());
-            if (result._1().multitagResult.isPresent()) {
+            if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
-            } else if (result._0() == 1) {
+            } else if (result._0() == 0 && !result._1().multitagResult.isPresent()) {
                 seesMultitag = false;
             }
             for (int i = 0; i < result._1().targets.size(); i++) {
-                var cameraPose = new Pose3d(state.getGlobalPoseEstimate())
-                    .plus(Constants.Vision.cameraConstants[result._0()].robotToCamera);
+                var robotToCamera = Constants.Vision.cameraConstants[result._0()].robotToCamera;
+                if (Constants.Vision.cameraConstants[result._0()].isTurret) {
+                    var maybeRobotToCamera = state.getTurretRobotToCamera(robotToCamera,
+                        result._1().getTimestampSeconds());
+                    if (maybeRobotToCamera.isEmpty()) {
+                        continue;
+                    }
+                    robotToCamera = maybeRobotToCamera.get();
+                }
+                var cameraPose = new Pose3d(state.getGlobalPoseEstimate()).plus(robotToCamera);
                 var target = result._1().targets.get(i);
                 Constants.Vision.fieldLayout.getTagPose(target.fiducialId).ifPresent(pose -> {
                     cameraViz[result._0()] = addTwo(cameraViz[result._0()],

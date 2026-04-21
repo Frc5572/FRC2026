@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -14,6 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -108,90 +110,154 @@ public class AutoCommandFactory {
         AutoRoutine routine = autoFactory.newRoutine("Just Shoot");
         MoveToPose moveToStart = swerve.moveToPose().target(poseSup).autoRoutine(routine).finish();
         routine.active().onTrue(moveToStart);
-        moveToStart.done().onTrue(CommandFactory.shoot(swerve.state, () -> {
-            return AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
-        }, turret, shooter, indexer, adjustableHood, () -> 0, () -> 0, () -> true));
+        moveToStart.done()
+            .onTrue(CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood));
         return routine;
     }
 
     /** Test to make sure autos work. */
-    public AutoRoutine wilsonTest() {
-        AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
-        routine.active()
-            .onTrue(new ConditionalCommand(wilsonTestSide(true), wilsonTestSide(false), () -> {
+    public AutoRoutine wilsonTest2() {
+        AutoRoutine routine = autoFactory.newRoutine("WilsonTest2");
+        routine.active().onTrue(new ConditionalCommand(wilsonTest2Side(routine, true),
+            wilsonTest2Side(routine, false), () -> {
                 return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
                     .getY() > FieldConstants.fieldWidth / 2.0;
             }));
         return routine;
     }
 
-    private Command wilsonTestSide(boolean left) {
-        double shootingTime = 5.5;
-        double driveSpeed = 2.5;
+    private Command wilsonTest2Side(AutoRoutine routine, boolean left) {
         double turretFudge = 2.5;
-        return Commands
-            .sequence(sweep(left, true, Constants.Auto.wilsonTestX, driveSpeed),
-                CommandFactory
-                    .shoot(swerve.state, () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub),
-                        turret, shooter, indexer, adjustableHood, () -> 1.0, () -> left
-                            ? turretFudge
-                            : -turretFudge,
-                        () -> false)
-                    .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
-                Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
-                    sweep(left, false, 6.5, driveSpeed),
-                    CommandFactory
-                        .shoot(swerve.state,
-                            () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 1.0,
-                            () -> left ? turretFudge : -turretFudge, () -> false)
-                        .alongWith(intake.jerkIntake()).withTimeout(shootingTime),
-                    adjustableHood.setGoal(Rotations.of(0)), sweep(left, false, 8.076, driveSpeed),
-                    CommandFactory
-                        .shoot(swerve.state,
-                            () -> AllianceFlipUtil.apply(FieldConstants.Hub.centerHub), turret,
-                            shooter, indexer, adjustableHood, () -> 1.0,
-                            () -> left ? turretFudge : -turretFudge, () -> false)
-                        .alongWith(intake.jerkIntake()).withTimeout(shootingTime * 2))
-                    .repeatedly());
+        String[] paths = new String[] {"LeftSweep", "LeftSidewinder", "LeftJab"};
+        Command c = new InstantCommand();
+        for (var path : paths) {
+            c = c.andThen(
+                neutralZonePath(routine, left, path)
+                    .deadlineFor(adjustableHood.setGoal(Degrees.of(0))),
+                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                    .withTimeout(6.0).deadlineFor(
+                        Commands.waitSeconds(2.5).andThen(intake.retractHopper(0).withTimeout(0.5),
+                            Commands.waitSeconds(2.5), intake.retractHopper(0).withTimeout(0.5))));
+        }
+        return c.repeatedly().deadlineFor(
+            CommandFactory.followHub(turret, swerve, () -> left ? turretFudge : -turretFudge));
     }
 
-    private Command sweep(boolean left, boolean isFirst, double xMeters, double driveSpeed) {
+    private Command neutralZonePath(AutoRoutine routine, boolean left, String name) {
+        AutoTrajectory test = routine.trajectory(name, 1);
+        var start = test.getRawTrajectory().getInitialSample(false).get();
+        Pose2d beforeEnter = test.getFinalPose().get();
+        Pose2d end = routine.trajectory(name, 2).getFinalPose().get();
+
+        return Commands.parallel(Commands.runOnce(() -> swerve.flipTrajectories(!left)),
+            Commands.sequence(
+                swerve.moveToPose().autoRoutine(routine).target(start.getPose()).maxSpeed(4.5)
+                    .flipY(!left).translationTolerance(0.5).ignoreRotation(true)
+                    .feedforward(Math.hypot(start.getChassisSpeeds().vxMetersPerSecond,
+                        start.getChassisSpeeds().vyMetersPerSecond))
+                    .flipForRed(true).finish(),
+                test.cmd(),
+                swerve.moveToPose().autoRoutine(routine).target(beforeEnter).maxSpeed(4.5)
+                    .flipY(!left).translationTolerance(0.2).rotationTolerance(5).finish(),
+                swerve.moveToPose().autoRoutine(routine).target(end).maxSpeed(4.5).flipY(!left)
+                    .translationTolerance(0.2).rotationTolerance(15).finish(),
+                swerve.emergencyStop()));
+    }
+
+    /** Test to make sure autos work. */
+    public AutoRoutine wilsonTest() {
+        AutoRoutine routine = autoFactory.newRoutine("WilsonTest");
+        return wilsonTestBase(routine, Constants.Auto.wilsonTestX);
+    }
+
+    public AutoRoutine wilsonTestShort() {
+        AutoRoutine routine = autoFactory.newRoutine("WilsonTestShort");
+        return wilsonTestBase(routine, Constants.Auto.wilsonTestX2);
+    }
+
+    /** Base for auto routines. */
+    public AutoRoutine wilsonTestBase(AutoRoutine routine, double sweepX) {
+        routine.active().onTrue(new ConditionalCommand(wilsonTestSide(true, sweepX),
+            wilsonTestSide(false, sweepX), () -> {
+                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0;
+            }));
+        return routine;
+    }
+
+    private Command wilsonTestSide(boolean left, double sweepX) {
+        double shootingTime = 5.5;
+        double driveSpeed = 2.5;
+        // Positive turret trim towards net, negative towards DS
+        double turretFudge1 = 9;
+        double turretFudge2 = 10;
+        return Commands.sequence(
+            wilsonTestSweep(left, true, sweepX, driveSpeed).alongWith(Commands.runOnce(() -> {
+                swerve.state.setTrims(-0.5, left ? turretFudge1 : -turretFudge1);
+            })),
+            CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                .alongWith(intake.jerkIntake(),
+                    turret.goToAngleFieldRelative(
+                        () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                .withTimeout(shootingTime),
+            Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
+                wilsonTestSweep(left, false, Constants.Auto.wilsonTestX2, driveSpeed),
+                Commands.runOnce(() -> {
+                    swerve.state.setTrims(-0.5, left ? turretFudge2 : -turretFudge2);
+                }),
+                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                    .alongWith(intake.jerkIntake(),
+                        turret.goToAngleFieldRelative(
+                            () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                    .withTimeout(shootingTime),
+                adjustableHood.setGoal(Rotations.of(0)),
+                wilsonTestSweep(left, false, sweepX, driveSpeed),
+                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                    .alongWith(intake.jerkIntake(),
+                        turret.goToAngleFieldRelative(
+                            () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                    .withTimeout(shootingTime * 2))
+                .repeatedly());
+    }
+
+    private Command wilsonTestSweep(boolean left, boolean isFirst, double xMeters,
+        double driveSpeed) {
         return Commands
-            .sequence(
-                Commands.sequence(
-                    swerve.moveToPose()
-                        .target(new Pose2d(5.7, 0.622,
-                            isFirst ? Rotation2d.kCCW_90deg : Rotation2d.kZero))
-                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
-                        .flipY(left).finish(),
-                    swerve
-                        .moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
-                        .flipY(left).finish().alongWith(intake.extendHopper(0.0)),
-                    swerve.moveToPose()
-                        .target(new Pose2d(xMeters,
-                            (FieldConstants.fieldWidth / 2.0) + Units.feetToMeters(
-                                SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
-                                    Constants.DashboardValues.feetPastCenterDefault)),
-                            Rotation2d.kCCW_90deg))
-                        .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                        .finish()
-                        .deadlineFor(intake.extendHopper(1.0).andThen(
+            .sequence(Commands.sequence(
+                swerve.moveToPose()
+                    .target(new Pose2d(5.7, 0.622,
+                        isFirst ? Rotation2d.kCCW_90deg : Rotation2d.k180deg))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
+                    .flipY(left).finish(),
+                swerve
+                    .moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                    .maxSpeed(driveSpeed).translationTolerance(
+                        0.5)
+                    .rotationTolerance(15).flipY(left).finish().alongWith(intake.extendHopper(0.0)),
+                swerve.moveToPose()
+                    .target(new Pose2d(xMeters,
+                        (FieldConstants.fieldWidth / 2.0) + Units.feetToMeters(
+                            SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                                Constants.DashboardValues.feetPastCenterDefault)),
+                        Rotation2d.kCCW_90deg))
+                    .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                    .finish().deadlineFor(
+                        intake.extendHopper(1.0).andThen(
                             intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
-                    swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
-                        .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(
-                            15)
-                        .flipY(left).finish(),
-                    swerve
-                        .moveToPose().target(
-                            new Pose2d(6.0, 0.622, Rotation2d.kZero))
-                        .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(8)
-                        .flipY(left).finish().withTimeout(3.5)),
+                swerve.moveToPose().target(new Pose2d(xMeters, 1.267, Rotation2d.kCCW_90deg))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(
+                        15)
+                    .flipY(left).finish(),
+                swerve
+                    .moveToPose().target(new Pose2d(6.0, 0.622, Rotation2d.k180deg))
+                    .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(8).flipY(left)
+                    .finish().withTimeout(3.5)),
                 Commands
-                    .sequence(swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero))
-                        .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
-                        .finish().withTimeout(3.5), swerve.emergencyStop())
+                    .sequence(
+                        swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.k180deg))
+                            .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5)
+                            .flipY(left).finish().withTimeout(3.5),
+                        swerve.emergencyStop())
                     .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
     }

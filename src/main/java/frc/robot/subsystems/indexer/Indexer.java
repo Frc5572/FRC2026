@@ -1,6 +1,7 @@
 package frc.robot.subsystems.indexer;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -22,8 +23,12 @@ public class Indexer extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Indexer", inputs);
 
-        Constants.Indexer.constants.ifDirty(constants -> {
-            io.setConstants(constants);
+        Constants.Indexer.spindexerConstants.ifDirty(constants -> {
+            io.setSpindexerConstants(constants);
+        });
+
+        Constants.Indexer.magazineConstants.ifDirty(constants -> {
+            io.setMagazineConstants(constants);
         });
     }
 
@@ -47,6 +52,19 @@ public class Indexer extends SubsystemBase {
         return runEnd(() -> {
             setSpindexerDutyCycle(spindexerDutyCycle);
             setMagazineDutyCycle(magazineDutyCycle);
+        }, () -> {
+            setSpindexerDutyCycle(0);
+            setMagazineDutyCycle(0);
+        });
+    }
+
+    /** Spin indexer if doSpin is true */
+    public Command runSpindexer(BooleanSupplier doSpin) {
+        return runEnd(() -> {
+            boolean doSpin_ = doSpin.getAsBoolean();
+            double value = doSpin_ ? 1.0 : 0.0;
+            setSpindexerDutyCycle(value);
+            setMagazineDutyCycle(value);
         }, () -> {
             setSpindexerDutyCycle(0);
             setMagazineDutyCycle(0);

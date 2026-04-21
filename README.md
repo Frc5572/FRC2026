@@ -33,5 +33,10 @@
 - 2 = Front Right CANCoder
 - 3 = Back Left CANCoder
 - 4 = Back Right CANCoder
-- 5 = Turret CANCoder 1
-- 6 = Turret CANCoder 2
+- 6 = Turret CANCoder
+
+### PDH
+
+- 22 = Radio
+- 21 = VRM
+- 20 = Rio

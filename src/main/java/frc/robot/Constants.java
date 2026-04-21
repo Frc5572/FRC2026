@@ -93,11 +93,20 @@ public final class Constants {
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
 
-        public static final FlywheelConstants constants =
-            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(12.0)
+        public static final FlywheelConstants spindexerConstants =
+            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(24.0)
                 .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
                 .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
                     .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
+                .finish();
+
+
+
+        public static final FlywheelConstants magazineConstants =
+            new FlywheelConstantsBuilder("MagazineConstants").holdCurrent(40.0).maxDutyCycle(105)
+                .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
+                .pid(new PIDConstantsBuilder("MagazinePID", GravityTypeValue.Elevator_Static)
+                    .kP(0.8).kI(0.1).kD(0.0).kV(0.105).kS(0.11).kG(0.0).kA(0.0).finish())
                 .finish();
 
         public static final double timeReversingDuringUnjam = 0.25;
@@ -308,14 +317,12 @@ public final class Constants {
         public static final AprilTagFieldLayout fieldLayout =
             FieldConstants.AprilTagLayoutType.OFFICIAL.getLayout();
 
-        public static final Pose3d turretCenter = new Pose3d(
-            new Translation3d(-Units.inchesToMeters(5.26), Units.inchesToMeters(-6.125), 0),
-            Rotation3d.kZero);
+        public static final Pose3d turretCenter =
+            new Pose3d(new Translation3d(-0.155575, -0.13335, 0), Rotation3d.kZero);
 
-        public static final Pose3d turretRight =
-            new Pose3d(Inches.of(-10), Inches.of(-5.274), Inches.of(21.56),
-                new Rotation3d(Units.degreesToRadians(180), Units.degreesToRadians(-22.115), 0.0))
-                    .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
+        public static final Pose3d turretRight = new Pose3d(-0.18097, -0.27012, 0.51406,
+            new Rotation3d(0, Units.degreesToRadians(-22.115), 0.0))
+                .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
@@ -331,8 +338,8 @@ public final class Constants {
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(0.3)
-                .rotationError(100.0)
+                .translationError(Units.inchesToMeters(3))
+                .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(true)
                 .finish(),
@@ -349,18 +356,18 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(
                     new Transform3d(
-                        Units.inchesToMeters(-9.029), 
-                        Units.inchesToMeters(12.359), 
-                        Units.inchesToMeters(8.187), 
+                        -0.335,
+                        0.19,
+                        0.202,
                         new Rotation3d(
-                            Degrees.of(180.0), 
-                            Degrees.of(-154.5), 
-                            Degrees.of(73.07 - 90))))
+                            Degrees.of(180.0),
+                            Degrees.of(-26),
+                            Degrees.of(163))))
                 .translationError(0.3)
-                .translationError(0.3)
-                .rotationError(100.0)
+                .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)
+                // .findConstants(true)
                 .finish(),
             new CameraConstantsBuilder()
                     .coProcessorName("skip")
@@ -375,17 +382,18 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(
                     new Transform3d(
-                        Units.inchesToMeters(-4.625), 
-                        Units.inchesToMeters(12.357), 
-                        Units.inchesToMeters(6.473),
+                        -0.059,
+                        -0.31,
+                        0.161,
                             new Rotation3d(
-                            Degrees.of(180.0), 
-                            Degrees.of(-154.5), 
-                            Degrees.of(39.062 + 180))))
+                            Degrees.of(180.0),
+                            Degrees.of(-27.75),
+                            Degrees.of(-51.42))))
                 .translationError(0.3)
-                .rotationError(100.0)
+                .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)
+                .findConstants(true)
                 .finish(),
             new CameraConstantsBuilder()
                 .coProcessorName("skip")
@@ -400,15 +408,15 @@ public final class Constants {
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(
                     new Transform3d(
-                        Units.inchesToMeters(-2.161), 
-                        Units.inchesToMeters(-12.771), 
-                        Units.inchesToMeters(6.473), 
+                        -0.132,
+                        0.305,
+                        0.165,
                         new Rotation3d(
-                            Degrees.of(180.0), 
-                            Degrees.of(-154.5), 
-                            Degrees.of(39.062 + 90))))
+                            Degrees.of(180.0),
+                            Degrees.of(-27.85),
+                            Degrees.of(51.33))))
                 .translationError(0.3)
-                .rotationError(100.0)
+                .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)
                 .finish(),
@@ -603,9 +611,9 @@ public final class Constants {
 
     /** Turret Constants */
     public static final class Turret {
-        public static final double gear1Gearing = 5.689 * 2.0;
-        public static final double gear2Gearing = 24.511 / 2.0 * 0.622;
-        public static final double motorGearing = 17.0732 * 2.0;
+        public static final double motorToTurretGearing = 3.0 * 3.0 * 4.04;
+        public static final double cancoderToTurretGearing = 4.04;
+        public static final double motorToCancoder = 3.0 * 3.0;
 
         public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;
@@ -624,14 +632,12 @@ public final class Constants {
                 .finish();
         // @formatter:on
 
-        public static final SensorDirectionValue canCoder1Invert =
-            SensorDirectionValue.Clockwise_Positive;
         public static final SensorDirectionValue canCoder2Invert =
-            SensorDirectionValue.Clockwise_Positive;
+            SensorDirectionValue.CounterClockwise_Positive;
         public static final double turretCANCoderDiscontinuity = 0.5;
 
-        public static final Angle maxAngle = Degrees.of(270);
-        public static final Angle minAngle = Degrees.of(-90);
+        public static final Angle maxAngle = Degrees.of(180);
+        public static final Angle minAngle = Degrees.of(-180);
     }
 
     /** Shooter Constants */
@@ -689,7 +695,7 @@ public final class Constants {
      */
     public static final class LEDs {
         public static final int LED_PORT = 9;
-        public static final int LED_LENGTH = 20; // needs to be checked
+        public static final int LED_LENGTH = 30; // needs to be checked
     }
 
     /**
@@ -701,7 +707,9 @@ public final class Constants {
         public static final String shootX = "Dashboard/Auto/Just Shoot X";
         public static final String shootY = "Dashboard/Auto/Just Shoot Y";
         public static final String feetPastCenter = "Dashboard/Auto/Feet Past Center";
+        public static final String delay = "Dashboard/Auto/Delay";
         public static final double feetPastCenterDefault = 0.0;
+        public static final double delayDefault = 0.0;
         public static final double shootXDefault = 2.5;
         public static final double shootYDefault = 4.0;
         public static final String activeHub = "Dashboard/ActiveHub";
@@ -711,7 +719,9 @@ public final class Constants {
     /** Auto constants */
     public static class Auto {
         public static final double wilsonTestX = 8.076;
+        public static final double wilsonTestX2 = 6.5;
         public static final String wilsonTest = "Peashooter";
+        public static final String wilsonTestShort = "Peashooter Short";
         public static final String justShoot = "Just Shoot";
     }
 }
