@@ -9,7 +9,6 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -287,18 +286,12 @@ public class AutoCommandFactory {
                     Commands.deadline(conditionalCollect(7.176),
                         intake.extendHopper(0).withTimeout(0.3).andThen(intake.extendHopper(0.7),
                             intake.intakeBalls(), intake.retractHopper(0))),
-                    CommandFactory.shoot(swerve.state, () -> {
-                        return AllianceFlipUtil
-                            .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
-                    }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
+                    CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                         .alongWith(intake.jerkIntake()).withTimeout(3),
                     Commands.deadline(conditionalCollect(7.85),
                         intake.extendHopper(0).withTimeout(0.3).andThen(intake.extendHopper(0.7),
                             intake.intakeBalls(), intake.retractHopper(0))),
-                    CommandFactory.shoot(swerve.state, () -> {
-                        return AllianceFlipUtil
-                            .apply(new Translation2d(0, FieldConstants.fieldWidth / 2.0));
-                    }, turret, shooter, indexer, adjustableHood, () -> 0.0, () -> 0.0, () -> false)
+                    CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                         .alongWith(intake.jerkIntake()).withTimeout(4));
         }, Set.of(swerve, turret, shooter, indexer, adjustableHood));
 
