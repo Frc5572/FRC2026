@@ -113,8 +113,11 @@ public class RobotState {
         visionAdjustedOdometry.update(gyroYaw.minus(gyroOffset), wheelPositions);
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
+            Logger.recordOutput("State/isOnBump", true);
             var diff = after.minus(before).times(0.6);
             visionAdjustedOdometry.resetPose(before.plus(diff));
+        } else {
+            Logger.recordOutput("State/isOnBump", false);
         }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
         limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
@@ -129,9 +132,9 @@ public class RobotState {
         this.currentSpeeds =
             ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getGlobalPoseEstimate().getRotation());
         Logger.recordOutput("State/currentSpeeds", this.currentSpeeds);
-        if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 0.1
-            || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 0.1
-            || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > Units.degreesToRadians(5)) {
+        if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 0.3
+            || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 0.3
+            || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > Units.degreesToRadians(10)) {
             this.lastTimeMoved = MathSharedStore.getTimestamp();
             Logger.recordOutput("State/stationary/speeds", true);
         } else {
@@ -185,7 +188,7 @@ public class RobotState {
     /** Set the current turret angle */
     public void setTurretRawAngle(double timestamp, Angle angle) {
         var angleDeg = angle.in(Degrees);
-        if (Math.abs(angleDeg - prevAngle) > 1e-1) {
+        if (Math.abs(angleDeg - prevAngle) > 2) {
             Logger.recordOutput("State/stationary/turret", true);
             this.lastTimeMoved = MathSharedStore.getTimestamp();
         } else {
@@ -272,8 +275,7 @@ public class RobotState {
                 Pose3d estRobotPose = cameraPose.plus(robotToCamera_.inverse());
                 Logger.recordOutput("State/Camera/" + camera.name + "/estRobotPose", estRobotPose);
                 double stdDevMultiplier = stdDevMultiplier(pipelineResult.targets, cameraPose);
-                double translationStdDev =
-                    stdDevMultiplier * velocityTranslationError + camera.translationError;
+                double translationStdDev = camera.translationError;
                 double rotationStdDev =
                     stdDevMultiplier * velocityRotationError + camera.rotationError;
                 if (camera.isTurret) {
@@ -292,11 +294,10 @@ public class RobotState {
                         if (estRobotPose2d.getTranslation()
                             .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
                                 .pow(Units.inchesToMeters(3), 2)) {
-                            visionAdjustedOdometry.resetPose(estRobotPose.toPose2d());
-                            return true;
-                        } else {
-                            rotationStdDev = Units.degreesToRadians(2);
+                            visionAdjustedOdometry
+                                .resetTranslation(estRobotPose2d.getTranslation());
                         }
+                        rotationStdDev = Units.degreesToRadians(2);
                     }
                 }
                 Logger.recordOutput("State/Camera/" + camera.name + "/stdDevMultipler",
@@ -500,7 +501,7 @@ public class RobotState {
 
     /**
      * limits position of a given pose
-     * 
+     *
      * @param pose new pose of robot reactangle
      * @param resetPose reset pose
      */
