@@ -295,10 +295,11 @@ public class FieldConstants {
 
     /** Return true if pose is in the area of the bump. */
     public static boolean isOnBump(Pose2d pose) {
-        AABB bumpArea = new AABB(Hub.centerHub, LeftBump.depth, LeftBump.width * 2 + 47.0);
+        AABB bumpArea = new AABB(Hub.centerHub, LeftBump.depth,
+            LeftBump.width * 2 + Units.inchesToMeters(47.0));
         AABB oppBumpArea =
             new AABB(new Translation2d(fieldLength - Hub.centerHub.getX(), Hub.centerHub.getY()),
-                LeftBump.depth, LeftBump.width * 2 + 47.0);
+                LeftBump.depth, LeftBump.width * 2 + Units.inchesToMeters(47.0));
 
         return bumpArea.contains(pose.getTranslation())
             || oppBumpArea.contains(pose.getTranslation());
