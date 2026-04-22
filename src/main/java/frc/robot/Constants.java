@@ -54,7 +54,7 @@ public final class Constants {
         public static final double stickDeadband = 0.1;
 
         /** Maximum Translational speed (in m/s) */
-        public static final double driverTranslationalMaxSpeed = 3.0;
+        public static final double driverTranslationalMaxSpeed = 4.0;
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
 
@@ -226,7 +226,7 @@ public final class Constants {
 
         /* Swerve Profiling Values */
         /** Max Speed in Meters per Second */
-        public static final double maxSpeed = 3.0;
+        public static final double maxSpeed = 7.0;
         /** Max Speed for Auto in Meters per Second */
         public static final double autoMaxSpeed = 3.0;
         /** Max Angular Velocity in Radians per Second */
