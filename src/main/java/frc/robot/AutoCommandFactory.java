@@ -8,7 +8,6 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -118,39 +117,31 @@ public class AutoCommandFactory {
     public AutoRoutine moveToDepot() {
         AutoRoutine routine = autoFactory.newRoutine("move to depot");
         Command depot =
-            Commands
-                .sequence(
-                    swerve.moveToPose()
-                        .target(
-                            new Pose2d(
-                                AllianceFlipUtil.apply(new Translation2d(
-                                    FieldConstants.Depot.depotCenter.getX()
-                                        + Units.inchesToMeters(42),
-                                    FieldConstants.Depot.depotCenter.getY())),
-                                Rotation2d.fromDegrees(180)))
-                        .finish(),
-                    intake.extendHopper(0),
-                    Commands.parallel(intake.intakeBalls(6),
-                        swerve.moveToPose()
-                            .target(new Pose2d(
-                                AllianceFlipUtil.apply(new Translation2d(
-                                    FieldConstants.Depot.depotCenter.getX()
-                                        - Units.inchesToMeters(2.5),
-                                    FieldConstants.Depot.depotCenter.getY())),
-                                Rotation2d.fromDegrees(180)))
-                            .finish()),
-                    swerve.moveToPose()
-                        .target(new Pose2d(AllianceFlipUtil.apply(new Translation2d(
+            Commands.sequence(
+                swerve.moveToPose()
+                    .target(new Pose2d(
+                        FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
+                        FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
+                        Rotation2d.fromDegrees(135)))
+                    .finish(),
+                swerve.emergencyStop(), intake.extendHopper(0),
+                swerve.moveToPose()
+                    .target(new Pose2d(Units.inchesToMeters(10),
+                        FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
+                        Rotation2d.fromDegrees(135)))
+                    .maxSpeed(0.4).finish().withTimeout(5.0)
+                    .andThen(swerve.moveToPose()
+                        .target(new Pose2d(
                             FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
-                            FieldConstants.Depot.depotCenter.getY())), Rotation2d.kZero))
-                        .finish(),
-                    Commands.parallel(shooter.shoot(65),
-                        Commands.sequence(Commands.waitSeconds(.6),
-                            indexer.setSpeedCommand(0.8, 0.8)),
-                        Commands.repeatingSequence(intake.jerkIntake())))
-                .withTimeout(15);
-        depot = depot.andThen(swerve.stop());
-        routine.active().onTrue(depot);
+                            FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
+                            Rotation2d.fromDegrees(135)))
+                        .finish())
+                    .deadlineFor(intake.intakeBalls(6)),
+                swerve.emergencyStop(),
+                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                    .alongWith(Commands.waitSeconds(2.0).andThen(intake.retractHopper(0.0))));
+        routine.active()
+            .onTrue(depot.alongWith(CommandFactory.followHub(turret, swerve, () -> 0.0)));
         return routine;
     }
 
