@@ -22,19 +22,18 @@ public class ShooterSim implements ShooterIO {
     }
 
     @Override
-    public void runDutyCycleVelocity(double velocity) {
+    public void runVolts(double velocity) {
         flywheelTarget = velocity;
     }
 
     @Override
-    public void runTorqueCurrentVelocity(double velocity) {
+    public void runVelocity(double velocity) {
         flywheelTarget = velocity;
     }
 
     /** Simulate shooting one ball */
     public void shootOne() {
-        flywheel.position *= 0.9;
-        flywheel.velocity *= 0.9;
+        flywheel.position -= 1.0;
         numBallsShot++;
         Logger.recordOutput("FuelSim/BallsShot", numBallsShot);
     }

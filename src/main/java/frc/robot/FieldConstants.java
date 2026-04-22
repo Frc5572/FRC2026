@@ -10,9 +10,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.math.geometry.AABB;
 import frc.robot.math.geometry.Rectangle;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Field geometry and reference points for path planning, vision, and alignment.
@@ -188,13 +187,13 @@ public class FieldConstants {
      */
     public static class Hub {
         /** Outer hub diameter/width in meters. */
-        public static final double width = Units.inchesToMeters(47.0);
+        public static final double width = Units.inchesToMeters(41.7);
 
         /** Outer hub height in meters (includes the catcher/top feature). */
         public static final double height = Units.inchesToMeters(72.0);
 
         /** Inner opening diameter/width in meters. */
-        public static final double innerWidth = Units.inchesToMeters(41.7);
+        public static final double innerWidth = Units.inchesToMeters(23.82);
 
         /** Inner opening height in meters. */
         public static final double innerHeight = Units.inchesToMeters(56.5);
@@ -292,6 +291,18 @@ public class FieldConstants {
          */
         public static final Pose2d leftFace =
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(21).get().toPose2d();
+    }
+
+    /** Return true if pose is in the area of the bump. */
+    public static boolean isOnBump(Pose2d pose) {
+        AABB bumpArea = new AABB(Hub.centerHub, LeftBump.depth,
+            LeftBump.width * 2 + Units.inchesToMeters(47.0));
+        AABB oppBumpArea =
+            new AABB(new Translation2d(fieldLength - Hub.centerHub.getX(), Hub.centerHub.getY()),
+                LeftBump.depth, LeftBump.width * 2 + Units.inchesToMeters(47.0));
+
+        return bumpArea.contains(pose.getTranslation())
+            || oppBumpArea.contains(pose.getTranslation());
     }
 
     /**
@@ -782,7 +793,6 @@ public class FieldConstants {
      * <p>
      * The {@link #jsonFolder} maps to a subdirectory under deploy/apriltags/.
      */
-    @RequiredArgsConstructor
     public enum FieldType {
         /** Field built from AndyMark elements. */
         ANDYMARK("andymark"),
@@ -792,8 +802,11 @@ public class FieldConstants {
         ROSBOT("rosbot");
 
         /** Deploy folder name containing JSON layouts for this field type. */
-        @Getter
-        private final String jsonFolder;
+        public final String jsonFolder;
+
+        FieldType(String jsonFolder_) {
+            this.jsonFolder = jsonFolder_;
+        }
     }
 
     /**

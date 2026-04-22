@@ -1,12 +1,24 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
+    id("com.dorongold.task-tree") version "4.0.1"
     id "com.peterabeles.gversion" version "1.10"
+    id "eclipse"
+    id "de.undercouch.download" version "5.7.0"
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+sourceSets {
+    generate {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
 }
 
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
@@ -66,12 +78,6 @@ task(replayWatch, type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 dependencies {
-    compileOnly("org.projectlombok:lombok:1.18.42")
-	annotationProcessor("org.projectlombok:lombok:1.18.42")
-
-	testCompileOnly("org.projectlombok:lombok:1.18.42")
-	testAnnotationProcessor("org.projectlombok:lombok:1.18.42")
-
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
@@ -90,7 +96,7 @@ dependencies {
     nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
     simulationRelease wpi.sim.enableRelease()
 
-    annotationProcessor 'com.github.Frc5572:RobotTools:v2.1'
+    annotationProcessor 'com.github.Frc5572:RobotTools:v2.2'
     implementation 'org.jspecify:jspecify:1.0.0'
 
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
@@ -103,6 +109,8 @@ dependencies {
 
     def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
+
+    generateImplementation "com.squareup:javapoet:1.13.0"
 }
 
 test {
@@ -112,7 +120,7 @@ test {
 
 // Simulation configuration (e.g. environment variables).
 wpi.sim.addGui().defaultEnabled = true
-wpi.sim.addDriverstation().defaultEnabled = true
+wpi.sim.addDriverstation().defaultEnabled = false
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
@@ -145,6 +153,13 @@ javadoc {
             "</script>"
     }
 }
+
+// Add '/' at beginning of next line to enable output for each class compiling. Required to run `compile_times.py`.
+/*
+compileJava {
+    options.verbose = true
+}
+//*/
 
 // Create version file
 project.compileJava.dependsOn(createVersionFile)
@@ -188,3 +203,27 @@ task(eventDeploy) {
     }
 }
 createVersionFile.dependsOn(eventDeploy)
+
+tasks.register('generateLUTs', JavaExec) {
+    group = 'Execution'
+    description = 'Generate LUTs'
+    classpath = sourceSets.generate.runtimeClasspath
+    mainClass = 'frc.gen.GenerateLUTs'
+    systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
+}
+
+project.ext.rioctlVersion = "1.0.4"
+
+task downloadRioctl(type: Download) {
+    src "https://github.com/Frc5572/rioctl/releases/download/v${rioctlVersion}/rioctl_${rioctlVersion}_windows_amd64.exe"
+    dest "build"
+    onlyIf {
+        !new File("build/rioctl_${rioctlVersion}_windows_amd64.exe").exists()
+    }
+}
+
+task downloadLogs(type: Exec) {
+    commandLine 'cmd', '/c', 'start', 'powershell', '-NoExit', layout.buildDirectory.file("rioctl_${rioctlVersion}_windows_amd64.exe").get(), 'logs', 'pull', '--team', '5572'
+}
+
+downloadLogs.dependsOn(downloadRioctl)

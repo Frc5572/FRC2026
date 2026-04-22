@@ -40,7 +40,14 @@ public class Intake extends SubsystemBase {
     public Command extendHopper(double intakeSpeed) {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
-        return startEnd(() -> {
+        Command extendHoldKickBar = startEnd(() -> {
+            io.setLeftHopperVoltage(3);
+            io.setRightHopperVoltage(3);
+            runIntakeOnly(-0.25);
+        }, () -> {
+            runIntakeOnly(intakeSpeed);
+        }).withTimeout(0.02);
+        Command extendAndIntake = startEnd(() -> {
             counts[0] = 0;
             counts[1] = 0;
             io.setLeftHopperVoltage(3);
@@ -69,7 +76,9 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
+
         });
+        return extendHoldKickBar.andThen(extendAndIntake);
     }
 
     /** Retracts hopper */
@@ -105,7 +114,7 @@ public class Intake extends SubsystemBase {
                 counts[1] = 0;
             }
             return counts[0] > 5 && counts[1] > 5;
-        });
+        }).withTimeout(1.0);
     }
 
     /** Run intake wheels */

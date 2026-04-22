@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -25,16 +26,13 @@ public class TurretReal implements TurretIO {
     private TalonFX turretMotor = new TalonFX(Constants.Turret.TurretMotorID);
     private TalonFXConfiguration turretConfig = new TalonFXConfiguration();
 
-    private CANcoder turretCANcoder1 = new CANcoder(Constants.Turret.TurretCANcoderID1);
     private CANcoder turretCANcoder2 = new CANcoder(Constants.Turret.TurretCANcoderID2);
-    private CANcoderConfiguration canCoder1Config = new CANcoderConfiguration();
     private CANcoderConfiguration canCoder2Config = new CANcoderConfiguration();
 
     private StatusSignal<Angle> turretPosition = turretMotor.getPosition();
     private StatusSignal<Voltage> turretVoltage = turretMotor.getMotorVoltage();
     private StatusSignal<Current> turretCurrent = turretMotor.getStatorCurrent();
     private StatusSignal<AngularVelocity> turretVelocity = turretMotor.getVelocity();
-    private StatusSignal<Angle> canCoder1Pos = turretCANcoder1.getPosition();
     private StatusSignal<Angle> canCoder2Pos = turretCANcoder2.getPosition();
     public final PositionVoltage mmVoltage = new PositionVoltage(0);
     private final VoltageOut voltage = new VoltageOut(0.0);
@@ -45,33 +43,26 @@ public class TurretReal implements TurretIO {
 
         Constants.Turret.pid.apply(turretConfig.Slot0);
 
-        canCoder1Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder1Invert;
-        canCoder1Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
-            Constants.Turret.turretCANCoderDiscontinuity;
         canCoder2Config.MagnetSensor.SensorDirection = Constants.Turret.canCoder2Invert;
         canCoder2Config.MagnetSensor.AbsoluteSensorDiscontinuityPoint =
             Constants.Turret.turretCANCoderDiscontinuity;
 
         turretConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         turretConfig.Feedback.FeedbackRemoteSensorID = turretCANcoder2.getDeviceID();
-        turretConfig.Feedback.SensorToMechanismRatio = Constants.Turret.gear2Gearing;
-        turretConfig.Feedback.RotorToSensorRatio =
-            Constants.Turret.motorGearing / Constants.Turret.gear2Gearing;
+        turretConfig.Feedback.SensorToMechanismRatio = Constants.Turret.cancoderToTurretGearing;
+        turretConfig.Feedback.RotorToSensorRatio = Constants.Turret.motorToCancoder;
 
         turretMotor.getConfigurator().apply(turretConfig);
-        turretCANcoder1.getConfigurator().apply(canCoder1Config);
         turretCANcoder2.getConfigurator().apply(canCoder2Config);
 
         turretMotor.setNeutralMode(NeutralModeValue.Brake);
-        turretMotor.setPosition(0.0);
-        turretCANcoder1.setPosition(0.0);
-        turretCANcoder2.setPosition(0.0);
+        resetPosition(Degree.of(0));
 
         BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
-            canCoder1Pos, canCoder2Pos);
+            canCoder2Pos);
         PhoenixSignals.registerSignals(false, turretPosition, turretVoltage, turretCurrent,
-            canCoder1Pos, canCoder2Pos);
-        ParentDevice.optimizeBusUtilizationForAll(turretCANcoder1, turretCANcoder2, turretMotor);
+            canCoder2Pos);
+        ParentDevice.optimizeBusUtilizationForAll(turretCANcoder2, turretMotor);
     }
 
     @Override
@@ -81,8 +72,7 @@ public class TurretReal implements TurretIO {
 
     @Override
     public void updateInputs(TurretInputs inputs) {
-        inputs.gear1AbsoluteAngle = canCoder1Pos.getValue();
-        inputs.gear2AbsoluteAngle = canCoder2Pos.getValue();
+        inputs.gear2AbsoluteAngle = canCoder2Pos.getValue().unaryMinus();
 
         inputs.relativeAngle = turretPosition.getValue().unaryMinus().in(Rotations);
         inputs.voltage = turretVoltage.getValue();
@@ -101,7 +91,9 @@ public class TurretReal implements TurretIO {
     @Override
     public void resetPosition(Angle angle) {
         turretMotor.setPosition(angle);
+        turretCANcoder2.setPosition(angle);
     }
+
 
     @Override
     public void setPID(PIDConstants constants) {

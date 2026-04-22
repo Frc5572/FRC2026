@@ -7,7 +7,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.sim.SimPosition;
 import frc.robot.util.tunable.PIDConstants;
 
 /**
@@ -35,21 +34,16 @@ public class TurretSim implements TurretIO {
     private final Random random;
 
     private static final double start = 0.0;
-
-    public final SimPosition turrentAngle = new SimPosition(0.8, 4.0, 60.0);
-    private double turretTarget = start;
+    public double turretTarget = start;
 
     public TurretSim(Random random) {
         this.random = random;
-        turrentAngle.position = start;
     }
 
     @Override
     public void updateInputs(TurretInputs inputs) {
-        turrentAngle.update(turretTarget);
-
-        inputs.relativeAngle = Units.radiansToRotations(turrentAngle.position - start);
-        inputs.velocity = RadiansPerSecond.of(turrentAngle.velocity);
+        inputs.relativeAngle = Units.radiansToRotations(turretTarget - start);
+        inputs.velocity = RadiansPerSecond.of(0.0);
     }
 
     @Override

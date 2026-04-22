@@ -4,8 +4,10 @@ import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -19,6 +21,7 @@ public class IntakeReal implements IntakeIO {
     private TalonFX hopperRightMotor = new TalonFX(Constants.IntakeConstants.hopperRightID);
     private TalonFX hopperLeftMotor = new TalonFX(Constants.IntakeConstants.hopperLeftID);
     private TalonFX intakeMotor;
+    private TalonFX intakeMotor2 = new TalonFX(15);
     private TalonFXConfiguration config = new TalonFXConfiguration();
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
@@ -35,7 +38,6 @@ public class IntakeReal implements IntakeIO {
             System.out.println("Intake initialization failed: " + e.getMessage());
             intakeConnected = false;
         }
-
         config.Feedback.SensorToMechanismRatio = 1; // change for testing
         config.Slot0.kP = Constants.IntakeConstants.KP; // change for testing
         config.Slot0.kI = Constants.IntakeConstants.KI; // change for testing
@@ -57,12 +59,15 @@ public class IntakeReal implements IntakeIO {
         rightMotorPosition.setUpdateFrequency(50);
 
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         config.CurrentLimits.SupplyCurrentLimitEnable = false;
         config.CurrentLimits.SupplyCurrentLimit = 40.0;
         config.CurrentLimits.StatorCurrentLimitEnable = false;
         config.CurrentLimits.StatorCurrentLimit = 30.0;
         intakeMotor.getConfigurator().apply(config);
+
+        intakeMotor2
+            .setControl(new Follower(intakeMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
         PhoenixSignals.registerSignals(false, rightMotorPosition, leftMotorPosition);
     }
