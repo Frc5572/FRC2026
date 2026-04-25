@@ -113,6 +113,64 @@ public class AutoCommandFactory {
         return routine;
     }
 
+
+    public AutoRoutine rampAuto() {
+        AutoRoutine routine = autoFactory.newRoutine("rampAuto");
+        routine.active()
+            .onTrue(
+                crossRampIntoCenter(routine)
+                    .andThen(
+                        swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kCCW_90deg))
+                            .maxSpeed(1.2).translationTolerance(1.5).rotationTolerance(15).flipY(
+                                true)
+                            .finish(),
+                        swerve.moveToPose().target(new Pose2d(8.076, 1.267, Rotation2d.kCCW_90deg))
+                            .maxSpeed(1.2).translationTolerance(
+                                0.5)
+                            .rotationTolerance(15).flipY(true).finish()
+                            .alongWith(intake.extendHopper(0.0)),
+                        swerve.moveToPose().target(new Pose2d(8.076,
+                            (FieldConstants.fieldWidth / 2.0) + Units.feetToMeters(
+                                SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                                    Constants.DashboardValues.feetPastCenterDefault)),
+                            Rotation2d.kCCW_90deg)).maxSpeed(1.0).translationTolerance(0.5)
+                            .rotationTolerance(15).flipY(true).finish().deadlineFor(
+                                intake.extendHopper(1.0).andThen(
+                                    intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
+                        swerve.moveToPose()
+                            .target(new Pose2d(5.8537397384643555, 2.05923399925231934,
+                                Rotation2d.fromDegrees(45)))
+                            .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15)
+                            .flipY(true).finish()
+                            .deadlineFor(intake.extendHopper(1.0).andThen(
+                                intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
+                        crossRampIntoZone(routine), swerve.emergencyStop(),
+                        CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                            .alongWith(
+                                Commands.waitSeconds(2.0).andThen(intake.retractHopper(0.0)))));
+        return routine;
+    }
+
+    public Command crossRampIntoCenter(AutoRoutine routine) {
+        return swerve.moveToPose().autoRoutine(routine).target(() -> {
+            return new Pose2d(FieldConstants.fieldLength / 2.0,
+                swerve.state.getGlobalPoseEstimate().getY(),
+                swerve.state.getGlobalPoseEstimate().getRotation());
+        }).flipForRed(false).flipY(false).maxSpeed(2.5).finish()
+            .until(() -> AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getX() > FieldConstants.LeftBump.farLeftCorner.getX() + Units.inchesToMeters(10));
+    }
+
+    public Command crossRampIntoZone(AutoRoutine routine) {
+        return swerve.moveToPose().autoRoutine(routine).target(() -> {
+            return new Pose2d(AllianceFlipUtil.applyX(0.0),
+                swerve.state.getGlobalPoseEstimate().getY(),
+                swerve.state.getGlobalPoseEstimate().getRotation());
+        }).flipForRed(false).flipY(false).maxSpeed(2.5).finish()
+            .until(() -> AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getX() < FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
+    }
+
     /** Test to make sure autos work. */
     public AutoRoutine wilsonTest2() {
         AutoRoutine routine = autoFactory.newRoutine("WilsonTest2");
