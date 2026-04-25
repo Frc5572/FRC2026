@@ -113,7 +113,7 @@ public class AutoCommandFactory {
         return routine;
     }
 
-
+    /** Cross ramp once, pick up balls, come back over same ramp, shoot. */
     public AutoRoutine rampAuto() {
         AutoRoutine routine = autoFactory.newRoutine("rampAuto");
         routine.active()
@@ -151,6 +151,7 @@ public class AutoCommandFactory {
         return routine;
     }
 
+    /** Cross ramp into the neutral zone. */
     public Command crossRampIntoCenter(AutoRoutine routine) {
         return swerve.moveToPose().autoRoutine(routine).target(() -> {
             return new Pose2d(FieldConstants.fieldLength / 2.0,
@@ -161,6 +162,7 @@ public class AutoCommandFactory {
                 .getX() > FieldConstants.LeftBump.farLeftCorner.getX() + Units.inchesToMeters(10));
     }
 
+    /** Cross ramp into our alliance zone. */
     public Command crossRampIntoZone(AutoRoutine routine) {
         return swerve.moveToPose().autoRoutine(routine).target(() -> {
             return new Pose2d(AllianceFlipUtil.applyX(0.0),
