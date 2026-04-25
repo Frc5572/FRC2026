@@ -180,6 +180,7 @@ public final class RobotContainer {
             climber, intake, indexer, shooter, turret);
         // autoChooser.addRoutine("Gather then Shoot (Left)",
         // autoCommandFactory::gatherThenShootLeft);
+        autoChooser.addRoutine("Cross Ramp", autoCommandFactory::rampAuto);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
         autoChooser.addRoutine(Constants.Auto.wilsonTestShort, autoCommandFactory::wilsonTestShort);
