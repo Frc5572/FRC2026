@@ -90,6 +90,7 @@ public final class Swerve extends SubsystemBase {
 
     private static boolean sideLocked = false;
 
+    private static boolean verticalLocked = false;
 
 
     /**
@@ -245,6 +246,16 @@ public final class Swerve extends SubsystemBase {
                 Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
                 // normalize between (-180, 180]
                 double rotationTarget = currentRotation.getDegrees() < 0 ? -90 : 90;
+                Rotation2d rotationError =
+                    Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
+                double omega = rotationError.getRadians() * 5.0;
+                omega = Math.max(-Constants.Swerve.maxAngularVelocity,
+                    Math.min(Constants.Swerve.maxAngularVelocity, omega));
+                speeds.omegaRadiansPerSecond = omega;
+            } else if (verticalLocked) {
+                Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
+                // normalize between (-180, 180]
+                double rotationTarget = Math.abs(currentRotation.getDegrees()) < 90 ? 0 : 180;
                 Rotation2d rotationError =
                     Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
                 double omega = rotationError.getRadians() * 5.0;
@@ -550,6 +561,13 @@ public final class Swerve extends SubsystemBase {
      */
     public Command toggleSideLock() {
         return Commands.startEnd(() -> sideLocked = true, () -> sideLocked = false);
+    }
+
+    /**
+     * Toggle Vertical lock
+     */
+    public Command toggleVerticalLock() {
+        return Commands.startEnd(() -> verticalLocked = true, () -> verticalLocked = false);
     }
 
 }
