@@ -244,10 +244,10 @@ public final class Swerve extends SubsystemBase {
             if (sideLocked) {
                 Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
                 // normalize between (-180, 180]
-                double normalizedAngle =
-                    ((currentRotation.getDegrees() + 180) % 360 + 360) % 360 - 180;
-                double rotationError = normalizedAngle < 0 ? -90 : 90;
-                double omega = rotationError * 5.0;
+                double rotationTarget = currentRotation.getDegrees() < 0 ? -90 : 90;
+                Rotation2d rotationError =
+                    Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
+                double omega = rotationError.getRadians() * 5.0;
                 omega = Math.max(-Constants.Swerve.maxAngularVelocity,
                     Math.min(Constants.Swerve.maxAngularVelocity, omega));
                 speeds.omegaRadiansPerSecond = omega;
