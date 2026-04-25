@@ -725,8 +725,12 @@ public final class Constants {
     public static class Auto {
         public static final double wilsonTestX = 8.076;
         public static final double wilsonTestX2 = 6.5;
+        public static final double fullSweepTrenchY = 7.420;
+        public static final double fullSweepRampY = 5.655;
         public static final String wilsonTest = "Peashooter";
         public static final String wilsonTestShort = "Peashooter Short";
         public static final String justShoot = "Just Shoot";
+        public static final String cmpSpecial = "CMP Special";
+        public static final String crossRamp = "Cross Ramp";
     }
 }

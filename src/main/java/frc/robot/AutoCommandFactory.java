@@ -219,7 +219,8 @@ public class AutoCommandFactory {
                 swerve.state.getGlobalPoseEstimate().getRotation());
         }).flipForRed(false).flipY(false).maxSpeed(2.5).finish()
             .until(() -> AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
-                .getX() < FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
+                .getX() < AllianceFlipUtil.apply(FieldConstants.LeftBump.nearLeftCorner).getX()
+                    - Units.inchesToMeters(10));
     }
 
     /** Test to make sure autos work. */
@@ -253,13 +254,10 @@ public class AutoCommandFactory {
                     Rotation2d.kCCW_90deg))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish().alongWith(intake.extendHopper(0.0)),
-            swerve.moveToPose()
-                .target(() -> new Pose2d(x1.getAsDouble(), 7.420,
-                    left ? Rotation2d.k180deg : Rotation2d.kZero))
+            swerve.moveToPose().target(() -> new Pose2d(x1.getAsDouble(), 7.420, Rotation2d.kZero))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish().alongWith(intake.extendHopper(0.0)),
-            swerve.moveToPose()
-                .target(() -> new Pose2d(4.04, 7.420, left ? Rotation2d.k180deg : Rotation2d.kZero))
+            swerve.moveToPose().target(() -> new Pose2d(4.04, 7.420, Rotation2d.kZero))
                 .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left).finish()
                 .withTimeout(3.5));
         Command endRamp = Commands.sequence(
@@ -268,13 +266,11 @@ public class AutoCommandFactory {
                     Rotation2d.kCCW_90deg))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish().alongWith(intake.extendHopper(0.0)),
-            swerve.moveToPose()
-                .target(() -> new Pose2d(x1.getAsDouble(), 5.655,
-                    left ? Rotation2d.k180deg : Rotation2d.kZero))
+            swerve.moveToPose().target(() -> new Pose2d(x1.getAsDouble(), 5.655, Rotation2d.kZero))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish().alongWith(intake.extendHopper(0.0)),
             crossRampIntoZone(routine));
-        Command ending = Commands.either(endRamp, endTrench,
+        Command ending = Commands.either(endRamp.andThen(swerve.emergencyStop()), endTrench,
             () -> SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false));
 
         Command sequence = Commands

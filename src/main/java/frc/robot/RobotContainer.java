@@ -187,10 +187,10 @@ public final class RobotContainer {
             climber, intake, indexer, shooter, turret);
         // autoChooser.addRoutine("Gather then Shoot (Left)",
         // autoCommandFactory::gatherThenShootLeft);
-        autoChooser.addRoutine("Cross Ramp", autoCommandFactory::rampAuto);
+        autoChooser.addRoutine(Constants.Auto.crossRamp, autoCommandFactory::rampAuto);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
-        autoChooser.addRoutine("CMP Special", autoCommandFactory::cmpSpecial);
+        autoChooser.addRoutine(Constants.Auto.cmpSpecial, autoCommandFactory::cmpSpecial);
         // autoChooser.addRoutine(Constants.Auto.wilsonTestShort,
         // autoCommandFactory::wilsonTestShort);
         // autoChooser.addRoutine("wilsonTest2", autoCommandFactory::wilsonTest2);
@@ -432,6 +432,25 @@ public final class RobotContainer {
                 pose = AllianceFlipUtil.flipY(pose);
             }
             autoStoppingPoint.setPose(pose);
+        } else if (selectedAuto.equals(Constants.Auto.cmpSpecial)) {
+            // System.out.println("asdf");
+            double x =
+                SmartDashboard.getNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
+            double y = SmartDashboard.getBoolean(Constants.DashboardValues.fullWidth, false)
+                ? SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false)
+                    ? Constants.Auto.fullSweepRampY
+                    : Constants.Auto.fullSweepTrenchY
+                : (FieldConstants.fieldWidth / 2.0) + Units
+                    .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                        Constants.DashboardValues.feetPastCenterDefault));
+            Pose2d pose = AllianceFlipUtil.apply(new Pose2d(x, y, Rotation2d.kCCW_90deg));
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0) {
+                pose = AllianceFlipUtil.flipY(pose);
+            }
+            autoStoppingPoint.setPose(pose);
+
+
         } else {
             autoStoppingPoint.setPoses(new ArrayList<Pose2d>());
         }
