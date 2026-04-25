@@ -115,31 +115,25 @@ public class AutoCommandFactory {
 
     /** moves the bot to the depot and intakes fuel */
     public AutoRoutine moveToDepot() {
+        SmartDashboard.putNumber("p1x", 0.803);
+        SmartDashboard.putNumber("p1y", 4.818);
+        SmartDashboard.putNumber("p2x", 0.803);
+        SmartDashboard.putNumber("p2y", 6.2);
         AutoRoutine routine = autoFactory.newRoutine("move to depot");
-        Command depot =
-            Commands.sequence(
-                swerve.moveToPose()
-                    .target(new Pose2d(
-                        FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
-                        FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
-                        Rotation2d.fromDegrees(135)))
-                    .finish(),
-                swerve.emergencyStop(), intake.extendHopper(0),
-                swerve.moveToPose()
-                    .target(new Pose2d(Units.inchesToMeters(10),
-                        FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
-                        Rotation2d.fromDegrees(135)))
-                    .maxSpeed(0.4).finish().withTimeout(5.0)
-                    .andThen(swerve.moveToPose()
-                        .target(new Pose2d(
-                            FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
-                            FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
-                            Rotation2d.fromDegrees(135)))
-                        .finish())
-                    .deadlineFor(intake.intakeBalls(6)),
-                swerve.emergencyStop(),
-                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                    .alongWith(Commands.waitSeconds(2.0).andThen(intake.retractHopper(0.0))));
+        Command depot = Commands.sequence(
+            swerve.moveToPose()
+                .target(() -> new Pose2d(SmartDashboard.getNumber("p1x", 0),
+                    SmartDashboard.getNumber("p1y", 0), Rotation2d.fromDegrees(90)))
+                .translationTolerance(Units.inchesToMeters(3)).rotationTolerance(5).finish()
+                .deadlineFor(intake.extendHopper(0)),
+            swerve.moveToPose()
+                .target(() -> new Pose2d(SmartDashboard.getNumber("p2x", 0),
+                    SmartDashboard.getNumber("p2y", 0), Rotation2d.fromDegrees(90)))
+                .translationTolerance(Units.inchesToMeters(3)).rotationTolerance(5).maxSpeed(0.6)
+                .finish().withTimeout(5.0).deadlineFor(intake.intakeBalls(6)),
+            swerve.emergencyStop(),
+            CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                .alongWith(Commands.waitSeconds(2.0).andThen(intake.retractHopper(0.0))));
         routine.active()
             .onTrue(depot.alongWith(CommandFactory.followHub(turret, swerve, () -> 0.0)));
         return routine;
