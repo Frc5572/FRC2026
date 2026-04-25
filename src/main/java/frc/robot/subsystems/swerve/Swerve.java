@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -12,6 +13,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -85,6 +87,10 @@ public final class Swerve extends SubsystemBase {
     public final RobotState state;
 
     public AutoFactory autoFactory;
+
+    private static boolean sideLocked = false;
+
+
 
     /**
      * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
@@ -233,8 +239,21 @@ public final class Swerve extends SubsystemBase {
      * @return a command that drives the robot while scheduled
      */
     public Command driveUserRelative(Supplier<ChassisSpeeds> driveSpeeds) {
-        return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(driveSpeeds.get(),
-            getUserRelativeHeading()));
+        return driveRobotRelative(() -> {
+            ChassisSpeeds speeds = driveSpeeds.get();
+            if (sideLocked) {
+                Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
+                // normalize between (-180, 180]
+                double rotationTarget = currentRotation.getDegrees() < 0 ? -90 : 90;
+                Rotation2d rotationError =
+                    Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
+                double omega = rotationError.getRadians() * 5.0;
+                omega = Math.max(-Constants.Swerve.maxAngularVelocity,
+                    Math.min(Constants.Swerve.maxAngularVelocity, omega));
+                speeds.omegaRadiansPerSecond = omega;
+            }
+            return ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getUserRelativeHeading());
+        });
     }
 
     /**
@@ -495,4 +514,42 @@ public final class Swerve extends SubsystemBase {
             }
         });
     }
+
+
+    /**
+     * Creates a command that drives and aims at the side walls
+     *
+     * @return drive-and-shoot command
+     */
+    public Command driveFacingSides(DoubleSupplier forward, DoubleSupplier right, double maxSpeed,
+        double maxRotSpeed) {
+        return this.driveUserRelative(() -> {
+            double omega = 0.0;
+            double xaxis = right.getAsDouble();
+            double yaxis = forward.getAsDouble();
+            yaxis = MathUtil.applyDeadband(yaxis, Constants.DriverControls.stickDeadband);
+            xaxis = MathUtil.applyDeadband(xaxis, Constants.DriverControls.stickDeadband);
+            xaxis *= xaxis * Math.signum(xaxis);
+            yaxis *= yaxis * Math.signum(yaxis);
+            Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
+            // normalize between (-180, 180]
+            double normalizedAngle = ((currentRotation.getDegrees() + 180) % 360 + 360) % 360 - 180;
+            double rotationError = normalizedAngle < 0 ? -90 : 90;
+            omega = rotationError * 5.0;
+            omega = Math.max(-Constants.Swerve.maxAngularVelocity,
+                Math.min(Constants.Swerve.maxAngularVelocity, omega));
+            ChassisSpeeds fieldRelative = new ChassisSpeeds(xaxis, yaxis, omega);
+            return fieldRelative;
+        });
+    }
+
+    /**
+     * Toggle Side lock
+     *
+     * @return Command
+     */
+    public Command toggleSideLock() {
+        return Commands.startEnd(() -> sideLocked = true, () -> sideLocked = false);
+    }
+
 }

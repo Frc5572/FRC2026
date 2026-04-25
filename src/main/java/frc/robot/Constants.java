@@ -54,7 +54,7 @@ public final class Constants {
         public static final double stickDeadband = 0.1;
 
         /** Maximum Translational speed (in m/s) */
-        public static final double driverTranslationalMaxSpeed = 3.0;
+        public static final double driverTranslationalMaxSpeed = 4.0;
         /** Maximum Rotational speed (in rad/s) */
         public static final double driverRotationalMaxSpeed = 4.0;
 
@@ -226,7 +226,7 @@ public final class Constants {
 
         /* Swerve Profiling Values */
         /** Max Speed in Meters per Second */
-        public static final double maxSpeed = 3.0;
+        public static final double maxSpeed = 7.0;
         /** Max Speed for Auto in Meters per Second */
         public static final double autoMaxSpeed = 3.0;
         /** Max Angular Velocity in Radians per Second */
@@ -338,7 +338,7 @@ public final class Constants {
                 .calibrationErrorMean(0.8)
                 .calibrationErrorStdDev(0.08)
                 .robotToCamera(new Transform3d(turretCenter, turretRight))
-                .translationError(Units.inchesToMeters(3))
+                .translationError(Units.inchesToMeters(2))
                 .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(true)
@@ -622,11 +622,11 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants pid =
             new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
-                .kP(32.0)
+                .kP(48.0)
                 .kI(0.0)
                 .kD(0.0)
-                .kV(7.01)
-                .kS(0.301)
+                .kV(3.6)
+                .kS(1.2)
                 .kG(0.0)
                 .kA(0.0)
                 .finish();
@@ -677,11 +677,11 @@ public final class Constants {
                 .velocityTolerance(8)
                 .atSpeedDebounce(0.1)
                 .pid(new PIDConstantsBuilder("ShooterConstantsPID", GravityTypeValue.Elevator_Static)
-                    .kP(0.5)
+                    .kP(0.9)
                     .kI(0.0)
                     .kD(0.0)
-                    .kV(0.122)
-                    .kS(0.02)
+                    .kV(0.13)
+                    .kS(0.04)
                     .kG(0.0)
                     .kA(0.0)
                     .finish())
