@@ -465,6 +465,9 @@ public class RobotState {
         double distance = adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
             + Units.feetToMeters(trimUp);
         Logger.recordOutput("State/distance", distance);
+        if (distance > FieldConstants.fieldLength * 2.0 / 3.0) {
+
+        }
         var parameters =
             targetIsGround ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
                 : ShotData.getShotParameters(distance, currentFlywheelSpeed, true);

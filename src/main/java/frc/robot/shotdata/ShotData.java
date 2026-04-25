@@ -322,6 +322,10 @@ public class ShotData {
         double hoodAngleDeg = res.hoodAngle().in(Degrees);
         double tof = res.tof().in(Seconds);
         boolean isOkay = currentFlywheelSpeed > desiredSpeed - 10;
+        if (distance > FieldConstants.fieldLength / 3.0) {
+            desiredSpeed = 180.0;
+            hoodAngleDeg = 43.0;
+        }
         if (log) {
             Logger.recordOutput("ShotParameters/distance", distance);
             Logger.recordOutput("ShotParameters/currentSpeed", currentFlywheelSpeed);
