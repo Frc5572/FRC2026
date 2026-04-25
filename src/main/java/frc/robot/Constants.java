@@ -48,6 +48,8 @@ public final class Constants {
 
     public static final boolean tunable = true;
 
+    public static final boolean keepInField = false;
+
     /** Constants for driver controls */
     public static class DriverControls {
         /** Stick axis controls less than this amount are treated as 0. */

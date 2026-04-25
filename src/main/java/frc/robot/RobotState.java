@@ -121,7 +121,9 @@ public class RobotState {
             Logger.recordOutput("State/isOnBump", false);
         }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
-        limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
+        if (Constants.keepInField) {
+            limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
+        }
     }
 
     /**
