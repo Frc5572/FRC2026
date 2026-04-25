@@ -113,6 +113,38 @@ public class AutoCommandFactory {
         return routine;
     }
 
+    /** moves the bot to the depot and intakes fuel */
+    public AutoRoutine moveToDepot() {
+        AutoRoutine routine = autoFactory.newRoutine("move to depot");
+        Command depot =
+            Commands.sequence(
+                swerve.moveToPose()
+                    .target(new Pose2d(
+                        FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
+                        FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
+                        Rotation2d.fromDegrees(135)))
+                    .finish(),
+                swerve.emergencyStop(), intake.extendHopper(0),
+                swerve.moveToPose()
+                    .target(new Pose2d(Units.inchesToMeters(10),
+                        FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
+                        Rotation2d.fromDegrees(135)))
+                    .maxSpeed(0.4).finish().withTimeout(5.0)
+                    .andThen(swerve.moveToPose()
+                        .target(new Pose2d(
+                            FieldConstants.Depot.depotCenter.getX() + Units.inchesToMeters(42),
+                            FieldConstants.Depot.depotCenter.getY() - Units.inchesToMeters(22),
+                            Rotation2d.fromDegrees(135)))
+                        .finish())
+                    .deadlineFor(intake.intakeBalls(6)),
+                swerve.emergencyStop(),
+                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                    .alongWith(Commands.waitSeconds(2.0).andThen(intake.retractHopper(0.0))));
+        routine.active()
+            .onTrue(depot.alongWith(CommandFactory.followHub(turret, swerve, () -> 0.0)));
+        return routine;
+    }
+
     /** Test to make sure autos work. */
     public AutoRoutine wilsonTest2() {
         AutoRoutine routine = autoFactory.newRoutine("WilsonTest2");
