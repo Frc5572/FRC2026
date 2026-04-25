@@ -273,6 +273,14 @@ public final class RobotContainer {
 
         driver.leftTrigger().and(driver.rightTrigger().negate())
             .whileTrue(indexer.spinWhileIntake());
+
+        // driver.rightBumper()
+        // .whileTrue(swerve.driveFacingSides(
+        // () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
+        // () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
+        // Constants.DriverControls.driverTranslationalMaxSpeed,
+        // Constants.DriverControls.driverRotationalShootSpeed));
+        driver.rightBumper().whileTrue(swerve.toggleSideLock());
     }
 
     private void setupOperator() {
