@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
@@ -118,6 +119,7 @@ public final class RobotContainer {
 
                 break;
             case kSimulation:
+                SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
                 sim = new SimulatedRobotState(
                     new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
@@ -175,6 +177,7 @@ public final class RobotContainer {
             Constants.DashboardValues.delayDefault);
         SmartDashboard.putBoolean(Constants.DashboardValues.fullWidth, false);
         SmartDashboard.putBoolean(Constants.DashboardValues.shootFirst, false);
+        SmartDashboard.putBoolean(Constants.DashboardValues.rampOrTrenchEnd, false);
         // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);

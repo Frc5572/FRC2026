@@ -48,6 +48,8 @@ public class AutoCommandFactory {
         () -> SmartDashboard.getBoolean(Constants.DashboardValues.shootFirst, false);
     BooleanSupplier fullWidth =
         () -> SmartDashboard.getBoolean(Constants.DashboardValues.fullWidth, false);
+    BooleanSupplier rampOrTranchEnd =
+        () -> SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false);
     DoubleSupplier x1 =
         () -> SmartDashboard.getNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
     DoubleSupplier x2 =
@@ -185,23 +187,43 @@ public class AutoCommandFactory {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
         // Positive turret trim towards net, negative towards DS
-        double turretFudge1 = 0;
-        double turretFudge2 = 0;
 
         Command sequence = Commands
             .sequence(
                 swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kCCW_90deg))
                     .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
                     .flipY(left).finish(),
-                swerve.moveToPose().target(() -> new Pose2d(5.7, 1.267, Rotation2d.kCCW_90deg))
-                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
-                    .flipY(!left).finish(),
-                swerve.moveToPose().target(() -> new Pose2d(5.7, 0.622, Rotation2d.kZero))
-                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
-                    .flipY(!left).finish().alongWith(intake.extendHopper(0.0)),
-                swerve.moveToPose().target(new Pose2d(4.04, 0.622, Rotation2d.kZero)).maxSpeed(1.5)
-                    .translationTolerance(0.1).rotationTolerance(5).flipY(!left).finish()
-                    .withTimeout(3.5),
+                swerve.moveToPose()
+                    .target(() -> new Pose2d(x1.getAsDouble(), 1.267, Rotation2d.kCCW_90deg))
+                    .maxSpeed(
+                        driveSpeed)
+                    .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
+                swerve.moveToPose()
+                    .target(
+                        () -> new Pose2d(x1.getAsDouble(),
+                            (SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd,
+                                false) ? 5.655 : 7.420) - Units.feetToMeters(1),
+                            Rotation2d.kCCW_90deg))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(
+                        left)
+                    .finish().alongWith(intake.extendHopper(0.0)),
+                swerve.moveToPose()
+                    .target(
+                        () -> new Pose2d(x1.getAsDouble(),
+                            SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd,
+                                false) ? 5.655 : 7.420,
+                            left ? Rotation2d.k180deg : Rotation2d.kZero))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(
+                        left)
+                    .finish().alongWith(intake.extendHopper(0.0)),
+                swerve.moveToPose()
+                    .target(
+                        () -> new Pose2d(4.04,
+                            SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd,
+                                false) ? 5.655 : 7.420,
+                            left ? Rotation2d.k180deg : Rotation2d.kZero))
+                    .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left)
+                    .finish().withTimeout(3.5),
                 swerve.emergencyStop())
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0))
             .andThen(CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
