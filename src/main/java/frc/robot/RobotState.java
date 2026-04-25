@@ -308,7 +308,8 @@ public class RobotState {
                             visionAdjustedOdometry
                                 .resetTranslation(estRobotPose2d.getTranslation());
                         }
-                    } else {
+                    }
+                    if (!isStationary) {
                         rotationStdDev = 10000.0;
                     }
                 }
