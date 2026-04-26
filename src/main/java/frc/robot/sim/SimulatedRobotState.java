@@ -86,7 +86,7 @@ public class SimulatedRobotState {
                 ShotEntry entry = ShotData.simFunc.interpolate(speedRotationsPerSecond,
                     Units.radiansToDegrees(effectiveHoodAngle));
 
-                double exitVelocity = entry.backtracedExitVelocity().in(MetersPerSecond);
+                double exitVelocity = entry.exitVelocity().in(MetersPerSecond);
 
                 Logger.recordOutput("Sim/speedTransferExitVelocity",
                     entry.speedTransferExitVelocity().in(MetersPerSecond));

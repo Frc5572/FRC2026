@@ -47,45 +47,45 @@ public class ShotData {
      */
     public static ShotEntry[] entries = new ShotEntry[] {
         // @formatter:off
-        // new ShotEntry(7.21, 45, 18, 0),
-        // new ShotEntry(8.0, 46, 20, 0),
-        // new ShotEntry(9.05, 50, 20, 0),
-        // new ShotEntry(10.13, 51, 20, 0),
-        // new ShotEntry(11.10, 54, 20, 0),
-        // new ShotEntry(12.05, 56, 20, 0),
-        // new ShotEntry(12.82, 58, 20, 0),
-        // new ShotEntry(13.87, 61, 21, 0),
-        // new ShotEntry(15.01, 64, 22, 0),
-        // new ShotEntry(16.14, 67, 23, 0),
-        // new ShotEntry(7.04, 43, 15, 0),
-        // new ShotEntry(8.00, 44, 15, 0),
-        // new ShotEntry(9.18, 45, 15, 0),
-        // new ShotEntry(10.6, 48, 20, 0),
-        // new ShotEntry(12.46, 53, 20, 0),
-        // new ShotEntry(13.67, 54, 22, 0),
-        // new ShotEntry(14.45, 56, 24, 0),
-        // new ShotEntry(15.75, 57, 24.5, 0),
-        // new ShotEntry(16.49, 57.5, 28, 0),
-        // new ShotEntry(18.15, 61, 28, 0),
-        // new ShotEntry(19.10, 63, 28, 0),
-        // new ShotEntry(20.2, 65, 28, 0),
-        // new ShotEntry(21.3, 67, 28, 0),
-        // new ShotEntry(22.5, 69, 28, 0),
-        
-        new ShotEntry(4.04, 37, 2, 0),
-        new ShotEntry(5.8, 37, 7, 0),
-        new ShotEntry(7.15, 39, 12, 0),
-        new ShotEntry(8.42, 40, 15, 0),
-        new ShotEntry(9.58, 43, 16, 0),
-        new ShotEntry(10.87, 45, 17, 0),
-        new ShotEntry(11.41, 46, 18, 0),
-        new ShotEntry(12.6, 48, 18.5, 0),
-        new ShotEntry(13.4, 50, 19, 0),
-        new ShotEntry(14.68, 51.5, 19.5, 0),
-        new ShotEntry(14.68, 51.5, 19.5, 0),
-        new ShotEntry(15.7, 53, 20, 0),
-        new ShotEntry(16.49, 55, 21, 0),
-        new ShotEntry(18.0, 57, 22, 0),
+        // new ShotEntry(7.21, 45, 18),
+        // new ShotEntry(8.0, 46, 20),
+        // new ShotEntry(9.05, 50, 20),
+        // new ShotEntry(10.13, 51, 20),
+        // new ShotEntry(11.10, 54, 20),
+        // new ShotEntry(12.05, 56, 20),
+        // new ShotEntry(12.82, 58, 20),
+        // new ShotEntry(13.87, 61, 21),
+        // new ShotEntry(15.01, 64, 22),
+        // new ShotEntry(16.14, 67, 23),
+        // new ShotEntry(7.04, 43, 15),
+        // new ShotEntry(8.00, 44, 15),
+        // new ShotEntry(9.18, 45, 15),
+        // new ShotEntry(10.6, 48, 20),
+        // new ShotEntry(12.46, 53, 20),
+        // new ShotEntry(13.67, 54, 22),
+        // new ShotEntry(14.45, 56, 24),
+        // new ShotEntry(15.75, 57, 24.5),
+        // new ShotEntry(16.49, 57.5, 28),
+        // new ShotEntry(18.15, 61, 28),
+        // new ShotEntry(19.10, 63, 28),
+        // new ShotEntry(20.2, 65, 28),
+        // new ShotEntry(21.3, 67, 28),
+        // new ShotEntry(22.5, 69, 28),
+
+        new ShotEntry(4.04, 37, 2),
+        new ShotEntry(5.8, 37, 7),
+        new ShotEntry(7.15, 39, 12),
+        new ShotEntry(8.42, 40, 15),
+        new ShotEntry(9.58, 43, 16),
+        new ShotEntry(10.87, 45, 17),
+        new ShotEntry(11.41, 46, 18),
+        new ShotEntry(12.6, 48, 18.5),
+        new ShotEntry(13.4, 50, 19),
+        new ShotEntry(14.68, 51.5, 19.5),
+        new ShotEntry(14.68, 51.5, 19.5),
+        new ShotEntry(15.7, 53, 20),
+        new ShotEntry(16.49, 55, 21),
+        new ShotEntry(18.0, 57, 22),
 
         // @formatter:on
     };
@@ -117,10 +117,9 @@ public class ShotData {
          * @param hoodAngleDeg hood angle in degrees (converted internally to exit angle)
          * @param tof time of flight in seconds
          */
-        public ShotEntry(double distanceFeet, double flywheelSpeed, double hoodAngleDeg,
-            double tof) {
+        public ShotEntry(double distanceFeet, double flywheelSpeed, double hoodAngleDeg) {
             this(Feet.of(distanceFeet), RotationsPerSecond.of(flywheelSpeed),
-                Degrees.of(90 - 12.695 - hoodAngleDeg), MetersPerSecond.of(0.0), Seconds.of(tof));
+                Degrees.of(90 - 12.695 - hoodAngleDeg), MetersPerSecond.of(0.0), Seconds.of(0.0));
         }
 
         /**
@@ -220,22 +219,6 @@ public class ShotData {
         }
 
     };
-
-    /**
-     * Interpolation function for hub shooting. Interpolates over hub-targeted {@link ShotEntry}
-     * data keyed by flywheel speed and distance.
-     */
-    public static final SemiGriddedBilinearInterpolation<ShotEntry> shootFunc =
-        new SemiGriddedBilinearInterpolation<>(2.0, GeneratedLUTs.hubEntries, mulAdd,
-            x -> x.flywheelSpeed().in(RotationsPerSecond), x -> x.targetDistance().in(Meters));
-
-    /**
-     * Interpolation function for ground passing. Interpolates over ground-pass {@link ShotEntry}
-     * data keyed by flywheel speed and distance.
-     */
-    public static final SemiGriddedBilinearInterpolation<ShotEntry> passFunc =
-        new SemiGriddedBilinearInterpolation<>(2.0, GeneratedLUTs.groundEntries, mulAdd,
-            x -> x.flywheelSpeed().in(RotationsPerSecond), x -> x.targetDistance().in(Meters));
 
     /**
      * Interpolation function for simulation. Uses the same ground-pass entries as

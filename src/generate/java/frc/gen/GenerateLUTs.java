@@ -47,7 +47,7 @@ public class GenerateLUTs {
 
     /** Entrypoint for generateLUTs gradle task */
     public static void main(String[] argv) {
-        // v1();
+        v1();
         NumberFormat formatter = new DecimalFormat("#0.000");
 
         InterpolatingDoubleTreeMap[] trajectories =
@@ -364,8 +364,8 @@ public class GenerateLUTs {
         int totalCount = inputs.size();
         System.out.println("Generating " + totalCount + " trajectories...");
         var infos = inputs.stream().parallel().map(input -> {
-            var shot = entryToShot
-                .apply(new ShotEntry(0, input.flywheelSpeedRps(), input.hoodAngleDeg(), 0));
+            var shot =
+                entryToShot.apply(new ShotEntry(0, input.flywheelSpeedRps(), input.hoodAngleDeg()));
             var res = new TrajectoryInfo(shot.exitAngle, shot.exitVelocity, shot.backspin);
             return new TrajectoryOutputs(input.flywheelSpeedRps, input.hoodAngleDeg, res);
         }).toList();
@@ -378,7 +378,10 @@ public class GenerateLUTs {
         for (int i = 0; i < infos.size(); i++) {
             var info = infos.get(i);
             var groundEntry = new ShotEntry(info.info.groundDistance.in(Feet),
-                info.flywheelSpeedRps, info.hoodAngleDeg, info.info.tofGround.in(Seconds));
+                info.flywheelSpeedRps, info.hoodAngleDeg);
+            var exitVelocity = entryToShot.apply(groundEntry).exitVelocity;
+            groundEntry = new ShotEntry(groundEntry.targetDistance(), groundEntry.flywheelSpeed(),
+                groundEntry.exitAngle(), exitVelocity, info.info.tofGround);
             groundEntries.add(groundEntry);
             if (!info.info.reachesHub || info.info.clearanceOverLip.lt(Centimeters.of(15))) {
                 infos.remove(i);
@@ -413,9 +416,7 @@ public class GenerateLUTs {
             double distance = info.info.hubDistance.in(Meters);
             double flywheelSpeedRps = info.flywheelSpeedRps;
             double hoodAngleDeg = info.hoodAngleDeg;
-            double tof = info.info.tofHub.in(Seconds);
-            var entry =
-                new ShotEntry(Units.metersToFeet(distance), flywheelSpeedRps, hoodAngleDeg, tof);
+            var entry = new ShotEntry(Units.metersToFeet(distance), flywheelSpeedRps, hoodAngleDeg);
             entries.add(entry);
             SimulatedShot shot = entryToShot.apply(entry);
             shot.state.a1 = -distance;
@@ -473,7 +474,7 @@ public class GenerateLUTs {
             System.out.println(i + " / " + entries.size());
             var entry = entries.get(i);
             DiffFunc clearanceFunc = new FiniteDifference(x -> {
-                var shot = entryToShot.apply(new ShotEntry(0, x[0], x[1], 0));
+                var shot = entryToShot.apply(new ShotEntry(0, x[0], x[1]));
                 var info = new TrajectoryInfo(shot.exitAngle, shot.exitVelocity, shot.backspin);
                 double clearance = info.clearanceOverLip.in(Meters);
                 double clearanceErr = clearance - targetClearance;
@@ -510,46 +511,25 @@ public class GenerateLUTs {
             TypeSpec.classBuilder("GeneratedLUTs").addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
         StringBuilder init = new StringBuilder("new ShotData.ShotEntry[] {");
-        for (int i = 0; i < entries.size(); i++) {
-            if (i != 0) {
-                init.append(',');
-            }
-            init.append(" new ShotData.ShotEntry(");
-            init.append(formatter.format(entries.get(i).targetDistance().in(Feet)));
-            init.append(", ");
-            init.append(formatter.format(entries.get(i).flywheelSpeed().in(RotationsPerSecond)));
-            init.append(", ");
-            init.append(formatter.format(entries.get(i).hoodAngle().in(Degrees)));
-            init.append(", ");
-            init.append(formatter.format(entries.get(i).tof().in(Seconds)));
-            init.append(')');
-        }
-        init.append(" }");
-        FieldSpec entriesField = FieldSpec
-            .builder(ShotEntry[].class, "hubEntries", Modifier.PUBLIC, Modifier.STATIC,
-                Modifier.FINAL)
-            .initializer(init.toString())
-            .addJavadoc("Pre-computed shot entries for hub-targeted shots.").build();
-        classBuilder.addField(entriesField);
-
-        init = new StringBuilder("new ShotData.ShotEntry[] {");
         for (int i = 0; i < groundEntries.size(); i++) {
             if (i != 0) {
                 init.append(',');
             }
-            init.append(" new ShotData.ShotEntry(");
-            init.append(formatter.format(groundEntries.get(i).targetDistance().in(Feet)));
-            init.append(", ");
+            init.append(" new ShotData.ShotEntry(Meters.of(");
+            init.append(formatter.format(groundEntries.get(i).targetDistance().in(Meters)));
+            init.append("), RotationsPerSecond.of(");
             init.append(
                 formatter.format(groundEntries.get(i).flywheelSpeed().in(RotationsPerSecond)));
-            init.append(", ");
-            init.append(formatter.format(groundEntries.get(i).hoodAngle().in(Degrees)));
-            init.append(", ");
+            init.append("), Degrees.of(");
+            init.append(formatter.format(groundEntries.get(i).exitAngle().in(Degrees)));
+            init.append("), MetersPerSecond.of(");
+            init.append(formatter.format(groundEntries.get(i).exitVelocity().in(MetersPerSecond)));
+            init.append("), Seconds.of(");
             init.append(formatter.format(groundEntries.get(i).tof().in(Seconds)));
-            init.append(')');
+            init.append("))");
         }
         init.append(" }");
-        entriesField = FieldSpec
+        FieldSpec entriesField = FieldSpec
             .builder(ShotEntry[].class, "groundEntries", Modifier.PUBLIC, Modifier.STATIC,
                 Modifier.FINAL)
             .initializer(init.toString())
@@ -591,7 +571,8 @@ public class GenerateLUTs {
         classBuilder.addJavadoc("derived from experimental shot data and curve-fitting.");
 
         try {
-            JavaFile.builder("frc.robot.shotdata", classBuilder.build()).build()
+            JavaFile.builder("frc.robot.shotdata", classBuilder.build())
+                .addStaticImport(ClassName.bestGuess("edu.wpi.first.units.Units"), "*").build()
                 .writeTo(new File("src/main/java"));
         } catch (IOException e) {
             e.printStackTrace();
