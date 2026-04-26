@@ -49,7 +49,7 @@ public class IntakeReal implements IntakeIO {
         config.CurrentLimits.StatorCurrentLimitEnable = false;
         config.CurrentLimits.StatorCurrentLimit = 30.0;
 
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         hopperLeftMotor.getConfigurator().apply(config);
 
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
