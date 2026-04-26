@@ -25,6 +25,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.math.geometry.Rectangle;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.swerve.Swerve;
@@ -61,6 +62,7 @@ public class RobotState {
             new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
             swerveOdometry, VecBuilder.fill(0.1, 0.1, 0.1), VecBuilder.fill(0.9, 0.9, 0.9));
+        SmartDashboard.putNumber("tofTrim", 0.0);
     }
 
     /**
@@ -445,20 +447,22 @@ public class RobotState {
         }
         Logger.recordOutput("State/turretEstPos", points);
 
+        double tofTrim = SmartDashboard.getNumber("tofTrim", 0.0);;
+
         Translation2d adjustedTarget = shootingTarget;
         if (currentFlywheelSpeed > 10.0) {
-            // for (int i = 0; i < 5; i++) {
-            // double distance =
-            // adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
-            // + Units.feetToMeters(trimUp);
-            // var parameters = targetIsGround
-            // ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
-            // : ShotData.getShotParameters(distance, currentFlywheelSpeed, false);
-            // double tof = parameters.timeOfFlight();
-            // var forward = getFieldRelativeSpeeds().times(tof);
-            // adjustedTarget = shootingTarget
-            // .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
-            // }
+            for (int i = 0; i < 5; i++) {
+                double distance =
+                    adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
+                        + Units.feetToMeters(trimUp);
+                var parameters = targetIsGround
+                    ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
+                    : ShotData.getShotParameters(distance, currentFlywheelSpeed, false);
+                double tof = parameters.timeOfFlight() + tofTrim;
+                var forward = getFieldRelativeSpeeds().times(tof);
+                adjustedTarget = shootingTarget
+                    .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
+            }
         } else {
             adjustedTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
         }

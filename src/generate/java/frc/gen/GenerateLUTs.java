@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -174,8 +175,10 @@ public class GenerateLUTs {
         }
 
         double maxGroundDistance = 0.0;
+        double maxHoodAngle = Arrays.stream(ShotData.entries)
+            .mapToDouble(x -> x.hoodAngle().in(Degrees)).max().getAsDouble();
         for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
-            var hoodAngle = Degrees.of(90 - 12.695 - 25);
+            var hoodAngle = Degrees.of(90 - 12.695 - maxHoodAngle);
             var exitVelocity =
                 MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
                     RotationsPerSecond.of(flywheel), null)));
@@ -204,7 +207,7 @@ public class GenerateLUTs {
         }
 
         for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
-            var hoodAngle = Degrees.of(90 - 12.695 - 35);
+            var hoodAngle = Degrees.of(90 - 12.695 - 43);
             var exitVelocity =
                 MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
                     RotationsPerSecond.of(flywheel), null)));
