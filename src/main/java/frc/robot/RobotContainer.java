@@ -172,7 +172,7 @@ public final class RobotContainer {
         SmartDashboard.putNumber(Constants.DashboardValues.feetPastCenter,
             Constants.DashboardValues.feetPastCenterDefault);
         SmartDashboard.putNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
-        SmartDashboard.putNumber(Constants.DashboardValues.x2, Constants.Auto.wilsonTestX);
+        SmartDashboard.putNumber(Constants.DashboardValues.x2, Constants.Auto.wilsonTestX2);
         SmartDashboard.putNumber(Constants.DashboardValues.delay,
             Constants.DashboardValues.delayDefault);
         SmartDashboard.putNumber(Constants.DashboardValues.delay2,
