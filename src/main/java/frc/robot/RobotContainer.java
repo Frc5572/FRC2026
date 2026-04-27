@@ -183,6 +183,7 @@ public final class RobotContainer {
         autoChooser.addRoutine("Just Pass", autoCommandFactory::passOnly);
         // autoChooser.addRoutine("Gather then Shoot (Left)",
         // autoCommandFactory::gatherThenShootLeft);
+        autoChooser.addRoutine("Cross Ramp", autoCommandFactory::rampAuto);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
         autoChooser.addRoutine(Constants.Auto.wilsonTestShort, autoCommandFactory::wilsonTestShort);
@@ -276,6 +277,15 @@ public final class RobotContainer {
 
         driver.leftTrigger().and(driver.rightTrigger().negate())
             .whileTrue(indexer.spinWhileIntake());
+
+        // driver.rightBumper()
+        // .whileTrue(swerve.driveFacingSides(
+        // () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
+        // () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
+        // Constants.DriverControls.driverTranslationalMaxSpeed,
+        // Constants.DriverControls.driverRotationalShootSpeed));
+        driver.rightBumper().whileTrue(swerve.toggleSideLock());
+        driver.leftBumper().whileTrue(swerve.toggleVerticalLock());
     }
 
     private void setupOperator() {

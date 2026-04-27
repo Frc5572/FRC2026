@@ -113,11 +113,17 @@ public class RobotState {
         visionAdjustedOdometry.update(gyroYaw.minus(gyroOffset), wheelPositions);
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
-            var diff = after.minus(before).times(0.6);
+            Logger.recordOutput("State/isOnBump", true);
+            var diff = after.minus(before);
+            diff = new Transform2d(diff.getX() * 0.6, diff.getY(), diff.getRotation());
             visionAdjustedOdometry.resetPose(before.plus(diff));
+        } else {
+            Logger.recordOutput("State/isOnBump", false);
         }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
-        limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
+        if (Constants.keepInField) {
+            limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
+        }
     }
 
     /**
@@ -129,9 +135,9 @@ public class RobotState {
         this.currentSpeeds =
             ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getGlobalPoseEstimate().getRotation());
         Logger.recordOutput("State/currentSpeeds", this.currentSpeeds);
-        if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 1e-2
-            || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 1e-2
-            || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > 1e-2) {
+        if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 0.3
+            || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 0.3
+            || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > Units.degreesToRadians(10)) {
             this.lastTimeMoved = MathSharedStore.getTimestamp();
             Logger.recordOutput("State/stationary/speeds", true);
         } else {
@@ -185,7 +191,7 @@ public class RobotState {
     /** Set the current turret angle */
     public void setTurretRawAngle(double timestamp, Angle angle) {
         var angleDeg = angle.in(Degrees);
-        if (Math.abs(angleDeg - prevAngle) > 1e-1) {
+        if (Math.abs(angleDeg - prevAngle) > 2) {
             Logger.recordOutput("State/stationary/turret", true);
             this.lastTimeMoved = MathSharedStore.getTimestamp();
         } else {
@@ -296,6 +302,15 @@ public class RobotState {
                         this.lastTimeMoved);
                     Logger.recordOutput("State/Camera/" + camera.name + "/timestamp",
                         pipelineResult.getTimestampSeconds());
+                    if (isStationary || FieldConstants.isOnBump(getGlobalPoseEstimate())) {
+                        var estRobotPose2d = estRobotPose.toPose2d();
+                        if (estRobotPose2d.getTranslation()
+                            .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
+                                .pow(Units.inchesToMeters(3), 2)) {
+                            visionAdjustedOdometry
+                                .resetTranslation(estRobotPose2d.getTranslation());
+                        }
+                    }
                     if (!isStationary) {
                         rotationStdDev = 10000.0;
                     }

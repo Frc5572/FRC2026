@@ -50,7 +50,7 @@ public class AllianceFlipUtil {
      */
     public static Pose2d flipY(Pose2d pose) {
         return new Pose2d(pose.getX(), FieldConstants.fieldWidth - pose.getY(),
-            pose.getRotation().plus(Rotation2d.k180deg));
+            pose.getRotation().unaryMinus());
     }
 
 }
