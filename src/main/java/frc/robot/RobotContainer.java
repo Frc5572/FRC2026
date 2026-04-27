@@ -291,6 +291,7 @@ public final class RobotContainer {
         // Constants.DriverControls.driverTranslationalMaxSpeed,
         // Constants.DriverControls.driverRotationalShootSpeed));
         driver.rightBumper().whileTrue(swerve.toggleSideLock());
+        driver.leftBumper().whileTrue(swerve.toggleVerticalLock());
     }
 
     private void setupOperator() {

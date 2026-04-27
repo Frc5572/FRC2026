@@ -40,18 +40,12 @@ public class Intake extends SubsystemBase {
     public Command extendHopper(double intakeSpeed) {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
-        Command extendHoldKickBar = startEnd(() -> {
-            io.setLeftHopperVoltage(3);
-            io.setRightHopperVoltage(3);
-            runIntakeOnly(-0.25);
-        }, () -> {
-            runIntakeOnly(intakeSpeed);
-        }).withTimeout(0.02);
+        double power = 5.0;
         Command extendAndIntake = startEnd(() -> {
             counts[0] = 0;
             counts[1] = 0;
-            io.setLeftHopperVoltage(3);
-            io.setRightHopperVoltage(3);
+            io.setLeftHopperVoltage(power);
+            io.setRightHopperVoltage(power);
             runIntakeOnly(intakeSpeed);
             SmartDashboard.putBoolean("Intake/HopperExtended", true);
         }, () -> {
@@ -78,18 +72,19 @@ public class Intake extends SubsystemBase {
             return counts[0] > 5 && counts[1] > 5;
 
         });
-        return extendHoldKickBar.andThen(extendAndIntake);
+        return extendAndIntake;
     }
 
     /** Retracts hopper */
     public Command retractHopper(double intakeSpeed) {
         int[] counts = new int[] {0, 0};
         double[] prev = new double[] {0.0, 0.0};
+        double power = -3.0;
         return startEnd(() -> {
             counts[0] = 0;
             counts[1] = 0;
-            io.setLeftHopperVoltage(-5);
-            io.setRightHopperVoltage(-5);
+            io.setLeftHopperVoltage(power);
+            io.setRightHopperVoltage(power);
             runIntakeOnly(intakeSpeed);
             SmartDashboard.putBoolean("Intake/HopperExtended", false);
         }, () -> {
