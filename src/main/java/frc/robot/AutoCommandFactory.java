@@ -262,14 +262,10 @@ public class AutoCommandFactory {
         // Positive turret trim towards net, negative towards DS
 
         Command endTrench = Commands.sequence(fullSweepCrossField(routine, 7.420, driveSpeed, left),
-            new WaitSupplierCommand(() -> SmartDashboard.getNumber(Constants.DashboardValues.delay2,
-                Constants.DashboardValues.delayDefault)),
             swerve.moveToPose().target(() -> new Pose2d(4.04, 7.420, Rotation2d.kZero))
                 .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left).finish()
                 .withTimeout(3.5));
         Command endRamp = Commands.sequence(fullSweepCrossField(routine, 5.655, driveSpeed, left),
-            new WaitSupplierCommand(() -> SmartDashboard.getNumber(Constants.DashboardValues.delay2,
-                Constants.DashboardValues.delayDefault)),
             crossRampIntoZone(routine));
         Command ending = Commands.either(endRamp.andThen(swerve.emergencyStop()), endTrench,
             () -> SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false));
@@ -389,6 +385,7 @@ public class AutoCommandFactory {
                 .target(() -> new Pose2d(x1.getAsDouble(), 2.4, Rotation2d.kCCW_90deg))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish(),
+            swerve.stop(),
             new WaitSupplierCommand(() -> SmartDashboard.getNumber(Constants.DashboardValues.delay2,
                 Constants.DashboardValues.delayDefault)),
             crossRampIntoZone(routine),
