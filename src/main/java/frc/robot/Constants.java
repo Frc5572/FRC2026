@@ -712,6 +712,7 @@ public final class Constants {
         public static final String x1 = "Dashboard/Auto/X1";
         public static final String x2 = "Dashboard/Auto/X2";
         public static final String delay = "Dashboard/Auto/Delay";
+        public static final String delay2 = "Dashboard/Auto/Delay 2";
         public static final String shootFirst = "Dashboard/Auto/Shoot First";
         public static final String fullWidth = "Dashboard/Auto/Full Width";
         public static final String rampOrTrenchEnd = "Dashboard/Auto/Ramp or Trench End";
@@ -734,5 +735,6 @@ public final class Constants {
         public static final String justShoot = "Just Shoot";
         public static final String cmpSpecial = "CMP Special";
         public static final String crossRamp = "Cross Ramp";
+        public static final String halfSweepTrenchRamp = "Half Sweep Trench Ramp";
     }
 }

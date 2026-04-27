@@ -175,6 +175,8 @@ public final class RobotContainer {
         SmartDashboard.putNumber(Constants.DashboardValues.x2, Constants.Auto.wilsonTestX);
         SmartDashboard.putNumber(Constants.DashboardValues.delay,
             Constants.DashboardValues.delayDefault);
+        SmartDashboard.putNumber(Constants.DashboardValues.delay2,
+            Constants.DashboardValues.delayDefault);
         SmartDashboard.putBoolean(Constants.DashboardValues.fullWidth, false);
         SmartDashboard.putBoolean(Constants.DashboardValues.shootFirst, false);
         SmartDashboard.putBoolean(Constants.DashboardValues.rampOrTrenchEnd, false);
@@ -185,23 +187,14 @@ public final class RobotContainer {
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
-        // autoChooser.addRoutine("Gather then Shoot (Left)",
-        // autoCommandFactory::gatherThenShootLeft);
-        autoChooser.addRoutine(Constants.Auto.crossRamp, autoCommandFactory::rampAuto);
-        autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
-        autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
         autoChooser.addRoutine(Constants.Auto.cmpSpecial, autoCommandFactory::cmpSpecial);
+        autoChooser.addRoutine(Constants.Auto.halfSweepTrenchRamp,
+            autoCommandFactory::halfSweepTrenchRamp);
+        autoChooser.addRoutine(Constants.Auto.crossRamp, autoCommandFactory::rampAuto);
+        autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
+        autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         // autoChooser.addRoutine(Constants.Auto.wilsonTestShort,
         // autoCommandFactory::wilsonTestShort);
-        // autoChooser.addRoutine("wilsonTest2", autoCommandFactory::wilsonTest2);
-        // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
-        // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
-        // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-        // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        // autoJustShootLocation.setPose(x, y, new Rotation2d());
-        // // System.out.println("asdfasdasdf");
-        // // Logger.recordOutput("asdfadsf", autoJustShootLocation.getPose());
-        // }));
         RobotModeTriggers.autonomous()
             .whileTrue(new WaitSupplierCommand(() -> SmartDashboard
                 .getNumber(Constants.DashboardValues.delay, Constants.DashboardValues.delayDefault))

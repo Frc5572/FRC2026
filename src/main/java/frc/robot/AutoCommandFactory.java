@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.commands.WaitSupplierCommand;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -117,12 +118,8 @@ public class AutoCommandFactory {
         AutoRoutine routine = autoFactory.newRoutine("CMP Special");
 
         Command autoSequence = Commands.none();
-        Command shoot = CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-            .alongWith(intake.jerkIntake(),
-                turret.goToAngleFieldRelative(
-                    () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
-            .withTimeout(3.3)
-            .andThen(adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25));
+        Command shoot = autoShooting(3.3).andThen(adjustableHood.setGoal(Degree.of(0)),
+            Commands.waitSeconds(0.25));
         Command shootOrNot = Commands.either(shoot, Commands.none(), shootFirst);
         Command halfSweep = Commands.either(wilsonTestSide(true), wilsonTestSide(false), fieldSide);
 
@@ -157,8 +154,7 @@ public class AutoCommandFactory {
         AutoRoutine routine = autoFactory.newRoutine("Just Shoot");
         MoveToPose moveToStart = swerve.moveToPose().target(poseSup).autoRoutine(routine).finish();
         routine.active().onTrue(moveToStart);
-        moveToStart.done()
-            .onTrue(CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood));
+        moveToStart.done().onTrue(autoShooting(15));
         return routine;
     }
 
@@ -219,8 +215,7 @@ public class AutoCommandFactory {
                 swerve.state.getGlobalPoseEstimate().getRotation());
         }).flipForRed(false).flipY(false).maxSpeed(2.5).finish()
             .until(() -> AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
-                .getX() < AllianceFlipUtil.apply(FieldConstants.LeftBump.nearLeftCorner).getX()
-                    - Units.inchesToMeters(10));
+                .getX() < FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
     }
 
     /** Test to make sure autos work. */
@@ -244,31 +239,37 @@ public class AutoCommandFactory {
         return routine;
     }
 
+    private Command fullSweepCrossField(AutoRoutine routine, double endY, double driveSpeed,
+        boolean left) {
+        return Commands
+            .sequence(
+                swerve.moveToPose()
+                    .target(() -> new Pose2d(x1.getAsDouble(), endY - Units.feetToMeters(1),
+                        Rotation2d.kCCW_90deg))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
+                    .flipY(left).finish(),
+                swerve.moveToPose()
+                    .target(() -> new Pose2d(x1.getAsDouble(), endY, Rotation2d.kZero))
+                    .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
+                    .flipY(left).finish())
+            .deadlineFor(intake.extendHopper(1.0)
+                .andThen(intake.intakeBalls().alongWith(indexer.spinWhileIntake())));
+    }
+
     private Command fullSweep(AutoRoutine routine, boolean left) {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
         // Positive turret trim towards net, negative towards DS
-        Command endTrench = Commands.sequence(
-            swerve.moveToPose()
-                .target(() -> new Pose2d(x1.getAsDouble(), 7.420 - Units.feetToMeters(1),
-                    Rotation2d.kCCW_90deg))
-                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                .finish().alongWith(intake.extendHopper(0.0)),
-            swerve.moveToPose().target(() -> new Pose2d(x1.getAsDouble(), 7.420, Rotation2d.kZero))
-                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                .finish().alongWith(intake.extendHopper(0.0)),
+
+        Command endTrench = Commands.sequence(fullSweepCrossField(routine, 7.420, driveSpeed, left),
+            new WaitSupplierCommand(() -> SmartDashboard.getNumber(Constants.DashboardValues.delay2,
+                Constants.DashboardValues.delayDefault)),
             swerve.moveToPose().target(() -> new Pose2d(4.04, 7.420, Rotation2d.kZero))
                 .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left).finish()
                 .withTimeout(3.5));
-        Command endRamp = Commands.sequence(
-            swerve.moveToPose()
-                .target(() -> new Pose2d(x1.getAsDouble(), 5.655 - Units.feetToMeters(1),
-                    Rotation2d.kCCW_90deg))
-                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                .finish().alongWith(intake.extendHopper(0.0)),
-            swerve.moveToPose().target(() -> new Pose2d(x1.getAsDouble(), 5.655, Rotation2d.kZero))
-                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
-                .finish().alongWith(intake.extendHopper(0.0)),
+        Command endRamp = Commands.sequence(fullSweepCrossField(routine, 5.655, driveSpeed, left),
+            new WaitSupplierCommand(() -> SmartDashboard.getNumber(Constants.DashboardValues.delay2,
+                Constants.DashboardValues.delayDefault)),
             crossRampIntoZone(routine));
         Command ending = Commands.either(endRamp.andThen(swerve.emergencyStop()), endTrench,
             () -> SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false));
@@ -281,14 +282,10 @@ public class AutoCommandFactory {
                 swerve.moveToPose()
                     .target(() -> new Pose2d(x1.getAsDouble(), 1.267, Rotation2d.kCCW_90deg))
                     .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15)
-                    .flipY(left).finish(),
+                    .flipY(left).finish().alongWith(intake.extendHopper(0.0)),
                 ending, swerve.emergencyStop())
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0))
-            .andThen(CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                .alongWith(intake.jerkIntake(),
-                    turret.goToAngleFieldRelative(
-                        () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
-                .withTimeout(shootingTime));
+            .andThen(autoShooting(shootingTime));
         return sequence;
 
     }
@@ -297,32 +294,17 @@ public class AutoCommandFactory {
         double shootingTime = 5.5;
         double driveSpeed = 2.5;
         // Positive turret trim towards net, negative towards DS
-        double turretFudge1 = 9;
-        double turretFudge2 = 10;
+        double turretFudge1 = 0;
+        double turretFudge2 = 0;
         return Commands
             .sequence(wilsonTestSweep(left, true, x1, driveSpeed).alongWith(Commands.runOnce(() -> {
                 swerve.state.setTrims(-0.5, left ? turretFudge1 : -turretFudge1);
-            })), CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                .alongWith(intake.jerkIntake(),
-                    turret.goToAngleFieldRelative(
-                        () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
-                .withTimeout(shootingTime),
+            })), autoShooting(shootingTime),
                 Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
                     wilsonTestSweep(left, false, x2, driveSpeed), Commands.runOnce(() -> {
                         swerve.state.setTrims(-0.5, left ? turretFudge2 : -turretFudge2);
-                    }),
-                    CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                        .alongWith(intake.jerkIntake(),
-                            turret.goToAngleFieldRelative(
-                                () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
-                        .withTimeout(shootingTime),
-                    adjustableHood.setGoal(Rotations.of(0)),
-                    wilsonTestSweep(left, false, x1, driveSpeed),
-                    CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
-                        .alongWith(intake.jerkIntake(),
-                            turret.goToAngleFieldRelative(
-                                () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
-                        .withTimeout(shootingTime * 2))
+                    }), autoShooting(shootingTime), adjustableHood.setGoal(Rotations.of(0)),
+                    wilsonTestSweep(left, false, x1, driveSpeed), autoShooting(shootingTime * 2))
                     .repeatedly());
     }
 
@@ -368,5 +350,76 @@ public class AutoCommandFactory {
                         swerve.emergencyStop())
                     .deadlineFor(shooter.shoot(60.0)))
             .deadlineFor(CommandFactory.followHub(turret, swerve, () -> 0.0));
+    }
+
+    /** Base for auto routines. */
+    public AutoRoutine halfSweepTrenchRamp() {
+        AutoRoutine routine = autoFactory.newRoutine("halfSweepTrenchRamp");
+        routine.active().onTrue(new ConditionalCommand(halfSweepTrenchRamp(routine, true),
+            halfSweepTrenchRamp(routine, false), () -> {
+                return AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0;
+            }));
+        return routine;
+    }
+
+    /** Cross trench and then back over ramp and shoot */
+    public Command halfSweepTrenchRamp(AutoRoutine routine, boolean left) {
+        double driveSpeed = 2.5;
+        Command shoot = autoShooting(3.3).andThen(adjustableHood.setGoal(Degree.of(0)),
+            Commands.waitSeconds(0.25));
+        Command shootOrNot = Commands.either(shoot, Commands.none(), shootFirst);
+        return Commands.sequence(shootOrNot,
+            swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kCCW_90deg))
+                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                .finish(),
+            swerve.moveToPose()
+                .target(() -> new Pose2d(x1.getAsDouble(), 1.267, Rotation2d.kCCW_90deg))
+                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                .finish().alongWith(intake.extendHopper(0.0)),
+            swerve.moveToPose()
+                .target(() -> new Pose2d(x1.getAsDouble(),
+                    (FieldConstants.fieldWidth / 2.0)
+                        + Units.feetToMeters(feetPastCenter.getAsDouble()),
+                    Rotation2d.kCCW_90deg))
+                .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left).finish()
+                .deadlineFor(intake.extendHopper(1.0)
+                    .andThen(intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
+            swerve.moveToPose()
+                .target(() -> new Pose2d(x1.getAsDouble(), 2.4, Rotation2d.kCCW_90deg))
+                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                .finish(),
+            new WaitSupplierCommand(() -> SmartDashboard.getNumber(Constants.DashboardValues.delay2,
+                Constants.DashboardValues.delayDefault)),
+            crossRampIntoZone(routine),
+            swerve.moveToPose().target(new Pose2d(1.22, 1.60, Rotation2d.kCCW_90deg))
+                .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
+                .finish(),
+            swerve.emergencyStop(), autoShooting(10));
+    }
+
+    /**
+     * Shooting Function
+     *
+     * @param shootingTime Time to shoot
+     * @return Command
+     */
+    Command autoShooting(double shootingTime, double delayTime) {
+        return Commands.sequence(Commands.waitSeconds(delayTime),
+            CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                .alongWith(intake.jerkIntake(),
+                    turret.goToAngleFieldRelative(
+                        () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                .withTimeout(shootingTime));
+    }
+
+    /**
+     * Shooting Function
+     *
+     * @param shootingTime Time to shoot
+     * @return Command
+     */
+    Command autoShooting(double shootingTime) {
+        return autoShooting(0, shootingTime);
     }
 }
