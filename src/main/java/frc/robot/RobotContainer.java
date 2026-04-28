@@ -190,7 +190,7 @@ public final class RobotContainer {
         autoChooser.addRoutine(Constants.Auto.cmpSpecial, autoCommandFactory::cmpSpecial);
         autoChooser.addRoutine(Constants.Auto.halfSweepTrenchRamp,
             autoCommandFactory::halfSweepTrenchRamp);
-        autoChooser.addRoutine(Constants.Auto.crossRamp, autoCommandFactory::rampAuto);
+        // autoChooser.addRoutine(Constants.Auto.crossRamp, autoCommandFactory::rampAuto);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
         autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
         // autoChooser.addRoutine(Constants.Auto.wilsonTestShort,
@@ -449,7 +449,23 @@ public final class RobotContainer {
             }
             autoStoppingPoint.setPose(pose);
 
-
+        } else if (selectedAuto.equals(Constants.Auto.halfSweepTrenchRamp)) {
+            double x =
+                SmartDashboard.getNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
+            double y = FieldConstants.fieldWidth / 2.0 + Units
+                .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                    Constants.DashboardValues.feetPastCenterDefault));
+            Pose2d pose1 = AllianceFlipUtil.apply(new Pose2d(x, y, Rotation2d.kCCW_90deg));
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0) {
+                pose1 = AllianceFlipUtil.flipY(pose1);
+            }
+            double x2 = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
+                Constants.DashboardValues.shootXDefault);
+            double y2 = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
+                Constants.DashboardValues.shootYDefault);
+            Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x, y, new Rotation2d()));
+            autoStoppingPoint.setPoses(pose1, pose2);
         } else {
             autoStoppingPoint.setPoses(new ArrayList<Pose2d>());
         }
