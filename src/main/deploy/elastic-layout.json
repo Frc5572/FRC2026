@@ -138,7 +138,7 @@
             "x": 256.0,
             "y": 0.0,
             "width": 256.0,
-            "height": 192.0,
+            "height": 128.0,
             "type": "ComboBox Chooser",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Auto Chooser",
@@ -151,7 +151,7 @@
             "x": 0.0,
             "y": 0.0,
             "width": 256.0,
-            "height": 192.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Vision/seesAprilTag",
@@ -165,10 +165,10 @@
           },
           {
             "title": "Just Shoot X",
-            "x": 896.0,
+            "x": 704.0,
             "y": 0.0,
-            "width": 192.0,
-            "height": 192.0,
+            "width": 128.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Just Shoot X",
@@ -179,10 +179,10 @@
           },
           {
             "title": "Just Shoot Y",
-            "x": 1088.0,
+            "x": 832.0,
             "y": 0.0,
-            "width": 192.0,
-            "height": 192.0,
+            "width": 128.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Just Shoot Y",
@@ -194,9 +194,9 @@
           {
             "title": "Field",
             "x": 0.0,
-            "y": 192.0,
-            "width": 1280.0,
-            "height": 512.0,
+            "y": 128.0,
+            "width": 1344.0,
+            "height": 576.0,
             "type": "Field",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Field",
@@ -214,10 +214,10 @@
           },
           {
             "title": "Feet Past Center",
-            "x": 704.0,
+            "x": 512.0,
             "y": 0.0,
             "width": 192.0,
-            "height": 192.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Feet Past Center",
@@ -228,10 +228,10 @@
           },
           {
             "title": "Delay",
-            "x": 512.0,
+            "x": 1216.0,
             "y": 0.0,
-            "width": 192.0,
-            "height": 192.0,
+            "width": 128.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Dashboard/Auto/Delay",
@@ -242,7 +242,7 @@
           },
           {
             "title": "X1",
-            "x": 1280.0,
+            "x": 960.0,
             "y": 0.0,
             "width": 128.0,
             "height": 128.0,
@@ -256,8 +256,8 @@
           },
           {
             "title": "X2",
-            "x": 1280.0,
-            "y": 128.0,
+            "x": 1088.0,
+            "y": 0.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
@@ -270,8 +270,8 @@
           },
           {
             "title": "Full Width",
-            "x": 1280.0,
-            "y": 384.0,
+            "x": 1344.0,
+            "y": 256.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Toggle Switch",
@@ -283,8 +283,8 @@
           },
           {
             "title": "Shoot First",
-            "x": 1280.0,
-            "y": 256.0,
+            "x": 1344.0,
+            "y": 128.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Toggle Switch",
@@ -296,8 +296,8 @@
           },
           {
             "title": "Ramp or Trench End",
-            "x": 1280.0,
-            "y": 512.0,
+            "x": 1344.0,
+            "y": 384.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Toggle Switch",
@@ -309,8 +309,8 @@
           },
           {
             "title": "Delay 2",
-            "x": 1280.0,
-            "y": 640.0,
+            "x": 1344.0,
+            "y": 0.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
