@@ -272,7 +272,7 @@ public final class RobotContainer {
         }));
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
-            .onFalse(intake.retractHopper(0));
+            .onFalse(intake.retractHopper(1.0));
 
         driver.leftTrigger().and(driver.rightTrigger().negate())
             .whileTrue(indexer.spinWhileIntake());
@@ -385,6 +385,11 @@ public final class RobotContainer {
         }
         viz.periodic();
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
+
+        Logger.recordOutput("test",
+            AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());
+        Logger.recordOutput("test1",
+            FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
     }
 
 

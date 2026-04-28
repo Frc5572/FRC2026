@@ -117,8 +117,7 @@ public class AutoCommandFactory {
 
         AutoRoutine routine = autoFactory.newRoutine("CMP Special");
 
-        Command autoSequence = Commands.none();
-        Command shoot = autoShooting(3.3).andThen(adjustableHood.setGoal(Degree.of(0)),
+        Command shoot = autoShooting(3.5).andThen(adjustableHood.setGoal(Degree.of(0)),
             Commands.waitSeconds(0.25));
         Command shootOrNot = Commands.either(shoot, Commands.none(), shootFirst);
         Command halfSweep = Commands.either(wilsonTestSide(true), wilsonTestSide(false), fieldSide);
@@ -127,7 +126,7 @@ public class AutoCommandFactory {
             Commands.either(fullSweep(routine, true), fullSweep(routine, false), fieldSide);
         Command sweep = Commands.either(fullsweep, halfSweep, fullWidth);
 
-        routine.active().onTrue(new SequentialCommandGroup(autoSequence, shootOrNot, sweep));
+        routine.active().onTrue(new SequentialCommandGroup(shootOrNot, sweep));
 
         return routine;
     }
@@ -192,7 +191,7 @@ public class AutoCommandFactory {
                         crossRampIntoZone(routine), swerve.emergencyStop(),
                         CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
                             .alongWith(
-                                Commands.waitSeconds(2.0).andThen(intake.retractHopper(0.0)))));
+                                Commands.waitSeconds(2.0).andThen(intake.retractHopper(1.0)))));
         return routine;
     }
 
@@ -263,8 +262,7 @@ public class AutoCommandFactory {
 
         Command endTrench = Commands.sequence(fullSweepCrossField(routine, 7.420, driveSpeed, left),
             swerve.moveToPose().target(() -> new Pose2d(4.04, 7.420, Rotation2d.kZero))
-                .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left).finish()
-                .withTimeout(3.5));
+                .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left).finish());
         Command endRamp = Commands.sequence(fullSweepCrossField(routine, 5.655, driveSpeed, left),
             crossRampIntoZone(routine));
         Command ending = Commands.either(endRamp.andThen(swerve.emergencyStop()), endTrench,
@@ -381,15 +379,14 @@ public class AutoCommandFactory {
                 .maxSpeed(1.0).translationTolerance(0.5).rotationTolerance(15).flipY(left).finish()
                 .deadlineFor(intake.extendHopper(1.0)
                     .andThen(intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
-            swerve.moveToPose()
-                .target(() -> new Pose2d(x1.getAsDouble(), 2.4, Rotation2d.kCCW_90deg))
+            swerve.moveToPose().target(() -> new Pose2d(x1.getAsDouble(), 2.4, Rotation2d.kZero))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish(),
             swerve.stop(),
             new WaitSupplierCommand(() -> SmartDashboard.getNumber(Constants.DashboardValues.delay2,
                 Constants.DashboardValues.delayDefault)),
             crossRampIntoZone(routine),
-            swerve.moveToPose().target(new Pose2d(1.22, 1.60, Rotation2d.kCCW_90deg))
+            swerve.moveToPose().target(new Pose2d(1.22, 1.60, Rotation2d.kZero))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish(),
             swerve.emergencyStop(), autoShooting(10));
@@ -407,7 +404,8 @@ public class AutoCommandFactory {
                 .alongWith(intake.jerkIntake(),
                     turret.goToAngleFieldRelative(
                         () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
-                .withTimeout(shootingTime));
+                .withTimeout(shootingTime))
+            .andThen(intake.retractHopper(1));
     }
 
     /**
@@ -417,6 +415,6 @@ public class AutoCommandFactory {
      * @return Command
      */
     Command autoShooting(double shootingTime) {
-        return autoShooting(0, shootingTime);
+        return autoShooting(shootingTime, 0);
     }
 }
