@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
@@ -118,6 +119,7 @@ public final class RobotContainer {
 
                 break;
             case kSimulation:
+                SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
                 sim = new SimulatedRobotState(
                     new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
@@ -169,8 +171,15 @@ public final class RobotContainer {
         SmartDashboard.putData(Constants.DashboardValues.field, field);
         SmartDashboard.putNumber(Constants.DashboardValues.feetPastCenter,
             Constants.DashboardValues.feetPastCenterDefault);
+        SmartDashboard.putNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
+        SmartDashboard.putNumber(Constants.DashboardValues.x2, Constants.Auto.wilsonTestX2);
         SmartDashboard.putNumber(Constants.DashboardValues.delay,
             Constants.DashboardValues.delayDefault);
+        SmartDashboard.putNumber(Constants.DashboardValues.delay2,
+            Constants.DashboardValues.delayDefault);
+        SmartDashboard.putBoolean(Constants.DashboardValues.fullWidth, false);
+        SmartDashboard.putBoolean(Constants.DashboardValues.shootFirst, false);
+        SmartDashboard.putBoolean(Constants.DashboardValues.rampOrTrenchEnd, false);
         // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
@@ -178,21 +187,14 @@ public final class RobotContainer {
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret);
-        // autoChooser.addRoutine("Gather then Shoot (Left)",
-        // autoCommandFactory::gatherThenShootLeft);
-        autoChooser.addRoutine("Cross Ramp", autoCommandFactory::rampAuto);
-        autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
+        autoChooser.addRoutine(Constants.Auto.cmpSpecial, autoCommandFactory::cmpSpecial);
+        autoChooser.addRoutine(Constants.Auto.halfSweepTrenchRamp,
+            autoCommandFactory::halfSweepTrenchRamp);
+        // autoChooser.addRoutine(Constants.Auto.crossRamp, autoCommandFactory::rampAuto);
         autoChooser.addRoutine(Constants.Auto.wilsonTest, autoCommandFactory::wilsonTest);
-        autoChooser.addRoutine(Constants.Auto.wilsonTestShort, autoCommandFactory::wilsonTestShort);
-        autoChooser.addRoutine("wilsonTest2", autoCommandFactory::wilsonTest2);
-        // Trigger isn't working for some reason during disabled mode, moved to disabled periodic
-        // RobotModeTriggers.disabled().whileTrue(Commands.run(() -> {
-        // double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX, 0);
-        // double y = SmartDashboard.getNumber(Constants.DashboardValues.shootY, 0);
-        // autoJustShootLocation.setPose(x, y, new Rotation2d());
-        // // System.out.println("asdfasdasdf");
-        // // Logger.recordOutput("asdfadsf", autoJustShootLocation.getPose());
-        // }));
+        autoChooser.addRoutine(Constants.Auto.justShoot, autoCommandFactory::justShoot);
+        // autoChooser.addRoutine(Constants.Auto.wilsonTestShort,
+        // autoCommandFactory::wilsonTestShort);
         RobotModeTriggers.autonomous()
             .whileTrue(new WaitSupplierCommand(() -> SmartDashboard
                 .getNumber(Constants.DashboardValues.delay, Constants.DashboardValues.delayDefault))
@@ -270,7 +272,7 @@ public final class RobotContainer {
         }));
 
         driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
-            .onFalse(intake.retractHopper(0));
+            .onFalse(intake.retractHopper(1.0));
 
         driver.leftTrigger().and(driver.rightTrigger().negate())
             .whileTrue(indexer.spinWhileIntake());
@@ -383,6 +385,11 @@ public final class RobotContainer {
         }
         viz.periodic();
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
+
+        Logger.recordOutput("test",
+            AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());
+        Logger.recordOutput("test1",
+            FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
     }
 
 
@@ -424,6 +431,58 @@ public final class RobotContainer {
                 pose = AllianceFlipUtil.flipY(pose);
             }
             autoStoppingPoint.setPose(pose);
+        } else if (selectedAuto.equals(Constants.Auto.cmpSpecial)) {
+            ArrayList<Pose2d> poses = new ArrayList<Pose2d>();
+            boolean fullwidth =
+                SmartDashboard.getBoolean(Constants.DashboardValues.fullWidth, false);
+            double x =
+                SmartDashboard.getNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
+            double y = fullwidth
+                ? SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false)
+                    ? Constants.Auto.fullSweepRampY
+                    : Constants.Auto.fullSweepTrenchY
+                : (FieldConstants.fieldWidth / 2.0) + Units
+                    .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                        Constants.DashboardValues.feetPastCenterDefault));
+            Pose2d pose = AllianceFlipUtil.apply(new Pose2d(x, y, Rotation2d.kCCW_90deg));
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0) {
+                pose = AllianceFlipUtil.flipY(pose);
+            }
+            poses.add(pose);
+            if (!fullwidth) {
+                double x2 = SmartDashboard.getNumber(Constants.DashboardValues.x2,
+                    Constants.Auto.wilsonTestX2);
+                double y2 = (FieldConstants.fieldWidth / 2.0) + Units
+                    .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                        Constants.DashboardValues.feetPastCenterDefault));
+                Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x2, y2, Rotation2d.kCCW_90deg));
+
+                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0) {
+                    pose2 = AllianceFlipUtil.flipY(pose2);
+                }
+                poses.add(pose2);
+            }
+            autoStoppingPoint.setPoses(poses);
+
+        } else if (selectedAuto.equals(Constants.Auto.halfSweepTrenchRamp)) {
+            double x =
+                SmartDashboard.getNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
+            double y = FieldConstants.fieldWidth / 2.0 + Units
+                .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                    Constants.DashboardValues.feetPastCenterDefault));
+            Pose2d pose1 = AllianceFlipUtil.apply(new Pose2d(x, y, Rotation2d.kCCW_90deg));
+            if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                .getY() > FieldConstants.fieldWidth / 2.0) {
+                pose1 = AllianceFlipUtil.flipY(pose1);
+            }
+            double x2 = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
+                Constants.DashboardValues.shootXDefault);
+            double y2 = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
+                Constants.DashboardValues.shootYDefault);
+            Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x2, y2, new Rotation2d()));
+            autoStoppingPoint.setPoses(pose1, pose2);
         } else {
             autoStoppingPoint.setPoses(new ArrayList<Pose2d>());
         }

@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
@@ -122,6 +123,6 @@ public class Intake extends SubsystemBase {
     }
 
     public Command jerkIntake() {
-        return extendHopper(0).andThen(retractHopper(0)).repeatedly();
+        return extendHopper(1).andThen(Commands.waitSeconds(0.5), retractHopper(1)).repeatedly();
     }
 }
