@@ -48,7 +48,7 @@ public final class Constants {
 
     public static final boolean tunable = true;
 
-    public static final boolean keepInField = false;
+    public static final boolean keepInField = true;
 
     /** Constants for driver controls */
     public static class DriverControls {
