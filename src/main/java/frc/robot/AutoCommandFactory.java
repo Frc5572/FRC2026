@@ -269,7 +269,11 @@ public class AutoCommandFactory {
                 .maxSpeed(1.5).translationTolerance(0.1).rotationTolerance(5).flipY(left).finish());
         Command endRamp = Commands.sequence(fullSweepCrossField(routine, 5.655, driveSpeed, left),
             crossRampIntoZone(routine));
-        Command ending = Commands.either(endRamp.andThen(swerve.emergencyStop()), endTrench,
+        Command ending = Commands.either(
+            endRamp.andThen(swerve.emergencyStop(), Commands.waitSeconds(1),
+                swerve.moveToPose().target(shootPoseSupplier).maxSpeed(driveSpeed)
+                    .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish()),
+            endTrench,
             () -> SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false));
 
         Command sequence = Commands

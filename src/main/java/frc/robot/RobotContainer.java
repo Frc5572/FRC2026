@@ -432,10 +432,12 @@ public final class RobotContainer {
             }
             autoStoppingPoint.setPose(pose);
         } else if (selectedAuto.equals(Constants.Auto.cmpSpecial)) {
-            // System.out.println("asdf");
+            ArrayList<Pose2d> poses = new ArrayList<Pose2d>();
+            boolean fullwidth =
+                SmartDashboard.getBoolean(Constants.DashboardValues.fullWidth, false);
             double x =
                 SmartDashboard.getNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
-            double y = SmartDashboard.getBoolean(Constants.DashboardValues.fullWidth, false)
+            double y = fullwidth
                 ? SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false)
                     ? Constants.Auto.fullSweepRampY
                     : Constants.Auto.fullSweepTrenchY
@@ -447,7 +449,22 @@ public final class RobotContainer {
                 .getY() > FieldConstants.fieldWidth / 2.0) {
                 pose = AllianceFlipUtil.flipY(pose);
             }
-            autoStoppingPoint.setPose(pose);
+            poses.add(pose);
+            if (!fullwidth) {
+                double x2 = SmartDashboard.getNumber(Constants.DashboardValues.x2,
+                    Constants.Auto.wilsonTestX2);
+                double y2 = (FieldConstants.fieldWidth / 2.0) + Units
+                    .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                        Constants.DashboardValues.feetPastCenterDefault));
+                Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x2, y2, Rotation2d.kCCW_90deg));
+
+                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0) {
+                    pose2 = AllianceFlipUtil.flipY(pose2);
+                }
+                poses.add(pose2);
+            }
+            autoStoppingPoint.setPoses(poses);
 
         } else if (selectedAuto.equals(Constants.Auto.halfSweepTrenchRamp)) {
             double x =
@@ -464,7 +481,7 @@ public final class RobotContainer {
                 Constants.DashboardValues.shootXDefault);
             double y2 = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
                 Constants.DashboardValues.shootYDefault);
-            Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x, y, new Rotation2d()));
+            Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x2, y2, new Rotation2d()));
             autoStoppingPoint.setPoses(pose1, pose2);
         } else {
             autoStoppingPoint.setPoses(new ArrayList<Pose2d>());
