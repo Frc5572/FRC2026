@@ -371,57 +371,6 @@ public final class Constants {
                 .isTurret(false)
                 // .findConstants(true)
                 .finish(),
-            // new CameraConstantsBuilder()
-            //         .coProcessorName("skip")
-            //     .name("front-right")
-            //     .height(800)
-            //     .width(1280)
-            //     .horizontalFieldOfView(80)
-            //     .simFps(20)
-            //     .simLatency(0.3)
-            //     .simLatencyStdDev(0.02)
-            //     .calibrationErrorMean(0.8)
-            //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(
-            //         new Transform3d(
-            //             -0.059,
-            //             -0.31,
-            //             0.161,
-            //                 new Rotation3d(
-            //                 Degrees.of(180.0),
-            //                 Degrees.of(-27.75),
-            //                 Degrees.of(-51.42))))
-            //     .translationError(0.3)
-            //     .rotationError(0.3)
-            //     .singleTagError(0)
-            //     .isTurret(false)
-            //     .findConstants(true)
-            //     .finish(),
-            // new CameraConstantsBuilder()
-            //     .coProcessorName("skip")
-            //     .name("front-left")
-            //     .height(800)
-            //     .width(1280)
-            //     .horizontalFieldOfView(80)
-            //     .simFps(20)
-            //     .simLatency(0.3)
-            //     .simLatencyStdDev(0.02)
-            //     .calibrationErrorMean(0.8)
-            //     .calibrationErrorStdDev(0.08)
-            //     .robotToCamera(
-            //         new Transform3d(
-            //             -0.132,
-            //             0.305,
-            //             0.165,
-            //             new Rotation3d(
-            //                 Degrees.of(180.0),
-            //                 Degrees.of(-27.85),
-            //                 Degrees.of(51.33))))
-            //     .translationError(0.3)
-            //     .rotationError(0.3)
-            //     .singleTagError(0)
-            //     .isTurret(false)
-            //     .finish(),
         };
         // @formatter:on
     }
