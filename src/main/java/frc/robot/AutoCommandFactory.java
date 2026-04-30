@@ -131,7 +131,7 @@ public class AutoCommandFactory {
 
         AutoRoutine routine = autoFactory.newRoutine("CMP Special");
 
-        Command shoot = autoShooting(3.5).andThen(adjustableHood.setGoal(Degree.of(0)),
+        Command shoot = autoShooting(2).andThen(adjustableHood.setGoal(Degree.of(0)),
             Commands.waitSeconds(0.25));
         Command shootOrNot = Commands.either(shoot, Commands.none(), shootFirst);
         Command halfSweep = Commands.either(wilsonTestSide(true), wilsonTestSide(false), fieldSide);
