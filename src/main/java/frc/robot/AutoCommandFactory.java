@@ -408,9 +408,11 @@ public class AutoCommandFactory {
             Commands
                 .either(
                     halfSweepTrenchRampPath(routine, left)
-                        .andThen(swerve.moveToPose()
-                            .target(new Pose2d(2.8, 0.622, Rotation2d.kZero)).maxSpeed(driveSpeed)
-                            .translationTolerance(0.2).rotationTolerance(15).flipY(left).finish())
+                        .andThen(
+                            swerve.moveToPose().target(new Pose2d(2.8, 0.622, Rotation2d.kZero))
+                                .maxSpeed(driveSpeed).translationTolerance(0.2)
+                                .rotationTolerance(15).flipY(left).finish(),
+                            adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25))
                         .repeatedly(),
                     halfSweepTrenchRampPath(routine, left).andThen(autoShooting(5)), secondSweep);
         return shootOrNot.andThen(runPath);
