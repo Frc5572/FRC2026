@@ -665,6 +665,7 @@ public final class Constants {
         public static final String shootFirst = "Dashboard/Auto/Shoot First";
         public static final String fullWidth = "Dashboard/Auto/Full Width";
         public static final String rampOrTrenchEnd = "Dashboard/Auto/Ramp or Trench End";
+        public static final String secondSweep = "Dashboard/Auto/Second Sweep";
         public static final double feetPastCenterDefault = 0.0;
         public static final double delayDefault = 0.0;
         public static final double shootXDefault = 2.5;

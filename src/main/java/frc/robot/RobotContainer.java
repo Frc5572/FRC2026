@@ -180,6 +180,7 @@ public final class RobotContainer {
         SmartDashboard.putBoolean(Constants.DashboardValues.fullWidth, false);
         SmartDashboard.putBoolean(Constants.DashboardValues.shootFirst, false);
         SmartDashboard.putBoolean(Constants.DashboardValues.rampOrTrenchEnd, false);
+        SmartDashboard.putBoolean(Constants.DashboardValues.secondSweep, true);
         // END DASHBOARD STUFF
 
         viz = new RobotViz(sim, swerve, turret, adjustableHood, intake, climber, shooter);
