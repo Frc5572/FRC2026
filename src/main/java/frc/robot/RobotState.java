@@ -116,7 +116,7 @@ public class RobotState {
             Logger.recordOutput("State/isOnBump", true);
             var diff = after.minus(before);
             diff = new Transform2d(diff.getX() * 0.6, diff.getY(), diff.getRotation());
-            // visionAdjustedOdometry.resetPose(before.plus(diff));
+            visionAdjustedOdometry.resetPose(before.plus(diff));
         } else {
             Logger.recordOutput("State/isOnBump", false);
         }
@@ -302,15 +302,15 @@ public class RobotState {
                         this.lastTimeMoved);
                     Logger.recordOutput("State/Camera/" + camera.name + "/timestamp",
                         pipelineResult.getTimestampSeconds());
-                    // if (isStationary || FieldConstants.isOnBump(getGlobalPoseEstimate())) {
-                    // var estRobotPose2d = estRobotPose.toPose2d();
-                    // if (estRobotPose2d.getTranslation()
-                    // .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
-                    // .pow(Units.inchesToMeters(3), 2)) {
-                    // visionAdjustedOdometry
-                    // .resetTranslation(estRobotPose2d.getTranslation());
-                    // }
-                    // }
+                    if (isStationary || FieldConstants.isOnBump(getGlobalPoseEstimate())) {
+                        var estRobotPose2d = estRobotPose.toPose2d();
+                        if (estRobotPose2d.getTranslation()
+                            .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
+                                .pow(Units.inchesToMeters(3), 2)) {
+                            visionAdjustedOdometry
+                                .resetTranslation(estRobotPose2d.getTranslation());
+                        }
+                    }
                     if (!isStationary) {
                         rotationStdDev = 10000.0;
                     }
