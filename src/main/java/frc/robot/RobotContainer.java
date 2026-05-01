@@ -464,10 +464,27 @@ public final class RobotContainer {
                     pose2 = AllianceFlipUtil.flipY(pose2);
                 }
                 poses.add(pose2);
+            } else if (SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd,
+                false)) {
+                double x2 = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
+                    Constants.DashboardValues.shootXDefault);
+                double y2 = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
+                    Constants.DashboardValues.shootYDefault);
+                Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x2, y2, Rotation2d.kCCW_90deg));
+                poses.add(pose2);
+            } else {
+                Pose2d pose2 =
+                    AllianceFlipUtil.apply(new Pose2d(4.04, 7.420, Rotation2d.kCCW_90deg));
+                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0) {
+                    pose2 = AllianceFlipUtil.flipY(pose2);
+                }
+                poses.add(pose2);
             }
             autoStoppingPoint.setPoses(poses);
 
         } else if (selectedAuto.equals(Constants.Auto.halfSweepTrenchRamp)) {
+            ArrayList<Pose2d> poses = new ArrayList<Pose2d>();
             double x =
                 SmartDashboard.getNumber(Constants.DashboardValues.x1, Constants.Auto.wilsonTestX);
             double y = FieldConstants.fieldWidth / 2.0 + Units
@@ -478,12 +495,27 @@ public final class RobotContainer {
                 .getY() > FieldConstants.fieldWidth / 2.0) {
                 pose1 = AllianceFlipUtil.flipY(pose1);
             }
+            poses.add(pose1);
+            if (SmartDashboard.getBoolean(Constants.DashboardValues.secondSweep, false)) {
+                double x3 = SmartDashboard.getNumber(Constants.DashboardValues.x2,
+                    Constants.Auto.wilsonTestX2);
+                double y3 = FieldConstants.fieldWidth / 2.0 + Units
+                    .feetToMeters(SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
+                        Constants.DashboardValues.feetPastCenterDefault));
+                Pose2d pose3 = AllianceFlipUtil.apply(new Pose2d(x3, y3, Rotation2d.kCCW_90deg));
+                if (AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate())
+                    .getY() > FieldConstants.fieldWidth / 2.0) {
+                    pose3 = AllianceFlipUtil.flipY(pose3);
+                }
+                poses.add(pose3);
+            }
             double x2 = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
                 Constants.DashboardValues.shootXDefault);
             double y2 = SmartDashboard.getNumber(Constants.DashboardValues.shootY,
                 Constants.DashboardValues.shootYDefault);
             Pose2d pose2 = AllianceFlipUtil.apply(new Pose2d(x2, y2, new Rotation2d()));
-            autoStoppingPoint.setPoses(pose1, pose2);
+            poses.add(pose2);
+            autoStoppingPoint.setPoses(poses);
         } else {
             autoStoppingPoint.setPoses(new ArrayList<Pose2d>());
         }

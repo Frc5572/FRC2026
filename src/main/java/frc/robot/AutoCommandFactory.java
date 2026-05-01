@@ -404,16 +404,14 @@ public class AutoCommandFactory {
     public Command halfSweepTrenchRamp(AutoRoutine routine, boolean left) {
         double driveSpeed = 6.0;
         Command shootOrNot = Commands.either(shootFirst(), Commands.none(), shootFirst);
-        Command runPath =
-            Commands.either(
-                halfSweepTrenchRampPath(routine, left, x1)
-                    .andThen(
-                        swerve.moveToPose().target(new Pose2d(2.8, 0.622, Rotation2d.kZero))
-                            .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(15)
-                            .flipY(left).finish(),
-                        adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25))
-                    .andThen(halfSweepTrenchRampPath(routine, left, x2)),
-                halfSweepTrenchRampPath(routine, left, x1).andThen(autoShooting(5)), secondSweep);
+        Command runPath = Commands.either(halfSweepTrenchRampPath(routine, left, x1).andThen(
+
+            adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25),
+            swerve.moveToPose().target(new Pose2d(2.8, 0.622, Rotation2d.kZero))
+                .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(15).flipY(left)
+                .finish(),
+            halfSweepTrenchRampPath(routine, left, x2)),
+            halfSweepTrenchRampPath(routine, left, x1).andThen(autoShooting(5)), secondSweep);
         return shootOrNot.andThen(runPath);
     }
 
