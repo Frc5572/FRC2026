@@ -1,76 +1,93 @@
-#include "whacknet.hh"
+#include "robot_localizer.hh"
 
-#include <gtsam/geometry/Pose2.h>
-#include <gtsam/inference/Factor.h>
-#include <gtsam/inference/VariableIndex.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/slam/BetweenFactor.h>
-#include <gtsam/slam/PriorFactor.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/geometry/Pose2.h>
-
-#include <Eigen/Dense>
 #include <chrono>
 #include <iostream>
 #include <thread>
 
-class RobotLocalizer
-{
-public:
-    RobotLocalizer(int vision_port, int telemetry_port) : server_(vision_port, telemetry_port), graph_(), values_()
-    {
-        gtsam::noiseModel::Diagonal::shared_ptr prior_noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector3(0.1, 0.1, 0.01));
-        graph_.addPriorFactor(X(0), gtsam::Pose2(0, 0, 0), prior_noise);
-        values_.insert(X(0), gtsam::Pose2(0, 0, 0));
-        current_state_ = gtsam::Pose2(0, 0, 0);
-        frame_id_ = 1;
-    }
-
-    void update_with_vision(uint64_t fpga_time)
-    {
-        auto packets = server_.drain_packers(fpga_time);
-        if (packets.empty())
-            return;
-        for (const auto &pkt : packets)
-        {
-            gtsam::Pose2 mesurement(pkt.pose.x, pkt.pose.y, pkt.pose.rot);
-            double std_x = pkt.stds.x;
-            double std_y = pkt.stds.y;
-            double std_theta = pkts.stds.rot;
-            auto vision_noise = gtsam::noiseModel::Diagonal::sigmas(gtsam::Vector3(std_x, std_y, std_theta));
-            graph_.emplace_shared<gtsam::PriorFactor<gtsam::Pose2d>>(X(0), gtsam::Pose2(0, 0, 0), vision_noise);
-        }
-
-        try
-        {
-            gtsam::LevenbergMarquardtOptimizer optimizer(graph_, values_);
-            values_ = optimizer.optimize();
-            current_state_ = values_.at<gtsam::Pose2>(X(frame_id_));
-        }
-        catch (const std::exception &e)
-        {
-            std::cerr << "[GTSAM] Optimization failed: " << e.what() << "\n";
-        }
-        frame_id++
-    }
-
-    void broadcast_state(uint64_t fpga_time)
-    {
-        server.broadcast_telemetry(fpga_time, current_state_.theta(), 0.0);
-    }
-
-    gtsam::Pose2 get_pose() const { return current_state_; }
-    uint64_t get_dropped_packets() { return server_.get_dropped_count(); }
-
-private:
-    whacknet::WhacknetServer server_;
-    gtsam::NonlinearFactorGraph graph_;
-    gtsam::Values values_;
-    gtsam::Pose2 current_state_;
-    size_t frame_id_;
-};
-
 int main()
 {
+    robot_localizer::RobotLocalizer localizer(5800, 5801);
+
+    const int TARGET_HZ = 120;
+    const auto FRAME_DURATION = std::chrono::duration<double>(1.0 / TARGET_HZ);
+    const int NUM_ITERATIONS = 1200; // 10 seconds at 120 Hz
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    uint64_t frame_count = 0;
+    uint64_t missed_deadlines = 0;
+
+    for (int frame = 0; frame < NUM_ITERATIONS; frame++)
+    {
+        auto frame_start = std::chrono::high_resolution_clock::now();
+
+        uint64_t fpga_time =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                frame_start.time_since_epoch())
+                .count();
+
+        localizer.update_with_vision(fpga_time);
+
+        auto pose = localizer.getPose();
+        std::cout << "[Frame " << frame << "] Estimated pose: "
+                  << "x=" << pose.x() << " y=" << pose.y()
+                  << " theta=" << pose.theta() << "\n";
+
+        localizer.broadcast_state(fpga_time);
+
+        uint64_t dropped = localizer.get_dropped_packets();
+        if (dropped > 0)
+        {
+            std::cerr << "[Warning] Dropped " << dropped << " vision packets\n";
+        }
+
+        auto frame_end = std::chrono::high_resolution_clock::now();
+        auto frame_duration = frame_end - frame_start;
+        auto sleep_time = FRAME_DURATION - frame_duration;
+
+        if (sleep_time.count() > 0)
+        {
+            std::this_thread::sleep_for(sleep_time);
+        }
+        else
+        {
+            std::cerr << "[Warning] Frame " << frame << " exceeded 120 Hz deadline by "
+                      << -sleep_time.count() * 1000 << " us\n";
+            missed_deadlines++;
+        }
+
+        frame_count++;
+
+        if ((frame + 1) % 120 == 0)
+        {
+            std::cout << "\n--- Processed " << (frame + 1) << "/" << NUM_ITERATIONS
+                      << " frames (" << (frame + 1) / 120 << "s) ---\n\n";
+        }
+    }
+
+    auto total_time = std::chrono::high_resolution_clock::now() - start_time;
+    auto total_ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(total_time);
+    auto total_us =
+        std::chrono::duration_cast<std::chrono::microseconds>(total_time);
+
+    std::cout << "\n=== Simulation Complete ===\n";
+    std::cout << "Total time: " << total_ms.count() << " ms ("
+              << total_ms.count() / 1000.0 << " s)\n";
+    std::cout << "Frames processed: " << frame_count << "\n";
+    std::cout << "Target frequency: " << TARGET_HZ << " Hz\n";
+    std::cout << "Average frame time: " << (total_us.count() / (double)frame_count)
+              << " us\n";
+    std::cout << "Missed deadlines: " << missed_deadlines << " / " << frame_count << "\n";
+
+    if (missed_deadlines == 0)
+    {
+        std::cout << "✓ All frames met 120 Hz deadline!\n";
+    }
+    else
+    {
+        double miss_rate = (100.0 * missed_deadlines) / frame_count;
+        std::cout << "✗ Miss rate: " << miss_rate << "%\n";
+    }
+
+    return 0;
 }
