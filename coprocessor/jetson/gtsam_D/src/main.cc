@@ -7,6 +7,8 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
+#include <gtsam/inference/Symbol.h>
+#include <gtsam/geometry/Pose2.h>
 
 #include <Eigen/Dense>
 #include <chrono>
@@ -60,7 +62,7 @@ public:
                 gtsam::Vector3(std_x, std_y, std_theta));
 
             // Add pose measurement
-            graph_.addPriorFactor(X(frame_id_), measurement, vision_noise);
+            graph_.emplace_shared<gtsam::PriorFactor<gtsam::Pose2d>>(X(0), gtsam::Pose2(0, 0, 0), vision_noise);
 
             std::cout << "[Vision] Camera " << (int)pkt.camera_id << ": "
                       << "x=" << pkt.pose.x << " y=" << pkt.pose.y

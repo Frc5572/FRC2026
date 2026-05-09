@@ -6,14 +6,12 @@
 #include <chrono>
 #include <vector>
 #include <optional>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/types.h>
 
 namespace whacknet
 {
-
-    // ============================================================================
-    // Data Structures
-    // ============================================================================
-
     /// Robot pose from vision system
     struct RobotPose
     {
@@ -43,10 +41,6 @@ namespace whacknet
         double heading;
         double angular_velocity;
     };
-
-    // ============================================================================
-    // Whacknet Server Class
-    // ============================================================================
 
     class WhacknetServer
     {
@@ -107,7 +101,6 @@ namespace whacknet
         std::thread worker_thread_;
         std::atomic<bool> should_run_{false};
 
-        // Worker thread function
         void receiver_worker();
 
         // Utility functions
