@@ -1,4 +1,4 @@
-#include "robot_localizer.hh"
+#include "robot_locallizer.hh"
 
 #include <chrono>
 #include <iostream>
@@ -27,7 +27,7 @@ int main()
 
         localizer.update_with_vision(fpga_time);
 
-        auto pose = localizer.getPose();
+        auto pose = localizer.get_pose();
         std::cout << "[Frame " << frame << "] Estimated pose: "
                   << "x=" << pose.x() << " y=" << pose.y()
                   << " theta=" << pose.theta() << "\n";
