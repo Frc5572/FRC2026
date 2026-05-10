@@ -196,7 +196,6 @@ simgui*.json
 BuildConstants.java
 /compile_times.csv
 
-*.txt
 
 # CMake generated files
 CMakeFiles/

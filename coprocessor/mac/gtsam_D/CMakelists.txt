@@ -1,0 +1,91 @@
+cmake_minimum_required(VERSION 3.15)
+project(Whacknet)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Eigen3 REQUIRED)
+find_package(GTSAM REQUIRED)
+
+option(BUILD_SHARED_LIBS "Build Whacknet as shared library" OFF)
+
+add_library(whacknet STATIC src/whacknet.cc)
+target_include_directories(whacknet PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${GTSAM_INCLUDE_DIR}
+)
+target_link_libraries(whacknet PUBLIC 
+    gtsam
+    Eigen3::Eigen
+    pthread
+)
+target_compile_options(whacknet PRIVATE -O3 -march=native)
+
+add_library(robot_localizer STATIC src/robot_localizer.cc)
+target_include_directories(robot_localizer PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${GTSAM_INCLUDE_DIR}
+)
+target_link_libraries(robot_localizer PUBLIC 
+    whacknet
+    gtsam
+    Eigen3::Eigen
+    pthread
+)
+target_compile_options(robot_localizer PRIVATE -O3 -march=native)
+
+#add_executable(program src/main.cc)
+#target_include_directories(program PRIVATE 
+#    ${CMAKE_CURRENT_SOURCE_DIR}
+#    ${GTSAM_INCLUDE_DIR}
+#)
+#target_link_libraries(program PRIVATE 
+#    whacknet
+#    robot_localizer
+#    gtsam
+#    Eigen3::Eigen
+#    pthread
+#)
+#target_compile_options(program PRIVATE -O3 -march=native)
+
+add_executable(crowtest src/crowtest.cc)
+target_include_directories(crowtest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(crowtest PRIVATE pthread)
+target_compile_options(crowtest PRIVATE -O3 -march=native)
+
+add_executable(numain src/numain.cc)
+target_include_directories(numain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(numain PRIVATE 
+    robot_localizer
+    gtsam
+    Eigen3::Eigen
+    pthread
+)
+target_compile_options(numain PRIVATE -O3 -march=native)
+
+if(BUILD_SHARED_LIBS)
+    add_library(whacknet_shared SHARED src/whacknet.cc)
+    target_include_directories(whacknet_shared PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${GTSAM_INCLUDE_DIR}
+    )
+    target_link_libraries(whacknet_shared PUBLIC 
+        gtsam
+        Eigen3::Eigen
+        pthread
+    )
+    target_compile_options(whacknet_shared PRIVATE -O3 -march=native -fPIC)
+
+    add_library(robot_localizer_shared SHARED src/robot_localizer.cc)
+    target_include_directories(robot_localizer_shared PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${GTSAM_INCLUDE_DIR}
+    )
+    target_link_libraries(robot_localizer_shared PUBLIC 
+        whacknet_shared
+        gtsam
+        Eigen3::Eigen
+        pthread
+    )
+    target_compile_options(robot_localizer_shared PRIVATE -O3 -march=native -fPIC)
+endif()
