@@ -12,7 +12,8 @@ Usage:
 
 Controls (during tracking):
     SPACE        - Pause / Resume
-    R            - Re-select robot (click a detected box to lock onto it)
+    R            - Select robot from YOLO detections (click a box)
+    R R          - Draw a manual bounding box when YOLO can't find the robot
     E            - Log a timestamped event (prompted in terminal)
     S            - Save current scouting report
     Q / ESC      - Quit
@@ -48,7 +49,7 @@ from ultralytics import YOLO
 import supervision as sv            
 import numpy as np                    
 
-YOLO_MODEL   = "yolov8n.pt"   
+YOLO_MODEL   = "model.pt"   
 CONF_THRESH  = 0.30
 IOU_THRESH   = 0.45
 TRACK_THRESH      = 0.35
@@ -56,7 +57,14 @@ TRACK_BUFFER      = 30
 MATCH_THRESH      = 0.80
 FRAME_RATE        = 30   
 REPORTS_DIR  = Path("scouting_reports")
-TRAIL_LEN    = 60  
+TRAIL_LEN    = 60
+
+# CSRT fallback: re-attempt YOLO hand-back after this many CSRT-only frames
+CSRT_HANDBACK_INTERVAL = 10
+# IoU overlap required between CSRT box and a YOLO detection to re-lock
+CSRT_REJOIN_IOU        = 0.30
+# Seconds a YOLO detection must consistently overlap CSRT before auto-promoting
+YOLO_LOCK_CONFIRM_SECS = 1.0
 ORANGE = (0, 165, 255)
 GREEN  = (0, 220, 80)
 RED    = (0, 60, 220)
@@ -206,7 +214,10 @@ def draw_hud(frame, session, status, frame_idx, fps, paused, speed):
     cv2.circle(frame, (210, 20), 7, bcolor, -1)
     cv2.circle(frame, (210, 20), 7, WHITE, 1)
 
-    pill_col = GREEN if status == "TRACKING" else (YELLOW if status == "SEARCHING" else RED)
+    pill_col = (GREEN   if status == "TRACKING"  else
+                ORANGE  if status == "FALLBACK"  else
+                YELLOW  if status == "SEARCHING" else
+                RED     if status == "LOST"      else GRAY)
     sx = w_f // 2 - 65
     cv2.rectangle(frame, (sx - 6, 8), (sx + 140, 44), pill_col, -1)
     cv2.putText(frame, status, (sx, 33),
@@ -222,7 +233,7 @@ def draw_hud(frame, session, status, frame_idx, fps, paused, speed):
     overlay2 = frame.copy()
     cv2.rectangle(overlay2, (0, h_f - 36), (w_f, h_f), BLACK, -1)
     cv2.addWeighted(overlay2, 0.55, frame, 0.45, 0, frame)
-    hint = "SPACE=pause  R=reselect  E=event  S=save  Q=quit  +/-=speed  click=lock"
+    hint = "SPACE=pause  R=select  E=event  S=save  Q=quit  +/-=speed  click=lock"
     cv2.putText(frame, hint, (10, h_f - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.40, GRAY, 1)
     ev_txt = f"Events: {len(session.events)}  Lost: {session.lost_count}"
@@ -247,6 +258,23 @@ def _pick_track_from_click(detections, click_xy):
             return int(tid)
     return None
 
+def _iou(a, b):
+    """IoU between two (x1,y1,x2,y2) boxes."""
+    ix1, iy1 = max(a[0], b[0]), max(a[1], b[1])
+    ix2, iy2 = min(a[2], b[2]), min(a[3], b[3])
+    inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+    if inter == 0:
+        return 0.0
+    area_a = (a[2]-a[0]) * (a[3]-a[1])
+    area_b = (b[2]-b[0]) * (b[3]-b[1])
+    return inter / (area_a + area_b - inter)
+
+def _init_csrt(frame, x1, y1, x2, y2):
+    """Create and initialise a CSRT tracker on the given bounding box."""
+    tracker = cv2.TrackerCSRT_create()
+    tracker.init(frame, (x1, y1, x2 - x1, y2 - y1))
+    return tracker
+
 def run_scouting(video_path: str, team_number: str, bumper_color: str):
     global _click_pos
 
@@ -256,7 +284,7 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
     model.fuse()
 
     # ByteTracker via supervision
-    tracker = sv.ByteTracker(
+    tracker = sv.ByteTrack(
         track_activation_threshold=TRACK_THRESH,
         lost_track_buffer=TRACK_BUFFER,
         minimum_matching_threshold=MATCH_THRESH,
@@ -271,63 +299,31 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
     fps   = cap.get(cv2.CAP_PROP_FPS) or float(FRAME_RATE)
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     print(f"[*] Video: {fps:.1f} fps, {total} frames ({total/fps:.1f}s)")
-
-    # ── Read first frame so user can click to lock a robot ──
-    ret, frame = cap.read()
-    if not ret:
-        print("[!] Could not read first frame.")
-        return
+    print(f"[*] Playing — press R at any time to select a robot to track.")
 
     cv2.namedWindow("Robot Scout", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Robot Scout",
-                     min(frame.shape[1], 1280), min(frame.shape[0], 720))
     cv2.setMouseCallback("Robot Scout", _mouse_cb)
 
-    # Run detection on frame 0 to give user visible boxes to click
-    results0   = model(frame, conf=CONF_THRESH, iou=IOU_THRESH, verbose=False)[0]
-    sv_dets0   = sv.Detections.from_ultralytics(results0)
-    sv_dets0   = tracker.update_with_detections(sv_dets0)
-    bcolor     = bumper_bgr(bumper_color)
-    display0   = frame.copy()
-
-    if sv_dets0 is not None and len(sv_dets0) > 0:
-        for bbox, tid in zip(sv_dets0.xyxy, sv_dets0.tracker_id):
-            x1, y1, x2, y2 = map(int, bbox)
-            draw_box_tactical(display0, x1, y1, x2, y2, GRAY, track_id=tid)
-
-    cv2.putText(display0,
-                "Click on the robot you want to track, then press ENTER or SPACE",
-                (10, 30), cv2.FONT_HERSHEY_DUPLEX, 0.75, ORANGE, 2)
-    cv2.imshow("Robot Scout", display0)
-
-    locked_id  = None
-    while locked_id is None:
-        key = cv2.waitKey(30) & 0xFF
-        if key in (ord('q'), 27):
-            cap.release()
-            cv2.destroyAllWindows()
-            return
-
-        if _click_pos is not None:
-            locked_id = _pick_track_from_click(sv_dets0, _click_pos)
-            _click_pos = None
-            if locked_id is None:
-                print("[!] No detected robot at that position – try again.")
-
-        # Enter/Space without click: lock first detection as fallback
-        if key in (13, ord(' ')) and locked_id is None and sv_dets0 is not None and len(sv_dets0):
-            locked_id = int(sv_dets0.tracker_id[0])
-            print(f"[*] Auto-locked track #{locked_id} (first detection)")
-
-    print(f"[✓] Locked onto track #{locked_id}")
-    cv2.setWindowTitle("Robot Scout", "Robot Scout  –  tracking…")
-
     session   = ScoutingSession(video_path, team_number, bumper_color)
+    bcolor    = bumper_bgr(bumper_color)
     trail     = []
     paused    = False
     speed     = 1.0
-    frame_idx = 1
-    status    = "TRACKING"
+    frame_idx = 0
+    status    = "UNTRACKED"
+    locked_id = None
+    sv_dets   = None
+    frame     = None
+
+    # CSRT fallback state
+    csrt_tracker      = None   # active only when YOLO loses the robot
+    csrt_box          = None   # last (x1,y1,x2,y2) from CSRT
+    csrt_frames       = 0      # consecutive frames on CSRT-only mode
+    using_csrt        = False  # True while YOLO can't find the locked robot
+
+    # YOLO auto-promote state: track which YOLO id has been overlapping CSRT
+    yolo_candidate_id     = None  # track id currently being evaluated
+    yolo_candidate_frames = 0     # consecutive frames it has overlapped CSRT
 
     while True:
         if not paused:
@@ -337,47 +333,166 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                 break
             frame_idx += 1
 
-            # YOLO detection
-            results  = model(frame, conf=CONF_THRESH, iou=IOU_THRESH, verbose=False)[0]
-            sv_dets  = sv.Detections.from_ultralytics(results)
-            sv_dets  = tracker.update_with_detections(sv_dets)
+            # Resize window to fit first frame
+            if frame_idx == 1:
+                cv2.resizeWindow("Robot Scout",
+                                 min(frame.shape[1], 1280),
+                                 min(frame.shape[0], 720))
 
-            # Find locked track
-            found = False
-            if sv_dets is not None and len(sv_dets) > 0:
+            # ── YOLO + ByteTrack ──────────────────────────────────────
+            results = model(frame, conf=CONF_THRESH, iou=IOU_THRESH, verbose=False)[0]
+            sv_dets = sv.Detections.from_ultralytics(results)
+            sv_dets = tracker.update_with_detections(sv_dets)
+
+            # ── Try to find locked robot in YOLO detections ───────────
+            found    = False
+            yolo_box = None
+            if locked_id is not None and sv_dets is not None and len(sv_dets) > 0:
                 for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
                     if int(tid) == locked_id:
-                        x1, y1, x2, y2 = map(int, bbox)
-                        cx  = (x1 + x2) // 2
-                        cy  = (y1 + y2) // 2
-                        w_b = x2 - x1
-                        h_b = y2 - y1
+                        yolo_box = tuple(map(int, bbox))
+                        found = True
+                        break
+
+            if found:
+                # ── YOLO primary tracking ─────────────────────────────
+                x1, y1, x2, y2 = yolo_box
+                cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+                w_b, h_b = x2 - x1, y2 - y1
+                trail.append((cx, cy))
+                if len(trail) > TRAIL_LEN:
+                    trail.pop(0)
+                session.log_position(frame_idx, fps, cx, cy, w_b, h_b)
+                status = "TRACKING"
+                using_csrt = False
+                csrt_frames = 0
+                yolo_candidate_id = None
+                yolo_candidate_frames = 0
+                # Keep CSRT warm so it can take over instantly if needed
+                csrt_tracker = _init_csrt(frame, x1, y1, x2, y2)
+                csrt_box = yolo_box
+
+            elif locked_id is not None or using_csrt:
+                # ── CSRT fallback (covers both: lost YOLO lock AND
+                #    manual ROI mode where locked_id is None) ──────────
+                csrt_ok = False
+                if csrt_tracker is not None:
+                    ok, rect = csrt_tracker.update(frame)
+                    if ok:
+                        rx, ry, rw, rh = [int(v) for v in rect]
+                        h_f, w_f = frame.shape[:2]
+                        rx  = max(0, min(rx, w_f - 1))
+                        ry  = max(0, min(ry, h_f - 1))
+                        rw  = max(1, min(rw, w_f - rx))
+                        rh  = max(1, min(rh, h_f - ry))
+                        x1, y1, x2, y2 = rx, ry, rx + rw, ry + rh
+                        csrt_box = (x1, y1, x2, y2)
+                        cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+                        w_b, h_b = rw, rh
                         trail.append((cx, cy))
                         if len(trail) > TRAIL_LEN:
                             trail.pop(0)
                         session.log_position(frame_idx, fps, cx, cy, w_b, h_b)
-                        status = "TRACKING"
-                        found  = True
-                        break
+                        status = "FALLBACK"
+                        using_csrt = True
+                        csrt_frames += 1
+                        csrt_ok = True
 
-            if not found:
-                status = "SEARCHING"
-                session.lost_count += 1
+                        # ── YOLO auto-promote: find best overlapping detection ──
+                        # Check every frame (not just on interval) so the 1-second
+                        # consistency window is accurate.
+                        if sv_dets is not None and len(sv_dets) > 0:
+                            best_iou, best_tid = 0.0, None
+                            for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
+                                iou_val = _iou(csrt_box, tuple(map(int, bbox)))
+                                if iou_val > best_iou:
+                                    best_iou, best_tid = iou_val, int(tid)
 
-        draw_all_detections(frame, sv_dets if not paused else None,
+                            if best_iou >= CSRT_REJOIN_IOU and best_tid is not None:
+                                # Same candidate as last frame → extend streak
+                                if best_tid == yolo_candidate_id:
+                                    yolo_candidate_frames += 1
+                                else:
+                                    # New candidate — start fresh streak
+                                    yolo_candidate_id     = best_tid
+                                    yolo_candidate_frames = 1
+
+                                # Promote once streak exceeds 1 second
+                                needed = max(1, int(fps * YOLO_LOCK_CONFIRM_SECS))
+                                if yolo_candidate_frames >= needed:
+                                    locked_id    = yolo_candidate_id
+                                    using_csrt   = False
+                                    csrt_frames  = 0
+                                    yolo_candidate_id     = None
+                                    yolo_candidate_frames = 0
+                                    print(f"  [CSRT→YOLO] Auto-promoted to track "
+                                          f"#{locked_id} after "
+                                          f"{YOLO_LOCK_CONFIRM_SECS}s overlap "
+                                          f"(IoU={best_iou:.2f})")
+                            else:
+                                # No good overlap — reset streak
+                                yolo_candidate_id     = None
+                                yolo_candidate_frames = 0
+
+                if not csrt_ok:
+                    status = "LOST"
+                    if locked_id is not None:
+                        session.lost_count += 1
+
+            else:
+                status = "UNTRACKED"
+
+        # Draw
+        draw_all_detections(frame, sv_dets if not paused else sv_dets,
                             locked_id, bcolor)
+        # Draw CSRT fallback box in orange (dashed-style: just thicker corners)
+        if using_csrt and csrt_box is not None:
+            cx1, cy1, cx2, cy2 = csrt_box
+            draw_box_tactical(frame, cx1, cy1, cx2, cy2, ORANGE,
+                              track_id=locked_id, locked=True)
         draw_trail(frame, trail, bcolor)
         draw_hud(frame, session, status, frame_idx, fps, paused, speed)
 
+        # Show YOLO auto-promote progress bar when a candidate is accumulating
+        if using_csrt and yolo_candidate_id is not None and fps > 0:
+            needed   = max(1, int(fps * YOLO_LOCK_CONFIRM_SECS))
+            progress = min(yolo_candidate_frames / needed, 1.0)
+            h_f, w_f = frame.shape[:2]
+            bar_w    = 200
+            bar_x    = w_f - bar_w - 12
+            bar_y    = 60
+            cv2.rectangle(frame, (bar_x, bar_y), (bar_x + bar_w, bar_y + 16), GRAY, -1)
+            cv2.rectangle(frame, (bar_x, bar_y),
+                          (bar_x + int(bar_w * progress), bar_y + 16), CYAN, -1)
+            cv2.putText(frame, f"YOLO lock #{yolo_candidate_id}…",
+                        (bar_x, bar_y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.45, CYAN, 1)
+
+        # Hint overlay when no robot is locked
+        if locked_id is None:
+            h_f, w_f = frame.shape[:2]
+            cv2.putText(frame, "Press R to select a robot",
+                        (w_f // 2 - 170, h_f // 2),
+                        cv2.FONT_HERSHEY_DUPLEX, 0.9, ORANGE, 2)
+
         cv2.imshow("Robot Scout", frame)
 
-        # Handle click-to-relock mid-session
-        if _click_pos is not None and not paused:
-            new_id = _pick_track_from_click(
-                sv_dets if not paused else None, _click_pos)
+        # Handle mid-playback click-to-lock
+        if _click_pos is not None:
+            new_id = _pick_track_from_click(sv_dets, _click_pos)
             if new_id is not None and new_id != locked_id:
-                locked_id = new_id
+                locked_id             = new_id
                 trail.clear()
+                using_csrt            = False
+                csrt_frames           = 0
+                csrt_box              = None
+                csrt_tracker          = None
+                yolo_candidate_id     = None
+                yolo_candidate_frames = 0
+                for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
+                    if int(tid) == new_id:
+                        bx1, by1, bx2, by2 = map(int, bbox)
+                        csrt_tracker = _init_csrt(frame, bx1, by1, bx2, by2)
+                        break
                 session.log_event(frame_idx, fps, f"Switched lock → track #{locked_id}")
                 print(f"[*] Switched lock to track #{locked_id}")
             _click_pos = None
@@ -390,33 +505,131 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
         elif key == ord(' '):
             paused = not paused
         elif key == ord('r'):
-            # Re-enter select mode: pause, show all boxes, let user click
+            # ── Stage 1: click a YOLO-detected box ───────────────────
             paused = True
-            cv2.setWindowTitle("Robot Scout", "Robot Scout  –  click to re-lock…")
-            print("\n[*] Click on a detected robot to re-lock, then press SPACE.")
+            cv2.setWindowTitle("Robot Scout", "Robot Scout  –  click to select robot…")
+            print("\n[*] Click a detected robot to lock.  Press R again to draw a box manually.")
             relock_done = False
             while not relock_done:
                 disp = frame.copy()
                 if sv_dets is not None and len(sv_dets) > 0:
                     for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
                         x1, y1, x2, y2 = map(int, bbox)
-                        draw_box_tactical(disp, x1, y1, x2, y2, GRAY, track_id=tid)
-                cv2.putText(disp, "Click robot to re-lock, SPACE=confirm",
+                        is_locked = (tid == locked_id)
+                        color = bcolor if is_locked else GRAY
+                        draw_box_tactical(disp, x1, y1, x2, y2, color, track_id=tid,
+                                          locked=is_locked)
+                cv2.putText(disp, "Click robot to lock  |  R=draw box  |  SPACE=cancel",
                             (10, 30), cv2.FONT_HERSHEY_DUPLEX, 0.75, ORANGE, 2)
                 cv2.imshow("Robot Scout", disp)
                 k2 = cv2.waitKey(30) & 0xFF
+
+                # Click lands on a YOLO box → lock it
                 if _click_pos is not None:
                     new_id = _pick_track_from_click(sv_dets, _click_pos)
                     _click_pos = None
                     if new_id is not None:
-                        locked_id = new_id
+                        locked_id             = new_id
                         trail.clear()
+                        using_csrt            = False
+                        csrt_frames           = 0
+                        csrt_box              = None
+                        csrt_tracker          = None
+                        yolo_candidate_id     = None
+                        yolo_candidate_frames = 0
+                        for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
+                            if int(tid) == new_id:
+                                bx1, by1, bx2, by2 = map(int, bbox)
+                                csrt_tracker = _init_csrt(frame, bx1, by1, bx2, by2)
+                                break
                         session.log_event(frame_idx, fps,
-                                          f"Manual re-lock → track #{locked_id}")
-                        print(f"[✓] Re-locked to track #{locked_id}")
+                                          f"Locked → track #{locked_id}")
+                        print(f"[✓] Locked to track #{locked_id}")
                         relock_done = True
-                if k2 == ord(' ') or k2 in (ord('q'), 27):
+
+                # R again → enter manual draw mode
+                elif k2 == ord('r'):
+                    relock_done = True   # exit stage-1 loop first
+                    cv2.setWindowTitle("Robot Scout",
+                                       "Robot Scout  –  draw box around robot…")
+                    print("[*] Draw a box around the robot (click-drag), then SPACE to confirm.")
+
+                    # ── Stage 2: freehand drag-to-draw ROI ───────────
+                    draw_start = None
+                    draw_end   = None
+                    drawing    = False
+                    draw_done  = False
+
+                    def _draw_mouse_cb(event, x, y, flags, param):
+                        nonlocal draw_start, draw_end, drawing
+                        if event == cv2.EVENT_LBUTTONDOWN:
+                            draw_start = (x, y)
+                            draw_end   = (x, y)
+                            drawing    = True
+                        elif event == cv2.EVENT_MOUSEMOVE and drawing:
+                            draw_end = (x, y)
+                        elif event == cv2.EVENT_LBUTTONUP and drawing:
+                            draw_end = (x, y)
+                            drawing  = False
+
+                    cv2.setMouseCallback("Robot Scout", _draw_mouse_cb)
+
+                    while not draw_done:
+                        disp2 = frame.copy()
+                        # Draw all YOLO boxes faintly for context
+                        if sv_dets is not None and len(sv_dets) > 0:
+                            for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
+                                bx1, by1, bx2, by2 = map(int, bbox)
+                                draw_box_tactical(disp2, bx1, by1, bx2, by2, GRAY,
+                                                  track_id=tid)
+                        # Live rubber-band rect
+                        if draw_start and draw_end:
+                            rx1 = min(draw_start[0], draw_end[0])
+                            ry1 = min(draw_start[1], draw_end[1])
+                            rx2 = max(draw_start[0], draw_end[0])
+                            ry2 = max(draw_start[1], draw_end[1])
+                            cv2.rectangle(disp2, (rx1, ry1), (rx2, ry2), CYAN, 2)
+                            cv2.putText(disp2, "MANUAL ROI",
+                                        (rx1 + 4, ry1 - 6),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, CYAN, 2)
+                        cv2.putText(disp2,
+                                    "Drag to draw box  |  SPACE=confirm  |  ESC=cancel",
+                                    (10, 30), cv2.FONT_HERSHEY_DUPLEX, 0.75, CYAN, 2)
+                        cv2.imshow("Robot Scout", disp2)
+                        k3 = cv2.waitKey(20) & 0xFF
+
+                        if k3 == ord(' ') and draw_start and draw_end:
+                            rx1 = min(draw_start[0], draw_end[0])
+                            ry1 = min(draw_start[1], draw_end[1])
+                            rx2 = max(draw_start[0], draw_end[0])
+                            ry2 = max(draw_start[1], draw_end[1])
+                            if rx2 - rx1 > 8 and ry2 - ry1 > 8:
+                                # Initialise CSRT on the drawn region;
+                                # clear YOLO lock so CSRT runs solo until
+                                # it can hand back to ByteTrack
+                                locked_id             = None
+                                trail.clear()
+                                csrt_tracker          = _init_csrt(frame, rx1, ry1, rx2, ry2)
+                                csrt_box              = (rx1, ry1, rx2, ry2)
+                                using_csrt            = True
+                                csrt_frames           = 0
+                                yolo_candidate_id     = None
+                                yolo_candidate_frames = 0
+                                session.log_event(frame_idx, fps,
+                                                  "Manual ROI – CSRT tracking")
+                                print(f"[✓] Manual ROI set – tracking via CSRT until "
+                                      f"YOLO re-acquires.")
+                            draw_done = True
+
+                        elif k3 in (27, ord('q')):
+                            draw_done = True   # cancel, keep previous state
+
+                    # Restore normal mouse callback
+                    cv2.setMouseCallback("Robot Scout", _mouse_cb)
+
+                elif k2 == ord(' ') or k2 in (ord('q'), 27):
                     relock_done = True
+
             cv2.setWindowTitle("Robot Scout", "Robot Scout  –  tracking…")
             paused = False
 
@@ -506,6 +719,7 @@ def main():
     print()
     print(f"[*] Starting scouting session for Team {team}…")
     print(f"[*] Alliance: {bumper_color.upper()}  |  Model: {YOLO_MODEL}  |  Reports → {REPORTS_DIR}/")
+    print(f"[*] Press R to select a robot to track at any time.")
     print()
     run_scouting(video_path, team, bumper_color)
 
