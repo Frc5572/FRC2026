@@ -5,20 +5,22 @@ Supports local MP4 files and YouTube links.
 Tracks bumper color (red or blue) for team alliance identification.
 
 Dependencies:
-    pip install ultralytics supervision yt-dlp opencv-python
-
-Usage:
-    python robot_scout.py
+    pip install ultralytics supervision yt-dlp opencv-contrib-python
 
 Controls (during tracking):
     SPACE        - Pause / Resume
     R            - Select robot from YOLO detections (click a box)
     R R          - Draw a manual bounding box when YOLO can't find the robot
+    F            - Manually log a shot (+1 override)
+    Z            - Undo last shot (-1)
     E            - Log a timestamped event (prompted in terminal)
     S            - Save current scouting report
     Q / ESC      - Quit
     +/-          - Speed up / slow down playback
     Click on box - Lock onto that detected robot
+
+Ball detection uses HSV colour masking (no ML).
+Tune BALL_H_LO/HI at the top of the file if yellow looks off.
 """
 
 import cv2
@@ -30,6 +32,7 @@ import subprocess
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from shot_tracker import BallTracker, OptimizedBallDetector
 
 def _ensure_deps():
     pkgs = {"ultralytics": "ultralytics", "supervision": "supervision"}
@@ -59,12 +62,21 @@ FRAME_RATE        = 30
 REPORTS_DIR  = Path("scouting_reports")
 TRAIL_LEN    = 60
 
-# CSRT fallback: re-attempt YOLO hand-back after this many CSRT-only frames
 CSRT_HANDBACK_INTERVAL = 10
-# IoU overlap required between CSRT box and a YOLO detection to re-lock
 CSRT_REJOIN_IOU        = 0.30
-# Seconds a YOLO detection must consistently overlap CSRT before auto-promoting
 YOLO_LOCK_CONFIRM_SECS = 1.0
+
+BALL_H_LO, BALL_H_HI   = 18,  35   
+BALL_S_LO, BALL_S_HI   = 80, 255  
+BALL_V_LO, BALL_V_HI   = 80, 255  
+BALL_MIN_AREA           = 60        
+BALL_MAX_AREA           = 8000  
+BALL_MIN_CIRC           = 0.55     
+BALL_MAX_DIST           = 80      
+BALL_GONE_FRAMES        = 6        
+BALL_NEAR_FRAMES        = 3         
+SHOT_ORIGIN_RADIUS      = 120    
+SHOT_MIN_SPEED          = 6.0       
 ORANGE = (0, 165, 255)
 GREEN  = (0, 220, 80)
 RED    = (0, 60, 220)
@@ -74,6 +86,52 @@ BLACK  = (0, 0, 0)
 GRAY   = (120, 120, 120)
 BLUE   = (220, 100, 0)
 YELLOW = (0, 220, 220)
+
+ball_detector = OptimizedBallDetector(
+    h_range=(BALL_H_LO, BALL_H_HI),
+    s_range=(BALL_S_LO, BALL_S_HI),
+    v_range=(BALL_V_LO, BALL_V_HI),
+    min_area=BALL_MIN_AREA,
+    max_area=BALL_MAX_AREA,
+    min_circularity=BALL_MIN_CIRC,
+)
+
+def detect_yellow_balls(frame):
+    return ball_detector.detect(frame)
+
+def draw_balls(frame, balls, owned_ids, robot_box):
+
+    if robot_box is not None:
+        x1, y1, x2, y2 = robot_box
+        rcx = (x1 + x2) // 2
+        rcy = (y1 + y2) // 2
+
+        cv2.circle(
+            frame,
+            (rcx, rcy),
+            SHOT_ORIGIN_RADIUS,
+            (80, 80, 255),
+            2
+        )
+
+    for tid, cx, cy, r in balls:
+        owned = tid in owned_ids
+        color = GREEN if owned else YELLOW
+        cv2.circle(frame, (int(cx), int(cy)), int(r), color, 2)
+        cv2.circle(frame, (int(cx), int(cy)), 2, WHITE, -1)
+
+        cv2.putText(
+            frame,
+            f"B{tid}",
+            (int(cx) + 5, int(cy) - 5),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            color,
+            1
+        )
+
+        if owned:
+            cv2.circle(frame, (int(cx), int(cy)), int(r + 4), CYAN, 1)
 
 def download_youtube(url: str) -> str:
     try:
@@ -115,6 +173,7 @@ class ScoutingSession:
         self.tracking_data  = []
         self.lost_count     = 0
         self.frames_tracked = 0
+        self.shot_count     = 0   
 
     def log_position(self, frame_idx: int, fps: float, cx: int, cy: int, w: int, h: int):
         t_sec = frame_idx / fps if fps > 0 else 0
@@ -152,6 +211,7 @@ class ScoutingSession:
             "frames_tracked": self.frames_tracked,
             "tracking_lost":  self.lost_count,
             "pixel_distance": round(total_dist, 1),
+            "shot_count":     self.shot_count,
             "events":         self.events,
             "tracking_data":  self.tracking_data,
         }
@@ -162,7 +222,6 @@ def bumper_bgr(bumper_color: str) -> tuple:
     return BLUE if bumper_color.lower() == "blue" else RED
 
 def draw_box_tactical(frame, x1, y1, x2, y2, color, track_id=None, locked=False):
-    """Corner-bracket bounding box; double-line if locked."""
     w, h = x2 - x1, y2 - y1
     L    = min(18, w // 3, h // 3)
     thickness = 3 if locked else 2
@@ -182,7 +241,6 @@ def draw_box_tactical(frame, x1, y1, x2, y2, color, track_id=None, locked=False)
                     (x1 + 4, y1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
 
 def draw_all_detections(frame, detections, locked_id, bumper_col):
-    """Draw all ByteTrack detections; highlight the locked one."""
     if detections is None or len(detections) == 0:
         return
     for i, (bbox, tid) in enumerate(
@@ -199,12 +257,56 @@ def draw_trail(frame, trail, color):
         col   = (int(color[0]*alpha), int(color[1]*alpha), int(color[2]*alpha))
         cv2.line(frame, trail[i-1], trail[i], col, 2)
 
+def draw_fuel_counter(frame, robot_box, shot_count, bumper_color):
+    if robot_box is None:
+        return
+    x1, y1, x2, y2 = robot_box
+    box_w = x2 - x1
+
+    # Layout
+    pad_x, pad_y = 10, 6
+    icon_r       = 9                         
+    dot_spacing  = 24
+    max_dots     = 5                        
+    font         = cv2.FONT_HERSHEY_DUPLEX
+    font_scale   = 0.65
+    font_thick   = 2
+
+    label        = f"FUEL  {shot_count}"
+    (lw, lh), _  = cv2.getTextSize(label, font, font_scale, font_thick)
+
+    pill_w = lw + pad_x * 2
+    pill_h = lh + pad_y * 2
+
+    h_f, w_f = frame.shape[:2]
+    cx_box   = (x1 + x2) // 2
+    px1      = max(4, min(cx_box - pill_w // 2, w_f - pill_w - 4))
+    py2      = max(pill_h + 4, y1 - 8)
+    py1      = py2 - pill_h
+
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (px1, py1), (px1 + pill_w, py2), BLACK, -1)
+    cv2.addWeighted(overlay, 0.65, frame, 0.35, 0, frame)
+
+    border_col = BLUE if bumper_color.lower() == "blue" else RED
+    cv2.rectangle(frame, (px1, py1), (px1 + pill_w, py2), border_col, 2)
+
+    mid_x = px1 + pill_w // 2
+    cv2.line(frame, (mid_x, py2), (mid_x, y1), border_col, 1)
+
+    cv2.putText(frame, "FUEL", (px1 + pad_x, py1 + pad_y + lh - 2),
+                font, font_scale * 0.7, YELLOW, font_thick - 1)
+    count_str = str(shot_count)
+    (cw, _), _ = cv2.getTextSize(count_str, font, font_scale, font_thick)
+    cv2.putText(frame, count_str,
+                (px1 + pill_w - pad_x - cw, py1 + pad_y + lh - 2),
+                font, font_scale, WHITE, font_thick)
+
 def draw_hud(frame, session, status, frame_idx, fps, paused, speed):
     h_f, w_f = frame.shape[:2]
     t_sec     = frame_idx / fps if fps > 0 else 0
     overlay   = frame.copy()
 
-    # Top bar
     cv2.rectangle(overlay, (0, 0), (w_f, 52), BLACK, -1)
     cv2.addWeighted(overlay, 0.55, frame, 0.45, 0, frame)
 
@@ -229,14 +331,13 @@ def draw_hud(frame, session, status, frame_idx, fps, paused, speed):
     cv2.putText(frame, info, (w_f - 285, 32),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.55, WHITE, 1)
 
-    # Bottom bar
     overlay2 = frame.copy()
     cv2.rectangle(overlay2, (0, h_f - 36), (w_f, h_f), BLACK, -1)
     cv2.addWeighted(overlay2, 0.55, frame, 0.45, 0, frame)
-    hint = "SPACE=pause  R=select  E=event  S=save  Q=quit  +/-=speed  click=lock"
+    hint = "SPACE=pause  R=select  F=shot  Z=undo  E=event  S=save  Q=quit  +/-=speed"
     cv2.putText(frame, hint, (10, h_f - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.40, GRAY, 1)
-    ev_txt = f"Events: {len(session.events)}  Lost: {session.lost_count}"
+    ev_txt = f"Events: {len(session.events)}  Lost: {session.lost_count}  Shots: {session.shot_count}"
     cv2.putText(frame, ev_txt, (12, h_f - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.40, CYAN, 1)
 
@@ -248,7 +349,6 @@ def _mouse_cb(event, x, y, flags, param):
         _click_pos = (x, y)
 
 def _pick_track_from_click(detections, click_xy):
-    """Return the track_id of the box containing the click, or None."""
     if detections is None or click_xy is None:
         return None
     cx, cy = click_xy
@@ -259,7 +359,6 @@ def _pick_track_from_click(detections, click_xy):
     return None
 
 def _iou(a, b):
-    """IoU between two (x1,y1,x2,y2) boxes."""
     ix1, iy1 = max(a[0], b[0]), max(a[1], b[1])
     ix2, iy2 = min(a[2], b[2]), min(a[3], b[3])
     inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
@@ -270,20 +369,15 @@ def _iou(a, b):
     return inter / (area_a + area_b - inter)
 
 def _init_csrt(frame, x1, y1, x2, y2):
-    """Create and initialise a CSRT tracker on the given bounding box."""
     tracker = cv2.TrackerCSRT_create()
     tracker.init(frame, (x1, y1, x2 - x1, y2 - y1))
     return tracker
 
 def run_scouting(video_path: str, team_number: str, bumper_color: str):
     global _click_pos
-
-    # Load YOLO model
     print(f"[*] Loading YOLO model ({YOLO_MODEL})…")
     model = YOLO(YOLO_MODEL)
     model.fuse()
-
-    # ByteTracker via supervision
     tracker = sv.ByteTrack(
         track_activation_threshold=TRACK_THRESH,
         lost_track_buffer=TRACK_BUFFER,
@@ -304,26 +398,27 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
     cv2.namedWindow("Robot Scout", cv2.WINDOW_NORMAL)
     cv2.setMouseCallback("Robot Scout", _mouse_cb)
 
-    session   = ScoutingSession(video_path, team_number, bumper_color)
-    bcolor    = bumper_bgr(bumper_color)
-    trail     = []
-    paused    = False
-    speed     = 1.0
+    session = ScoutingSession(video_path, team_number, bumper_color)
+    bcolor = bumper_bgr(bumper_color)
+    trail = []
+    paused = False
+    speed = 1.0
     frame_idx = 0
-    status    = "UNTRACKED"
+    status = "UNTRACKED"
     locked_id = None
-    sv_dets   = None
-    frame     = None
+    sv_dets = None
+    frame = None
+    csrt_tracker = None   
+    csrt_box = None   
+    csrt_frames = 0     
+    using_csrt = False  
+    yolo_candidate_id = None  
+    yolo_candidate_frames = 0     
+    current_robot_box = None  
 
-    # CSRT fallback state
-    csrt_tracker      = None   # active only when YOLO loses the robot
-    csrt_box          = None   # last (x1,y1,x2,y2) from CSRT
-    csrt_frames       = 0      # consecutive frames on CSRT-only mode
-    using_csrt        = False  # True while YOLO can't find the locked robot
-
-    # YOLO auto-promote state: track which YOLO id has been overlapping CSRT
-    yolo_candidate_id     = None  # track id currently being evaluated
-    yolo_candidate_frames = 0     # consecutive frames it has overlapped CSRT
+    ball_tracker  = BallTracker(fps)
+    live_balls    = []   
+    shot_flash_frames = 0 
 
     while True:
         if not paused:
@@ -333,18 +428,15 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                 break
             frame_idx += 1
 
-            # Resize window to fit first frame
             if frame_idx == 1:
                 cv2.resizeWindow("Robot Scout",
                                  min(frame.shape[1], 1280),
                                  min(frame.shape[0], 720))
 
-            # ── YOLO + ByteTrack ──────────────────────────────────────
             results = model(frame, conf=CONF_THRESH, iou=IOU_THRESH, verbose=False)[0]
             sv_dets = sv.Detections.from_ultralytics(results)
             sv_dets = tracker.update_with_detections(sv_dets)
 
-            # ── Try to find locked robot in YOLO detections ───────────
             found    = False
             yolo_box = None
             if locked_id is not None and sv_dets is not None and len(sv_dets) > 0:
@@ -355,7 +447,6 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                         break
 
             if found:
-                # ── YOLO primary tracking ─────────────────────────────
                 x1, y1, x2, y2 = yolo_box
                 cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
                 w_b, h_b = x2 - x1, y2 - y1
@@ -368,13 +459,11 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                 csrt_frames = 0
                 yolo_candidate_id = None
                 yolo_candidate_frames = 0
-                # Keep CSRT warm so it can take over instantly if needed
+                current_robot_box = yolo_box
                 csrt_tracker = _init_csrt(frame, x1, y1, x2, y2)
                 csrt_box = yolo_box
 
             elif locked_id is not None or using_csrt:
-                # ── CSRT fallback (covers both: lost YOLO lock AND
-                #    manual ROI mode where locked_id is None) ──────────
                 csrt_ok = False
                 if csrt_tracker is not None:
                     ok, rect = csrt_tracker.update(frame)
@@ -397,10 +486,8 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                         using_csrt = True
                         csrt_frames += 1
                         csrt_ok = True
+                        current_robot_box = csrt_box
 
-                        # ── YOLO auto-promote: find best overlapping detection ──
-                        # Check every frame (not just on interval) so the 1-second
-                        # consistency window is accurate.
                         if sv_dets is not None and len(sv_dets) > 0:
                             best_iou, best_tid = 0.0, None
                             for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
@@ -409,15 +496,12 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                                     best_iou, best_tid = iou_val, int(tid)
 
                             if best_iou >= CSRT_REJOIN_IOU and best_tid is not None:
-                                # Same candidate as last frame → extend streak
                                 if best_tid == yolo_candidate_id:
                                     yolo_candidate_frames += 1
                                 else:
-                                    # New candidate — start fresh streak
                                     yolo_candidate_id     = best_tid
                                     yolo_candidate_frames = 1
 
-                                # Promote once streak exceeds 1 second
                                 needed = max(1, int(fps * YOLO_LOCK_CONFIRM_SECS))
                                 if yolo_candidate_frames >= needed:
                                     locked_id    = yolo_candidate_id
@@ -430,7 +514,6 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                                           f"{YOLO_LOCK_CONFIRM_SECS}s overlap "
                                           f"(IoU={best_iou:.2f})")
                             else:
-                                # No good overlap — reset streak
                                 yolo_candidate_id     = None
                                 yolo_candidate_frames = 0
 
@@ -442,18 +525,45 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
             else:
                 status = "UNTRACKED"
 
-        # Draw
+            if not paused:
+                raw_balls = detect_yellow_balls(frame)
+                live_balls, shot_now = ball_tracker.update(
+                    raw_balls, current_robot_box, frame_idx)
+                if shot_now:
+                    session.shot_count += 1
+                    session.log_event(frame_idx, fps,
+                                      f"AUTO shot (total: {session.shot_count})")
+                    print(f"  [FUEL AUTO] Shot detected — total: {session.shot_count}")
+                    shot_flash_frames = max(shot_flash_frames,
+                                            int(fps * 0.4)) 
         draw_all_detections(frame, sv_dets if not paused else sv_dets,
                             locked_id, bcolor)
-        # Draw CSRT fallback box in orange (dashed-style: just thicker corners)
         if using_csrt and csrt_box is not None:
             cx1, cy1, cx2, cy2 = csrt_box
             draw_box_tactical(frame, cx1, cy1, cx2, cy2, ORANGE,
                               track_id=locked_id, locked=True)
         draw_trail(frame, trail, bcolor)
+
+        draw_balls(frame, live_balls, ball_tracker._owned, current_robot_box)
+
+        # Shot-scored flash border
+        if shot_flash_frames > 0:
+            h_f, w_f = frame.shape[:2]
+            alpha = shot_flash_frames / (fps * 0.4)
+            overlay_f = frame.copy()
+            cv2.rectangle(overlay_f, (0, 0), (w_f, h_f), (0, 215, 255), 18)
+            cv2.addWeighted(overlay_f, alpha * 0.7, frame, 1 - alpha * 0.7, 0, frame)
+            cv2.putText(frame, "SHOT!", (w_f // 2 - 60, h_f // 2),
+                        cv2.FONT_HERSHEY_DUPLEX, 1.6, (0, 215, 255), 4)
+            if not paused:
+                shot_flash_frames -= 1
+
         draw_hud(frame, session, status, frame_idx, fps, paused, speed)
 
-        # Show YOLO auto-promote progress bar when a candidate is accumulating
+        if current_robot_box is not None and (locked_id is not None or using_csrt):
+            draw_fuel_counter(frame, current_robot_box,
+                              session.shot_count, session.bumper_color)
+
         if using_csrt and yolo_candidate_id is not None and fps > 0:
             needed   = max(1, int(fps * YOLO_LOCK_CONFIRM_SECS))
             progress = min(yolo_candidate_frames / needed, 1.0)
@@ -467,7 +577,6 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
             cv2.putText(frame, f"YOLO lock #{yolo_candidate_id}…",
                         (bar_x, bar_y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.45, CYAN, 1)
 
-        # Hint overlay when no robot is locked
         if locked_id is None:
             h_f, w_f = frame.shape[:2]
             cv2.putText(frame, "Press R to select a robot",
@@ -476,7 +585,6 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
 
         cv2.imshow("Robot Scout", frame)
 
-        # Handle mid-playback click-to-lock
         if _click_pos is not None:
             new_id = _pick_track_from_click(sv_dets, _click_pos)
             if new_id is not None and new_id != locked_id:
@@ -505,7 +613,6 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
         elif key == ord(' '):
             paused = not paused
         elif key == ord('r'):
-            # ── Stage 1: click a YOLO-detected box ───────────────────
             paused = True
             cv2.setWindowTitle("Robot Scout", "Robot Scout  –  click to select robot…")
             print("\n[*] Click a detected robot to lock.  Press R again to draw a box manually.")
@@ -524,7 +631,6 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                 cv2.imshow("Robot Scout", disp)
                 k2 = cv2.waitKey(30) & 0xFF
 
-                # Click lands on a YOLO box → lock it
                 if _click_pos is not None:
                     new_id = _pick_track_from_click(sv_dets, _click_pos)
                     _click_pos = None
@@ -547,14 +653,12 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                         print(f"[✓] Locked to track #{locked_id}")
                         relock_done = True
 
-                # R again → enter manual draw mode
                 elif k2 == ord('r'):
-                    relock_done = True   # exit stage-1 loop first
+                    relock_done = True  
                     cv2.setWindowTitle("Robot Scout",
                                        "Robot Scout  –  draw box around robot…")
                     print("[*] Draw a box around the robot (click-drag), then SPACE to confirm.")
 
-                    # ── Stage 2: freehand drag-to-draw ROI ───────────
                     draw_start = None
                     draw_end   = None
                     drawing    = False
@@ -576,13 +680,11 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
 
                     while not draw_done:
                         disp2 = frame.copy()
-                        # Draw all YOLO boxes faintly for context
                         if sv_dets is not None and len(sv_dets) > 0:
                             for bbox, tid in zip(sv_dets.xyxy, sv_dets.tracker_id):
                                 bx1, by1, bx2, by2 = map(int, bbox)
                                 draw_box_tactical(disp2, bx1, by1, bx2, by2, GRAY,
                                                   track_id=tid)
-                        # Live rubber-band rect
                         if draw_start and draw_end:
                             rx1 = min(draw_start[0], draw_end[0])
                             ry1 = min(draw_start[1], draw_end[1])
@@ -604,9 +706,6 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                             rx2 = max(draw_start[0], draw_end[0])
                             ry2 = max(draw_start[1], draw_end[1])
                             if rx2 - rx1 > 8 and ry2 - ry1 > 8:
-                                # Initialise CSRT on the drawn region;
-                                # clear YOLO lock so CSRT runs solo until
-                                # it can hand back to ByteTrack
                                 locked_id             = None
                                 trail.clear()
                                 csrt_tracker          = _init_csrt(frame, rx1, ry1, rx2, ry2)
@@ -622,9 +721,8 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                             draw_done = True
 
                         elif k3 in (27, ord('q')):
-                            draw_done = True   # cancel, keep previous state
+                            draw_done = True  
 
-                    # Restore normal mouse callback
                     cv2.setMouseCallback("Robot Scout", _mouse_cb)
 
                 elif k2 == ord(' ') or k2 in (ord('q'), 27):
@@ -661,6 +759,17 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
         elif key == ord('-'):
             speed = max(speed - 0.25, 0.25)
             print(f"  Speed: {speed:.2f}x")
+        elif key == ord('f'):
+            session.shot_count += 1
+            session.log_event(frame_idx, fps,
+                              f"Shot scored (total: {session.shot_count})")
+            print(f"  [FUEL] Shot logged — total: {session.shot_count}")
+        elif key == ord('z'):
+            if session.shot_count > 0:
+                session.shot_count -= 1
+                session.log_event(frame_idx, fps,
+                                  f"Shot undone (total: {session.shot_count})")
+                print(f"  [FUEL] Shot undone — total: {session.shot_count}")
 
     path = session.save()
     print(f"\n[✓] Session ended. Report saved → {path}")
@@ -674,7 +783,7 @@ def prompt_input(label: str, default: str = "") -> str:
 
 def main():
     print("=" * 56)
-    print("  🤖  ROBOT SCOUTING APP  –  YOLOv8 + ByteTrack")
+    print("ROBOT SCOUTING APP")
     print("=" * 56)
     print()
 
