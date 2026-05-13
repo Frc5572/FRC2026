@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRC Robot Scout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap');
+
+        :root {
+            --primary: #ff6b35;
+            --secondary: #004e89;
+            --accent: #1ac8db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #0a0e27;
+            --darker: #05070f;
+            --gray-light: #1a2332;
+            --gray-medium: #2d3d52;
+            --gray-dark: #1f2937;
+            --text-primary: #e8eef7;
+            --text-secondary: #a0adb8;
+            --border: #2d3f56;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-sans: 'IBM Plex Sans', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr 280px;
+            gap: 1px;
+            height: 100vh;
+            background: var(--dark);
+        }
+
+        /* ===== SIDEBAR LEFT ===== */
+        .sidebar-left {
+            background: linear-gradient(180deg, var(--gray-dark) 0%, var(--dark) 100%);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .form-section h3 {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--gray-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="file"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(26, 200, 219, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-option {
+            flex: 1;
+        }
+
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+
+        .radio-option label {
+            margin: 0;
+            padding: 0.8rem;
+            background: var(--gray-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .radio-option input[type="radio"]:checked+label {
+            background: var(--secondary);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .btn {
+            padding: 0.9rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            margin-bottom: 0.8rem;
+        }
+
+        .btn-primary:hover {
+            background: #ff5722;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--gray-light);
+            color: var(--text-primary);
+            width: 100%;
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-medium);
+            border-color: var(--accent);
+        }
+
+        .btn-small {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.75rem;
+            width: auto;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: var(--gray-light);
+            color: var(--text-secondary);
+        }
+
+        .status-badge.tracking {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-badge.recording {
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1.5rem 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-box {
+            background: var(--gray-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: var(--font-mono);
+        }
+
+        .flex-spacer {
+            flex: 1;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            display: flex;
+            flex-direction: column;
+            background: var(--dark);
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        .video-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--darker);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-frame {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            background: var(--darker);
+        }
+
+        .video-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .video-placeholder h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .timeline-scrubber {
+            background: var(--gray-dark);
+            border-top: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--gray-light);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            min-width: 100px;
+        }
+
+        /* ===== SIDEBAR RIGHT ===== */
+        .sidebar-right {
+            background: linear-gradient(180deg, var(--gray-dark) 0%, var(--dark) 100%);
+            border-left: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-panel h3 {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .control-btn {
+            padding: 0.75rem;
+            margin-bottom: 0.6rem;
+            background: var(--gray-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-btn:hover {
+            border-color: var(--accent);
+            background: var(--gray-medium);
+        }
+
+        .control-btn.active {
+            background: var(--secondary);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .control-btn.danger {
+            background: rgba(231, 76, 60, 0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .control-btn.danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .events-list {
+            margin-top: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+        }
+
+        .event-item {
+            background: var(--gray-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .event-time {
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .event-label {
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 0.2rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--gray-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-light);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-left,
+            .sidebar-right {
+                display: none;
+            }
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            border-left: 4px solid;
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .alert-success {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        .video-frame {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            background: var(--darker);
+
+            image-rendering: auto;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- LEFT SIDEBAR -->
+        <div class="sidebar-left">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <span>SCOUT</span>
+            </div>
+
+            <div id="setup-panel">
+                <div class="form-section">
+                    <h3>Match Info</h3>
+                    <div class="form-group">
+                        <label for="team-number">Team Number</label>
+                        <input type="text" id="team-number" placeholder="e.g., 254" value="254">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Alliance</h3>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="red-alliance" name="alliance" value="red" checked>
+                            <label for="red-alliance">RED</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="blue-alliance" name="alliance" value="blue">
+                            <label for="blue-alliance">BLUE</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Video Source</h3>
+                    <div class="form-group">
+                        <label for="video-file">Upload MP4</label>
+                        <input type="file" id="video-file" accept=".mp4,.avi,.mov,.mkv">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="start-btn" onclick="startSession()">
+                    START SCOUTING
+                </button>
+
+                <div class="divider"></div>
+
+                <div id="status-section" class="hidden">
+                    <h3
+                        style="color: var(--accent); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1rem;">
+                        Session Status</h3>
+                    <div class="status-badge recording">● RECORDING</div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Shots</div>
+                            <div class="stat-value" id="shot-count">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Lost</div>
+                            <div class="stat-value" id="lost-count">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-spacer"></div>
+
+            <div id="session-data" class="hidden">
+                <div class="divider"></div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center;">
+                    Report will be saved when you finish
+                </p>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <div class="video-container" id="video-container">
+                <div class="video-placeholder">
+                    <h2>No Video Loaded</h2>
+                    <p>Upload a video to begin scouting</p>
+                </div>
+            </div>
+
+            <div class="timeline-scrubber">
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">Frame</span>
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress-bar-fill"></div>
+                </div>
+                <div class="time-display" id="time-display">0:00 / 0:00</div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="sidebar-right">
+            <div class="control-panel">
+                <h3>Controls</h3>
+                <button class="control-btn" id="pause-btn" onclick="togglePause()">
+                    <span>Pause</span>
+                    <span id="pause-status"></span>
+                </button>
+                <button class="control-btn" id="shot-btn" onclick="logShot()">
+                    <span>Log Shot</span>
+                    <span id="shot-status"></span>
+                </button>
+                <button class="control-btn" id="event-btn" onclick="logEvent()">
+                    <span>Log Event</span>
+                </button>
+                <button class="control-btn" id="save-btn" onclick="saveSession()" class="hidden">
+                    <span>💾 Save Report</span>
+                </button>
+            </div>
+
+            <div class="events-list">
+                <h3
+                    style="color: var(--accent); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1rem;">
+                    Events</h3>
+                <div id="events-container">
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">No events logged</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FOR EVENTS -->
+    <div id="event-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Log Event</h2>
+            <input type="text" id="event-input" placeholder="e.g., scored, defended, passed..." autofocus>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="submitEvent()">Log</button>
+                <button class="btn btn-secondary" onclick="closeEventModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSession = null;
+        let isPaused = false;
+        let frameIndex = 0;
+        let totalFrames = 0;
+        let polling = false;
+
+        // Persistent image element
+        const videoImg = document.createElement('img');
+        videoImg.className = 'video-frame';
+
+        async function startSession() {
+            const teamNumber = document.getElementById('team-number').value;
+            const alliance = document.querySelector('input[name="alliance"]:checked').value;
+            const videoFile = document.getElementById('video-file').files[0];
+
+            if (!teamNumber) {
+                alert('Please enter a team number');
+                return;
+            }
+
+            if (!videoFile) {
+                alert('Please select a video file');
+                return;
+            }
+
+            try {
+                // Upload video
+                const formData = new FormData();
+                formData.append('file', videoFile);
+
+                const uploadRes = await fetch('/api/upload-video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadRes.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const uploadData = await uploadRes.json();
+
+                // Start backend session
+                const startRes = await fetch('/api/start-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        team_number: teamNumber,
+                        bumper_color: alliance,
+                        video_path: uploadData.path
+                    })
+                });
+
+                if (!startRes.ok) {
+                    throw new Error('Session failed');
+                }
+
+                currentSession = await startRes.json();
+
+                // UI updates
+                document.getElementById('setup-panel').classList.add('hidden');
+                document.getElementById('status-section').classList.remove('hidden');
+                document.getElementById('save-btn').classList.remove('hidden');
+
+                // Add image once
+                const container = document.getElementById('video-container');
+                container.innerHTML = '';
+                container.appendChild(videoImg);
+
+                pollFrames();
+
+            } catch (err) {
+                console.error(err);
+                alert(err.message);
+            }
+        }
+
+        async function pollFrames() {
+            if (!currentSession) return;
+
+            if (polling) {
+                setTimeout(pollFrames, 33);
+                return;
+            }
+
+            polling = true;
+
+            try {
+                const res = await fetch('/api/get-frame');
+
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Update image source only
+                    videoImg.src = 'data:image/jpeg;base64,' + data.frame;
+
+                    frameIndex = data.frame_idx;
+                    totalFrames = data.total_frames;
+
+                    // Progress bar
+                    const progress = (frameIndex / totalFrames) * 100;
+
+                    document.querySelector('.progress-bar-fill').style.width =
+                        progress + '%';
+
+                    // Time display
+                    const seconds = Math.floor(data.time);
+                    const totalSeconds = Math.floor(totalFrames / 30);
+
+                    document.getElementById('time-display').textContent =
+                        `${seconds}s / ${totalSeconds}s`;
+
+                    // Stats
+                    document.getElementById('shot-count').textContent =
+                        data.shot_count;
+                }
+
+            } catch (err) {
+                console.error('Polling error:', err);
+            }
+
+            polling = false;
+
+            setTimeout(pollFrames, 33);
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+
+            document.getElementById('pause-btn')
+                .classList.toggle('active');
+
+            document.getElementById('pause-status')
+                .textContent = isPaused ? 'PAUSED' : '';
+        }
+
+        function logShot() {
+            fetch('/api/log-shot', {
+                method: 'POST'
+            })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('shot-count').textContent =
+                        data.shot_count;
+
+                    addEvent(`Shot #${data.shot_count}`);
+                });
+        }
+
+        function logEvent() {
+            document.getElementById('event-modal')
+                .classList.remove('hidden');
+
+            document.getElementById('event-input').focus();
+        }
+
+        function closeEventModal() {
+            document.getElementById('event-modal')
+                .classList.add('hidden');
+        }
+
+        function submitEvent() {
+            const label =
+                document.getElementById('event-input').value;
+
+            if (!label) return;
+
+            fetch('/api/log-event', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    label
+                })
+            })
+                .then(r => r.json())
+                .then(() => {
+                    addEvent(label);
+
+                    closeEventModal();
+
+                    document.getElementById('event-input').value = '';
+                });
+        }
+
+        function addEvent(label) {
+            const seconds = Math.floor(frameIndex / 30);
+
+            const container =
+                document.getElementById('events-container');
+
+            if (container.innerHTML.includes('No events')) {
+                container.innerHTML = '';
+            }
+
+            const item = document.createElement('div');
+
+            item.className = 'event-item';
+
+            item.innerHTML = `
+                    <div class="event-time">${seconds}s</div>
+                    <div class="event-label">${label}</div>
+                `;
+
+            container.appendChild(item);
+        }
+
+        function saveSession() {
+            fetch('/api/save-session', {
+                method: 'POST'
+            })
+                .then(r => r.json())
+                .then(data => {
+                    alert('Report saved: ' + data.path);
+                    location.reload();
+                });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePause();
+            }
+
+            if (e.key === 'f') {
+                logShot();
+            }
+
+            if (e.key === 'e') {
+                logEvent();
+            }
+
+            if (e.key === 's') {
+                saveSession();
+            }
+        });
+    </script>
+</body>
+
+</html>
