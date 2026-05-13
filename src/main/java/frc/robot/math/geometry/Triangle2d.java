@@ -1,6 +1,7 @@
 package frc.robot.math.geometry;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 /** 2D triangle made up of 3 vertices. */
@@ -10,11 +11,48 @@ public class Triangle2d {
     public final Translation2d b;
     public final Translation2d c;
 
+    /**
+     * Local origin / anchor point of the triangle. The Pose2d passed into transformBy() will place
+     * this point.
+     */
+    public final Translation2d origin;
+
     /** Create new Triangle2d. */
     public Triangle2d(Translation2d a, Translation2d b, Translation2d c) {
+        this(a, b, c, new Translation2d());
+    }
+
+    /** Create new Triangle2d with custom origin/anchor point. */
+    public Triangle2d(Translation2d a, Translation2d b, Translation2d c, Translation2d origin) {
         this.a = a;
         this.b = b;
         this.c = c;
+        this.origin = origin;
+    }
+
+    /**
+     * Transforms the triangle by a Pose2d.
+     *
+     * The pose translation becomes the new position of the triangle origin. All triangle points
+     * move relative to that origin and are rotated by the pose rotation.
+     */
+    public Triangle2d transformBy(Pose2d pose) {
+        Translation2d newA = transformPoint(a, pose);
+        Translation2d newB = transformPoint(b, pose);
+        Translation2d newC = transformPoint(c, pose);
+
+        return new Triangle2d(newA, newB, newC, pose.getTranslation());
+    }
+
+    private Translation2d transformPoint(Translation2d point, Pose2d pose) {
+        // Convert point into local space relative to origin
+        Translation2d relative = point.minus(origin);
+
+        // Rotate around origin
+        Translation2d rotated = relative.rotateBy(pose.getRotation());
+
+        // Move to pose position
+        return pose.getTranslation().plus(rotated);
     }
 
     /** Record holding results of a call to {@link Triangle2d#closestPoint}. */
@@ -113,18 +151,24 @@ public class Triangle2d {
         var e0 = b.minus(a);
         var e1 = c.minus(b);
         var e2 = a.minus(c);
+
         var v0 = p.minus(a);
         var v1 = p.minus(b);
         var v2 = p.minus(c);
+
         var pq0 = v0.minus(e0.times(MathUtil.clamp(dot(v0, e0) / dot(e0, e0), 0.0, 1.0)));
+
         var pq1 = v1.minus(e1.times(MathUtil.clamp(dot(v1, e1) / dot(e1, e1), 0.0, 1.0)));
+
         var pq2 = v2.minus(e2.times(MathUtil.clamp(dot(v2, e2) / dot(e2, e2), 0.0, 1.0)));
+
         var s = sign(e0.getX() * e2.getY() - e0.getY() * e2.getX());
+
         var d = min(min(
             new Translation2d(dot(pq0, pq0), s * (v0.getX() * e0.getY() - v0.getY() * e0.getX())),
             new Translation2d(dot(pq1, pq1), s * (v1.getX() * e1.getY() - v1.getY() * e1.getX()))),
             new Translation2d(dot(pq2, pq2), s * (v2.getX() * e2.getY() - v2.getY() * e2.getX())));
+
         return -Math.sqrt(d.getX()) * sign(d.getY());
     }
-
 }
