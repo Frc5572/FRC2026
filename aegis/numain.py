@@ -75,7 +75,7 @@ BALL_MIN_CIRC           = 0.55
 BALL_MAX_DIST           = 80      
 BALL_GONE_FRAMES        = 6        
 BALL_NEAR_FRAMES        = 3         
-SHOT_ORIGIN_RADIUS      = 120    
+SHOT_ORIGIN_RADIUS      = 60
 SHOT_MIN_SPEED          = 6.0       
 ORANGE = (0, 165, 255)
 GREEN  = (0, 220, 80)
@@ -86,6 +86,9 @@ BLACK  = (0, 0, 0)
 GRAY   = (120, 120, 120)
 BLUE   = (220, 100, 0)
 YELLOW = (0, 220, 220)
+
+BALL_MODEL = "ball_model.pt"  
+BALL_CONF_THRESH = 0.5       
 
 ball_detector = OptimizedBallDetector(
     h_range=(BALL_H_LO, BALL_H_HI),
@@ -103,16 +106,19 @@ def draw_balls(frame, balls, owned_ids, robot_box):
 
     if robot_box is not None:
         x1, y1, x2, y2 = robot_box
-        rcx = (x1 + x2) // 2
-        rcy = (y1 + y2) // 2
+        
+        trap_bottom_width = (x2 - x1) * 0.6  
+        trap_offset_bottom = (x2 - x1 - trap_bottom_width) / 2
+        
 
-        cv2.circle(
-            frame,
-            (rcx, rcy),
-            SHOT_ORIGIN_RADIUS,
-            (80, 80, 255),
-            2
-        )
+        pts = np.array([
+            [x1 + trap_offset_bottom, y1],                               # bottom-left (at robot)
+            [x2 - trap_offset_bottom, y1],                               # bottom-right (at robot)
+            [x2, y1 - SHOT_ORIGIN_RADIUS],                               # top-right (wide)
+            [x1, y1 - SHOT_ORIGIN_RADIUS]                                # top-left (wide)
+        ], np.int32)
+        
+        cv2.polylines(frame, [pts], True, (80, 80, 255), 2)
 
     for tid, cx, cy, r in balls:
         owned = tid in owned_ids
@@ -257,6 +263,39 @@ def draw_trail(frame, trail, color):
         col   = (int(color[0]*alpha), int(color[1]*alpha), int(color[2]*alpha))
         cv2.line(frame, trail[i-1], trail[i], col, 2)
 
+def draw_ball_debug_info(frame, raw_balls, robot_box):
+    """Display debug info about ball detection"""
+    if robot_box is None:
+        return
+    
+    h_f, w_f = frame.shape[:2]
+    rx1, ry1, rx2, ry2 = robot_box
+    rcx = (rx1 + rx2) // 2
+    rcy = (ry1 + ry2) // 2
+    
+    # Count near/far balls
+    balls_near = 0
+    balls_far = 0
+    for cx, cy, r in raw_balls:
+        dist = ((cx - rcx)**2 + (cy - rcy)**2) ** 0.5
+        if dist < SHOT_ORIGIN_RADIUS:
+            balls_near += 1
+        else:
+            balls_far += 1
+    
+    # Display in top right
+    debug_text = [
+        f"Total balls: {len(raw_balls)}",
+        f"Near (r<120): {balls_near}",
+        f"Far (r>=120): {balls_far}",
+    ]
+    
+    y_pos = 70
+    for line in debug_text:
+        cv2.putText(frame, line, (w_f - 250, y_pos),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, CYAN, 1)
+        y_pos += 25
+
 def draw_fuel_counter(frame, robot_box, shot_count, bumper_color):
     if robot_box is None:
         return
@@ -334,7 +373,7 @@ def draw_hud(frame, session, status, frame_idx, fps, paused, speed):
     overlay2 = frame.copy()
     cv2.rectangle(overlay2, (0, h_f - 36), (w_f, h_f), BLACK, -1)
     cv2.addWeighted(overlay2, 0.55, frame, 0.45, 0, frame)
-    hint = "SPACE=pause  R=select  F=shot  Z=undo  E=event  S=save  Q=quit  +/-=speed"
+    hint = "SPACE=pause  R=select  F=shot  Z=undo  E=event  S=save  D=debug  Q=quit  +/-=speed"
     cv2.putText(frame, hint, (10, h_f - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.40, GRAY, 1)
     ev_txt = f"Events: {len(session.events)}  Lost: {session.lost_count}  Shots: {session.shot_count}"
@@ -416,9 +455,10 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
     yolo_candidate_frames = 0     
     current_robot_box = None  
 
-    ball_tracker  = BallTracker(fps)
+    ball_tracker  = BallTracker(fps, robot_radius=SHOT_ORIGIN_RADIUS, height_threshold=0.3)
     live_balls    = []   
     shot_flash_frames = 0 
+    debug_mode = False 
 
     while True:
         if not paused:
@@ -529,6 +569,11 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                 raw_balls = detect_yellow_balls(frame)
                 live_balls, shot_now = ball_tracker.update(
                     raw_balls, current_robot_box, frame_idx)
+                
+                # Debug: print ball counts every 30 frames
+                if frame_idx % 30 == 0:
+                    print(f"[DEBUG] Frame {frame_idx}: {len(raw_balls)} balls detected, shot={shot_now}")
+                
                 if shot_now:
                     session.shot_count += 1
                     session.log_event(frame_idx, fps,
@@ -563,6 +608,10 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
         if current_robot_box is not None and (locked_id is not None or using_csrt):
             draw_fuel_counter(frame, current_robot_box,
                               session.shot_count, session.bumper_color)
+        
+        # Debug display
+        if debug_mode:
+            draw_ball_debug_info(frame, detect_yellow_balls(frame), current_robot_box)
 
         if using_csrt and yolo_candidate_id is not None and fps > 0:
             needed   = max(1, int(fps * YOLO_LOCK_CONFIRM_SECS))
@@ -770,6 +819,9 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                 session.log_event(frame_idx, fps,
                                   f"Shot undone (total: {session.shot_count})")
                 print(f"  [FUEL] Shot undone — total: {session.shot_count}")
+        elif key == ord('d'):
+            debug_mode = not debug_mode
+            print(f"  Debug mode: {'ON' if debug_mode else 'OFF'}")
 
     path = session.save()
     print(f"\n[✓] Session ended. Report saved → {path}")
