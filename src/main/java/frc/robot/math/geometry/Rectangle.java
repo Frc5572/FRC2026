@@ -97,4 +97,20 @@ public class Rectangle implements ConvexShape {
         }
         return true;
     }
+
+    public boolean isInside(Triangle2d triangle) {
+
+        Translation2d[] corners = getCorners();
+
+        for (Translation2d corner : corners) {
+
+            Triangle2d.ClosestPoint result = triangle.closestPoint(corner);
+
+            if (!result.inside()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

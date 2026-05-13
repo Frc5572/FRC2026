@@ -390,6 +390,8 @@ public final class RobotContainer {
             AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());
         Logger.recordOutput("test1",
             FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
+
+        Constants.robotRect.setPose(swerve.state.getGlobalPoseEstimate());
     }
 
 

@@ -17,6 +17,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -29,6 +30,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import frc.robot.math.geometry.Rectangle;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.CameraConstantsBuilder;
 import frc.robot.util.tunable.FlywheelConstants;
@@ -49,6 +51,9 @@ public final class Constants {
     public static final boolean tunable = true;
 
     public static final boolean keepInField = false;
+
+    public static final Rectangle robotRect =
+        new Rectangle("robotRect", new Pose2d(), Swerve.trackWidth, Swerve.trackWidth);
 
     /** Constants for driver controls */
     public static class DriverControls {
