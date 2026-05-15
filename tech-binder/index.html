@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRC Tech Binder</title>
+
+    <style>
+        :root {
+            --bg: #0b0b0b;
+            --panel: #101010;
+            --text: #f3f3f3;
+            --red: #7b2f2c;
+            --red-light: #9c3b37;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* NAVBAR */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(8, 8, 8, 0.92);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar {
+            max-width: 1400px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 28px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .logo-image {
+            height: 40px;
+            width: auto;
+            border-radius: 6px;
+        }
+
+        .logo span {
+            color: var(--red-light);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #d4d4d4;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        /* HERO */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.35);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(123, 47, 44, 0.22), transparent 50%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 950px;
+            padding: 40px;
+            animation: fadeHero 1.2s ease;
+        }
+
+        .hero h4 {
+            color: #c8c8c8;
+            letter-spacing: 3px;
+            font-weight: normal;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: 6rem;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 span {
+            color: var(--red-light);
+        }
+
+        .hero p {
+            color: #d0d0d0;
+            font-size: 1.15rem;
+            line-height: 2;
+            max-width: 760px;
+            margin: auto;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 36px;
+            background: var(--red);
+            color: white;
+            text-decoration: none;
+            padding: 14px 26px;
+            border-radius: 12px;
+            transition: 0.2s;
+        }
+
+        .button:hover {
+            background: var(--red-light);
+        }
+
+        /* MAIN */
+        .container {
+            max-width: 1250px;
+            margin: auto;
+            padding: 140px 24px;
+        }
+
+        .section {
+            margin-bottom: 220px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 100px;
+        }
+
+        .subsection {
+            margin-bottom: 140px;
+        }
+
+        .subsection-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--text);
+            margin-bottom: 80px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--red);
+        }
+
+        /* SUBSYSTEM */
+        .subsystem {
+            margin-bottom: 220px;
+            opacity: 0;
+            transform: translateY(70px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .subsystem.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* IMAGE */
+        .section-image {
+            display: block;
+            max-width: 100%;
+            max-height: 720px;
+            width: auto;
+            height: auto;
+            margin: auto;
+            margin-bottom: 50px;
+            border-radius: 18px;
+        }
+
+        /* TEXT */
+        .section-content {
+            max-width: 950px;
+            margin: auto;
+            text-align: center;
+        }
+
+        .section-content h3 {
+            color: var(--red-light);
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+
+        .section-content h4 {
+            color: #9a9a9a;
+            font-weight: normal;
+            letter-spacing: 4px;
+            margin-bottom: 34px;
+        }
+
+        .section-content p {
+            color: #d0d0d0;
+            font-size: 1.05rem;
+            line-height: 2.1;
+        }
+
+        /* ITERATIONS GRID */
+        .iterations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .iteration-card {
+            background: var(--panel);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #1a1a1a;
+            transition: 0.3s;
+        }
+
+        .iteration-card:hover {
+            border-color: var(--red);
+            transform: translateY(-5px);
+        }
+
+        .iteration-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .iteration-card-content {
+            padding: 24px;
+        }
+
+        .iteration-card h4 {
+            color: var(--red-light);
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+
+        .iteration-card p {
+            color: #c0c0c0;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* ============================================
+           TIMELINE — WITH OPPOSITE-SIDE IMAGES
+           ============================================ */
+
+        .timeline-container {
+            position: relative;
+            margin: 80px 0;
+            padding: 60px 0;
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Center spine */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--red), var(--red-light));
+        }
+
+        /* Each row = full-width flex container */
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 60px;
+            position: relative;
+            gap: 0;
+        }
+
+        /* Dot on the spine */
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--red-light);
+            border: 4px solid var(--bg);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        /* Left half — holds card OR image depending on child order */
+        .timeline-left {
+            width: calc(50% - 40px);
+            margin-right: 40px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Right half */
+        .timeline-right {
+            width: calc(50% - 40px);
+            margin-left: 40px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        /* Text card */
+        .timeline-content {
+            background: var(--panel);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #1a1a1a;
+            transition: 0.3s;
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .timeline-content:hover {
+            border-color: var(--red);
+            box-shadow: 0 8px 24px rgba(156, 59, 55, 0.15);
+        }
+
+        .timeline-content h4 {
+            color: var(--red-light);
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .timeline-content p {
+            color: #d0d0d0;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* Timeline image */
+        .timeline-img {
+            width: 100%;
+            max-width: 440px;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #1a1a1a;
+            display: block;
+        }
+
+        /* Placeholder when no image src is set */
+        .timeline-img-placeholder {
+            width: 100%;
+            max-width: 440px;
+            height: 220px;
+            border-radius: 12px;
+            border: 1px dashed #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+        }
+
+        /* ODD items: card on LEFT, image on RIGHT */
+        .timeline-item:nth-child(odd) .timeline-left {
+            justify-content: flex-end;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-right {
+            justify-content: flex-start;
+        }
+
+        /* EVEN items: image on LEFT, card on RIGHT */
+        .timeline-item:nth-child(even) .timeline-left {
+            justify-content: flex-end;
+        }
+
+        .timeline-item:nth-child(even) .timeline-right {
+            justify-content: flex-start;
+        }
+
+        /* MOBILE TIMELINE */
+        @media(max-width: 768px) {
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding-left: 56px;
+            }
+
+            .timeline-item::before {
+                left: 20px;
+                top: 16px;
+                transform: translateX(-50%);
+            }
+
+            .timeline-left,
+            .timeline-right {
+                width: 100%;
+                margin: 0 0 12px 0;
+                justify-content: flex-start !important;
+            }
+
+            .timeline-img,
+            .timeline-img-placeholder {
+                max-width: 100%;
+                height: 180px;
+            }
+
+            .timeline-content {
+                max-width: 100%;
+            }
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 60px;
+            color: #777;
+        }
+
+        /* ANIMATION */
+        @keyframes fadeHero {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* MOBILE GENERAL */
+        @media(max-width: 900px) {
+            .navbar {
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+
+            .section-title {
+                font-size: 2.4rem;
+            }
+
+            .section-content h3 {
+                font-size: 2rem;
+            }
+
+            .section-image {
+                max-height: 350px;
+            }
+
+            .subsystem {
+                margin-bottom: 140px;
+            }
+
+            .iterations-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            @page {
+                margin: 2cm;
+            }
+
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 12pt;
+            }
+
+            header,
+            .hero-overlay,
+            .button,
+            script {
+                display: none !important;
+            }
+
+            .hero {
+                min-height: auto !important;
+                padding: 50px 0 !important;
+                display: block !important;
+                page-break-after: always;
+            }
+
+            .hero-image {
+                position: relative !important;
+                filter: none !important;
+                max-height: 300px;
+                width: auto !important;
+                margin: 0 auto 20px auto;
+                display: block;
+                content: url('logo.png');
+            }
+
+            .hero h1,
+            .hero h1 span,
+            .logo span,
+            .section-content h3 {
+                color: #000 !important;
+                text-shadow: none !important;
+            }
+
+            .hero p,
+            .section-content p {
+                color: #333 !important;
+            }
+
+            .container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+
+            .section {
+                margin-bottom: 50px !important;
+                page-break-before: always;
+            }
+
+            .section-title {
+                font-size: 28pt !important;
+                margin-bottom: 30px !important;
+                color: black !important;
+                border-bottom: 2px solid #7b2f2c;
+                padding-bottom: 10px;
+            }
+
+            .subsection-title {
+                font-size: 18pt !important;
+                margin-bottom: 20px !important;
+                color: black !important;
+                border-bottom: 1px solid #7b2f2c;
+                padding-bottom: 8px;
+            }
+
+            .subsystem {
+                opacity: 1 !important;
+                transform: none !important;
+                margin-bottom: 40px !important;
+                page-break-inside: avoid;
+            }
+
+            .section-image {
+                max-height: 4in !important;
+                filter: grayscale(20%);
+                border: 1px solid #ddd;
+            }
+
+            .section-content h4 {
+                color: #666 !important;
+                margin-bottom: 10px !important;
+            }
+
+            .iterations-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 20px;
+                page-break-inside: avoid;
+            }
+
+            .iteration-card {
+                background: white !important;
+                border: 1px solid #999 !important;
+                page-break-inside: avoid;
+            }
+
+            .iteration-card img {
+                max-height: 3in;
+                object-fit: contain;
+            }
+
+            .iteration-card h4,
+            .iteration-card p {
+                color: black !important;
+            }
+
+            footer {
+                position: running(footer);
+                font-size: 10pt;
+                border-top: 1px solid #ccc;
+            }
+
+            /* ---- TIMELINE PRINT FIX ---- */
+
+            /* Kill the vertical spine line */
+            .timeline::before {
+                display: none !important;
+            }
+
+            /* Each timeline row: stack vertically, no flex weirdness */
+            .timeline-item {
+                display: block !important;
+                padding: 0 !important;
+                margin-bottom: 24pt !important;
+                page-break-inside: avoid;
+                border-left: 3px solid #7b2f2c;
+                padding-left: 12pt !important;
+            }
+
+            /* Kill the dot */
+            .timeline-item::before {
+                display: none !important;
+            }
+
+            /* Both halves full width, stacked */
+            .timeline-left,
+            .timeline-right {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 0 8pt 0 !important;
+                justify-content: unset !important;
+            }
+
+            /* Image sizing */
+            .timeline-img {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: 2.5in !important;
+                object-fit: contain !important;
+                border: 1px solid #ddd !important;
+                border-radius: 4px !important;
+                display: block !important;
+            }
+
+            /* Hide placeholder boxes in print */
+            .timeline-img-placeholder {
+                display: none !important;
+            }
+
+            /* Card colors */
+            .timeline-content {
+                background: white !important;
+                border: 1px solid #ccc !important;
+                border-radius: 4px !important;
+                max-width: 100% !important;
+            }
+
+            .timeline-content h4 {
+                color: #7b2f2c !important;
+            }
+
+            .timeline-content p {
+                color: #333 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header>
+        <div class="navbar">
+            <div class="logo">
+                <img class="logo-image" src="logo.png" alt="Team 5572 Logo">
+                <div>FRC <span>5572 | The Rosbots</span></div>
+            </div>
+            <div class="nav-links">
+                <a href="#overview">Overview</a>
+                <a href="#mechanical">Mechanical</a>
+                <a href="#programming">Programming</a>
+                <a href="#iterations">Iterations</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+        <img class="hero-image" src="images/robot.png" alt="Arakkis Robot">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h4>TEAM 5572 | THE ROSBOTS</h4>
+            <h1><span>ARAKKIS</span></h1>
+            <p>FRC 5572 The Rosbots robot for the 2026 Rebuilt season.</p>
+            <a class="button" href="#overview">Open Binder</a>
+        </div>
+    </section>
+
+    <!-- MAIN -->
+    <div class="container">
+
+        <!-- OVERVIEW -->
+        <section class="section" id="overview">
+            <h2 class="section-title">Robot Overview</h2>
+            <div class="subsystem fade">
+                <img class="section-image" src="images/robot.png" alt="Arakkis Robot">
+                <div class="section-content">
+                    <h3>Arakkis</h3>
+                    <h4>OVERVIEW</h4>
+                    <p>
+                        Arakkis is Team 5572's 2026 competition robot.
+                        The robot was designed around rapid cycling,
+                        scoring consistency, field awareness,
+                        and simplified maintenance between matches.
+                        Structural rigidity, subsystem accessibility,
+                        and optimized packaging were major priorities
+                        throughout development to ensure reliability
+                        under heavy competitive use.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MECHANICAL -->
+        <section class="section" id="mechanical">
+            <h2 class="section-title">Mechanical</h2>
+
+            <div class="subsystem fade">
+                <img class="section-image" src="images/drive-train-with-bumpers.png" alt="Drive Train">
+                <div class="section-content">
+                    <h3>Drive Train</h3>
+                    <h4>FEATURES</h4>
+                    <p>
+                        The drivetrain utilizes SDS MK4i and MK4N swerve modules
+                        powered by Kraken X60 motors to provide rapid acceleration,
+                        precise maneuverability, and reliable performance under load.
+                        The frame structure combines grid pattern aluminum tubing,
+                        MAX pattern mounting geometry, and reinforced bumper brackets
+                        to maintain rigidity while allowing modular subsystem integration
+                        and fast repair access during competitions.
+                    </p>
+                </div>
+            </div>
+
+            <div class="subsystem fade">
+                <img class="section-image" src="images/shooter.png" alt="Shooter">
+                <div class="section-content">
+                    <h3>Shooter</h3>
+                    <h4>FEATURES</h4>
+                    <p>
+                        The shooter assembly uses a rigid aluminum exterior
+                        combined with lightweight Lexan plates to reduce weight
+                        while maintaining structural stiffness.
+                        A high inertia flywheel system maintains wheel velocity
+                        during repeated firing cycles, minimizing speed loss
+                        from game piece compression and improving shot consistency.
+                        Adjustable hood geometry allows accurate targeting
+                        across multiple scoring locations while maintaining
+                        constant compression throughout the firing path.
+                    </p>
+                </div>
+            </div>
+
+            <div class="subsystem fade">
+                <img class="section-image" src="images/turret.png" alt="Turret">
+                <div class="section-content">
+                    <h3>Turret</h3>
+                    <h4>FEATURES</h4>
+                    <p>
+                        The corner-mounted turret maximizes intake area
+                        and hopper capacity while enabling continuous
+                        target alignment from nearly any field position.
+                        Vision localization using cameras and AprilTags
+                        allows the robot to maintain global target tracking
+                        and improve shot consistency while reducing
+                        driver alignment demands.
+                        The turret geartrain is simplified around a
+                        through-bore encoder system for reliable positioning
+                        and reduced maintenance complexity.
+                    </p>
+                </div>
+            </div>
+
+            <div class="subsystem fade">
+                <img class="section-image" src="images/spindexer.png" alt="Spindexer">
+                <div class="section-content">
+                    <h3>Spindexer</h3>
+                    <h4>FEATURES</h4>
+                    <p>
+                        The spindexer uses a turbo-style curved geometry
+                        designed to maintain smooth game piece flow
+                        into the magazine system while minimizing jams
+                        and dead zones.
+                        Integrated brush systems continuously guide fuel
+                        through the mechanism while the staggered
+                        structural layout increases intake volume
+                        and preserves space for electronics packaging.
+                    </p>
+                </div>
+            </div>
+
+            <div class="subsystem fade">
+                <img class="section-image" src="images/magazine.png" alt="Magazine">
+                <div class="section-content">
+                    <h3>Magazine</h3>
+                    <h4>FEATURES</h4>
+                    <p>
+                        The magazine assembly is constructed using
+                        milled aluminum plate structures designed
+                        for rigidity, efficient packaging,
+                        and consistent fuel routing.
+                        Precision guide geometry ensures stable
+                        transfer between the intake, spindexer,
+                        and shooter systems while maintaining
+                        controlled compression and reliable feeding behavior.
+                    </p>
+                </div>
+            </div>
+
+            <div class="subsystem fade">
+                <img class="section-image" src="images/rnp.png" alt="Rack and Pinion Intake">
+                <div class="section-content">
+                    <h3>Rack and Pinion Intake</h3>
+                    <h4>FEATURES</h4>
+                    <p>
+                        The rack and pinion intake system is optimized
+                        for rapid game piece acquisition while minimizing
+                        structural complexity and maintenance overhead.
+                        Large compression wheels provide strong intake force
+                        while rigid aluminum support structures maintain
+                        consistent geometry under impact loading during matches.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROGRAMMING -->
+        <section class="section" id="programming">
+            <h2 class="section-title">Programming</h2>
+            <div class="subsystem fade">
+                <img class="section-image" src="images/graph.png" alt="Auto Shoot Graph">
+                <div class="section-content">
+                    <h3>Auto Shoot</h3>
+                    <h4>FEATURES</h4>
+                    <p>
+                        In order to calculate shots, we give the simulator five
+                        reference shots and it creates over 1000 generated shot
+                        results using varying parameters.
+                        The generated data is then filtered to only keep the
+                        trajectories that consistently hit the center of the hub.
+                        This allows the robot to dynamically determine accurate
+                        shooting solutions across multiple field positions
+                        while compensating for variation in velocity,
+                        distance, and robot movement.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ITERATIONS -->
+        <section class="section" id="iterations">
+            <h2 class="section-title">Robot Iterations</h2>
+
+            <!-- OVERALL ROBOT ITERATIONS -->
+            <div class="subsection">
+                <h3 class="subsection-title">Overall Robot Evolution</h3>
+                <div class="section-content">
+                    <h4 style="color: #9a9a9a; margin-bottom: 50px;">DESIGN EVOLUTION</h4>
+                </div>
+
+                <div class="iterations-grid fade">
+                    <div class="iteration-card">
+                        <img src="images/iteration-1.png" alt="Iteration 1">
+                        <div class="iteration-card-content">
+                            <h4>Prototype Alpha</h4>
+                            <p>Initial concept exploration focusing on drivetrain validation and core subsystem
+                                architecture. Established foundation for mechanical design principles.</p>
+                        </div>
+                    </div>
+                    <div class="iteration-card">
+                        <img src="images/iteration-2.png" alt="Iteration 2">
+                        <div class="iteration-card-content">
+                            <h4>Prototype Beta</h4>
+                            <p>Integrated shooter and intake systems with refined packaging. Focused on reducing weight
+                                while maintaining structural rigidity under competitive loads.</p>
+                        </div>
+                    </div>
+                    <div class="iteration-card">
+                        <img src="images/iteration-3.png" alt="Iteration 3">
+                        <div class="iteration-card-content">
+                            <h4>Prototype Gamma</h4>
+                            <p>Full system integration with vision systems and optimized electronics routing.
+                                Implemented autonomous shot calculation and field awareness capabilities.</p>
+                        </div>
+                    </div>
+                    <div class="iteration-card">
+                        <img src="images/iteration-4.png" alt="Iteration 4">
+                        <div class="iteration-card-content">
+                            <h4>Final Competition Build</h4>
+                            <p>Production-ready Arakkis with all systems validated and optimized. Incorporates feedback
+                                from testing phases and ready for competitive season deployment.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBSYSTEM ITERATIONS -->
+            <div class="subsection">
+                <h3 class="subsection-title">Subsystem Iterations</h3>
+                <div class="section-content">
+                    <h4 style="color: #9a9a9a; margin-bottom: 50px;">COMPONENT REFINEMENT</h4>
+                </div>
+
+                <!-- DRIVETRAIN ITERATION -->
+                <div class="subsystem fade">
+                    <img class="section-image" src="images/drivetrain-iteration.png" alt="Drivetrain Iteration">
+                    <div class="section-content">
+                        <h3>Drivetrain Evolution</h3>
+                        <h4>ITERATION REFINEMENTS</h4>
+                        <p>
+                            The drivetrain underwent three major iterations focusing on
+                            weight reduction and performance optimization. Early prototypes
+                            used traditional module mounting, while later versions incorporated
+                            custom brackets for improved accessibility and faster module swaps.
+                            Final iteration features optimized weight distribution and
+                            enhanced structural support for high-load scenarios.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SHOOTER ITERATION WITH TIMELINE -->
+                <div class="subsystem fade">
+                    <img class="section-image" src="images/shooter.png" alt="Shooter Iteration">
+                    <div class="section-content">
+                        <h3>Shooter Subsystem Evolution</h3>
+                    </div>
+
+                    <div class="timeline-container">
+                        <div class="timeline">
+
+                            <!-- V1: card left, image right -->
+                            <div class="timeline-item">
+                                <div class="timeline-left">
+
+                                </div>
+
+                                <div class="timeline-right">
+                                    <img class="timeline-img" src="images/shooter-v1.png" alt="Shooter V1"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                                </div>
+
+
+                            </div>
+                            <div class="timeline-item">
+
+                                <div class="timeline-right">
+                                    <img class="timeline-img" src="images/shooter.png" alt="Turret V1"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                                </div>
+                                <div class="timeline-left">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INTAKE ITERATION WITH TIMELINE -->
+                <div class="subsystem fade">
+                    <img class="section-image" src="images/rnp.png" alt="Intake Iteration">
+                    <div class="section-content">
+                        <h3>Intake Subsystem Evolution</h3>
+                    </div>
+
+                    <div class="timeline-container">
+                        <div class="timeline">
+
+                            <div class="timeline-item">
+                                <div class="timeline-left">
+
+                                </div>
+
+                                <div class="timeline-right">
+                                    <img class="timeline-img" src="images/rnp-v1.png" alt="Intake V1"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-left">
+                                    <img class="timeline-img" src="images/rnp-v2.png" alt="Intake V2"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                                </div>
+                                <div class="timeline-right">
+
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-right">
+                                </div>
+                                <div class="timeline-left">
+                                    <img class="timeline-img" src="images/rnp-v3.png" alt="Intake V3"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- <div class="timeline-item">
+
+                                <div class="timeline-right">
+                                    <img class="timeline-img" src="images/rnp.png" alt="Intake V4"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET
+                                    </div>
+                                </div>
+                                <div class="timeline-left">
+
+                                </div>
+                            </div> -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- TURRET ITERATION WITH TIMELINE -->
+            <div class="subsystem fade">
+                <img class="section-image" src="images/turret.png" alt="Turret Iteration">
+                <div class="section-content">
+                    <h3>Turret Subsystem Evolution</h3>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="timeline">
+
+                        <div class="timeline-item">
+                            <div class="timeline-left">
+
+                            </div>
+                            <div class="timeline-right">
+                                <img class="timeline-img" src="images/turret-v1.png" alt="Turret V1"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-left">
+                                <img class="timeline-img" src="images/turret.png" alt="Turret V2"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                            </div>
+                            <div class="timeline-right">
+
+                            </div>
+                        </div>
+
+                        <!-- <div class="timeline-item">
+                            <div class="timeline-left">
+
+                            </div>
+                            <div class="timeline-right">
+                                <img class="timeline-img" src="images/turret-v3.png" alt="Turret V3"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-left">
+                                <img class="timeline-img" src="images/turret-v4.png" alt="Turret V4"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                            </div>
+                            <div class="timeline-right">
+
+                            </div>
+                        </div> -->
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spindexer ITERATION WITH TIMELINE -->
+            <div class="subsystem fade">
+                <img class="section-image" src="images/spindexer.png" alt="Spindexer Iteration">
+                <div class="section-content">
+                    <h3>Spindexer Subsystem Evolution</h3>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="timeline">
+
+                        <div class="timeline-item">
+                            <div class="timeline-left">
+
+                            </div>
+                            <div class="timeline-right">
+                                <img class="timeline-img" src="images/spindexer-v1.png" alt="Turret V1"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-left">
+                                <img class="timeline-img" src="images/spindexer.png" alt="Turret V2"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                            </div>
+                            <div class="timeline-right">
+
+                            </div>
+                        </div>
+
+                        <!-- <div class="timeline-item">
+                                        <div class="timeline-left">
+            
+                                        </div>
+                                        <div class="timeline-right">
+                                            <img class="timeline-img" src="images/turret-v3.png" alt="Turret V3"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                                        </div>
+                                    </div>
+            
+                                    <div class="timeline-item">
+                                        <div class="timeline-left">
+                                            <img class="timeline-img" src="images/turret-v4.png" alt="Turret V4"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="timeline-img-placeholder" style="display:none;">NO IMAGE SET</div>
+                                        </div>
+                                        <div class="timeline-right">
+            
+                                        </div>
+                                    </div> -->
+
+                    </div>
+                </div>
+            </div>
+
+    </div>
+
+    </section>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>Team 5572 • FRC Tech Binder</footer>
+
+    <!-- FADE SCRIPT -->
+    <script>
+        const fadeElements = document.querySelectorAll('.fade');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                } else {
+                    entry.target.classList.remove('visible');
+                }
+            });
+        }, { threshold: 0.2 });
+        fadeElements.forEach((el) => observer.observe(el));
+
+        window.addEventListener('beforeprint', () => {
+            document.querySelectorAll('.hero-image').forEach((img) => {
+                if (img.src.includes('robot.png')) img.src = img.src.replace('robot.png', 'logo.png');
+            });
+        });
+        window.addEventListener('afterprint', () => {
+            document.querySelectorAll('.hero-image').forEach((img) => {
+                if (img.src.includes('logo.png')) img.src = img.src.replace('logo.png', 'robot.png');
+            });
+        });
+    </script>
+
+</body>
+
+</html>
