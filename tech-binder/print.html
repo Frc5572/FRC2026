@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRC Tech Binder - Arakkis</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 1.5cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* COVER PAGE */
+        .cover {
+            text-align: center;
+            padding: 60px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+        }
+
+        .cover img {
+            max-width: 250px;
+            height: auto;
+            margin-bottom: 30px;
+        }
+
+        .cover h1 {
+            font-size: 3em;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .cover h2 {
+            font-size: 1.1em;
+            color: #666;
+            font-weight: normal;
+            margin: 8px 0 20px 0;
+        }
+
+        .cover p {
+            font-size: 1em;
+            color: #777;
+            max-width: 600px;
+        }
+
+        /* SECTION TITLE PAGES */
+        .section-header {
+            text-align: center;
+            padding: 60px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+        }
+
+        .section-header h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #dc2626;
+        }
+
+        /* SUBSYSTEMS */
+        .subsystem {
+            padding: 40px;
+            page-break-after: always;
+            min-height: auto;
+        }
+
+        .subsystem-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            color: #1a1a1a;
+        }
+
+        .subsystem-subtitle {
+            font-size: 0.85em;
+            color: #777;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .subsystem-image {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0 20px 0;
+        }
+
+        .subsystem-text {
+            font-size: 0.95em;
+            line-height: 1.7;
+            color: #444;
+        }
+
+        /* ITERATION CARDS */
+        .iteration-card {
+            padding: 40px;
+            page-break-after: always;
+        }
+
+        .iteration-card-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .iteration-card h2 {
+            font-size: 1.6em;
+            color: #dc2626;
+            margin: 10px 0 8px 0;
+            font-weight: bold;
+        }
+
+        .iteration-card p {
+            font-size: 0.95em;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        /* TIMELINE IMAGES */
+        .timeline-image-page {
+            padding: 40px;
+            page-break-after: always;
+        }
+
+        .timeline-image-page h2 {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .timeline-image-page img {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+        }
+
+        /* SCREEN ONLY */
+        @media screen {
+            body {
+                background: #f5f5f5;
+                padding: 20px;
+            }
+
+            .cover,
+            .section-header,
+            .subsystem,
+            .iteration-card,
+            .timeline-image-page {
+                background: white;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                page-break-after: auto;
+            }
+        }
+
+        /* PRINT ONLY */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .cover,
+            .section-header,
+            .subsystem,
+            .iteration-card,
+            .timeline-image-page {
+                background: white;
+                margin: 0;
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- COVER PAGE -->
+    <div class="cover">
+        <img src="images/logo.png" alt="Team 5572 Logo">
+        <h1>ARAKKIS</h1>
+        <h2>TEAM 5572 | THE ROSBOTS</h2>
+        <p>FRC 5572 The Rosbots robot for the 2026 Rebuilt season.</p>
+    </div>
+
+    <!-- OVERVIEW HEADER -->
+    <div class="section-header">
+        <h1>Robot Overview</h1>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/robot.png" alt="Arakkis Robot">
+        <h2 class="subsystem-title">Arakkis</h2>
+        <p class="subsystem-subtitle">Overview</p>
+        <p class="subsystem-text">
+            Arakkis is Team 5572's 2026 competition robot. The robot was designed around rapid cycling, scoring
+            consistency, field awareness, and simplified maintenance between matches. Structural rigidity, subsystem
+            accessibility, and optimized packaging were major priorities throughout development to ensure reliability
+            under heavy competitive use.
+        </p>
+    </div>
+
+    <!-- MECHANICAL HEADER -->
+    <div class="section-header">
+        <h1>Mechanical</h1>
+    </div>
+
+    <!-- MECHANICAL SUBSYSTEMS -->
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/drive-train-with-bumpers.png" alt="Drive Train">
+        <h2 class="subsystem-title">Drive Train</h2>
+        <p class="subsystem-subtitle">Features</p>
+        <p class="subsystem-text">
+            The drivetrain utilizes SDS MK4i and MK4N swerve modules powered by Kraken X60 motors to provide rapid
+            acceleration, precise maneuverability, and reliable performance under load. The frame structure combines
+            grid pattern aluminum tubing, MAX pattern mounting geometry, and reinforced bumper brackets to maintain
+            rigidity while allowing modular subsystem integration and fast repair access during competitions.
+        </p>
+    </div>
+
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/shooter.png" alt="Shooter">
+        <h2 class="subsystem-title">Shooter</h2>
+        <p class="subsystem-subtitle">Features</p>
+        <p class="subsystem-text">
+            The shooter assembly uses a rigid aluminum exterior combined with lightweight Lexan plates to reduce weight
+            while maintaining structural stiffness. A high inertia flywheel system maintains wheel velocity during
+            repeated firing cycles, minimizing speed loss from game piece compression and improving shot consistency.
+            Adjustable hood geometry allows accurate targeting across multiple scoring locations while maintaining
+            constant compression throughout the firing path.
+        </p>
+    </div>
+
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/turret.png" alt="Turret">
+        <h2 class="subsystem-title">Turret</h2>
+        <p class="subsystem-subtitle">Features</p>
+        <p class="subsystem-text">
+            The corner-mounted turret maximizes intake area and hopper capacity while enabling continuous target
+            alignment from nearly any field position. Vision localization using cameras and AprilTags allows the robot
+            to maintain global target tracking and improve shot consistency while reducing driver alignment demands. The
+            turret geartrain is simplified around a through-bore encoder system for reliable positioning and reduced
+            maintenance complexity.
+        </p>
+    </div>
+
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/spindexer.png" alt="Spindexer">
+        <h2 class="subsystem-title">Spindexer</h2>
+        <p class="subsystem-subtitle">Features</p>
+        <p class="subsystem-text">
+            The spindexer uses a turbo-style curved geometry designed to maintain smooth game piece flow into the
+            magazine system while minimizing jams and dead zones. Integrated brush systems continuously guide fuel
+            through the mechanism while the staggered structural layout increases intake volume and preserves space for
+            electronics packaging.
+        </p>
+    </div>
+
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/magazine.png" alt="Magazine">
+        <h2 class="subsystem-title">Magazine</h2>
+        <p class="subsystem-subtitle">Features</p>
+        <p class="subsystem-text">
+            The magazine assembly is constructed using milled aluminum plate structures designed for rigidity, efficient
+            packaging, and consistent fuel routing. Precision guide geometry ensures stable transfer between the intake,
+            spindexer, and shooter systems while maintaining controlled compression and reliable feeding behavior.
+        </p>
+    </div>
+
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/rnp.png" alt="Rack and Pinion Intake">
+        <h2 class="subsystem-title">Rack and Pinion Intake</h2>
+        <p class="subsystem-subtitle">Features</p>
+        <p class="subsystem-text">
+            The rack and pinion intake system is optimized for rapid game piece acquisition while minimizing structural
+            complexity and maintenance overhead. Large compression wheels provide strong intake force while rigid
+            aluminum support structures maintain consistent geometry under impact loading during matches.
+        </p>
+    </div>
+
+    <!-- PROGRAMMING HEADER -->
+    <div class="section-header">
+        <h1>Programming</h1>
+    </div>
+
+    <!-- PROGRAMMING -->
+    <div class="subsystem">
+        <img class="subsystem-image" src="images/graph.png" alt="Auto Shoot Graph">
+        <h2 class="subsystem-title">Auto Shoot</h2>
+        <p class="subsystem-subtitle">Features</p>
+        <p class="subsystem-text">
+            In order to calculate shots, we give the simulator five reference shots and it creates over 1000 generated
+            shot results using varying parameters. The generated data is then filtered to only keep the trajectories
+            that consistently hit the center of the hub. This allows the robot to dynamically determine accurate
+            shooting solutions across multiple field positions while compensating for variation in velocity, distance,
+            and robot movement.
+        </p>
+    </div>
+
+    <!-- ITERATIONS HEADER -->
+    <div class="section-header">
+        <h1>Robot Iterations</h1>
+    </div>
+
+    <!-- OVERALL ROBOT ITERATIONS -->
+    <div class="iteration-card">
+        <img class="iteration-card-image" src="images/iteration-1.png" alt="Iteration 1">
+        <h2>Prototype Alpha</h2>
+        <p>Initial concept exploration focusing on drivetrain validation and core subsystem architecture. Established
+            foundation for mechanical design principles.</p>
+    </div>
+
+    <div class="iteration-card">
+        <img class="iteration-card-image" src="images/iteration-2.png" alt="Iteration 2">
+        <h2>Prototype Beta</h2>
+        <p>Integrated shooter and intake systems with refined packaging. Focused on reducing weight while maintaining
+            structural rigidity under competitive loads.</p>
+    </div>
+
+    <div class="iteration-card">
+        <img class="iteration-card-image" src="images/iteration-3.png" alt="Iteration 3">
+        <h2>Prototype Gamma</h2>
+        <p>Full system integration with vision systems and optimized electronics routing. Implemented autonomous shot
+            calculation and field awareness capabilities.</p>
+    </div>
+
+    <div class="iteration-card">
+        <img class="iteration-card-image" src="images/iteration-4.png" alt="Iteration 4">
+        <h2>Final Competition Build</h2>
+        <p>Production-ready Arakkis with all systems validated and optimized. Incorporates feedback from testing phases
+            and ready for competitive season deployment.</p>
+    </div>
+
+    <!-- SUBSYSTEM ITERATIONS HEADER -->
+    <div class="section-header">
+        <h1>Subsystem Iterations</h1>
+    </div>
+
+    <!-- SHOOTER ITERATIONS -->
+    <div class="timeline-image-page">
+        <h2>Shooter V1</h2>
+        <img src="images/shooter-v1.png" alt="Shooter V1">
+    </div>
+
+    <div class="timeline-image-page">
+        <h2>Shooter V2</h2>
+        <img src="images/shooter.png" alt="Shooter V2">
+    </div>
+
+    <!-- INTAKE ITERATIONS -->
+    <div class="timeline-image-page">
+        <h2>Intake V1</h2>
+        <img src="images/rnp-v1.png" alt="Intake V1">
+    </div>
+
+    <div class="timeline-image-page">
+        <h2>Intake V2</h2>
+        <img src="images/rnp-v2.png" alt="Intake V2">
+    </div>
+
+    <div class="timeline-image-page">
+        <h2>Intake V3</h2>
+        <img src="images/rnp-v3.png" alt="Intake V3">
+    </div>
+
+    <!-- TURRET ITERATIONS -->
+    <div class="timeline-image-page">
+        <h2>Turret V1</h2>
+        <img src="images/turret-v1.png" alt="Turret V1">
+    </div>
+
+    <div class="timeline-image-page">
+        <h2>Turret V2</h2>
+        <img src="images/turret.png" alt="Turret V2">
+    </div>
+
+    <!-- SPINDEXER ITERATIONS -->
+    <div class="timeline-image-page">
+        <h2>Spindexer V1</h2>
+        <img src="images/spindexer-v1.png" alt="Spindexer V1">
+    </div>
+
+    <div class="timeline-image-page">
+        <h2>Spindexer V2</h2>
+        <img src="images/spindexer.png" alt="Spindexer V2">
+    </div>
+
+</body>
+
+</html>
