@@ -28,6 +28,43 @@
             line-height: 1.6;
         }
 
+        /* PRINT INSTRUCTIONS - SCREEN ONLY */
+        .print-instructions {
+            padding: 10px 20px;
+            margin: 0;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.4;
+            background: white;
+        }
+
+        .print-instructions h3 {
+            color: #333;
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .print-instructions p {
+            margin: 3px 0;
+            font-size: 14px;
+        }
+
+        .print-instructions kbd {
+            background: none;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            font-weight: normal;
+        }
+
+        @media print {
+            .print-instructions {
+                display: none !important;
+            }
+        }
+
         /* COVER PAGE */
         .cover {
             text-align: center;
@@ -204,6 +241,11 @@
 </head>
 
 <body>
+
+    <!-- PRINT INSTRUCTIONS - SCREEN ONLY, HIDDEN FROM PDF -->
+    <div class="print-instructions">
+        <p>To print to PDF, press Ctrl+P (Windows/Linux) or Cmd+P (Mac)</p>
+    </div>
 
     <!-- COVER PAGE -->
     <div class="cover">
