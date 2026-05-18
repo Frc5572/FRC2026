@@ -104,7 +104,8 @@ public class RobotProcessor extends AbstractProcessor {
                         .equals("InitField")) {
                         if (found) {
                             processingEnv.getMessager().printMessage(Kind.ERROR,
-                                "Each parameter of a TypeStateBuilder constructor can only have one of @InitField, @RequiredField or @OptionalField",
+                                "Each parameter of a TypeStateBuilder constructor can only "
+                                    + "have one of @InitField, @RequiredField or @OptionalField",
                                 param);
                         }
                         fields.add(new TypeStateBuilder.InitField(param.asType(),
@@ -114,7 +115,8 @@ public class RobotProcessor extends AbstractProcessor {
                         .equals("RequiredField")) {
                         if (found) {
                             processingEnv.getMessager().printMessage(Kind.ERROR,
-                                "Each parameter of a TypeStateBuilder constructor can only have one of @InitField, @RequiredField or @OptionalField",
+                                "Each parameter of a TypeStateBuilder constructor can only "
+                                    + "have one of @InitField, @RequiredField or @OptionalField",
                                 param);
                         }
                         fields.add(TypeStateBuilder.RequiredField.fromAnnotation(param.asType(),
@@ -124,7 +126,8 @@ public class RobotProcessor extends AbstractProcessor {
                         .equals("OptionalField")) {
                         if (found) {
                             processingEnv.getMessager().printMessage(Kind.ERROR,
-                                "Each parameter of a TypeStateBuilder constructor can only have one of @InitField, @RequiredField or @OptionalField",
+                                "Each parameter of a TypeStateBuilder constructor can only "
+                                    + "have one of @InitField, @RequiredField or @OptionalField",
                                 param);
                         }
                         fields.add(TypeStateBuilder.OptionalField.fromAnnotation(param.asType(),
@@ -133,9 +136,11 @@ public class RobotProcessor extends AbstractProcessor {
                     }
                 }
                 if (!found) {
-                    processingEnv.getMessager().printMessage(Kind.ERROR,
-                        "Each parameter of a TypeStateBuilder constructor must have one of @InitField, @RequiredField or @OptionalField",
-                        param);
+                    processingEnv.getMessager()
+                        .printMessage(Kind.ERROR,
+                            "Each parameter of a TypeStateBuilder constructor must "
+                                + "have one of @InitField, @RequiredField or @OptionalField",
+                            param);
                 }
             }
 
