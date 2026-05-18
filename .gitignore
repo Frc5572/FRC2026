@@ -198,3 +198,4 @@ BuildConstants.java
 
 *.txt
 
+.venv

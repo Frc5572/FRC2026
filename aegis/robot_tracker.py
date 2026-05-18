@@ -1,20 +1,18 @@
 """
 Robot tracking module for FRC scouting.
-Handles YOLO detection, ByteTrack integration, and CSRT fallback tracking.
+Handles YOLO detection and BoxMOT tracking (unified, no CSRT fallback).
 """
 
 import cv2
 import numpy as np
 from typing import Optional, Tuple, List
+from pathlib import Path
 
 
 class RobotTracker:
-    """Manages robot detection and tracking using YOLO + ByteTrack + CSRT."""
+    """Manages robot detection and tracking using YOLO + BoxMOT."""
     
     # Tracking configuration
-    CSRT_HANDBACK_INTERVAL = 10
-    CSRT_REJOIN_IOU = 0.30
-    YOLO_LOCK_CONFIRM_SECS = 1.0
     TRAIL_LEN = 60
     
     def __init__(self, model, tracker, fps: float = 30.0):
@@ -23,7 +21,7 @@ class RobotTracker:
         
         Args:
             model: YOLO model instance
-            tracker: ByteTrack instance
+            tracker: BoxMOT tracker instance (e.g., BoostTrack, ByteTrack)
             fps: Video frames per second
         """
         self.model = model
@@ -33,25 +31,16 @@ class RobotTracker:
         # Tracking state
         self.locked_id: Optional[int] = None
         self.trail: List[Tuple[int, int]] = []
-        self.using_csrt = False
         self.status = "UNTRACKED"
         self.current_robot_box: Optional[Tuple[int, int, int, int]] = None
         
-        # CSRT state
-        self.csrt_tracker = None
-        self.csrt_box: Optional[Tuple[int, int, int, int]] = None
-        self.csrt_frames = 0
-        
-        # YOLO rejoin candidate
-        self.yolo_candidate_id: Optional[int] = None
-        self.yolo_candidate_frames = 0
-        
         # Latest detections
-        self.sv_dets = None
+        self.current_detections = []  # List of (box, track_id)
         
         # Statistics
         self.lost_count = 0
         self.frames_tracked = 0
+        self.frame_idx = 0
     
     def update(self, frame: np.ndarray, frame_idx: int, conf_thresh: float = 0.30,
                iou_thresh: float = 0.45) -> Tuple[str, Optional[Tuple[int, int, int, int]], List[Tuple[int, int]]]:
@@ -67,28 +56,52 @@ class RobotTracker:
         Returns:
             Tuple of (status, robot_box, trail)
         """
+        self.frame_idx = frame_idx
+        
         # Run YOLO detection
         results = self.model(frame, conf=conf_thresh, iou=iou_thresh, verbose=False)[0]
-        import supervision as sv
-        self.sv_dets = sv.Detections.from_ultralytics(results)
-        self.sv_dets = self.tracker.update_with_detections(self.sv_dets)
         
-        found = False
-        yolo_box = None
+        # Extract detections in format required by BoxMOT
+        # BoxMOT expects: Nx6 array of [x1, y1, x2, y2, conf, cls]
+        detections = []
+        for box in results.boxes:
+            x1, y1, x2, y2 = map(float, box.xyxy[0])
+            conf = float(box.conf[0])
+            cls = int(box.cls[0])
+            detections.append([x1, y1, x2, y2, conf, cls])
         
-        # Check if locked robot is detected
-        if self.locked_id is not None and self.sv_dets is not None and len(self.sv_dets) > 0:
-            for bbox, tid in zip(self.sv_dets.xyxy, self.sv_dets.tracker_id):
-                if int(tid) == self.locked_id:
-                    yolo_box = tuple(map(int, bbox))
-                    found = True
-                    break
-        
-        if found:
-            self._handle_yolo_lock(yolo_box)
-        elif self.locked_id is not None or self.using_csrt:
-            self._handle_csrt_fallback(frame, yolo_box)
+        if detections:
+            detections = np.array(detections)
         else:
+            detections = np.empty((0, 6))
+        
+        # Update tracker with detections
+        # BoxMOT tracker.update() returns Nx8 array: [x1, y1, x2, y2, id, conf, cls, ind]
+        tracked = self.tracker.update(detections, frame)
+        
+        # Parse tracked results
+        self.current_detections = []
+        found = False
+        
+        if tracked is not None and len(tracked) > 0:
+            for detection in tracked:
+                x1, y1, x2, y2, track_id, conf, cls, _ = detection[:8]
+                track_id = int(track_id)
+                bbox = (int(x1), int(y1), int(x2), int(y2))
+                self.current_detections.append((bbox, track_id))
+                
+                # Check if locked robot is detected
+                if self.locked_id is not None and track_id == self.locked_id:
+                    self.current_robot_box = bbox
+                    self.status = "TRACKING"
+                    found = True
+                    self.frames_tracked += 1
+        
+        if self.locked_id is not None and not found:
+            self.status = "LOST"
+            self.lost_count += 1
+            self.current_robot_box = None
+        elif self.locked_id is None:
             self.status = "UNTRACKED"
         
         # Update trail
@@ -101,135 +114,56 @@ class RobotTracker:
         
         return self.status, self.current_robot_box, self.trail
     
-    def _handle_yolo_lock(self, yolo_box: Tuple[int, int, int, int]):
-        """Handle successful YOLO detection of locked robot."""
-        x1, y1, x2, y2 = yolo_box
-        self.current_robot_box = yolo_box
-        self.status = "TRACKING"
-        self.using_csrt = False
-        self.csrt_frames = 0
-        self.yolo_candidate_id = None
-        self.yolo_candidate_frames = 0
-        
-        # Initialize CSRT for next frame
-        frame_for_csrt = getattr(self, '_last_frame', None)
-        if frame_for_csrt is not None:
-            self.csrt_tracker = self._init_csrt(frame_for_csrt, x1, y1, x2, y2)
-            self.csrt_box = yolo_box
-        
-        self.frames_tracked += 1
-    
-    def _handle_csrt_fallback(self, frame: np.ndarray, yolo_box: Optional[Tuple[int, int, int, int]]):
-        """Handle CSRT fallback when YOLO loses track."""
-        csrt_ok = False
-        
-        if self.csrt_tracker is not None:
-            ok, rect = self.csrt_tracker.update(frame)
-            if ok:
-                rx, ry, rw, rh = [int(v) for v in rect]
-                h_f, w_f = frame.shape[:2]
-                
-                # Clamp to frame boundaries
-                rx = max(0, min(rx, w_f - 1))
-                ry = max(0, min(ry, h_f - 1))
-                rw = max(1, min(rw, w_f - rx))
-                rh = max(1, min(rh, h_f - ry))
-                
-                x1, y1, x2, y2 = rx, ry, rx + rw, ry + rh
-                self.csrt_box = (x1, y1, x2, y2)
-                self.current_robot_box = self.csrt_box
-                self.status = "FALLBACK"
-                self.using_csrt = True
-                self.csrt_frames += 1
-                csrt_ok = True
-                self.frames_tracked += 1
-                
-                # Try to rejoin YOLO
-                self._try_yolo_rejoin(yolo_box)
-        
-        if not csrt_ok:
-            self.status = "LOST"
-            if self.locked_id is not None:
-                self.lost_count += 1
-    
-    def _try_yolo_rejoin(self, yolo_box: Optional[Tuple[int, int, int, int]]):
-        """Attempt to rejoin a YOLO detection that overlaps with CSRT."""
-        if self.sv_dets is None or len(self.sv_dets) == 0 or self.csrt_box is None:
-            return
-        
-        best_iou, best_tid = 0.0, None
-        
-        for bbox, tid in zip(self.sv_dets.xyxy, self.sv_dets.tracker_id):
-            iou_val = self._iou(self.csrt_box, tuple(map(int, bbox)))
-            if iou_val > best_iou:
-                best_iou, best_tid = iou_val, int(tid)
-        
-        if best_iou >= self.CSRT_REJOIN_IOU and best_tid is not None:
-            if best_tid == self.yolo_candidate_id:
-                self.yolo_candidate_frames += 1
-            else:
-                self.yolo_candidate_id = best_tid
-                self.yolo_candidate_frames = 1
-            
-            needed = max(1, int(self.fps * self.YOLO_LOCK_CONFIRM_SECS))
-            if self.yolo_candidate_frames >= needed:
-                self.locked_id = self.yolo_candidate_id
-                self.using_csrt = False
-                self.csrt_frames = 0
-                self.yolo_candidate_id = None
-                self.yolo_candidate_frames = 0
-                print(f"  [CSRT→YOLO] Auto-promoted to track #{self.locked_id} "
-                      f"after {self.YOLO_LOCK_CONFIRM_SECS}s overlap (IoU={best_iou:.2f})")
-        else:
-            self.yolo_candidate_id = None
-            self.yolo_candidate_frames = 0
-    
-    def lock_to_detection(self, detection_id: int, frame: np.ndarray, bbox: Tuple[int, int, int, int]):
-        """Lock tracking to a specific detection."""
+    def lock_to_detection(self, detection_id: int, bbox: Tuple[int, int, int, int]):
+        """Lock tracking to a specific detection by track ID."""
         self.locked_id = detection_id
         self.trail.clear()
-        self.using_csrt = False
-        self.csrt_frames = 0
-        self.csrt_box = None
-        self.csrt_tracker = None
-        self.yolo_candidate_id = None
-        self.yolo_candidate_frames = 0
-        
-        x1, y1, x2, y2 = bbox
-        self.csrt_tracker = self._init_csrt(frame, x1, y1, x2, y2)
+        self.current_robot_box = bbox
         print(f"[*] Locked to track #{self.locked_id}")
     
-    def lock_to_manual_roi(self, frame: np.ndarray, x1: int, y1: int, x2: int, y2: int):
-        """Lock tracking to a manually-drawn region of interest."""
-        self.locked_id = None
-        self.trail.clear()
-        self.using_csrt = True
-        self.csrt_frames = 0
-        self.csrt_tracker = self._init_csrt(frame, x1, y1, x2, y2)
-        self.csrt_box = (x1, y1, x2, y2)
-        self.yolo_candidate_id = None
-        self.yolo_candidate_frames = 0
-        print(f"[✓] Manual ROI set – tracking via CSRT until YOLO re-acquires.")
+    def lock_by_click(self, norm_x: float, norm_y: float, frame_w: int, frame_h: int):
+        """
+        Lock tracking by clicking on a robot in the frame.
+        
+        Args:
+            norm_x: Normalized x coordinate (0-1)
+            norm_y: Normalized y coordinate (0-1)
+            frame_w: Frame width in pixels
+            frame_h: Frame height in pixels
+        """
+        px = norm_x * frame_w
+        py = norm_y * frame_h
+        
+        # Find the smallest box containing the click point
+        best_id, best_bbox, best_area = None, None, float("inf")
+        
+        for bbox, track_id in self.current_detections:
+            x1, y1, x2, y2 = bbox
+            if x1 <= px <= x2 and y1 <= py <= y2:
+                area = (x2 - x1) * (y2 - y1)
+                if area < best_area:
+                    best_area = area
+                    best_id = track_id
+                    best_bbox = bbox
+        
+        if best_id is not None:
+            self.lock_to_detection(best_id, best_bbox)
+            return best_id
+        return None
     
     def reset(self):
         """Reset all tracking state."""
         self.locked_id = None
         self.trail.clear()
-        self.using_csrt = False
         self.status = "UNTRACKED"
         self.current_robot_box = None
-        self.csrt_tracker = None
-        self.csrt_box = None
-        self.csrt_frames = 0
-        self.yolo_candidate_id = None
-        self.yolo_candidate_frames = 0
-        self.sv_dets = None
+        self.current_detections = []
         self.lost_count = 0
         self.frames_tracked = 0
     
-    def get_detections(self):
-        """Return current detections."""
-        return self.sv_dets
+    def get_detections(self) -> List[Tuple[Tuple[int, int, int, int], int]]:
+        """Return current detections as list of (bbox, track_id)."""
+        return self.current_detections
     
     def get_locked_id(self) -> Optional[int]:
         """Return currently locked track ID."""
@@ -247,14 +181,6 @@ class RobotTracker:
         """Return current tracking status."""
         return self.status
     
-    def is_using_csrt(self) -> bool:
-        """Return True if currently using CSRT fallback."""
-        return self.using_csrt
-    
-    def get_yolo_candidate(self) -> Tuple[Optional[int], int]:
-        """Return (candidate_id, frames_matched)."""
-        return self.yolo_candidate_id, self.yolo_candidate_frames
-    
     def get_stats(self) -> dict:
         """Return tracking statistics."""
         return {
@@ -263,26 +189,3 @@ class RobotTracker:
             "status": self.status,
             "locked_id": self.locked_id,
         }
-    
-    @staticmethod
-    def _init_csrt(frame: np.ndarray, x1: int, y1: int, x2: int, y2: int):
-        """Initialize CSRT tracker for a region."""
-        tracker = cv2.TrackerCSRT_create()
-        tracker.init(frame, (x1, y1, x2 - x1, y2 - y1))
-        return tracker
-    
-    @staticmethod
-    def _iou(a: Tuple[int, int, int, int], b: Tuple[int, int, int, int]) -> float:
-        """Calculate intersection-over-union between two boxes."""
-        ix1, iy1 = max(a[0], b[0]), max(a[1], b[1])
-        ix2, iy2 = min(a[2], b[2]), min(a[3], b[3])
-        inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
-        if inter == 0:
-            return 0.0
-        area_a = (a[2] - a[0]) * (a[3] - a[1])
-        area_b = (b[2] - b[0]) * (b[3] - b[1])
-        return inter / (area_a + area_b - inter)
-    
-    def _store_frame(self, frame: np.ndarray):
-        """Store current frame for CSRT initialization (internal use)."""
-        self._last_frame = frame
