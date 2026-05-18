@@ -118,6 +118,8 @@ dependencies {
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 
     generateImplementation "com.squareup:javapoet:1.13.0"
+
+    toolsImplementation "org.bytedeco:javacv-platform:1.5.13"
 }
 
 test {
@@ -224,7 +226,7 @@ tasks.register('testApp', JavaExec) {
     description = 'Test App'
     classpath = sourceSets.tools.runtimeClasspath
     mainClass = 'frc.gen.TestApp'
-    systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
+    // systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
 }
 
 project.ext.rioctlVersion = "1.0.4"

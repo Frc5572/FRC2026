@@ -2,22 +2,23 @@ package frc.gen;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
 public class VideoViewer extends JFrame {
 
     private final FrameProvider frameProvider;
+    private final PoseEstimator poseEstimator;
     private final VideoPanel videoPanel;
     private final TimelinePanel timelinePanel;
+    private final PoseResultPanel poseResultPanel;
     private final JButton playButton;
     private final JButton pauseButton;
     private final JButton addMarkerButton;
@@ -27,11 +28,13 @@ public class VideoViewer extends JFrame {
     private boolean playing = false;
     private int fps = 30; // playback speed
 
-    public VideoViewer(FrameProvider provider) {
+    public VideoViewer(FrameProvider provider, PoseEstimator poseEstimator) {
         this.frameProvider = provider;
+        this.poseEstimator = poseEstimator;
 
         videoPanel = new VideoPanel();
         timelinePanel = new TimelinePanel(provider.getTotalFrames());
+        poseResultPanel = new PoseResultPanel();
 
         playButton = new JButton("Play");
         pauseButton = new JButton("Pause");
@@ -46,7 +49,8 @@ public class VideoViewer extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        add(new JScrollPane(videoPanel), BorderLayout.CENTER);
+        add(videoPanel, BorderLayout.CENTER);
+        add(poseResultPanel, BorderLayout.EAST);
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(timelinePanel, BorderLayout.CENTER);
@@ -72,30 +76,26 @@ public class VideoViewer extends JFrame {
             loadFrame(currentFrame);
         });
 
-        // Keyboard listener for frame stepping
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int code = e.getKeyCode();
-                int step = e.isControlDown() ? 10 : 1; // Ctrl+arrow for bigger jumps
+        // Key bindings on the root pane fire regardless of which component has focus
+        var inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        var actionMap = getRootPane().getActionMap();
 
-                if (code == KeyEvent.VK_LEFT) {
-                    pausePlayback(); // often desirable to pause when scrubbing
-                    seekRelative(-step);
-                } else if (code == KeyEvent.VK_RIGHT) {
-                    pausePlayback();
-                    seekRelative(step);
-                }
-            }
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "step-back");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "step-forward");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, KeyEvent.CTRL_DOWN_MASK), "step-back-10");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, KeyEvent.CTRL_DOWN_MASK), "step-forward-10");
+
+        actionMap.put("step-back", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) { pausePlayback(); seekRelative(-1); }
         });
-
-        // Make sure the frame receives key events
-        setFocusable(true);
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowOpened(WindowEvent e) {
-                requestFocusInWindow();
-            }
+        actionMap.put("step-forward", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) { pausePlayback(); seekRelative(1); }
+        });
+        actionMap.put("step-back-10", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) { pausePlayback(); seekRelative(-10); }
+        });
+        actionMap.put("step-forward-10", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) { pausePlayback(); seekRelative(10); }
         });
 
         pack();
@@ -134,6 +134,7 @@ public class VideoViewer extends JFrame {
         BufferedImage img = frameProvider.getFrame(frameIndex);
         videoPanel.setFrame(img);
         timelinePanel.setCurrentFrame(frameIndex);
+        poseResultPanel.update(poseEstimator.estimate(img).orElse(null));
     }
 
     private void seekRelative(int delta) {

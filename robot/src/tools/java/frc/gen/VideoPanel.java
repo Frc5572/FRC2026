@@ -1,6 +1,5 @@
 package frc.gen;
 
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
@@ -11,14 +10,6 @@ public class VideoPanel extends JPanel {
     public void setFrame(BufferedImage img) {
         this.currentFrame = img;
         repaint();
-    }
-
-    @Override
-    public Dimension getPreferredSize() {
-        if (currentFrame != null) {
-            return new Dimension(currentFrame.getWidth(), currentFrame.getHeight());
-        }
-        return new Dimension(640, 360);
     }
 
     @Override
