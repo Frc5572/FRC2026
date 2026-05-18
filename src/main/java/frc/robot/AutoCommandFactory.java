@@ -370,6 +370,25 @@ public class AutoCommandFactory {
         return routine;
     }
 
+    /** Cross trench and then back over ramp and shoot */
+    public Command halfSweepTrenchRamp(AutoRoutine routine, boolean left) {
+        double driveSpeed = 6.0;
+        Command shootOrNot = Commands.either(shootFirst(), Commands.none(), shootFirst);
+        Command runPath = Commands.either(halfSweepTrenchRampPath(routine, left, x1).andThen(
+
+            adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25),
+            swerve.moveToPose().target(new Pose2d(2.8, 0.622, Rotation2d.kZero))
+                .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(15).flipY(left)
+                .finish(),
+            halfSweepTrenchRampPath(routine, left, x2)),
+            halfSweepTrenchRampPath(routine, left, x1).andThen(autoShooting(5)), secondSweep);
+        return shootOrNot.andThen(runPath);
+    }
+
+
+    /**
+    * Half Sweep Trench Ramp Path
+    */
     public Command halfSweepTrenchRampPath(AutoRoutine routine, boolean left, DoubleSupplier x) {
         return Commands.sequence(
             swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kCCW_90deg))
@@ -398,21 +417,6 @@ public class AutoCommandFactory {
             swerve.moveToPose().target(shootPoseSupplier).maxSpeed(driveSpeed)
                 .translationTolerance(0.5).rotationTolerance(15).flipY(false).finish(),
             swerve.emergencyStop(), autoShooting(5));
-    }
-
-    /** Cross trench and then back over ramp and shoot */
-    public Command halfSweepTrenchRamp(AutoRoutine routine, boolean left) {
-        double driveSpeed = 6.0;
-        Command shootOrNot = Commands.either(shootFirst(), Commands.none(), shootFirst);
-        Command runPath = Commands.either(halfSweepTrenchRampPath(routine, left, x1).andThen(
-
-            adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25),
-            swerve.moveToPose().target(new Pose2d(2.8, 0.622, Rotation2d.kZero))
-                .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(15).flipY(left)
-                .finish(),
-            halfSweepTrenchRampPath(routine, left, x2)),
-            halfSweepTrenchRampPath(routine, left, x1).andThen(autoShooting(5)), secondSweep);
-        return shootOrNot.andThen(runPath);
     }
 
     /**
