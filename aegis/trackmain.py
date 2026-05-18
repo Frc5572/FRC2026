@@ -190,7 +190,7 @@ def _boxmot_to_list(tracks):
 
 
 # ===== CONFIGURATION =====
-YOLO_MODEL   = "model.pt"
+YOLO_MODEL   = "best-2.mlpackage"
 CONF_THRESH  = 0.30
 IOU_THRESH   = 0.45
 FRAME_RATE   = 30
@@ -482,10 +482,10 @@ def _iou(a, b):
     area_b = (b[2]-b[0])*(b[3]-b[1])
     return inter / (area_a + area_b - inter)
 
-# def _init_csrt(frame, x1, y1, x2, y2):
-#     tracker = cv2.TrackerCSRT_create()
-#     tracker.init(frame, (x1, y1, x2-x1, y2-y1))
-#     return tracker
+def _init_csrt(frame, x1, y1, x2, y2):
+    tracker = cv2.TrackerCSRT_create()
+    tracker.init(frame, (x1, y1, x2-x1, y2-y1))
+    return tracker
 
 
 # ===== MAIN SCOUTING LOOP =====
@@ -494,7 +494,7 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
 
     print(f"[*] Loading YOLO model ({YOLO_MODEL})…")
     model = YOLO(YOLO_MODEL)
-    model.fuse()
+    # model.fuse()
 
     boxmot_tracker, tracker_name = _load_boxmot_tracker()
 
@@ -580,59 +580,59 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
 
             elif locked_id is not None or using_csrt:
                 csrt_ok = False
-                # if csrt_tracker is not None:
-                #     ok, rect = csrt_tracker.update(frame)
-                #     if ok:
-                #         rx, ry, rw, rh = [int(v) for v in rect]
-                #         h_f, w_f = frame.shape[:2]
-                #         rx  = max(0, min(rx, w_f-1))
-                #         ry  = max(0, min(ry, h_f-1))
-                #         rw  = max(1, min(rw, w_f-rx))
-                #         rh  = max(1, min(rh, h_f-ry))
-                #         x1, y1, x2, y2 = rx, ry, rx+rw, ry+rh
-                #         csrt_box = (x1, y1, x2, y2)
-                #         cx, cy   = (x1+x2)//2, (y1+y2)//2
-                #         trail.append((cx, cy))
-                #         if len(trail) > TRAIL_LEN:
-                #             trail.pop(0)
-                #         session.log_position(frame_idx, fps, cx, cy, rw, rh)
-                #         status      = "FALLBACK"
-                #         using_csrt  = True
-                #         csrt_frames += 1
-                #         csrt_ok     = True
-                #         current_robot_box = csrt_box
+                if csrt_tracker is not None:
+                    ok, rect = csrt_tracker.update(frame)
+                    if ok:
+                        rx, ry, rw, rh = [int(v) for v in rect]
+                        h_f, w_f = frame.shape[:2]
+                        rx  = max(0, min(rx, w_f-1))
+                        ry  = max(0, min(ry, h_f-1))
+                        rw  = max(1, min(rw, w_f-rx))
+                        rh  = max(1, min(rh, h_f-ry))
+                        x1, y1, x2, y2 = rx, ry, rx+rw, ry+rh
+                        csrt_box = (x1, y1, x2, y2)
+                        cx, cy   = (x1+x2)//2, (y1+y2)//2
+                        trail.append((cx, cy))
+                        if len(trail) > TRAIL_LEN:
+                            trail.pop(0)
+                        session.log_position(frame_idx, fps, cx, cy, rw, rh)
+                        status      = "FALLBACK"
+                        using_csrt  = True
+                        csrt_frames += 1
+                        csrt_ok     = True
+                        current_robot_box = csrt_box
 
-                #         if track_list:
-                #             best_iou, best_tid = 0.0, None
-                #             for bbox, tid in track_list:
-                #                 iou_val = _iou(csrt_box, bbox)
-                #                 if iou_val > best_iou:
-                #                     best_iou, best_tid = iou_val, tid
+                        if track_list:
+                            best_iou, best_tid = 0.0, None
+                            for bbox, tid in track_list:
+                                iou_val = _iou(csrt_box, bbox)
+                                if iou_val > best_iou:
+                                    best_iou, best_tid = iou_val, tid
 
-                #             if best_iou >= CSRT_REJOIN_IOU and best_tid is not None:
-                #                 if best_tid == yolo_candidate_id:
-                #                     yolo_candidate_frames += 1
-                #                 else:
-                #                     yolo_candidate_id     = best_tid
-                #                     yolo_candidate_frames = 1
+                            if best_iou >= CSRT_REJOIN_IOU and best_tid is not None:
+                                if best_tid == yolo_candidate_id:
+                                    yolo_candidate_frames += 1
+                                else:
+                                    yolo_candidate_id     = best_tid
+                                    yolo_candidate_frames = 1
 
-                #                 needed = max(1, int(fps * YOLO_LOCK_CONFIRM_SECS))
-                #                 if yolo_candidate_frames >= needed:
-                #                     locked_id             = yolo_candidate_id
-                #                     using_csrt            = False
-                #                     csrt_frames           = 0
-                #                     yolo_candidate_id     = None
-                #                     yolo_candidate_frames = 0
-                #                     print(f"  [CSRT→YOLO] Re-acquired track "
-                #                           f"#{locked_id} (IoU={best_iou:.2f})")
-                #             else:
-                #                 yolo_candidate_id     = None
-                #                 yolo_candidate_frames = 0
+                                needed = max(1, int(fps * YOLO_LOCK_CONFIRM_SECS))
+                                if yolo_candidate_frames >= needed:
+                                    locked_id             = yolo_candidate_id
+                                    using_csrt            = False
+                                    csrt_frames           = 0
+                                    yolo_candidate_id     = None
+                                    yolo_candidate_frames = 0
+                                    print(f"  [CSRT→YOLO] Re-acquired track "
+                                          f"#{locked_id} (IoU={best_iou:.2f})")
+                            else:
+                                yolo_candidate_id     = None
+                                yolo_candidate_frames = 0
 
-                # if not csrt_ok:
-                #     status = "LOST"
-                #     if locked_id is not None:
-                #         session.lost_count += 1
+                if not csrt_ok:
+                    status = "LOST"
+                    if locked_id is not None:
+                        session.lost_count += 1
             else:
                 status = "UNTRACKED"
 
@@ -713,7 +713,7 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                 for bbox, tid in track_list:
                     if tid == new_id:
                         bx1, by1, bx2, by2 = bbox
-                        # csrt_tracker = _init_csrt(frame, bx1, by1, bx2, by2)
+                        csrt_tracker = _init_csrt(frame, bx1, by1, bx2, by2)
                         break
                 session.log_event(frame_idx, fps, f"Switched lock → track #{locked_id}")
                 print(f"[*] Switched lock to track #{locked_id}")
@@ -756,7 +756,7 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                         for bbox, tid in track_list:
                             if tid == new_id:
                                 bx1, by1, bx2, by2 = bbox
-                                # csrt_tracker = _init_csrt(frame, bx1, by1, bx2, by2)
+                                csrt_tracker = _init_csrt(frame, bx1, by1, bx2, by2)
                                 break
                         session.log_event(frame_idx, fps, f"Locked → track #{locked_id}")
                         print(f"[✓] Locked to track #{locked_id}")
@@ -810,7 +810,7 @@ def run_scouting(video_path: str, team_number: str, bumper_color: str):
                             if rx2-rx1 > 8 and ry2-ry1 > 8:
                                 locked_id             = None
                                 trail.clear()
-                                # csrt_tracker          = _init_csrt(frame, rx1, ry1, rx2, ry2)
+                                csrt_tracker          = _init_csrt(frame, rx1, ry1, rx2, ry2)
                                 csrt_box              = (rx1, ry1, rx2, ry2)
                                 using_csrt            = True
                                 csrt_frames           = 0

@@ -199,3 +199,5 @@ BuildConstants.java
 *.txt
 
 .venv
+*.mlpackage/
+*.onnx
