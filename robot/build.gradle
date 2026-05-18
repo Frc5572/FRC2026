@@ -19,6 +19,13 @@ sourceSets {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output
     }
+
+    tools {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
 }
 
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
@@ -209,6 +216,14 @@ tasks.register('generateLUTs', JavaExec) {
     description = 'Generate LUTs'
     classpath = sourceSets.generate.runtimeClasspath
     mainClass = 'frc.gen.GenerateLUTs'
+    systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
+}
+
+tasks.register('testApp', JavaExec) {
+    group = 'Execution'
+    description = 'Test App'
+    classpath = sourceSets.tools.runtimeClasspath
+    mainClass = 'frc.gen.TestApp'
     systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
 }
 
