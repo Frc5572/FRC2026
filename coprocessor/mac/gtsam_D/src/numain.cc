@@ -1,70 +1,80 @@
-#include "robot_locallizer.hh"
+#include "robot_localizer.hh"
 
 #include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <thread>
 
 int main()
 {
-    robot_localizer::RobotLocalizer localizer(5800, 5801);
+    robot_localizer::RobotLocalizer localizer(
+        "10.55.72.2", // roboRIO IP for team 5572
+        5810,         // Java Whacknet.startServer(5810)
+        5811          // Java Whacknet.registerTelemetryService(5811, ...)
+    );
 
-    const int TARGET_HZ = 120;
-    const auto FRAME_DURATION = std::chrono::duration<double>(1.0 / TARGET_HZ);
-    const int NUM_ITERATIONS = 1200; // 10 seconds at 120 Hz
+    constexpr int TARGET_HZ = 120;
+    constexpr int NUM_ITERATIONS = TARGET_HZ * 10;
+    const auto FRAME_DURATION = std::chrono::microseconds(1000000 / TARGET_HZ);
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+    auto start_time = std::chrono::steady_clock::now();
     uint64_t frame_count = 0;
     uint64_t missed_deadlines = 0;
 
     for (int frame = 0; frame < NUM_ITERATIONS; frame++)
     {
-        auto frame_start = std::chrono::high_resolution_clock::now();
+        auto frame_start = std::chrono::steady_clock::now();
 
-        uint64_t fpga_time =
+        uint64_t fpga_time_us =
             std::chrono::duration_cast<std::chrono::microseconds>(
                 frame_start.time_since_epoch())
                 .count();
 
-        localizer.update_with_vision(fpga_time);
-
+        localizer.update_with_vision(fpga_time_us);
+        localizer.update_with_wheel_odometry(fpga_time_us);
         auto pose = localizer.get_pose();
         std::cout << "[Frame " << frame << "] Estimated pose: "
                   << "x=" << pose.x() << " y=" << pose.y()
                   << " theta=" << pose.theta() << "\n";
 
-        localizer.broadcast_state(fpga_time);
+        localizer.broadcast_state(fpga_time_us);
 
         uint64_t dropped = localizer.get_dropped_packets();
         if (dropped > 0)
         {
-            std::cerr << "[Warning] Dropped " << dropped << " vision packets\n";
+            std::cerr << "[Warning] Dropped/bad telemetry packets: " << dropped
+                      << "\n";
         }
 
-        auto frame_end = std::chrono::high_resolution_clock::now();
-        auto frame_duration = frame_end - frame_start;
-        auto sleep_time = FRAME_DURATION - frame_duration;
+        auto frame_end = std::chrono::steady_clock::now();
+        auto frame_duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(frame_end -
+                                                                  frame_start);
 
-        if (sleep_time.count() > 0)
+        if (frame_duration < FRAME_DURATION)
         {
-            std::this_thread::sleep_for(sleep_time);
+            std::this_thread::sleep_for(FRAME_DURATION - frame_duration);
         }
         else
         {
-            std::cerr << "[Warning] Frame " << frame << " exceeded 120 Hz deadline by "
-                      << -sleep_time.count() * 1000 << " us\n";
+            auto overrun_us = frame_duration - FRAME_DURATION;
+            std::cerr << "[Warning] Frame " << frame
+                      << " exceeded 120 Hz deadline by " << overrun_us.count()
+                      << " us\n";
             missed_deadlines++;
         }
 
         frame_count++;
 
-        if ((frame + 1) % 120 == 0)
+        if ((frame + 1) % TARGET_HZ == 0)
         {
-            std::cout << "\n--- Processed " << (frame + 1) << "/" << NUM_ITERATIONS
-                      << " frames (" << (frame + 1) / 120 << "s) ---\n\n";
+            std::cout << "\n--- Processed " << (frame + 1) << "/"
+                      << NUM_ITERATIONS << " frames (" << (frame + 1) / TARGET_HZ
+                      << "s) ---\n\n";
         }
     }
 
-    auto total_time = std::chrono::high_resolution_clock::now() - start_time;
+    auto total_time = std::chrono::steady_clock::now() - start_time;
     auto total_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(total_time);
     auto total_us =
@@ -75,18 +85,19 @@ int main()
               << total_ms.count() / 1000.0 << " s)\n";
     std::cout << "Frames processed: " << frame_count << "\n";
     std::cout << "Target frequency: " << TARGET_HZ << " Hz\n";
-    std::cout << "Average frame time: " << (total_us.count() / (double)frame_count)
-              << " us\n";
-    std::cout << "Missed deadlines: " << missed_deadlines << " / " << frame_count << "\n";
+    std::cout << "Average frame time: "
+              << total_us.count() / static_cast<double>(frame_count) << " us\n";
+    std::cout << "Missed deadlines: " << missed_deadlines << " / "
+              << frame_count << "\n";
 
     if (missed_deadlines == 0)
     {
-        std::cout << "✓ All frames met 120 Hz deadline!\n";
+        std::cout << "All frames met 120 Hz deadline.\n";
     }
     else
     {
-        double miss_rate = (100.0 * missed_deadlines) / frame_count;
-        std::cout << "✗ Miss rate: " << miss_rate << "%\n";
+        double miss_rate = 100.0 * missed_deadlines / frame_count;
+        std::cout << "Miss rate: " << miss_rate << "%\n";
     }
 
     return 0;

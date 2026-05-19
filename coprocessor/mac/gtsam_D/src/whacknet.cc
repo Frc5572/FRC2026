@@ -1,236 +1,202 @@
 #include "whacknet.hh"
 
 #include <arpa/inet.h>
+#include <cerrno>
 #include <cstring>
-#include <errno.h>
-#include <time.h>
-#include <netinet/in.h>
+#include <cstdio>
 #include <pthread.h>
-#include <sched.h>
-#include <stdio.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 namespace whacknet
 {
 
-    uint64_t WhacknetServer::get_monotonic_micros()
+    WhacknetClient::WhacknetClient(const std::string &rio_ip, int rio_vision_port,
+                                   int telemetry_port)
     {
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        return (uint64_t)ts.tv_sec * 1000000ULL +
-               (uint64_t)ts.tv_nsec / 1000ULL;
-    }
-
-    uint64_t WhacknetServer::get_realtime_micros()
-    {
-        struct timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-        return (uint64_t)ts.tv_sec * 1000000ULL +
-               (uint64_t)ts.tv_nsec / 1000ULL;
-    }
-
-    uint64_t WhacknetServer::extract_timestamp_from_cmsg(struct msghdr *msg)
-    {
-        for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(msg); cmsg != nullptr;
-             cmsg = CMSG_NXTHDR(msg, cmsg))
+        vision_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
+        if (vision_fd_ < 0)
         {
-            if (cmsg->cmsg_level == SOL_SOCKET &&
-                cmsg->cmsg_type == SCM_TIMESTAMP)
-            {
-                // macOS gives timeval, not timespec
-                struct timeval *tv = (struct timeval *)CMSG_DATA(cmsg);
-
-                return (uint64_t)tv->tv_sec * 1000000ULL +
-                       (uint64_t)tv->tv_usec;
-            }
-        }
-
-        return get_realtime_micros();
-    }
-
-    WhacknetServer::WhacknetServer(int recv_port, int broadcast_port)
-        : broadcast_addr_{}
-    {
-        listen_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
-        if (listen_fd_ < 0)
-        {
-            perror("[Whacknet] Socket creation failed");
+            std::perror("[Whacknet] vision socket creation failed");
             return;
         }
 
-        int rcvbuf = RECV_BUF_SIZE;
-        setsockopt(listen_fd_, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf));
+        std::memset(&rio_addr_, 0, sizeof(rio_addr_));
+        rio_addr_.sin_family = AF_INET;
+        rio_addr_.sin_port = htons(rio_vision_port);
+
+        if (inet_pton(AF_INET, rio_ip.c_str(), &rio_addr_.sin_addr) != 1)
+        {
+            std::fprintf(stderr, "[Whacknet] invalid roboRIO IP address: %s\n",
+                         rio_ip.c_str());
+            close(vision_fd_);
+            vision_fd_ = -1;
+            return;
+        }
+
+        telemetry_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
+        if (telemetry_fd_ < 0)
+        {
+            std::perror("[Whacknet] telemetry socket creation failed");
+            close(vision_fd_);
+            vision_fd_ = -1;
+            return;
+        }
 
         int reuse = 1;
-        setsockopt(listen_fd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+        setsockopt(telemetry_fd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
-        // macOS supports SO_TIMESTAMP (timeval)
-        int ts_on = 1;
-        setsockopt(listen_fd_, SOL_SOCKET, SO_TIMESTAMP, &ts_on, sizeof(ts_on));
+        int rcvbuf = RECV_BUF_SIZE;
+        setsockopt(telemetry_fd_, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf));
 
-        struct sockaddr_in servaddr;
-        std::memset(&servaddr, 0, sizeof(servaddr));
-        servaddr.sin_family = AF_INET;
-        servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-        servaddr.sin_port = htons(recv_port);
+        timeval timeout{};
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100000;
+        setsockopt(telemetry_fd_, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-        if (bind(listen_fd_, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
+        sockaddr_in local_addr{};
+        local_addr.sin_family = AF_INET;
+        local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        local_addr.sin_port = htons(telemetry_port);
+
+        if (bind(telemetry_fd_, reinterpret_cast<sockaddr *>(&local_addr),
+                 sizeof(local_addr)) < 0)
         {
-            perror("[Whacknet] Bind failed");
-            close(listen_fd_);
-            listen_fd_ = -1;
+            std::perror("[Whacknet] telemetry bind failed");
+            close(telemetry_fd_);
+            close(vision_fd_);
+            telemetry_fd_ = -1;
+            vision_fd_ = -1;
             return;
         }
 
-        printf("[Whacknet] Listening on port %d\n", recv_port);
-
-        broadcast_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
-        if (broadcast_fd_ < 0)
-        {
-            perror("[Whacknet] Broadcast socket creation failed");
-            return;
-        }
-
-        int broadcast = 1;
-        setsockopt(broadcast_fd_, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
-        setsockopt(broadcast_fd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
-
-        std::memset(&broadcast_addr_, 0, sizeof(broadcast_addr_));
-        broadcast_addr_.sin_family = AF_INET;
-        broadcast_addr_.sin_port = htons(broadcast_port);
-        broadcast_addr_.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-
-        printf("[Whacknet] Broadcast socket ready on port %d\n", broadcast_port);
+        std::printf("[Whacknet] sending vision to %s:%d\n", rio_ip.c_str(),
+                    rio_vision_port);
+        std::printf("[Whacknet] listening for roboRIO telemetry on port %d\n",
+                    telemetry_port);
 
         start();
     }
 
-    WhacknetServer::~WhacknetServer() { stop(); }
+    WhacknetClient::~WhacknetClient() { stop(); }
 
-    void WhacknetServer::start()
+    bool WhacknetClient::ok() const
     {
-        if (listen_fd_ < 0)
+        return vision_fd_ >= 0 && telemetry_fd_ >= 0;
+    }
+
+    void WhacknetClient::start()
+    {
+        if (!ok() || should_run_.exchange(true))
         {
-            fprintf(stderr, "[Whacknet] Cannot start\n");
             return;
         }
 
-        should_run_.store(true);
-        worker_thread_ = std::thread([this]()
-                                     { receiver_worker(); });
+        receiver_thread_ = std::thread([this]
+                                       { receiver_worker(); });
     }
 
-    void WhacknetServer::stop()
+    void WhacknetClient::stop()
     {
         should_run_.store(false);
 
-        if (worker_thread_.joinable())
-            worker_thread_.join();
-
-        if (listen_fd_ >= 0)
-            close(listen_fd_);
-
-        if (broadcast_fd_ >= 0)
-            close(broadcast_fd_);
-    }
-
-    void WhacknetServer::broadcast_telemetry(uint64_t timestamp, double heading,
-                                             double angular_velocity)
-    {
-        if (broadcast_fd_ < 0)
-            return;
-
-        GyroPacket pkt{timestamp, heading, angular_velocity};
-
-        sendto(broadcast_fd_, &pkt, sizeof(pkt), 0,
-               (struct sockaddr *)&broadcast_addr_,
-               sizeof(broadcast_addr_));
-    }
-
-    std::vector<VisionMeasurement> WhacknetServer::drain_packets(uint64_t current_hal_time)
-    {
-        std::vector<VisionMeasurement> result;
-
-        uint64_t now_monotonic = get_monotonic_micros();
-        int64_t offset = (int64_t)current_hal_time - (int64_t)now_monotonic;
-
-        int t = queue_.tail.load();
-        int h = queue_.head.load();
-
-        while (t != h && result.size() < MAX_QUEUE_SIZE)
+        if (telemetry_fd_ >= 0)
         {
-            VisionMeasurement m = queue_.data[t];
-
-            m.timestamp_us = (uint64_t)((int64_t)m.timestamp_us + offset);
-
-            result.push_back(m);
-            t = (t + 1) & MASK;
+            close(telemetry_fd_);
+            telemetry_fd_ = -1;
         }
 
-        queue_.tail.store(t);
-
-        return result;
-    }
-
-    uint64_t WhacknetServer::get_dropped_count()
-    {
-        return queue_.dropped_packets.exchange(0);
-    }
-
-    void WhacknetServer::receiver_worker()
-    {
-        // macOS version (different API)
-        pthread_setname_np("VisionUDPRecv");
-
-        VisionMeasurement recv_bufs[RECV_BATCH];
-        struct iovec iov;
-        struct msghdr msg;
-
-        union
+        if (receiver_thread_.joinable())
         {
-            char buf[CMSG_SPACE(sizeof(struct timeval))];
-            struct timeval align;
-        } ctrl_buf;
+            receiver_thread_.join();
+        }
+
+        if (vision_fd_ >= 0)
+        {
+            close(vision_fd_);
+            vision_fd_ = -1;
+        }
+    }
+
+    bool WhacknetClient::send_vision_measurement(
+        const CameraMeasurement &measurement)
+    {
+        if (vision_fd_ < 0)
+        {
+            return false;
+        }
+
+        ssize_t sent = sendto(vision_fd_, &measurement, sizeof(measurement), 0,
+                              reinterpret_cast<sockaddr *>(&rio_addr_),
+                              sizeof(rio_addr_));
+
+        if (sent != static_cast<ssize_t>(sizeof(measurement)))
+        {
+            std::perror("[Whacknet] failed to send vision measurement");
+            return false;
+        }
+
+        return true;
+    }
+
+    std::optional<RobotTelemetry> WhacknetClient::latest_telemetry() const
+    {
+        std::lock_guard<std::mutex> lock(telemetry_mutex_);
+        return latest_telemetry_;
+    }
+
+    uint64_t WhacknetClient::received_telemetry_count() const
+    {
+        return received_telemetry_count_.load();
+    }
+
+    uint64_t WhacknetClient::bad_telemetry_count() const
+    {
+        return bad_telemetry_count_.load();
+    }
+
+    void WhacknetClient::receiver_worker()
+    {
+#ifdef __APPLE__
+        pthread_setname_np("WhacknetTelemetry");
+#else
+        pthread_setname_np(pthread_self(), "WhacknetTelemetry");
+#endif
 
         while (should_run_.load())
         {
-            for (int i = 0; i < RECV_BATCH; i++)
+            RobotTelemetry packet{};
+            sockaddr_in sender{};
+            socklen_t sender_len = sizeof(sender);
+
+            ssize_t len = recvfrom(telemetry_fd_, &packet, sizeof(packet), 0,
+                                   reinterpret_cast<sockaddr *>(&sender), &sender_len);
+
+            if (len < 0)
             {
-                iov.iov_base = &recv_bufs[i];
-                iov.iov_len = sizeof(VisionMeasurement);
-
-                std::memset(&msg, 0, sizeof(msg));
-                msg.msg_iov = &iov;
-                msg.msg_iovlen = 1;
-                msg.msg_control = ctrl_buf.buf;
-                msg.msg_controllen = sizeof(ctrl_buf.buf);
-
-                ssize_t len = recvmsg(listen_fd_, &msg, 0);
-                if (len <= 0)
-                    break;
-
-                if (len != sizeof(VisionMeasurement))
-                    continue;
-
-                uint64_t ts = extract_timestamp_from_cmsg(&msg);
-
-                int h = queue_.head.load();
-                int t = queue_.tail.load();
-                int next_h = (h + 1) & MASK;
-
-                if (next_h == t)
+                if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR ||
+                    !should_run_.load())
                 {
-                    queue_.dropped_packets.fetch_add(1);
                     continue;
                 }
 
-                VisionMeasurement *pkt = &recv_bufs[i];
-                pkt->timestamp_us = ts;
-
-                queue_.data[h] = *pkt;
-                queue_.head.store(next_h);
+                std::perror("[Whacknet] telemetry receive failed");
+                continue;
             }
+
+            if (len != static_cast<ssize_t>(sizeof(RobotTelemetry)))
+            {
+                bad_telemetry_count_.fetch_add(1);
+                continue;
+            }
+
+            {
+                std::lock_guard<std::mutex> lock(telemetry_mutex_);
+                latest_telemetry_ = packet;
+            }
+
+            received_telemetry_count_.fetch_add(1);
         }
     }
 

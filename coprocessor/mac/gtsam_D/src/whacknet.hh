@@ -1,112 +1,122 @@
 #pragma once
 
-#include <cstdint>
 #include <atomic>
-#include <thread>
-#include <chrono>
-#include <vector>
-#include <optional>
-#include <sys/socket.h>
+#include <cstdint>
+#include <mutex>
 #include <netinet/in.h>
-#include <sys/types.h>
+#include <optional>
+#include <string>
+#include <thread>
 
 namespace whacknet
 {
-    /// Robot pose from vision system
-    struct RobotPose
+
+    constexpr int MAX_CAMERAS = 4;
+
+    struct CameraMeasurement
     {
-        double x, y, rot; // meters and radians
+        double x;
+        double y;
+        double z;
+        double roll;
+        double pitch;
+        double yaw;
+        double std_x;
+        double std_y;
+        double std_rot;
+
+        uint64_t timestamp_us;
+        uint8_t valid;
+        uint8_t padding[7]{};
     };
 
-    /// Vision measurement uncertainty (standard deviations)
-    struct VisionUncertainty
+    static_assert(sizeof(CameraMeasurement) == 88);
+
+    struct VisionPacket
     {
-        double x, y, rot;
+        CameraMeasurement cameras[MAX_CAMERAS];
     };
 
-    /// Complete vision measurement from camera
-    struct VisionMeasurement
+    static_assert(sizeof(VisionPacket) == MAX_CAMERAS * 88);
+
+    struct OdomMeasurement
     {
-        RobotPose pose;         // Estimated robot position
-        VisionUncertainty stds; // Position uncertainty
-        uint64_t timestamp_us;  // Monotonic timestamp in microseconds
-        uint8_t camera_id;      // Which camera provided this
-        uint8_t num_tags;       // Number of AprilTags detected
+        double x;
+        double y;
+        double z;
+        double roll;
+        double pitch;
+        double yaw;
+
+        double std_x;
+        double std_y;
+        double std_rot;
+
+        uint64_t timestamp_us;
+
+        uint8_t padding[16]{};
     };
 
-    /// Gyroscope/telemetry data
-    struct GyroPacket
+    static_assert(sizeof(OdomMeasurement) == 96,
+                  "OdomMeasurement must match Java STRUCT_SIZE");
+
+    // Must match Java broadcastTelemetry():
+    // long timestampUs + 6 doubles = 56 bytes sent by DatagramChannel.send().
+    struct RobotTelemetry
     {
-        uint64_t fpga_timestamp;
-        double heading;
-        double angular_velocity;
+        uint64_t timestamp_us;
+        double roll;
+        double pitch;
+        double yaw;
+        double roll_vel;
+        double pitch_vel;
+        double yaw_vel;
     };
 
-    class WhacknetServer
+    static_assert(sizeof(RobotTelemetry) == 56,
+                  "RobotTelemetry must match Java telemetry payload size");
+
+    class WhacknetClient
     {
     public:
-        /// Initialize the server on specified ports
-        /// @param recv_port Port to listen for vision data
-        /// @param broadcast_port Port for outgoing telemetry
-        WhacknetServer(int recv_port, int broadcast_port);
+        // rio_ip is normally "10.TE.AM.2". For team 5572, that is "10.55.72.2".
+        // rio_vision_port must match Java: Whacknet.getInstance().startServer(port).
+        // telemetry_port must match Java: registerTelemetryService(port, ...).
+        WhacknetClient(const std::string &rio_ip, int rio_vision_port,
+                       int telemetry_port);
+        ~WhacknetClient();
 
-        ~WhacknetServer();
+        WhacknetClient(const WhacknetClient &) = delete;
+        WhacknetClient &operator=(const WhacknetClient &) = delete;
 
-        /// Disable copy operations
-        WhacknetServer(const WhacknetServer &) = delete;
-        WhacknetServer &operator=(const WhacknetServer &) = delete;
+        bool ok() const;
 
-        /// Start the receiver thread (called automatically in constructor)
         void start();
-
-        /// Stop the receiver thread
         void stop();
 
-        /// Broadcast robot telemetry to the network
-        /// @param timestamp FPGA timestamp
-        /// @param heading Robot heading in radians
-        /// @param angular_velocity Robot angular velocity
-        void broadcast_telemetry(uint64_t timestamp, double heading,
-                                 double angular_velocity);
+        bool send_vision_measurement(const CameraMeasurement &measurement);
 
-        /// Drain all pending vision packets from the queue
-        /// @param current_hal_time Current FPGA time for synchronization
-        /// @return Vector of all pending vision measurements
-        std::vector<VisionMeasurement> drain_packets(uint64_t current_hal_time);
-
-        /// Get count of dropped packets (clears the counter)
-        uint64_t get_dropped_count();
+        std::optional<RobotTelemetry> latest_telemetry() const;
+        uint64_t received_telemetry_count() const;
+        uint64_t bad_telemetry_count() const;
 
     private:
-        static constexpr int MAX_QUEUE_SIZE = 64;
-        static constexpr int MASK = MAX_QUEUE_SIZE - 1;
-        static constexpr int RECV_BUF_SIZE = 4194304;
-        static constexpr int RECV_BATCH = 16;
-        static constexpr int CACHE_LINE = 64;
-        static constexpr int RT_PRIORITY = 50;
+        static constexpr int RECV_BUF_SIZE = 4 * 1024 * 1024;
 
-        // Lock-free ring buffer
-        struct
-        {
-            VisionMeasurement data[MAX_QUEUE_SIZE];
-            alignas(CACHE_LINE) std::atomic<int> head{0};
-            alignas(CACHE_LINE) std::atomic<int> tail{0};
-            std::atomic<uint64_t> dropped_packets{0};
-        } queue_;
+        int telemetry_fd_ = -1;
+        int vision_fd_ = -1;
 
-        int listen_fd_ = -1;
-        int broadcast_fd_ = -1;
-
-        struct sockaddr_in broadcast_addr_;
-        std::thread worker_thread_;
+        sockaddr_in rio_addr_{};
+        std::thread receiver_thread_;
         std::atomic<bool> should_run_{false};
 
-        void receiver_worker();
+        mutable std::mutex telemetry_mutex_;
+        std::optional<RobotTelemetry> latest_telemetry_;
 
-        // Utility functions
-        static uint64_t get_monotonic_micros();
-        static uint64_t get_realtime_micros();
-        static uint64_t extract_timestamp_from_cmsg(struct msghdr *msg);
+        std::atomic<uint64_t> received_telemetry_count_{0};
+        std::atomic<uint64_t> bad_telemetry_count_{0};
+
+        void receiver_worker();
     };
 
 } // namespace whacknet

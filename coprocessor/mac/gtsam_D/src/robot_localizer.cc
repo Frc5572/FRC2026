@@ -1,34 +1,15 @@
-#include "whacknet.hh"
-#include "robot_locallizer.hh"
+#include "robot_localizer.hh"
 
-#include <gtsam/geometry/Pose2.h>
-#include <gtsam/inference/Factor.h>
-#include <gtsam/inference/VariableIndex.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/slam/BetweenFactor.h>
-#include <gtsam/slam/PriorFactor.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/geometry/Pose2.h>
-#include <gtsam/inference/Symbol.h>
-
-#include <Eigen/Dense>
-#include <chrono>
+#include <algorithm>
+#include <cmath>
 #include <iostream>
-#include <thread>
-
-using gtsam::symbol_shorthand::X;
 
 namespace robot_localizer
 {
-    RobotLocalizer::RobotLocalizer(int vision_port, int telemetry_port) : server_(vision_port, telemetry_port), graph_(), values_()
-    {
-        gtsam::noiseModel::Diagonal::shared_ptr prior_noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector3(0.1, 0.1, 0.01));
-        graph_.add(gtsam::PriorFactor<gtsam::Pose2>(X(0), gtsam::Pose2(0, 0, 0), prior_noise));
-        values_.insert(X(0), gtsam::Pose2(0, 0, 0));
-        current_state_ = gtsam::Pose2(0, 0, 0);
-        frame_id_ = 1;
-    }
+
+    RobotLocalizer::RobotLocalizer(const std::string &rio_ip, int rio_vision_port,
+                                   int telemetry_port)
+        : whacknet_(rio_ip, rio_vision_port, telemetry_port) {}
 
     void RobotLocalizer::update_with_vision(uint64_t fpga_time)
     {
@@ -58,11 +39,37 @@ namespace robot_localizer
         frame_id_++;
     }
 
-    void RobotLocalizer::broadcast_state(uint64_t fpga_time)
+    void RobotLocalizer::update_with_wheel_odometry(uint64_t fpga_time)
     {
-        server_.broadcast_telemetry(fpga_time, current_state_.theta(), 0.0);
+        }
+
+    void RobotLocalizer::broadcast_state(uint64_t fpga_time_us)
+    {
+        whacknet::VisionMeasurement measurement{};
+        measurement.x = current_state_.x();
+        measurement.y = current_state_.y();
+        measurement.z = 0.0;
+        measurement.roll = 0.0;
+        measurement.pitch = 0.0;
+        measurement.yaw = current_state_.theta();
+        measurement.std_x = 0.1;
+        measurement.std_y = 0.1;
+        measurement.std_rot = 0.05;
+        measurement.timestamp_us = fpga_time_us;
+        measurement.camera_id = camera_id_;
+        measurement.num_tags = num_tags_;
+
+        if (!whacknet_.send_vision_measurement(measurement))
+        {
+            std::cerr << "[RobotLocalizer] Failed to send vision measurement\n";
+        }
     }
 
     gtsam::Pose2 RobotLocalizer::get_pose() const { return current_state_; }
-    uint64_t RobotLocalizer::get_dropped_packets() { return server_.get_dropped_count(); }
-};
+
+    uint64_t RobotLocalizer::get_dropped_packets() const
+    {
+        return whacknet_.bad_telemetry_count();
+    }
+
+} // namespace robot_localizer

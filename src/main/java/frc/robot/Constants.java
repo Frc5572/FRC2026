@@ -326,6 +326,9 @@ public final class Constants {
             new Rotation3d(0, Units.degreesToRadians(-22.115), 0.0))
                 .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
 
+        /** Whether or not to broadcast heading information. */
+        public static final boolean BROADCAST_HEADING = false;
+
         // @formatter:off
         public static final CameraConstants[] cameraConstants = new CameraConstants[] {
             new CameraConstantsBuilder()
