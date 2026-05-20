@@ -58,7 +58,7 @@ public class Utilities {
             return arg0;
         }
 
-    };
+    }
 
     public static String stringAnnotationValue(AnnotationValue value) {
         return value.accept(new StringVisitor(), null);
