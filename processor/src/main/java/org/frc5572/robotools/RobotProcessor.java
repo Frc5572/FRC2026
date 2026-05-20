@@ -20,6 +20,7 @@ public class RobotProcessor extends AbstractProcessor {
         // @formatter:off
         new GenerateEmptyIOGenerator(), 
         new TypeStateBuilderGenerator(),
+        new TunablesGenerator(),
         // @formatter:on
     };
 

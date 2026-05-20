@@ -38,6 +38,7 @@ import frc.robot.util.tunable.ModuleConstants.ModuleKind;
 import frc.robot.util.tunable.ModuleConstantsBuilder;
 import frc.robot.util.tunable.PIDConstants;
 import frc.robot.util.tunable.PIDConstantsBuilder;
+import frc.robot.util.tunable.PIDConstantsNT;
 
 /**
  * Constants file.
@@ -202,7 +203,7 @@ public final class Constants {
 
         // @formatter:off
         public static final PIDConstants angleMotorPID =
-            new PIDConstantsBuilder("Swerve/angle", GravityTypeValue.Elevator_Static)
+            PIDConstantsNT.bind("Swerve/angle", new PIDConstantsBuilder("Swerve/angle", GravityTypeValue.Elevator_Static)
                 .kP(100.0)
                 .kI(0.0)
                 .kD(0.0)
@@ -210,7 +211,7 @@ public final class Constants {
                 .kS(0.0)
                 .kG(0.0)
                 .kA(0.0)
-                .finish();
+                .finish());
         // @formatter:on
 
         // @formatter:off

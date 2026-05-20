@@ -13,6 +13,7 @@ import frc.robot.util.typestate.RequiredField;
 import frc.robot.util.typestate.TypeStateBuilder;
 
 /** Tunable constants for PID controllers */
+@frc.robot.util.Tunable
 public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
 
     public double kP;
