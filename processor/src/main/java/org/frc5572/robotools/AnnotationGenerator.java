@@ -4,8 +4,14 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 
+/**
+ * A specific annotation that generates java classes.
+ */
 public interface AnnotationGenerator {
 
+    /**
+     * Provide the generator the processing environment.
+     */
     public void init(ProcessingEnvironment env);
 
     /**

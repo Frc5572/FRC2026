@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
@@ -14,8 +13,6 @@ import javax.lang.model.element.TypeElement;
 /**
  * Annotation processor for checks. Used by VS Code.
  */
-@SupportedAnnotationTypes({"frc.robot.util.typestate.TypeStateBuilder",
-    "frc.robot.util.GenerateEmptyIO"})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class RobotProcessor extends AbstractProcessor {
 

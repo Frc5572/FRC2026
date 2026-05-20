@@ -22,6 +22,9 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
+/**
+ * Annotation Generator for {@code @TypeStateBuilder}
+ */
 public final class TypeStateBuilderGenerator implements AnnotationGenerator {
 
     private ProcessingEnvironment processingEnv;
