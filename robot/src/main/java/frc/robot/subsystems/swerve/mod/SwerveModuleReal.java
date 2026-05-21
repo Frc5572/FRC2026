@@ -166,7 +166,7 @@ public class SwerveModuleReal implements SwerveModuleIO {
             Constants.Swerve.angleCurrentLowerTimeThreshold;
 
         /* PID Config */
-        Constants.Swerve.angleMotorPID.apply(angleConfig.Slot0);
+        Constants.Swerve.angleMotorPID.value().apply(angleConfig.Slot0);
 
         PhoenixSignals.tryUntilOk(5, () -> angleMotor.getConfigurator().apply(angleConfig));
     }

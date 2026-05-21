@@ -23,13 +23,15 @@ public class Indexer extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Indexer", inputs);
 
-        Constants.Indexer.spindexerConstants.ifDirty(constants -> {
-            io.setSpindexerConstants(constants);
-        });
+        Constants.Indexer.spindexerConstants.dirtyCheckPeriodic("Indexer/SpindexerConstants",
+            constants -> {
+                io.setSpindexerConstants(constants);
+            });
 
-        Constants.Indexer.magazineConstants.ifDirty(constants -> {
-            io.setMagazineConstants(constants);
-        });
+        Constants.Indexer.magazineConstants.dirtyCheckPeriodic("Indexer/MagazineConstants",
+            constants -> {
+                io.setMagazineConstants(constants);
+            });
     }
 
     public void setMagazineDutyCycle(double dutyCycle) {

@@ -45,7 +45,7 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
 
-        Constants.Turret.pid.ifDirty(io::setPID);
+        // Constants.Turret.pid.ifDirty(io::setPID);
 
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
 

@@ -47,7 +47,7 @@ public final class Shooter extends SubsystemBase {
         Logger.processInputs("Shooter", inputs);
         SmartDashboard.putBoolean("Shooter/UpToSpeed", inputs.shooterAngularVelocity1
             .in(RadiansPerSecond) > Constants.Shooter.atSpeedThreshold);
-        Constants.Shooter.constants.ifDirty(constants -> {
+        Constants.Shooter.constants.dirtyCheckPeriodic("Shooter/Constants", constants -> {
             io.setConstants(constants);
             torqueCurrentDebouncer =
                 new Debouncer(constants.atSpeedDebounce, DebounceType.kFalling);

@@ -31,8 +31,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.CameraConstantsBuilder;
-import frc.robot.util.tunable.FlywheelConstants;
 import frc.robot.util.tunable.FlywheelConstantsBuilder;
+import frc.robot.util.tunable.FlywheelConstantsNT;
 import frc.robot.util.tunable.ModuleConstants;
 import frc.robot.util.tunable.ModuleConstants.ModuleKind;
 import frc.robot.util.tunable.ModuleConstantsBuilder;
@@ -96,21 +96,23 @@ public final class Constants {
         public static final int indexerSpeed = 0;
         public static final int spinMotorSpeed = 0;
 
-        public static final FlywheelConstants spindexerConstants =
-            new FlywheelConstantsBuilder("IndexerConstants").holdCurrent(40.0).maxDutyCycle(24.0)
-                .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
-                .pid(new PIDConstantsBuilder("SpindexerPID", GravityTypeValue.Elevator_Static)
-                    .kP(0.3).kI(0.3).kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
-                .finish();
+        public static final FlywheelConstantsNT spindexerConstants =
+            FlywheelConstantsNT.bind("IndexerConstants",
+                new FlywheelConstantsBuilder().holdCurrent(40.0).maxDutyCycle(24.0).isReversed(true)
+                    .velocityTolerance(8).atSpeedDebounce(0.1)
+                    .pid(new PIDConstantsBuilder(GravityTypeValue.Elevator_Static).kP(0.3).kI(0.3)
+                        .kD(0.0).kV(0.25).kS(0.1).kG(0.0).kA(0.0).finish())
+                    .finish());
 
 
 
-        public static final FlywheelConstants magazineConstants =
-            new FlywheelConstantsBuilder("MagazineConstants").holdCurrent(40.0).maxDutyCycle(105)
-                .isReversed(true).velocityTolerance(8).atSpeedDebounce(0.1)
-                .pid(new PIDConstantsBuilder("MagazinePID", GravityTypeValue.Elevator_Static)
-                    .kP(0.8).kI(0.1).kD(0.0).kV(0.105).kS(0.11).kG(0.0).kA(0.0).finish())
-                .finish();
+        public static final FlywheelConstantsNT magazineConstants =
+            FlywheelConstantsNT.bind("MagazineConstants",
+                new FlywheelConstantsBuilder().holdCurrent(40.0).maxDutyCycle(105).isReversed(true)
+                    .velocityTolerance(8).atSpeedDebounce(0.1)
+                    .pid(new PIDConstantsBuilder(GravityTypeValue.Elevator_Static).kP(0.8).kI(0.1)
+                        .kD(0.0).kV(0.105).kS(0.11).kG(0.0).kA(0.0).finish())
+                    .finish());
 
         public static final double timeReversingDuringUnjam = 0.25;
         public static final double timeBetweenUnjams = 1.0;
@@ -202,8 +204,8 @@ public final class Constants {
         public static final double closedLoopRamp = 0.0;
 
         // @formatter:off
-        public static final PIDConstants angleMotorPID =
-            PIDConstantsNT.bind("Swerve/angle", new PIDConstantsBuilder("Swerve/angle", GravityTypeValue.Elevator_Static)
+        public static final PIDConstantsNT angleMotorPID =
+            PIDConstantsNT.bind("Swerve/angle", new PIDConstantsBuilder(GravityTypeValue.Elevator_Static)
                 .kP(100.0)
                 .kI(0.0)
                 .kD(0.0)
@@ -216,7 +218,7 @@ public final class Constants {
 
         // @formatter:off
         public static final PIDConstants driveMotorPID =
-            new PIDConstantsBuilder("Swerve/drive", GravityTypeValue.Elevator_Static)
+            new PIDConstantsBuilder(GravityTypeValue.Elevator_Static)
                 .kP(0.0012)
                 .kI(0.0)
                 .kD(0.0)
@@ -400,7 +402,7 @@ public final class Constants {
 
         // @formatter:off
         public static final PIDConstants pid =
-            new PIDConstantsBuilder("AdjustableHood", GravityTypeValue.Arm_Cosine)
+            new PIDConstantsBuilder(GravityTypeValue.Arm_Cosine)
                 .kP(200.0)
                 .kI(0.0)
                 .kD(0.0)
@@ -573,7 +575,7 @@ public final class Constants {
 
         // @formatter:off
         public static final PIDConstants pid =
-            new PIDConstantsBuilder("TurretPID", GravityTypeValue.Elevator_Static)
+            new PIDConstantsBuilder(GravityTypeValue.Elevator_Static)
                 .kP(48.0)
                 .kI(0.0)
                 .kD(0.0)
@@ -621,14 +623,14 @@ public final class Constants {
         public static final double atSpeedThreshold = 50.0;
 
         // @formatter:off
-        public static final FlywheelConstants constants =
-            new FlywheelConstantsBuilder("ShooterConstants")
+        public static final FlywheelConstantsNT constants =
+            FlywheelConstantsNT.bind("ShooterConstants", new FlywheelConstantsBuilder()
                 .holdCurrent(40.0)
                 .maxDutyCycle(1.0)
                 .isReversed(true)
                 .velocityTolerance(8)
                 .atSpeedDebounce(0.1)
-                .pid(new PIDConstantsBuilder("ShooterConstantsPID", GravityTypeValue.Elevator_Static)
+                .pid(new PIDConstantsBuilder(GravityTypeValue.Elevator_Static)
                     .kP(0.9)
                     .kI(0.0)
                     .kD(0.0)
@@ -637,7 +639,7 @@ public final class Constants {
                     .kG(0.0)
                     .kA(0.0)
                     .finish())
-                .finish();
+                .finish());
 
         // @formatter:on
     }

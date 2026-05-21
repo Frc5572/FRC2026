@@ -7,7 +7,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
-import frc.robot.util.tunable.Tunable;
+import frc.robot.util.Tunable;
 
 /**
  * Applies rate limiting to robot-relative swerve chassis commands to ensure physically achievable,
@@ -50,14 +50,15 @@ import frc.robot.util.tunable.Tunable;
  * https://www.youtube.com/watch?v=vUtVXz7ebEE</a>
  */
 @NullMarked
-public class SwerveRateLimiter implements Tunable {
+@Tunable
+public class SwerveRateLimiter {
 
-    private double forwardLimit = Constants.Swerve.forwardLimit;
-    private double forwardTiltLimit = Constants.Swerve.forwardTiltLimit;
-    private double leftTiltLimit = Constants.Swerve.leftTiltLimit;
-    private double rightTiltLimit = Constants.Swerve.rightTiltLimit;
-    private double backTiltLimit = Constants.Swerve.backTiltLimit;
-    private double skidLimit = Constants.Swerve.skidLimit;
+    public double forwardLimit = Constants.Swerve.forwardLimit;
+    public double forwardTiltLimit = Constants.Swerve.forwardTiltLimit;
+    public double leftTiltLimit = Constants.Swerve.leftTiltLimit;
+    public double rightTiltLimit = Constants.Swerve.rightTiltLimit;
+    public double backTiltLimit = Constants.Swerve.backTiltLimit;
+    public double skidLimit = Constants.Swerve.skidLimit;
 
     /**
      * Creates a new {@code SwerveRateLimiter} and publishes all acceleration limits to
@@ -68,8 +69,7 @@ public class SwerveRateLimiter implements Tunable {
      * by the rate limiter.
      */
     public SwerveRateLimiter() {
-        Tunable.setupTunable("/SwerveRateLimiter", this, SwerveRateLimiter.class, () -> {
-        });
+
     }
 
     /**

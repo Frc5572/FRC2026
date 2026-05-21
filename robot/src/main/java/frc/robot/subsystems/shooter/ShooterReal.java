@@ -48,7 +48,7 @@ public final class ShooterReal implements ShooterIO {
         shooterCurrent1 = shooterMotor1.getStatorCurrent();
         shooterCurrent2 = shooterMotor2.getStatorCurrent();
 
-        setConstants(Constants.Shooter.constants);
+        setConstants(Constants.Shooter.constants.value());
 
         PhoenixSignals.registerSignals(false, shooterVelocity1, shooterVelocity2, shooterVoltage1,
             shooterVoltage2, shooterCurrent1, shooterCurrent2);

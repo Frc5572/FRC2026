@@ -35,6 +35,7 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleIO;
 import frc.robot.subsystems.swerve.util.MoveToPoseBuilder;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
+import frc.robot.subsystems.swerve.util.SwerveRateLimiterNT;
 import frc.robot.subsystems.swerve.util.TuningCommands;
 import frc.robot.util.AllianceFlipUtil;
 
@@ -80,7 +81,8 @@ public final class Swerve extends SubsystemBase {
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
 
-    private final SwerveRateLimiter limiter = new SwerveRateLimiter();
+    private final SwerveRateLimiterNT limiter =
+        SwerveRateLimiterNT.bind("SwerveRateLimiter", new SwerveRateLimiter());
 
     private boolean flipTrajectories = false;
 
@@ -184,6 +186,9 @@ public final class Swerve extends SubsystemBase {
 
         this.odometryLock.unlock();
 
+        limiter.dirtyCheckPeriodic("Swerve/SwerveRateLimiter", _x -> {
+        });
+
         for (int i = 0; i < modules.length; i++) {
             this.modules[i].periodic();
         }
@@ -203,7 +208,7 @@ public final class Swerve extends SubsystemBase {
         }
         ChassisSpeeds currentSpeeds =
             Constants.Swerve.swerveKinematics.toChassisSpeeds(wheelStates);
-        limiter.update(currentSpeeds);
+        limiter.value().update(currentSpeeds);
         state.updateMeasuredSpeeds(currentSpeeds);
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
@@ -224,7 +229,7 @@ public final class Swerve extends SubsystemBase {
     public Command driveRobotRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return this.run(() -> {
             ChassisSpeeds speeds = driveSpeeds.get();
-            speeds = limiter.limit(speeds);
+            speeds = limiter.value().limit(speeds);
             setModuleStates(speeds);
         });
     }
@@ -323,7 +328,7 @@ public final class Swerve extends SubsystemBase {
      */
     public MoveToPoseBuilder moveToPose() {
         var builder = new MoveToPoseBuilder(this, (speeds) -> {
-            limiter.limit(speeds);
+            limiter.value().limit(speeds);
             setModuleStates(speeds);
         });
         return builder;
@@ -421,7 +426,7 @@ public final class Swerve extends SubsystemBase {
      */
     public Command stop() {
         return this.driveRobotRelative(ChassisSpeeds::new).until(() -> {
-            var speeds = limiter.limit(new ChassisSpeeds());
+            var speeds = limiter.value().limit(new ChassisSpeeds());
             return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.1;
         }).andThen(this.emergencyStop());
     }
