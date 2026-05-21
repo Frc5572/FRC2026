@@ -18,7 +18,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 /**
- * Annotation Generator for {@code @AnnotationGenerator}
+ * Annotation Generator for {@code @GenerateEmptyIO}
  */
 public class GenerateEmptyIOGenerator implements AnnotationGenerator {
 

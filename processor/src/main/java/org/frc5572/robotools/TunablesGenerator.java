@@ -22,6 +22,9 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
+/**
+ * Annotation Generator for {@code @Tunable}
+ */
 public class TunablesGenerator implements AnnotationGenerator {
 
     private ProcessingEnvironment processingEnv;
