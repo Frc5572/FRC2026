@@ -6,8 +6,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import org.frc5572.ParticleFilter;
-import org.frc5572.ParticleFilterConfig;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -49,8 +47,6 @@ public class RobotState {
 
     private ChassisSpeeds currentSpeeds;
     private double lastTimeMoved = 0.0;
-
-    private ParticleFilter pf = new ParticleFilter(new ParticleFilterConfig().numParticles(200));
 
     /**
      * Creates a new swerve state estimator.
