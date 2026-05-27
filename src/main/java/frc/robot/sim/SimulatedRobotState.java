@@ -1,6 +1,5 @@
 package frc.robot.sim;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -11,10 +10,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
-import frc.robot.shotdata.ShotData;
-import frc.robot.shotdata.ShotData.ShotEntry;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.IndexerSim;
@@ -83,22 +79,10 @@ public class SimulatedRobotState {
                 var speeds =
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
 
-                ShotEntry entry = ShotData.simFunc.interpolate(speedRotationsPerSecond,
-                    Units.radiansToDegrees(effectiveHoodAngle));
+                double exitVelocity = 5.0;
 
-                double exitVelocity = entry.backtracedExitVelocity().in(MetersPerSecond);
-
-                Logger.recordOutput("Sim/speedTransferExitVelocity",
-                    entry.speedTransferExitVelocity().in(MetersPerSecond));
-                Logger.recordOutput("Sim/backtracedExitVelocity",
-                    entry.backtracedExitVelocity().in(MetersPerSecond));
-                Logger.recordOutput("Sim/theoreticalExitVelocity",
-                    entry.theoreticalExitVelocity().in(MetersPerSecond));
-                Logger.recordOutput("Sim/noSlipExitVelocity",
-                    entry.noSlipExitVelocity().in(MetersPerSecond));
-
-                double vert = Math.sin(entry.exitAngle().in(Radians)) * exitVelocity;
-                double horiz = Math.cos(entry.exitAngle().in(Radians)) * exitVelocity;
+                double vert = Math.sin(effectiveHoodAngle) * exitVelocity;
+                double horiz = Math.cos(effectiveHoodAngle) * exitVelocity;
                 double x = Math.cos(effectiveTurretAngle) * horiz + speeds.vxMetersPerSecond;
                 double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
                 Translation3d initial =
