@@ -27,6 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.commands.WaitSupplierCommand;
+import frc.robot.shotdata.ShotData;
+import frc.robot.shotdata.TargetingState;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.LEDs;
@@ -99,12 +101,15 @@ public final class RobotContainer {
     // Location");
     private final FieldObject2d autoStoppingPoint = field.getObject("Auto End Point");
 
+    private final TargetingState targetingState;
+
     /**
      * Robot Container
      *
      * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
+        ShotData shotData = new ShotData();
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -112,7 +117,6 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
-                shooter = new Shooter(new ShooterReal(), swerve.state);
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
@@ -139,7 +143,6 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, sim.visionSim);
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
-                shooter = new Shooter(sim.shooter, swerve.state);
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
@@ -155,12 +158,24 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
-                shooter = new Shooter(new ShooterIOEmpty(), swerve.state);
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
 
                 break;
+        }
+        targetingState = new TargetingState(swerve.state, shotData);
+        switch (runtimeType) {
+            case kReal:
+                shooter = new Shooter(new ShooterReal(), targetingState);
+                break;
+            case kSimulation:
+                shooter = new Shooter(sim.shooter, targetingState);
+                break;
+            default:
+                shooter = new Shooter(new ShooterIOEmpty(), targetingState);
+                break;
+
         }
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
@@ -187,7 +202,7 @@ public final class RobotContainer {
 
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
-            climber, intake, indexer, shooter, turret);
+            climber, intake, indexer, shooter, turret, targetingState);
         autoChooser.addRoutine(Constants.Auto.cmpSpecial, autoCommandFactory::cmpSpecial);
         autoChooser.addRoutine(Constants.Auto.halfSweepTrenchRamp,
             autoCommandFactory::halfSweepTrenchRamp);
@@ -207,7 +222,7 @@ public final class RobotContainer {
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
         turret.setDefaultCommand(turret
-            .goToAngleFieldRelative(() -> swerve.state.getDesiredTurretHeadingFieldRelative()));
+            .goToAngleFieldRelative(() -> targetingState.getDesiredTurretHeadingFieldRelative()));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
@@ -251,7 +266,7 @@ public final class RobotContainer {
 
         driver.rightTrigger()
             .whileTrue(Commands.parallel(
-                CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood),
+                CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood),
                 swerve.driveUserRelative(TeleopControls.teleopControls(
                     () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
                     () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
@@ -260,10 +275,10 @@ public final class RobotContainer {
                     Constants.DriverControls.driverRotationalShootSpeed))));
 
         driver.povUp().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.5, 0);
+            targetingState.incTrims(0.5, 0);
         }));
         driver.povDown().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(-0.5, 0);
+            targetingState.incTrims(-0.5, 0);
         }));
         driver.povLeft().onTrue(Commands.runOnce(() -> {
             // swerve.state.incTrims(0.0, 2.0);
@@ -293,18 +308,18 @@ public final class RobotContainer {
             .onTrue(CommandFactory.resetInit(swerve, turret));
         operator.b().whileTrue(turret.setVoltage(() -> 0));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
-        operator.y().onTrue(Commands.runOnce(() -> swerve.state.setTrims(0.0, 0.0)));
+        operator.y().onTrue(Commands.runOnce(() -> targetingState.setTrims(0.0, 0.0)));
         operator.povUp().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.5, 0);
+            targetingState.incTrims(0.5, 0);
         }));
         operator.povDown().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(-0.5, 0);
+            targetingState.incTrims(-0.5, 0);
         }));
         operator.povLeft().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.0, 2.0);
+            targetingState.incTrims(0.0, 2.0);
         }));
         operator.povRight().onTrue(Commands.runOnce(() -> {
-            swerve.state.incTrims(0.0, -2.0);
+            targetingState.incTrims(0.0, -2.0);
         }));
     }
 
@@ -391,6 +406,8 @@ public final class RobotContainer {
             AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());
         Logger.recordOutput("test1",
             FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
+
+        targetingState.updateTargeting();
     }
 
 

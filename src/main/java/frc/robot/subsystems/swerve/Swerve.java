@@ -207,8 +207,6 @@ public final class Swerve extends SubsystemBase {
         state.updateMeasuredSpeeds(currentSpeeds);
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
-
-        state.updateTargeting();
     }
 
     /**

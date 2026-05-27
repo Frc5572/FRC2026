@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.WaitSupplierCommand;
+import frc.robot.shotdata.TargetingState;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.indexer.Indexer;
@@ -74,12 +75,14 @@ public class AutoCommandFactory {
     };
     final double driveSpeed = 6.0;
     final double intakeSpeed = 1.2;
+    private final TargetingState targetingState;
 
     /**
      * Auto Command Factory
      */
     public AutoCommandFactory(AutoFactory autoFactory, Swerve swerve, AdjustableHood adjustableHood,
-        Climber climber, Intake intake, Indexer indexer, Shooter shooter, Turret turret) {
+        Climber climber, Intake intake, Indexer indexer, Shooter shooter, Turret turret,
+        TargetingState targetingState) {
         this.autoFactory = autoFactory;
         this.swerve = swerve;
         this.adjustableHood = adjustableHood;
@@ -88,7 +91,7 @@ public class AutoCommandFactory {
         this.intake = intake;
         this.shooter = shooter;
         this.turret = turret;
-
+        this.targetingState = targetingState;
     }
 
     /**
@@ -198,7 +201,7 @@ public class AutoCommandFactory {
                             .deadlineFor(intake.extendHopper(1.0).andThen(
                                 intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
                         crossRampIntoZone(routine), swerve.emergencyStop(),
-                        CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+                        CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood)
                             .alongWith(
                                 Commands.waitSeconds(2.0).andThen(intake.retractHopper(1.0)))));
         return routine;
@@ -305,11 +308,11 @@ public class AutoCommandFactory {
         double turretFudge2 = 0;
         return Commands
             .sequence(wilsonTestSweep(left, true, x1, driveSpeed).alongWith(Commands.runOnce(() -> {
-                swerve.state.setTrims(-0.5, left ? turretFudge1 : -turretFudge1);
+                targetingState.setTrims(-0.5, left ? turretFudge1 : -turretFudge1);
             })), autoShooting(shootingTime),
                 Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
                     wilsonTestSweep(left, false, x2, driveSpeed), Commands.runOnce(() -> {
-                        swerve.state.setTrims(-0.5, left ? turretFudge2 : -turretFudge2);
+                        targetingState.setTrims(-0.5, left ? turretFudge2 : -turretFudge2);
                     }), autoShooting(shootingTime), adjustableHood.setGoal(Rotations.of(0)),
                     wilsonTestSweep(left, false, x1, driveSpeed), autoShooting(shootingTime * 2))
                     .repeatedly());
@@ -387,8 +390,8 @@ public class AutoCommandFactory {
 
 
     /**
-    * Half Sweep Trench Ramp Path
-    */
+     * Half Sweep Trench Ramp Path
+     */
     public Command halfSweepTrenchRampPath(AutoRoutine routine, boolean left, DoubleSupplier x) {
         return Commands.sequence(
             swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kCCW_90deg))
@@ -427,10 +430,10 @@ public class AutoCommandFactory {
      */
     Command autoShooting(double shootingTime, double delayTime) {
         return Commands.sequence(Commands.waitSeconds(delayTime),
-            CommandFactory.shoot(swerve.state, shooter, indexer, adjustableHood)
+            CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood)
                 .alongWith(intake.jerkIntake(),
                     turret.goToAngleFieldRelative(
-                        () -> swerve.state.getDesiredTurretHeadingFieldRelative()))
+                        () -> targetingState.getDesiredTurretHeadingFieldRelative()))
                 .withTimeout(shootingTime))
             .andThen(intake.retractHopper(1));
     }
