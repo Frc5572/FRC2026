@@ -54,9 +54,9 @@ public:
     gtsam::Pose2 readVisionPose()
     {
         return gtsam::Pose2(
-            visionDxSub_.Get(),
-            visionDySub_.Get(),
-            visionDtheataSub_.Get());
+            visionXSub_.Get(),
+            visionYSub_.Get(),
+            visionThetaSub_.Get());
     }
 
     double readVisionTimestamp()
