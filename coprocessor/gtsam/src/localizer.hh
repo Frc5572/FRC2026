@@ -102,6 +102,36 @@ public:
         return latestPose_;
     }
 
+    Pose2 resetPose(const Pose2 &cameraFeildPose)
+    {
+        NonlinearFactorGraph newFactors;
+        Values newValues;
+
+        const size_t nextIndex = currentIndex_ + 1;
+
+        auto odomNoise = Diagonal::Sigmas(
+            (gtsam::Vector(3) << 0.0001, 0.0001 0.0001).finished());
+
+        newFactors.add(BetweenFactor<Pose2>(
+            X(currentIndex_),
+            X(nextIndex),
+            odomDelta,
+            odomNoise));
+
+        Pose2 initialGuess = latestPose_.compose(odomDelta);
+        newValues.insert(X(nextIndex), initialGuess);
+
+        isam_.update(newFactors, newValues);
+
+        currentIndex_ = nextIndex;
+        latestPose_ = isam_.calculateEstimate<Pose2>(X(currentIndex_));
+
+        std::cout << "ODOM key=" << currentIndex_
+                  << " pose=" << latestPose_ << "\n";
+
+        return latestPose_;
+    }
+
 private:
     ISAM2 isam_;
     size_t currentIndex_ = 0;

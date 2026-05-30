@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <string>
 
 class Server
 {
@@ -20,6 +21,7 @@ public:
         auto odomTable = inst.GetTable("robot/odometry");
         auto visionTable = inst.GetTable("vision/localizer");
         auto outputTable = inst.GetTable("localizer");
+        auto commandTable = inst.GetTable("command");
 
         odomDxSub_ = odomTable->GetDoubleTopic("dx").Subscribe(0.0);
         odomDySub_ = odomTable->GetDoubleTopic("dy").Subscribe(0.0);
@@ -36,6 +38,13 @@ public:
         poseYPub_ = outputTable->GetDoubleTopic("y").Publish();
         poseThetaPub_ = outputTable->GetDoubleTopic("theta").Publish();
         poseTimestampPub_ = outputTable->GetDoubleTopic("timestamp").Publish();
+
+        command_ = commandTable->GetStringTopic("command").Subscribe("");
+        commandResponse_ = commandTable->GetStringTopic("commandResponse").Publish();
+        commandXPub_ = commandTable->GetDoubleTopic("x").Subscribe(0.0);
+        commandYPub_ = commandTable->GetDoubleTopic("y").Subscribe(0.0);
+        commandThetaPub_ = commandTable->GetDoubleTopic("theta").Subscribe(0.0);
+        commandTimestampPub_ = commandTable->GetDoubleTopic("timestamp").Subscribe(0.0);
     }
 
     gtsam::Pose2 readOdomDelta()
@@ -72,6 +81,24 @@ public:
         poseTimestampPub_.Set(timestamp);
     }
 
+    string pullCommand()
+    {
+        return command_.get();
+    }
+
+    void respondCommand(string &response)
+    {
+        commandResponse_.Set(response);
+    }
+
+    gtsam::Pose2 readCommandPose()
+    {
+        return gtsam::Pose2(
+            commandXSub_.get(),
+            commandYSub_.get(),
+            commandThetaSub_.get(), )
+    }
+
 private:
     nt::DoubleSubscriber odomDxSub_;
     nt::DoubleSubscriber odomDySub_;
@@ -88,4 +115,11 @@ private:
     nt::DoublePublisher poseYPub_;
     nt::DoublePublisher poseThetaPub_;
     nt::DoublePublisher poseTimestampPub_;
+
+    nt::StringSubscriber command_;
+    nt::StringPublisher commandResponse_;
+    nt::DoublePublisher commandXSub_;
+    nt::DoublePublisher commandYSub_;
+    nt::DoublePublisher commandThetaSub_;
+    nt::DoublePublisher commandTimestampSub_;
 };

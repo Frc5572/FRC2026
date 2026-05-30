@@ -11,11 +11,23 @@ int main()
     {
         gtsam::Pose2 odomDelta = nt.readOdomDelta();
         gtsam::Pose2 pose = localizer.addOdometry(odomDelta);
+        string command = nt.pullCommand();
 
         if (nt.hasVision())
         {
             gtsam::Pose2 visionPose = nt.readVisionPose();
             pose = localizer.addVisionMeasurement(visionPose);
+        }
+
+        switch (command)
+        {
+        case "RESET_POSE":
+            localizer.resetPose(nt.getCommandPose);
+            break;
+        case "RESET_TRANSLATION":
+            break;
+        case "NONE"
+            break;
         }
 
         double timestamp = nt.readVisionTimestamp();
