@@ -243,6 +243,7 @@ public class RobotState {
                 // reading - gyroOffset = actual
                 // gyroOffset = reading - actual
                 gyroOffset = prevGyroReading.minus(robotPose.toPose2d().getRotation());
+                odomEst.resetPose(robotPose.toPose2d());
                 server.resetPose(robotPose.toPose2d());
                 Logger.recordOutput("State/initPose", getGlobalPoseEstimate());
                 currentTurretAngle.clear();

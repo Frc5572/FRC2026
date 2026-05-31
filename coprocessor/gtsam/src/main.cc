@@ -13,13 +13,13 @@ int main()
         gtsam::Pose2 pose = localizer.addOdometry(odomDelta);
         int command = nt.pullCommand();
 
-        // if (nt.hasVision())
-        // {
-        gtsam::Pose2 visionPose = nt.readVisionPose();
-        auto [visionTranslationStdDev, visionRotStdDev] = nt.getVisionStdDev();
-        pose = localizer.addVisionMeasurement(visionPose, visionTranslationStdDev, visionRotStdDev);
-        nt.pubInited(localizer.isInited());
-        // }
+        if (nt.hasVision())
+        {
+            gtsam::Pose2 visionPose = nt.readVisionPose();
+            auto [visionTranslationStdDev, visionRotStdDev] = nt.getVisionStdDev();
+            pose = localizer.addVisionMeasurement(visionPose, visionTranslationStdDev, visionRotStdDev);
+            nt.pubInited(localizer.isInited());
+        }
         switch (command)
         {
         case 0:

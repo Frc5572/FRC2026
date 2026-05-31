@@ -37,7 +37,7 @@ public:
         visionThetaSub_ = visionTable->GetDoubleTopic("theta").Subscribe(0.0);
         visionTimestampSub_ = visionTable->GetDoubleTopic("timestamp").Subscribe(0.0);
         inited_ = visionTable->GetBooleanTopic("inited").Publish();
-        visionTranslationStdDev_ = visionTable->GetDoubleTopic("tranlsationStdDev").Subscribe(0.0);
+        visionTranslationStdDev_ = visionTable->GetDoubleTopic("translationStdDev").Subscribe(0.0);
         visionRotStdDev_ = visionTable->GetDoubleTopic("rotStdDev").Subscribe(0.0);
         poseXPub_ = outputTable->GetDoubleTopic("x").Publish();
         poseYPub_ = outputTable->GetDoubleTopic("y").Publish();

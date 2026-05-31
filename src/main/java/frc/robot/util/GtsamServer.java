@@ -6,6 +6,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -48,6 +49,8 @@ public class GtsamServer {
     private final NetworkTable visionTable;
     private final NetworkTable outputTable;
     private final NetworkTable commandTable;
+    private Pose2d lastOdomPose = Pose2d.kZero;
+    private boolean hasLastOdomPose = false;
 
     public GtsamServer() {
         this.inst = NetworkTableInstance.getDefault();
@@ -79,7 +82,7 @@ public class GtsamServer {
 
         this.commandTable = inst.getTable("command");
         this.command = commandTable.getIntegerTopic("command").publish();
-        this.commandResp = commandTable.getIntegerTopic("CommandResponse").subscribe(0);
+        this.commandResp = commandTable.getIntegerTopic("commandResponse").subscribe(0);
         this.commandXPub = commandTable.getDoubleTopic("x").publish();
         this.commandYPub = commandTable.getDoubleTopic("y").publish();
         this.commandThetaPub = commandTable.getDoubleTopic("theta").publish();
@@ -88,9 +91,15 @@ public class GtsamServer {
     }
 
     public void updateOdom(Supplier<Pose2d> pose) {
-        odomDxPub.set(pose.get().getX());
-        odomDyPub.set(pose.get().getX());
-        odomDthetaPub.set(pose.get().getRotation().getRadians());
+        Pose2d currentPose = pose.get();
+        Transform2d odomDelta =
+            hasLastOdomPose ? currentPose.minus(lastOdomPose) : Transform2d.kZero;
+        lastOdomPose = currentPose;
+        hasLastOdomPose = true;
+
+        odomDxPub.set(odomDelta.getX());
+        odomDyPub.set(odomDelta.getY());
+        odomDthetaPub.set(odomDelta.getRotation().getRadians());
         odomTimestampPub.set(Timer.getFPGATimestamp());
     }
 
@@ -117,11 +126,13 @@ public class GtsamServer {
         commandTimestampPub.set(Timer.getFPGATimestamp());
         while (!(0 == commandResp.get())) {
         }
+        lastOdomPose = pose;
+        hasLastOdomPose = true;
         command.set(0);
     }
 
     public void resetTranslation(Translation2d translation) {
-        command.set(1);
+        command.set(2);
         commandXPub.set(translation.getX());
         commandYPub.set(translation.getY());
         commandTimestampPub.set(Timer.getFPGATimestamp());

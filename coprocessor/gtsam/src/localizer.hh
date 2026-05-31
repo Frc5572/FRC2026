@@ -58,7 +58,7 @@ public:
         const size_t nextIndex = currentIndex_ + 1;
 
         auto odomNoise = Diagonal::Sigmas(
-            (gtsam::Vector(3) << 0.10, 0.10, 0.04).finished());
+            (gtsam::Vector(3) << 0.10, 0.10, 5.0).finished());
 
         newFactors.add(BetweenFactor<Pose2>(
             X(currentIndex_),
@@ -73,6 +73,7 @@ public:
 
         currentIndex_ = nextIndex;
         latestPose_ = isam_.calculateEstimate<Pose2>(X(currentIndex_));
+        oldOdomPose_ = odomDelta;
 
         std::cout << "ODOM key=" << currentIndex_
                   << " pose=" << latestPose_ << "\n";
@@ -123,7 +124,7 @@ public:
         return latestPose_;
     }
 
-    Pose2 resetPose(const Pose2 &feildPose)
+    Pose2 resetPose(const Pose2 &fieldPose)
     {
         NonlinearFactorGraph newFactors;
         Values newValues;
@@ -136,16 +137,16 @@ public:
         newFactors.add(BetweenFactor<Pose2>(
             X(currentIndex_),
             X(nextIndex),
-            feildPose,
+            latestPose_.between(fieldPose),
             odomNoise));
 
-        Pose2 initialGuess = latestPose_.compose(feildPose);
-        newValues.insert(X(nextIndex), initialGuess);
+        newValues.insert(X(nextIndex), fieldPose);
 
         isam_.update(newFactors, newValues);
 
         currentIndex_ = nextIndex;
         latestPose_ = isam_.calculateEstimate<Pose2>(X(currentIndex_));
+        oldOdomPose_ = Pose2(0.0, 0.0, 0.0);
 
         std::cout << "ODOM key=" << currentIndex_
                   << " pose=" << latestPose_ << "\n";
@@ -157,7 +158,7 @@ public:
         double newX,
         double newY)
     {
-        return gtsam::Pose2(newX, newY, latestPose_.theta());
+        return resetPose(gtsam::Pose2(newX, newY, latestPose_.theta()));
     }
 
 private:
