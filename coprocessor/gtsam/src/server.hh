@@ -1,6 +1,8 @@
 #include <networktables/NetworkTableInstance.h>
 #include <networktables/DoubleTopic.h>
 #include <networktables/BooleanTopic.h>
+#include <networktables/StringTopic.h>
+#include <networktables/IntegerTopic.h>
 
 #include <gtsam/geometry/Pose2.h>
 
@@ -8,7 +10,7 @@
 #include <iostream>
 #include <thread>
 #include <string>
-#include <vector>
+#include <utility>
 
 class Server
 {
@@ -17,7 +19,7 @@ public:
     {
         auto inst = nt::NetworkTableInstance::GetDefault();
         inst.StartClient4("gtsam-localizer");
-        inst.SetServer("10.55.72.2");
+        inst.SetServer("127.0.0.1");
 
         auto odomTable = inst.GetTable("robot/odometry");
         auto visionTable = inst.GetTable("vision/localizer");
@@ -42,8 +44,8 @@ public:
         poseThetaPub_ = outputTable->GetDoubleTopic("theta").Publish();
         poseTimestampPub_ = outputTable->GetDoubleTopic("timestamp").Publish();
 
-        command_ = commandTable->GetStringTopic("command").Subscribe("");
-        commandResponse_ = commandTable->GetStringTopic("commandResponse").Publish();
+        command_ = commandTable->GetIntegerTopic("command").Subscribe(0);
+        commandResponse_ = commandTable->GetIntegerTopic("commandResponse").Publish();
         commandXSub_ = commandTable->GetDoubleTopic("x").Subscribe(0.0);
         commandYSub_ = commandTable->GetDoubleTopic("y").Subscribe(0.0);
         commandThetaSub_ = commandTable->GetDoubleTopic("theta").Subscribe(0.0);
@@ -71,7 +73,7 @@ public:
             visionThetaSub_.Get());
     }
 
-    std::vector<std::vector<double>> getVisionStdDev()
+    std::pair<double, double> getVisionStdDev()
     {
         return {visionTranslationStdDev_.Get(), visionRotStdDev_.Get()};
     }
@@ -89,22 +91,22 @@ public:
         poseTimestampPub_.Set(timestamp);
     }
 
-    std::string pullCommand()
+    int pullCommand()
     {
-        return command_.get();
+        return command_.Get();
     }
 
-    void respondCommand(std::string &response)
+    void respondCommand(int response)
     {
         commandResponse_.Set(response);
     }
 
-    gtsam::Pose2 readCommandPose()
+    gtsam::Pose2 getCommandPose()
     {
         return gtsam::Pose2(
             commandXSub_.Get(),
             commandYSub_.Get(),
-            commandThetaSub_.Get())
+            commandThetaSub_.Get());
     }
 
     void pubInited(bool inited)
@@ -123,7 +125,7 @@ private:
     nt::DoubleSubscriber visionYSub_;
     nt::DoubleSubscriber visionThetaSub_;
     nt::DoubleSubscriber visionTimestampSub_;
-    nt::DoublePublisher inited_;
+    nt::BooleanPublisher inited_;
     nt::DoubleSubscriber visionTranslationStdDev_;
     nt::DoubleSubscriber visionRotStdDev_;
 
@@ -132,8 +134,8 @@ private:
     nt::DoublePublisher poseThetaPub_;
     nt::DoublePublisher poseTimestampPub_;
 
-    nt::StringSubscriber command_;
-    nt::StringPublisher commandResponse_;
+    nt::IntegerSubscriber command_;
+    nt::IntegerPublisher commandResponse_;
     nt::DoubleSubscriber commandXSub_;
     nt::DoubleSubscriber commandYSub_;
     nt::DoubleSubscriber commandThetaSub_;

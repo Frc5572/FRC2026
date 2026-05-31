@@ -48,7 +48,7 @@ public:
 
     Pose2 addOdometry(const Pose2 &odomDelta)
     {
-        if (oldOdomPose_ == odomDelta)
+        if (oldOdomPose_.equals(odomDelta, tol_))
         {
             return getLatestPose();
         }
@@ -82,7 +82,7 @@ public:
 
     Pose2 addVisionMeasurement(const Pose2 &cameraFieldPose, double translationStdDev, double rotStdDev)
     {
-        if (cameraFieldPose == oldVisionPose_)
+        if (cameraFieldPose.equals(oldVisionPose_, tol_))
         {
             return getLatestPose();
         }
@@ -167,4 +167,5 @@ private:
     bool inited_;
     Pose2 oldOdomPose_;
     Pose2 oldVisionPose_;
+    double tol_ = 1e-8;
 };

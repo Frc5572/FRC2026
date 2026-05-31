@@ -59,7 +59,7 @@ public class RobotState {
     }
 
     public Pose2d getGlobalPoseEstimate() {
-        return new Pose2d();
+        return server.getGtsamOptimization();
     }
 
     public void addOdomObservations(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw,
@@ -68,6 +68,7 @@ public class RobotState {
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
         var before = getGlobalPoseEstimate();
         odomEst.update(gyroYaw.minus(gyroOffset), wheelPositions);
+        server.updateOdom(() -> odomEst.getEstimatedPosition());
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
             Logger.recordOutput("State/isOnBump", true);
@@ -75,13 +76,14 @@ public class RobotState {
             diff = new Transform2d(diff.getX() * 0.6, diff.getY(), diff.getRotation());
             if (RobotBase.isReal()) {
                 odomEst.resetPose(before.plus(diff));
+                server.resetPose(odomEst.getEstimatedPosition());
             }
         } else {
             Logger.recordOutput("State/isOnBump", false);
         }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
         if (Constants.keepInField) {
-            limitPosition(getGlobalPoseEstimate(), odomEst::resetPose);
+            limitPosition(getGlobalPoseEstimate(), server::resetPose);
         }
     }
 

@@ -11,26 +11,31 @@ int main()
     {
         gtsam::Pose2 odomDelta = nt.readOdomDelta();
         gtsam::Pose2 pose = localizer.addOdometry(odomDelta);
-        std::string command = nt.pullCommand();
+        int command = nt.pullCommand();
 
         // if (nt.hasVision())
         // {
         gtsam::Pose2 visionPose = nt.readVisionPose();
-        pose = localizer.addVisionMeasurement(visionPose);
-        nt.pubInited(localizer.isInited);
+        auto [visionTranslationStdDev, visionRotStdDev] = nt.getVisionStdDev();
+        pose = localizer.addVisionMeasurement(visionPose, visionTranslationStdDev, visionRotStdDev);
+        nt.pubInited(localizer.isInited());
         // }
-
         switch (command)
         {
-        case "RESET_POSE":
-            localizer.resetPose(nt.getCommandPose);
-            nt.respondCommand("DONE");
+        case 0:
             break;
-        case "RESET_TRANSLATION":
-            localizer.resetTranslation(nt.getCommandPose.x(), nt.getCommandPose.y());
-            nt.respondCommand("DONE");
+        case 1:
+            nt.respondCommand(1);
+            localizer.resetPose(nt.getCommandPose());
+            nt.respondCommand(0);
             break;
-        case "NONE"
+        case 2:
+            nt.respondCommand(1);
+            localizer.resetTranslation(nt.getCommandPose().x(), nt.getCommandPose().y());
+            nt.respondCommand(0);
+            break;
+        default:
+            nt.respondCommand(0);
             break;
         }
 

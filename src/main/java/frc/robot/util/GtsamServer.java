@@ -10,10 +10,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.IntegerPublisher;
+import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
-import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj.Timer;
 
 public class GtsamServer {
@@ -36,8 +36,8 @@ public class GtsamServer {
     private DoubleSubscriber poseThetaSub;
     private DoubleSubscriber poseTimestampSub;
 
-    private StringPublisher command;
-    private StringSubscriber commandResp;
+    private IntegerPublisher command;
+    private IntegerSubscriber commandResp;
     private DoublePublisher commandXPub;
     private DoublePublisher commandYPub;
     private DoublePublisher commandThetaPub;
@@ -78,8 +78,8 @@ public class GtsamServer {
         this.poseTimestampSub = outputTable.getDoubleTopic("timestamp").subscribe(0.0);
 
         this.commandTable = inst.getTable("command");
-        this.command = commandTable.getStringTopic("command").publish();
-        this.commandResp = commandTable.getStringTopic("CommandResponse").subscribe("NONE");
+        this.command = commandTable.getIntegerTopic("command").publish();
+        this.commandResp = commandTable.getIntegerTopic("CommandResponse").subscribe(0);
         this.commandXPub = commandTable.getDoubleTopic("x").publish();
         this.commandYPub = commandTable.getDoubleTopic("y").publish();
         this.commandThetaPub = commandTable.getDoubleTopic("theta").publish();
@@ -110,24 +110,24 @@ public class GtsamServer {
     }
 
     public void resetPose(Pose2d pose) {
-        command.set("RESET_POSE");
+        command.set(1);
         commandXPub.set(pose.getX());
         commandYPub.set(pose.getY());
         commandThetaPub.set(pose.getRotation().getRadians());
         commandTimestampPub.set(Timer.getFPGATimestamp());
-        while (!"DONE".equals(commandResp.get())) {
+        while (!(0 == commandResp.get())) {
         }
-        command.set("NONE");
+        command.set(0);
     }
 
     public void resetTranslation(Translation2d translation) {
-        command.set("RESET_TRANSLATION");
+        command.set(1);
         commandXPub.set(translation.getX());
         commandYPub.set(translation.getY());
         commandTimestampPub.set(Timer.getFPGATimestamp());
-        while (!"DONE".equals(commandResp.get())) {
+        while (!(0 == commandResp.get())) {
         }
-        command.set("NONE");
+        command.set(0);
     }
 
     public boolean isInited() {
