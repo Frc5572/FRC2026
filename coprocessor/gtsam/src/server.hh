@@ -1,0 +1,143 @@
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/DoubleTopic.h>
+#include <networktables/BooleanTopic.h>
+#include <networktables/StringTopic.h>
+#include <networktables/IntegerTopic.h>
+
+#include <gtsam/geometry/Pose2.h>
+
+#include <chrono>
+#include <iostream>
+#include <thread>
+#include <string>
+#include <utility>
+
+class Server
+{
+public:
+    Server()
+    {
+        auto inst = nt::NetworkTableInstance::GetDefault();
+        inst.StartClient4("gtsam-localizer");
+        inst.SetServer("127.0.0.1");
+
+        auto odomTable = inst.GetTable("robot/odometry");
+        auto visionTable = inst.GetTable("vision/localizer");
+        auto outputTable = inst.GetTable("localizer");
+        auto commandTable = inst.GetTable("command");
+
+        odomDxSub_ = odomTable->GetDoubleTopic("dx").Subscribe(0.0);
+        odomDySub_ = odomTable->GetDoubleTopic("dy").Subscribe(0.0);
+        odomDthetaSub_ = odomTable->GetDoubleTopic("dtheta").Subscribe(0.0);
+        odomTimestampSub_ = odomTable->GetDoubleTopic("timestamp").Subscribe(0.0);
+
+        visionValidSub_ = visionTable->GetBooleanTopic("valid").Subscribe(false);
+        visionXSub_ = visionTable->GetDoubleTopic("x").Subscribe(0.0);
+        visionYSub_ = visionTable->GetDoubleTopic("y").Subscribe(0.0);
+        visionThetaSub_ = visionTable->GetDoubleTopic("theta").Subscribe(0.0);
+        visionTimestampSub_ = visionTable->GetDoubleTopic("timestamp").Subscribe(0.0);
+        inited_ = visionTable->GetBooleanTopic("inited").Publish();
+        visionTranslationStdDev_ = visionTable->GetDoubleTopic("translationStdDev").Subscribe(0.0);
+        visionRotStdDev_ = visionTable->GetDoubleTopic("rotStdDev").Subscribe(0.0);
+        poseXPub_ = outputTable->GetDoubleTopic("x").Publish();
+        poseYPub_ = outputTable->GetDoubleTopic("y").Publish();
+        poseThetaPub_ = outputTable->GetDoubleTopic("theta").Publish();
+        poseTimestampPub_ = outputTable->GetDoubleTopic("timestamp").Publish();
+
+        command_ = commandTable->GetIntegerTopic("command").Subscribe(0);
+        commandResponse_ = commandTable->GetIntegerTopic("commandResponse").Publish();
+        commandXSub_ = commandTable->GetDoubleTopic("x").Subscribe(0.0);
+        commandYSub_ = commandTable->GetDoubleTopic("y").Subscribe(0.0);
+        commandThetaSub_ = commandTable->GetDoubleTopic("theta").Subscribe(0.0);
+        commandTimestampSub_ = commandTable->GetDoubleTopic("timestamp").Subscribe(0.0);
+    }
+
+    gtsam::Pose2 readOdomDelta()
+    {
+        return gtsam::Pose2(
+            odomDxSub_.Get(),
+            odomDySub_.Get(),
+            odomDthetaSub_.Get());
+    }
+
+    bool hasVision()
+    {
+        return visionValidSub_.Get();
+    }
+
+    gtsam::Pose2 readVisionPose()
+    {
+        return gtsam::Pose2(
+            visionXSub_.Get(),
+            visionYSub_.Get(),
+            visionThetaSub_.Get());
+    }
+
+    std::pair<double, double> getVisionStdDev()
+    {
+        return {visionTranslationStdDev_.Get(), visionRotStdDev_.Get()};
+    }
+
+    double readVisionTimestamp()
+    {
+        return visionTimestampSub_.Get();
+    }
+
+    void publishOptimizedPose(const gtsam::Pose2 &pose, double timestamp)
+    {
+        poseXPub_.Set(pose.x());
+        poseYPub_.Set(pose.y());
+        poseThetaPub_.Set(pose.theta());
+        poseTimestampPub_.Set(timestamp);
+    }
+
+    int pullCommand()
+    {
+        return command_.Get();
+    }
+
+    void respondCommand(int response)
+    {
+        commandResponse_.Set(response);
+    }
+
+    gtsam::Pose2 getCommandPose()
+    {
+        return gtsam::Pose2(
+            commandXSub_.Get(),
+            commandYSub_.Get(),
+            commandThetaSub_.Get());
+    }
+
+    void pubInited(bool inited)
+    {
+        inited_.Set(inited);
+    }
+
+private:
+    nt::DoubleSubscriber odomDxSub_;
+    nt::DoubleSubscriber odomDySub_;
+    nt::DoubleSubscriber odomDthetaSub_;
+    nt::DoubleSubscriber odomTimestampSub_;
+
+    nt::BooleanSubscriber visionValidSub_;
+    nt::DoubleSubscriber visionXSub_;
+    nt::DoubleSubscriber visionYSub_;
+    nt::DoubleSubscriber visionThetaSub_;
+    nt::DoubleSubscriber visionTimestampSub_;
+    nt::BooleanPublisher inited_;
+    nt::DoubleSubscriber visionTranslationStdDev_;
+    nt::DoubleSubscriber visionRotStdDev_;
+
+    nt::DoublePublisher poseXPub_;
+    nt::DoublePublisher poseYPub_;
+    nt::DoublePublisher poseThetaPub_;
+    nt::DoublePublisher poseTimestampPub_;
+
+    nt::IntegerSubscriber command_;
+    nt::IntegerPublisher commandResponse_;
+    nt::DoubleSubscriber commandXSub_;
+    nt::DoubleSubscriber commandYSub_;
+    nt::DoubleSubscriber commandThetaSub_;
+    nt::DoubleSubscriber commandTimestampSub_;
+};
