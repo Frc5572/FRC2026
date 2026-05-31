@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Radians;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -11,6 +12,8 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj.Timer;
 
 public class GtsamServer {
@@ -20,6 +23,7 @@ public class GtsamServer {
     private DoublePublisher odomTimestampPub;
 
     private BooleanPublisher visionValidPub;
+    private BooleanSupplier visionInited;
     private DoublePublisher visionXPub;
     private DoublePublisher visionYPub;
     private DoublePublisher visionThetaPub;
@@ -32,10 +36,18 @@ public class GtsamServer {
     private DoubleSubscriber poseThetaSub;
     private DoubleSubscriber poseTimestampSub;
 
+    private StringPublisher command;
+    private StringSubscriber commandResp;
+    private DoublePublisher commandXPub;
+    private DoublePublisher commandYPub;
+    private DoublePublisher commandThetaPub;
+    private DoublePublisher commandTimestampPub;
+
     private NetworkTableInstance inst;
     private final NetworkTable odomTable;
     private final NetworkTable visionTable;
     private final NetworkTable outputTable;
+    private final NetworkTable commandTable;
 
     public GtsamServer() {
         this.inst = NetworkTableInstance.getDefault();
@@ -54,8 +66,8 @@ public class GtsamServer {
         this.visionYPub = visionTable.getDoubleTopic("y").publish();
         this.visionThetaPub = visionTable.getDoubleTopic("theta").publish();
         this.visionTimestampPub = visionTable.getDoubleTopic("timestamp").publish();
-
-        this.visiontranslationStdDev = visionTable.getDoubleTopic("XYStdDev").publish();
+        this.visionInited = visionTable.getBooleanTopic("inited").subscribe(false);
+        this.visiontranslationStdDev = visionTable.getDoubleTopic("translationStdDev").publish();
         this.visionrotationStdDev = visionTable.getDoubleTopic("rotStdDev").publish();
 
         this.outputTable = inst.getTable("localizer");
@@ -64,6 +76,15 @@ public class GtsamServer {
         this.poseYSub = outputTable.getDoubleTopic("y").subscribe(0.0);
         this.poseThetaSub = outputTable.getDoubleTopic("theta").subscribe(0.0);
         this.poseTimestampSub = outputTable.getDoubleTopic("timestamp").subscribe(0.0);
+
+        this.commandTable = inst.getTable("command");
+        this.command = commandTable.getStringTopic("command").publish();
+        this.commandResp = commandTable.getStringTopic("CommandResponse").subscribe("NONE");
+        this.commandXPub = commandTable.getDoubleTopic("x").publish();
+        this.commandYPub = commandTable.getDoubleTopic("y").publish();
+        this.commandThetaPub = commandTable.getDoubleTopic("theta").publish();
+        this.commandTimestampPub = commandTable.getDoubleTopic("timestamp").publish();
+
     }
 
     public void updateOdom(Supplier<Pose2d> pose) {
@@ -88,7 +109,29 @@ public class GtsamServer {
             new Rotation2d(Radians.of(poseThetaSub.get())));
     }
 
-    public void resetPose(Pose2d pose) {}
+    public void resetPose(Pose2d pose) {
+        command.set("RESET_POSE");
+        commandXPub.set(pose.getX());
+        commandYPub.set(pose.getY());
+        commandThetaPub.set(pose.getRotation().getRadians());
+        commandTimestampPub.set(Timer.getFPGATimestamp());
+        while (!"DONE".equals(commandResp.get())) {
+        }
+        command.set("NONE");
+    }
 
-    public void resetTranslation(Translation2d translation) {}
+    public void resetTranslation(Translation2d translation) {
+        command.set("RESET_TRANSLATION");
+        commandXPub.set(translation.getX());
+        commandYPub.set(translation.getY());
+        commandTimestampPub.set(Timer.getFPGATimestamp());
+        while (!"DONE".equals(commandResp.get())) {
+        }
+        command.set("NONE");
+    }
+
+    public boolean isInited() {
+        return visionInited.getAsBoolean();
+    }
+
 }

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <thread>
 #include <string>
+#include <vector>
 
 class Server
 {
@@ -33,7 +34,9 @@ public:
         visionYSub_ = visionTable->GetDoubleTopic("y").Subscribe(0.0);
         visionThetaSub_ = visionTable->GetDoubleTopic("theta").Subscribe(0.0);
         visionTimestampSub_ = visionTable->GetDoubleTopic("timestamp").Subscribe(0.0);
-
+        inited_ = visionTable->getBooleanTopic("inited").Publish();
+        visionTranslationStdDev_ = visionTable->getDoubleTopic("tranlsationStdDev").subscribe(0.0);
+        visionRotStdDev_ visionTable->getDoubleTopic("rotStdDev").subscribe(0.0);
         poseXPub_ = outputTable->GetDoubleTopic("x").Publish();
         poseYPub_ = outputTable->GetDoubleTopic("y").Publish();
         poseThetaPub_ = outputTable->GetDoubleTopic("theta").Publish();
@@ -41,10 +44,10 @@ public:
 
         command_ = commandTable->GetStringTopic("command").Subscribe("");
         commandResponse_ = commandTable->GetStringTopic("commandResponse").Publish();
-        commandXPub_ = commandTable->GetDoubleTopic("x").Subscribe(0.0);
-        commandYPub_ = commandTable->GetDoubleTopic("y").Subscribe(0.0);
-        commandThetaPub_ = commandTable->GetDoubleTopic("theta").Subscribe(0.0);
-        commandTimestampPub_ = commandTable->GetDoubleTopic("timestamp").Subscribe(0.0);
+        commandXSub_ = commandTable->GetDoubleTopic("x").Subscribe(0.0);
+        commandYSub_ = commandTable->GetDoubleTopic("y").Subscribe(0.0);
+        commandThetaSub_ = commandTable->GetDoubleTopic("theta").Subscribe(0.0);
+        commandTimestampSub_ = commandTable->GetDoubleTopic("timestamp").Subscribe(0.0);
     }
 
     gtsam::Pose2 readOdomDelta()
@@ -66,6 +69,11 @@ public:
             visionXSub_.Get(),
             visionYSub_.Get(),
             visionThetaSub_.Get());
+    }
+
+    std::vector getVisionStdDev()
+    {
+        return {visionTranslationStdDev_.get(), visionRotStdDev_.get()};
     }
 
     double readVisionTimestamp()
@@ -99,6 +107,11 @@ public:
             commandThetaSub_.get(), )
     }
 
+    void pubInited(bool inited)
+    {
+        inited_.set(inited);
+    }
+
 private:
     nt::DoubleSubscriber odomDxSub_;
     nt::DoubleSubscriber odomDySub_;
@@ -110,6 +123,9 @@ private:
     nt::DoubleSubscriber visionYSub_;
     nt::DoubleSubscriber visionThetaSub_;
     nt::DoubleSubscriber visionTimestampSub_;
+    nt::DoublePublisher inited_;
+    nt::DoubleSubscriber visionTranslationStdDev_;
+    nt::DoubleSubscriber visionRotStdDev_;
 
     nt::DoublePublisher poseXPub_;
     nt::DoublePublisher poseYPub_;
@@ -118,8 +134,8 @@ private:
 
     nt::StringSubscriber command_;
     nt::StringPublisher commandResponse_;
-    nt::DoublePublisher commandXSub_;
-    nt::DoublePublisher commandYSub_;
-    nt::DoublePublisher commandThetaSub_;
-    nt::DoublePublisher commandTimestampSub_;
+    nt::DoubleSubscriber commandXSub_;
+    nt::DoubleSubscriber commandYSub_;
+    nt::DoubleSubscriber commandThetaSub_;
+    nt::DoubleSubscriber commandTimestampSub_;
 };

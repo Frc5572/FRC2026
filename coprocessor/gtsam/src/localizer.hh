@@ -45,6 +45,10 @@ public:
 
     Pose2 addOdometry(const Pose2 &odomDelta)
     {
+        if (oldOdomPose == odomDelta)
+        {
+            return getLatestPose;
+        }
         NonlinearFactorGraph newFactors;
         Values newValues;
 
@@ -73,13 +77,17 @@ public:
         return latestPose_;
     }
 
-    Pose2 addVisionMeasurement(const Pose2 &cameraFieldPose)
+    Pose2 addVisionMeasurement(const Pose2 &cameraFieldPose, double translationStdDev, double rotStdDev)
     {
+        if (cameraFieldPose == oldVisionPose)
+        {
+            return getLatestPose;
+        }
         NonlinearFactorGraph newFactors;
         Values noNewValues;
 
         auto visionNoise = Diagonal::Sigmas(
-            (gtsam::Vector(3) << 0.08, 0.08, 2.00).finished());
+            (gtsam::Vector(3) << translationStdDev, transaction_safe_dynamic, rotStdDev).finished());
 
         newFactors.add(PriorFactor<Pose2>(
             X(currentIndex_),
@@ -94,7 +102,17 @@ public:
                   << " measurement=" << cameraFieldPose
                   << " pose=" << latestPose_ << "\n";
 
+        if (!inited_)
+        {
+            inited_ = true;
+        }
+        oldVisionPose = cameraFeildPose;
         return latestPose_;
+    }
+
+    bool isInited()
+    {
+        return inited_;
     }
 
     Pose2 getLatestPose() const
@@ -102,7 +120,7 @@ public:
         return latestPose_;
     }
 
-    Pose2 resetPose(const Pose2 &cameraFeildPose)
+    Pose2 resetPose(const Pose2 &feildPose)
     {
         NonlinearFactorGraph newFactors;
         Values newValues;
@@ -115,10 +133,10 @@ public:
         newFactors.add(BetweenFactor<Pose2>(
             X(currentIndex_),
             X(nextIndex),
-            odomDelta,
+            feildPose,
             odomNoise));
 
-        Pose2 initialGuess = latestPose_.compose(odomDelta);
+        Pose2 initialGuess = latestPose_.compose(feildPose);
         newValues.insert(X(nextIndex), initialGuess);
 
         isam_.update(newFactors, newValues);
@@ -132,8 +150,18 @@ public:
         return latestPose_;
     }
 
+    gtsam::Pose2 resetTranslation(
+        double newX,
+        double newY)
+    {
+        return gtsam::Pose2(newX, newY, latestPose_.theta());
+    }
+
 private:
     ISAM2 isam_;
     size_t currentIndex_ = 0;
     Pose2 latestPose_;
+    bool inited_;
+    Pose2 oldOdomPose_;
+    Pose2 oldVisionPose_;
 };
