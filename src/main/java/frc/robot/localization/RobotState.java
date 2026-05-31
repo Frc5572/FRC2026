@@ -213,7 +213,7 @@ public class RobotState {
     }
 
     /** Add potentially asequent observation from camera */
-    public void addVisionObservation(VisionObservations observations) {
+    public void addVisionObservation(VisionObservation observations) {
         Pose2d robotPose =
             observations.cameraPose().plus(observations.robotToCamera().inverse()).toPose2d();
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
@@ -341,7 +341,7 @@ public class RobotState {
                         Units.radiansToDegrees(transform.getRotation().getZ()));
                     return false;
                 }
-                VisionObservations observations = new VisionObservations(cameraPose, robotToCamera_,
+                VisionObservation observations = new VisionObservation(cameraPose, robotToCamera_,
                     translationStdDev, rotationStdDev, pipelineResult.getTimestampSeconds());
                 addVisionObservation(observations);
                 return true;
