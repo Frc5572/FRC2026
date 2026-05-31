@@ -41,13 +41,16 @@ public:
 
         isam_.update(graph, values);
         currentIndex_ = 0;
+
+        oldOdomPose_ = Pose2(0.0, 0.0, 0.0);
+        oldVisionPose_ = Pose2(0.0, 0.0, 0.0);
     }
 
     Pose2 addOdometry(const Pose2 &odomDelta)
     {
-        if (oldOdomPose == odomDelta)
+        if (oldOdomPose_ == odomDelta)
         {
-            return getLatestPose;
+            return getLatestPose();
         }
         NonlinearFactorGraph newFactors;
         Values newValues;
@@ -79,15 +82,15 @@ public:
 
     Pose2 addVisionMeasurement(const Pose2 &cameraFieldPose, double translationStdDev, double rotStdDev)
     {
-        if (cameraFieldPose == oldVisionPose)
+        if (cameraFieldPose == oldVisionPose_)
         {
-            return getLatestPose;
+            return getLatestPose();
         }
         NonlinearFactorGraph newFactors;
         Values noNewValues;
 
         auto visionNoise = Diagonal::Sigmas(
-            (gtsam::Vector(3) << translationStdDev, transaction_safe_dynamic, rotStdDev).finished());
+            (gtsam::Vector(3) << translationStdDev, translationStdDev, rotStdDev).finished());
 
         newFactors.add(PriorFactor<Pose2>(
             X(currentIndex_),
@@ -106,7 +109,7 @@ public:
         {
             inited_ = true;
         }
-        oldVisionPose = cameraFeildPose;
+        oldVisionPose_ = cameraFieldPose;
         return latestPose_;
     }
 
@@ -128,7 +131,7 @@ public:
         const size_t nextIndex = currentIndex_ + 1;
 
         auto odomNoise = Diagonal::Sigmas(
-            (gtsam::Vector(3) << 0.0001, 0.0001 0.0001).finished());
+            (gtsam::Vector(3) << 0.0001, 0.0001, 0.0001).finished());
 
         newFactors.add(BetweenFactor<Pose2>(
             X(currentIndex_),

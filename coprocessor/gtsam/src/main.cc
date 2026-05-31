@@ -11,7 +11,7 @@ int main()
     {
         gtsam::Pose2 odomDelta = nt.readOdomDelta();
         gtsam::Pose2 pose = localizer.addOdometry(odomDelta);
-        string command = nt.pullCommand();
+        std::string command = nt.pullCommand();
 
         // if (nt.hasVision())
         // {

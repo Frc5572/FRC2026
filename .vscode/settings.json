@@ -75,6 +75,7 @@
   "java.compile.nullAnalysis.mode": "disabled",
   "files.associations": {
     "chrono": "cpp",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "vector": "cpp"
   }
 }

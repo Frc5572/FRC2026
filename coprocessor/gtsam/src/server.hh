@@ -34,9 +34,9 @@ public:
         visionYSub_ = visionTable->GetDoubleTopic("y").Subscribe(0.0);
         visionThetaSub_ = visionTable->GetDoubleTopic("theta").Subscribe(0.0);
         visionTimestampSub_ = visionTable->GetDoubleTopic("timestamp").Subscribe(0.0);
-        inited_ = visionTable->getBooleanTopic("inited").Publish();
-        visionTranslationStdDev_ = visionTable->getDoubleTopic("tranlsationStdDev").subscribe(0.0);
-        visionRotStdDev_ visionTable->getDoubleTopic("rotStdDev").subscribe(0.0);
+        inited_ = visionTable->GetBooleanTopic("inited").Publish();
+        visionTranslationStdDev_ = visionTable->GetDoubleTopic("tranlsationStdDev").Subscribe(0.0);
+        visionRotStdDev_ = visionTable->GetDoubleTopic("rotStdDev").Subscribe(0.0);
         poseXPub_ = outputTable->GetDoubleTopic("x").Publish();
         poseYPub_ = outputTable->GetDoubleTopic("y").Publish();
         poseThetaPub_ = outputTable->GetDoubleTopic("theta").Publish();
@@ -71,9 +71,9 @@ public:
             visionThetaSub_.Get());
     }
 
-    std::vector getVisionStdDev()
+    std::vector<std::vector<double>> getVisionStdDev()
     {
-        return {visionTranslationStdDev_.get(), visionRotStdDev_.get()};
+        return {visionTranslationStdDev_.Get(), visionRotStdDev_.Get()};
     }
 
     double readVisionTimestamp()
@@ -89,12 +89,12 @@ public:
         poseTimestampPub_.Set(timestamp);
     }
 
-    string pullCommand()
+    std::string pullCommand()
     {
         return command_.get();
     }
 
-    void respondCommand(string &response)
+    void respondCommand(std::string &response)
     {
         commandResponse_.Set(response);
     }
@@ -102,14 +102,14 @@ public:
     gtsam::Pose2 readCommandPose()
     {
         return gtsam::Pose2(
-            commandXSub_.get(),
-            commandYSub_.get(),
-            commandThetaSub_.get(), )
+            commandXSub_.Get(),
+            commandYSub_.Get(),
+            commandThetaSub_.Get())
     }
 
     void pubInited(bool inited)
     {
-        inited_.set(inited);
+        inited_.Set(inited);
     }
 
 private:
