@@ -1,11 +1,9 @@
 package frc.robot.localization;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -28,7 +26,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
-import frc.robot.math.geometry.Rectangle;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
@@ -131,34 +128,7 @@ public class RobotState {
         }
     }
 
-    /**
-     * Updates the robot's current chassis speeds.
-     *
-     * @param speeds the current robot-relative chassis speeds
-     */
-    public void updateMeasuredSpeeds(ChassisSpeeds speeds) {
-        this.currentSpeeds =
-            ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getGlobalPoseEstimate().getRotation());
-        Logger.recordOutput("State/currentSpeeds", this.currentSpeeds);
-        if (Math.abs(this.currentSpeeds.vxMetersPerSecond) > 0.3
-            || Math.abs(this.currentSpeeds.vyMetersPerSecond) > 0.3
-            || Math.abs(this.currentSpeeds.omegaRadiansPerSecond) > Units.degreesToRadians(10)) {
-            this.lastTimeMoved = MathSharedStore.getTimestamp();
-            Logger.recordOutput("State/stationary/speeds", true);
-        } else {
-            Logger.recordOutput("State/stationary/speeds", false);
-        }
-    }
 
-    /**
-     * Forcibly initializes the pose estimator using a known robot pose.
-     *
-     * @param pose the known robot pose in field coordinates to initialize the estimator with
-     */
-    public void overrideInit(Pose2d pose) {
-        visionAdjustedOdometry.resetPose(pose);
-        initted = true;
-    }
 
     /** Get robot to camera for camera mounted on the turret */
     public static Transform3d getTurretRobotToCamera(Transform3d turretToCamera,
@@ -212,18 +182,7 @@ public class RobotState {
         Logger.recordOutput("State/TurretDirection", turretDirection);
     }
 
-    /** Add potentially asequent observation from camera */
-    public void addVisionObservation(VisionObservation observations) {
-        Pose2d robotPose =
-            observations.cameraPose().plus(observations.robotToCamera().inverse()).toPose2d();
-        Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
-        visionAdjustedOdometry.addVisionMeasurement(robotPose, observations.timestamp(),
-            observations.getStdDev());
-        Pose2d after = visionAdjustedOdometry.getEstimatedPosition();
-        double correction = after.getTranslation().getDistance(before.getTranslation());
-        Logger.recordOutput("State/Correction", correction);
-        Logger.recordOutput("State/VisionRobotPose", robotPose);
-    }
+
 
     /** Add potentially asequent observation from camera */
     public boolean addVisionObservation(CameraConstants camera,
@@ -380,10 +339,6 @@ public class RobotState {
             Constants.Vision.turretCenter.toPose2d().getTranslation(), Rotation2d.kZero));
     }
 
-    public ChassisSpeeds getFieldRelativeSpeeds() {
-        return currentSpeeds;
-    }
-
     private Translation2d shootingTarget = FieldConstants.Hub.centerHub;
     private boolean targetIsGround = false;
     private double desiredFlywheelSpeed = 0.0;
@@ -495,9 +450,6 @@ public class RobotState {
         Logger.recordOutput("State/DesiredTurretDirection", turretDirection);
     }
 
-    public boolean isInitted() {
-        return initted;
-    }
 
     public double getDesiredFlywheelSpeed() {
         return desiredFlywheelSpeed;
@@ -519,38 +471,5 @@ public class RobotState {
         this.currentFlywheelSpeed = flywheelSpeed;
     }
 
-    private final Rectangle robotRect = new Rectangle("pose", Pose2d.kZero,
-        Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);
 
-    /**
-     * limits position of a given pose
-     *
-     * @param pose new pose of robot reactangle
-     * @param resetPose reset pose
-     */
-    public void limitPosition(Pose2d pose, Consumer<Pose2d> resetPose) {
-        robotRect.setPose(pose);
-        double offsetX = 0.0;
-        double offsetY = 0.0;
-        var corners = robotRect.getCorners();
-        for (var corner : corners) {
-            if (corner.getX() < 0) {
-                offsetX = Math.max(offsetX, -corner.getX());
-            }
-            if (corner.getX() > FieldConstants.fieldLength) {
-                offsetX = Math.min(offsetX, FieldConstants.fieldLength - corner.getX());
-            }
-            if (corner.getY() < 0) {
-                offsetY = Math.max(offsetY, -corner.getY());
-            }
-            if (corner.getY() > FieldConstants.fieldWidth) {
-                offsetY = Math.min(offsetY, FieldConstants.fieldWidth - corner.getY());
-            }
-        }
-
-        if (Math.abs(offsetX) > 1e-3 || Math.abs(offsetY) > 1e-3) {
-            resetPose.accept(
-                new Pose2d(pose.getX() + offsetX, pose.getY() + offsetY, pose.getRotation()));
-        }
-    }
 }
