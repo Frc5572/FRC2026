@@ -6,20 +6,42 @@ int main()
 {
     Server nt;
     IsamLocalizer localizer;
+    double lastOdomTimestamp = 0.0;
+    double lastVisionTimestamp = 0.0;
+    double poseTimestamp = 0.0;
 
     while (true)
     {
-        gtsam::Pose2 odomDelta = nt.readOdomDelta();
-        gtsam::Pose2 pose = localizer.addOdometry(odomDelta);
+        gtsam::Pose2 pose = localizer.getLatestPose();
+
+        double odomTimestamp = nt.readOdomTimestamp();
+        if (odomTimestamp > lastOdomTimestamp)
+        {
+            gtsam::Pose2 odomDelta = nt.readOdomDelta();
+            pose = localizer.addOdometry(odomDelta);
+            lastOdomTimestamp = odomTimestamp;
+            poseTimestamp = odomTimestamp;
+        }
+
         int command = nt.pullCommand();
 
-        if (nt.hasVision())
+        double visionTimestamp = nt.readVisionTimestamp();
+        if (nt.hasVision() && visionTimestamp > lastVisionTimestamp)
         {
             gtsam::Pose2 visionPose = nt.readVisionPose();
             auto [visionTranslationStdDev, visionRotStdDev] = nt.getVisionStdDev();
-            pose = localizer.addVisionMeasurement(visionPose, visionTranslationStdDev, visionRotStdDev);
-            nt.pubInited(localizer.isInited());
+
+            if (visionTranslationStdDev > 0.0 && visionRotStdDev > 0.0)
+            {
+                pose = localizer.addVisionMeasurement(
+                    visionPose, visionTranslationStdDev, visionRotStdDev);
+                lastVisionTimestamp = visionTimestamp;
+                poseTimestamp = visionTimestamp;
+            }
         }
+
+        nt.pubInited(localizer.isInited());
+
         switch (command)
         {
         case 0:
@@ -39,8 +61,7 @@ int main()
             break;
         }
 
-        double timestamp = nt.readVisionTimestamp();
-        nt.publishOptimizedPose(pose, timestamp);
+        nt.publishOptimizedPose(pose, poseTimestamp);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }

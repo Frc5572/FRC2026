@@ -43,15 +43,18 @@ public class RobotState {
         Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);
 
     public RobotState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
-        odomEst = new SwerveDrivePoseEstimator(Constants.Swerve.swerveKinematics, gyroYaw,
-            wheelPositions, new Pose2d(0.0, 0.0, Rotation2d.kPi));
+        odomEst =
+            new SwerveDrivePoseEstimator(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions,
+                new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
     }
 
     private final TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
         TimeInterpolatableBuffer.createBuffer(1.5);
 
     public void resetPose(Pose2d pose) {
-
+        gyroOffset = prevGyroReading.minus(pose.getRotation());
+        odomEst.resetPose(pose);
+        server.resetPose(pose);
     }
 
     public void resetInit() {
@@ -140,7 +143,8 @@ public class RobotState {
      * @param pose the known robot pose in field coordinates to initialize the estimator with
      */
     public void overrideInit(Pose2d pose) {
-        // visionAdjustedOdometry.resetPose(pose);
+        odomEst.resetPose(pose);
+        server.resetPose(pose);
         initted = true;
     }
 
@@ -200,9 +204,17 @@ public class RobotState {
     public void addVisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
         double translationStdDev, double rotationStdDev, double timestamp) {
         Pose2d robotPose = cameraPose.plus(robotToCamera.inverse()).toPose2d();
+        boolean visionPoseInField =
+            robotPose.getX() >= 0.0 && robotPose.getX() <= FieldConstants.fieldLength
+                && robotPose.getY() >= 0.0 && robotPose.getY() <= FieldConstants.fieldWidth;
+        Logger.recordOutput("State/VisionRobotPoseInField", visionPoseInField);
+        if (!visionPoseInField) {
+            Logger.recordOutput("State/RejectedVisionRobotPose", robotPose);
+            return;
+        }
+
         Pose2d before = server.getGtsamOptimization();
-        server.updateVision(() -> robotPose, () -> timestamp, () -> translationStdDev,
-            () -> rotationStdDev);
+        server.updateVision(robotPose, timestamp, translationStdDev, rotationStdDev);
         Pose2d after = server.getGtsamOptimization();
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);

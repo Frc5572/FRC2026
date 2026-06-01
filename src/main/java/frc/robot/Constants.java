@@ -365,7 +365,7 @@ public final class Constants {
                             Degrees.of(180.0),
                             Degrees.of(-26),
                             Degrees.of(163))))
-                .translationError(0.3)
+                .translationError(0.1)
                 .rotationError(0.3)
                 .singleTagError(0)
                 .isTurret(false)

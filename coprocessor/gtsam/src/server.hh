@@ -60,6 +60,11 @@ public:
             odomDthetaSub_.Get());
     }
 
+    double readOdomTimestamp()
+    {
+        return odomTimestampSub_.Get();
+    }
+
     bool hasVision()
     {
         return visionValidSub_.Get();
