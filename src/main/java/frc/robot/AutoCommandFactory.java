@@ -58,6 +58,8 @@ public class AutoCommandFactory {
     DoubleSupplier feetPastCenter =
         () -> SmartDashboard.getNumber(Constants.DashboardValues.feetPastCenter,
             Constants.DashboardValues.feetPastCenterDefault);
+    BooleanSupplier secondSweep =
+        () -> SmartDashboard.getBoolean(Constants.DashboardValues.secondSweep, false);
 
     Supplier<Pose2d> shootPoseSupplier = () -> {
         double x = SmartDashboard.getNumber(Constants.DashboardValues.shootX,
@@ -122,6 +124,11 @@ public class AutoCommandFactory {
         return routine;
     }
 
+    public Command shootFirst() {
+        return autoShooting(2).andThen(adjustableHood.setGoal(Degree.of(0)),
+            Commands.waitSeconds(0.25));
+    }
+
     /**
      * CMP Special
      *
@@ -131,9 +138,7 @@ public class AutoCommandFactory {
 
         AutoRoutine routine = autoFactory.newRoutine("CMP Special");
 
-        Command shoot = autoShooting(3.5).andThen(adjustableHood.setGoal(Degree.of(0)),
-            Commands.waitSeconds(0.25));
-        Command shootOrNot = Commands.either(shoot, Commands.none(), shootFirst);
+        Command shootOrNot = Commands.either(shootFirst(), Commands.none(), shootFirst);
         Command halfSweep = Commands.either(wilsonTestSide(true), wilsonTestSide(false), fieldSide);
 
         Command fullsweep =
@@ -154,8 +159,8 @@ public class AutoCommandFactory {
     public AutoRoutine justShoot() {
 
         AutoRoutine routine = autoFactory.newRoutine("Just Shoot");
-        MoveToPose moveToStart =
-            swerve.moveToPose().target(shootPoseSupplier).autoRoutine(routine).finish();
+        MoveToPose moveToStart = swerve.moveToPose().target(shootPoseSupplier).autoRoutine(routine)
+            .flipY(false).finish();
         routine.active().onTrue(moveToStart);
         moveToStart.done().onTrue(autoShooting(15));
         return routine;
@@ -272,7 +277,7 @@ public class AutoCommandFactory {
         Command ending = Commands.either(
             endRamp.andThen(swerve.emergencyStop(), Commands.waitSeconds(1),
                 swerve.moveToPose().target(shootPoseSupplier).maxSpeed(driveSpeed)
-                    .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish()),
+                    .translationTolerance(0.5).rotationTolerance(15).flipY(false).finish()),
             endTrench,
             () -> SmartDashboard.getBoolean(Constants.DashboardValues.rampOrTrenchEnd, false));
 
@@ -368,19 +373,33 @@ public class AutoCommandFactory {
     /** Cross trench and then back over ramp and shoot */
     public Command halfSweepTrenchRamp(AutoRoutine routine, boolean left) {
         double driveSpeed = 6.0;
-        Command shoot = autoShooting(3.3).andThen(adjustableHood.setGoal(Degree.of(0)),
-            Commands.waitSeconds(0.25));
-        Command shootOrNot = Commands.either(shoot, Commands.none(), shootFirst);
-        return Commands.sequence(shootOrNot,
+        Command shootOrNot = Commands.either(shootFirst(), Commands.none(), shootFirst);
+        Command runPath = Commands.either(halfSweepTrenchRampPath(routine, left, x1).andThen(
+
+            adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25),
+            swerve.moveToPose().target(new Pose2d(2.8, 0.622, Rotation2d.kZero))
+                .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(15).flipY(left)
+                .finish(),
+            halfSweepTrenchRampPath(routine, left, x2)),
+            halfSweepTrenchRampPath(routine, left, x1).andThen(autoShooting(5)), secondSweep);
+        return shootOrNot.andThen(runPath);
+    }
+
+
+    /**
+    * Half Sweep Trench Ramp Path
+    */
+    public Command halfSweepTrenchRampPath(AutoRoutine routine, boolean left, DoubleSupplier x) {
+        return Commands.sequence(
             swerve.moveToPose().target(new Pose2d(5.7, 0.622, Rotation2d.kCCW_90deg))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish(),
             swerve.moveToPose()
-                .target(() -> new Pose2d(x1.getAsDouble(), 1.267, Rotation2d.kCCW_90deg))
+                .target(() -> new Pose2d(x.getAsDouble(), 1.267, Rotation2d.kCCW_90deg))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish().alongWith(intake.extendHopper(0.0)),
             swerve.moveToPose()
-                .target(() -> new Pose2d(x1.getAsDouble(),
+                .target(() -> new Pose2d(x.getAsDouble(),
                     (FieldConstants.fieldWidth / 2.0)
                         + Units.feetToMeters(feetPastCenter.getAsDouble()),
                     Rotation2d.kCCW_90deg))
@@ -388,7 +407,7 @@ public class AutoCommandFactory {
                 .finish()
                 .deadlineFor(intake.extendHopper(1.0)
                     .andThen(intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
-            swerve.moveToPose().target(() -> new Pose2d(x1.getAsDouble(), 2.4, Rotation2d.kZero))
+            swerve.moveToPose().target(() -> new Pose2d(x.getAsDouble(), 2.4, Rotation2d.kZero))
                 .maxSpeed(driveSpeed).translationTolerance(0.5).rotationTolerance(15).flipY(left)
                 .finish(),
             swerve.stop(),
@@ -396,8 +415,8 @@ public class AutoCommandFactory {
                 Constants.DashboardValues.delayDefault)),
             crossRampIntoZone(routine),
             swerve.moveToPose().target(shootPoseSupplier).maxSpeed(driveSpeed)
-                .translationTolerance(0.5).rotationTolerance(15).flipY(left).finish(),
-            swerve.emergencyStop(), autoShooting(10));
+                .translationTolerance(0.5).rotationTolerance(15).flipY(false).finish(),
+            swerve.emergencyStop(), autoShooting(5));
     }
 
     /**

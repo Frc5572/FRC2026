@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.localization;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
@@ -25,6 +25,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.math.geometry.Rectangle;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.swerve.Swerve;
@@ -116,7 +119,9 @@ public class RobotState {
             Logger.recordOutput("State/isOnBump", true);
             var diff = after.minus(before);
             diff = new Transform2d(diff.getX() * 0.6, diff.getY(), diff.getRotation());
-            visionAdjustedOdometry.resetPose(before.plus(diff));
+            if (RobotBase.isReal()) {
+                visionAdjustedOdometry.resetPose(before.plus(diff));
+            }
         } else {
             Logger.recordOutput("State/isOnBump", false);
         }
@@ -208,12 +213,12 @@ public class RobotState {
     }
 
     /** Add potentially asequent observation from camera */
-    public void addVisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
-        double translationStdDev, double rotationStdDev, double timestamp) {
-        Pose2d robotPose = cameraPose.plus(robotToCamera.inverse()).toPose2d();
+    public void addVisionObservation(VisionObservation observations) {
+        Pose2d robotPose =
+            observations.cameraPose().plus(observations.robotToCamera().inverse()).toPose2d();
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
-        visionAdjustedOdometry.addVisionMeasurement(robotPose, timestamp,
-            VecBuilder.fill(translationStdDev, translationStdDev, rotationStdDev));
+        visionAdjustedOdometry.addVisionMeasurement(robotPose, observations.timestamp(),
+            observations.getStdDev());
         Pose2d after = visionAdjustedOdometry.getEstimatedPosition();
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);
@@ -302,7 +307,8 @@ public class RobotState {
                         this.lastTimeMoved);
                     Logger.recordOutput("State/Camera/" + camera.name + "/timestamp",
                         pipelineResult.getTimestampSeconds());
-                    if (isStationary || FieldConstants.isOnBump(getGlobalPoseEstimate())) {
+                    if (isStationary || (RobotBase.isReal()
+                        && FieldConstants.isOnBump(getGlobalPoseEstimate()))) {
                         var estRobotPose2d = estRobotPose.toPose2d();
                         if (estRobotPose2d.getTranslation()
                             .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
@@ -335,8 +341,9 @@ public class RobotState {
                         Units.radiansToDegrees(transform.getRotation().getZ()));
                     return false;
                 }
-                addVisionObservation(cameraPose, robotToCamera_, translationStdDev, rotationStdDev,
-                    pipelineResult.getTimestampSeconds());
+                VisionObservation observations = new VisionObservation(cameraPose, robotToCamera_,
+                    translationStdDev, rotationStdDev, pipelineResult.getTimestampSeconds());
+                addVisionObservation(observations);
                 return true;
             }
         }
