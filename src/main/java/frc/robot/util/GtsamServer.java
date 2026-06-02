@@ -151,21 +151,21 @@ public class GtsamServer {
             return rawGtsamPose;
         }
 
-        double timestamp = poseTimestampSub.get();
-        if (timestamp > 0.0 && timestamp != lastPoseTimestamp) {
-            Transform2d targetCorrection = rawGtsamPose.minus(latestOdomPose);
-            smoothedCorrection = new Transform2d(
-                smoothedCorrection.getX()
-                    + (targetCorrection.getX() - smoothedCorrection.getX()) * poseSmoothingAlpha,
-                smoothedCorrection.getY()
-                    + (targetCorrection.getY() - smoothedCorrection.getY()) * poseSmoothingAlpha,
-                new Rotation2d(smoothedCorrection.getRotation().getRadians()
-                    + targetCorrection.getRotation().minus(smoothedCorrection.getRotation())
-                        .getRadians() * poseSmoothingAlpha));
-            lastPoseTimestamp = timestamp;
-        }
+        // double timestamp = poseTimestampSub.get();
+        // if (timestamp > 0.0 && timestamp != lastPoseTimestamp) {
+        // Transform2d targetCorrection = rawGtsamPose.minus(latestOdomPose);
+        // smoothedCorrection = new Transform2d(
+        // smoothedCorrection.getX()
+        // + (targetCorrection.getX() - smoothedCorrection.getX()) * poseSmoothingAlpha,
+        // smoothedCorrection.getY()
+        // + (targetCorrection.getY() - smoothedCorrection.getY()) * poseSmoothingAlpha,
+        // new Rotation2d(smoothedCorrection.getRotation().getRadians()
+        // + targetCorrection.getRotation().minus(smoothedCorrection.getRotation())
+        // .getRadians() * poseSmoothingAlpha));
+        // lastPoseTimestamp = timestamp;
+        // }
 
-        return latestOdomPose.plus(smoothedCorrection);
+        return latestOdomPose;// .plus(smoothedCorrection);
     }
 
     public void resetPose(Pose2d pose) {

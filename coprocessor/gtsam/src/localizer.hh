@@ -66,7 +66,7 @@ public:
         const size_t nextIndex = currentIndex_ + 1;
 
         auto odomNoise = Diagonal::Sigmas(
-            (gtsam::Vector(3) << 0.50, 0.50, 0.10).finished());
+            (gtsam::Vector(3) << 0.10, 0.10, 0.10).finished());
 
         newFactors.add(BetweenFactor<Pose2>(
             X(currentIndex_),
@@ -94,8 +94,8 @@ public:
 
         oldOdomPose_ = odomDelta;
 
-        std::cout << "ODOM key=" << currentIndex_
-                  << " pose=" << latestPose_ << "\n";
+        // std::cout << "ODOM key=" << currentIndex_
+        //           << " pose=" << latestPose_ << "\n";
 
         return latestPose_;
     }
@@ -117,6 +117,11 @@ public:
             cameraFieldPose,
             visionNoise));
 
+        if (!inited_)
+        {
+            inited_ = true;
+            resetPose(cameraFieldPose);
+        }
         try
         {
             isam_.update(newFactors, noNewValues);
@@ -131,14 +136,10 @@ public:
             return latestPose_;
         }
 
-        std::cout << "VISION key=" << currentIndex_
-                  << " measurement=" << cameraFieldPose
-                  << " pose=" << latestPose_ << "\n";
+        // std::cout << "VISION key=" << currentIndex_
+        //           << " measurement=" << cameraFieldPose
+        //           << " pose=" << latestPose_ << "\n";
 
-        if (!inited_)
-        {
-            inited_ = true;
-        }
         oldVisionPose_ = cameraFieldPose;
         return latestPose_;
     }
