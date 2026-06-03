@@ -145,7 +145,7 @@ public class GtsamServer {
     }
 
     public Pose2d getGtsamOptimization() {
-        Pose2d rawGtsamPose = new Pose2d(poseXSub.get(), poseYSub.get(),
+        Pose2d rawGtsamPose = new Pose2d(poseYSub.get(), -poseXSub.get(),
             new Rotation2d(Radians.of(poseThetaSub.get())));
         if (!hasLatestOdomPose) {
             return rawGtsamPose;
