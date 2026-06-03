@@ -2,6 +2,7 @@ package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Radians;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -98,46 +99,45 @@ public class GtsamServer {
 
     }
 
-    public void updateOdom(Pose2d pose) {
-        // Pose2d currentPose = pose.get();
+    public void updateOdom(Supplier<Pose2d> pose) {
+        Pose2d currentPose = pose.get();
         double now = Timer.getFPGATimestamp();
-        // latestOdomPose = currentPose;
-        // hasLatestOdomPose = true;
+        latestOdomPose = currentPose;
+        hasLatestOdomPose = true;
 
-        // if (!hasLastOdomPose) {
-        // lastOdomPose = currentPose;
-        // hasLastOdomPose = true;
-        // odomDxPub.set(0.0);
-        // odomDyPub.set(0.0);
-        // odomDthetaPub.set(0.0);
-        // odomTimestampPub.set(now);
-        // lastOdomPublishTime = now;
-        // return;
-        // }
+        if (!hasLastOdomPose) {
+            lastOdomPose = currentPose;
+            hasLastOdomPose = true;
+            odomDxPub.set(0.0);
+            odomDyPub.set(0.0);
+            odomDthetaPub.set(0.0);
+            odomTimestampPub.set(now);
+            lastOdomPublishTime = now;
+            return;
+        }
 
-        // Transform2d odomDelta = currentPose.minus(lastOdomPose);
-        // boolean movedEnough =
-        // Math.hypot(odomDelta.getX(), odomDelta.getY()) >= minOdomTranslationMeters
-        // || Math.abs(odomDelta.getRotation().getRadians()) >= minOdomRotationRadians;
-        // if (!movedEnough || now - lastOdomPublishTime < odomPublishPeriodSecs) {
-        // return;
-        // }
+        Transform2d odomDelta = currentPose.minus(lastOdomPose);
+        boolean movedEnough =
+            Math.hypot(odomDelta.getX(), odomDelta.getY()) >= minOdomTranslationMeters
+                || Math.abs(odomDelta.getRotation().getRadians()) >= minOdomRotationRadians;
+        if (!movedEnough || now - lastOdomPublishTime < odomPublishPeriodSecs) {
+            return;
+        }
 
-        // lastOdomPose = currentPose;
+        lastOdomPose = currentPose;
         lastOdomPublishTime = now;
-        Pose2 gtPose = new Pose2(pose);
-        odomDxPub.set(gtPose.getX());
-        odomDyPub.set(gtPose.getY());
-        odomDthetaPub.set(gtPose.getRot());
+
+        odomDxPub.set(odomDelta.getX());
+        odomDyPub.set(odomDelta.getY());
+        odomDthetaPub.set(odomDelta.getRotation().getRadians());
         odomTimestampPub.set(now);
     }
 
     public void updateVision(Pose2d pose, double timestamp, double translationStdDev,
         double rotationStdDev) {
-        Pose2 gtPose = new Pose2(pose);
-        visionXPub.set(gtPose.getX());
-        visionYPub.set(gtPose.getY());
-        visionThetaPub.set(gtPose.getRot());
+        visionXPub.set(pose.getX());
+        visionYPub.set(pose.getY());
+        visionThetaPub.set(pose.getRotation().getRadians());
         visionTimestampPub.set(timestamp);
         visiontranslationStdDev.set(translationStdDev);
         visionrotationStdDev.set(rotationStdDev);
@@ -145,12 +145,12 @@ public class GtsamServer {
     }
 
     public Pose2d getGtsamOptimization() {
-        double gtX = poseXSub.get();
-        double gtY = poseYSub.get();
-        Pose2d rawGtsamPose = new Pose2d(gtY, -gtX, new Rotation2d(Radians.of(poseThetaSub.get())));
+        Pose2d rawGtsamPose = new Pose2d(poseXSub.get(), poseYSub.get(),
+            new Rotation2d(Radians.of(poseThetaSub.get())));
         if (!hasLatestOdomPose) {
             return rawGtsamPose;
         }
+
         // double timestamp = poseTimestampSub.get();
         // if (timestamp > 0.0 && timestamp != lastPoseTimestamp) {
         // Transform2d targetCorrection = rawGtsamPose.minus(latestOdomPose);
@@ -164,20 +164,15 @@ public class GtsamServer {
         // .getRadians() * poseSmoothingAlpha));
         // lastPoseTimestamp = timestamp;
         // }
-        return latestOdomPose.plus(smoothedCorrection);
+
+        return latestOdomPose;// .plus(smoothedCorrection);
     }
-
-    // public Pose2d getGtsamOptimization() {
-
-    // return new Pose2d(-gtY, gtX, new Rotation2d(Radians.of(poseThetaSub.get())));
-    // }
 
     public void resetPose(Pose2d pose) {
         command.set(1);
-        Pose2 gtPose = new Pose2(pose);
-        commandXPub.set(gtPose.getX());
-        commandYPub.set(gtPose.getY());
-        commandThetaPub.set(gtPose.getRot());
+        commandXPub.set(pose.getX());
+        commandYPub.set(pose.getY());
+        commandThetaPub.set(pose.getRotation().getRadians());
         commandTimestampPub.set(Timer.getFPGATimestamp());
         while (!(0 == commandResp.get())) {
         }
@@ -191,8 +186,8 @@ public class GtsamServer {
 
     public void resetTranslation(Translation2d translation) {
         command.set(2);
-        commandXPub.set(translation.getY());
-        commandYPub.set(-translation.getX());
+        commandXPub.set(translation.getX());
+        commandYPub.set(translation.getY());
         commandTimestampPub.set(Timer.getFPGATimestamp());
         while (!(0 == commandResp.get())) {
         }

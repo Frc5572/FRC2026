@@ -71,7 +71,7 @@ public class RobotState {
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
         var before = getGlobalPoseEstimate();
         odomEst.update(gyroYaw.minus(gyroOffset), wheelPositions);
-        server.updateOdom(odomEst.getEstimatedPosition());
+        server.updateOdom(() -> odomEst.getEstimatedPosition());
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
             Logger.recordOutput("State/isOnBump", true);
