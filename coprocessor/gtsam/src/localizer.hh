@@ -94,8 +94,8 @@ public:
 
         oldOdomPose_ = odomDelta;
 
-        // std::cout << "ODOM key=" << currentIndex_
-        //           << " pose=" << latestPose_ << "\n";
+        std::cout << "ODOM key=" << currentIndex_
+                  << " pose=" << latestPose_ << "\n";
 
         return latestPose_;
     }
@@ -136,9 +136,9 @@ public:
             return latestPose_;
         }
 
-        // std::cout << "VISION key=" << currentIndex_
-        //           << " measurement=" << cameraFieldPose
-        //           << " pose=" << latestPose_ << "\n";
+        std::cout << "VISION key=" << currentIndex_
+                  << " measurement=" << cameraFieldPose
+                  << " pose=" << latestPose_ << "\n";
 
         oldVisionPose_ = cameraFieldPose;
         return latestPose_;
