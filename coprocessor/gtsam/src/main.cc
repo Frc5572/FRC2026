@@ -1,6 +1,7 @@
 #include "localizer.hh"
 #include "server.hh"
 #include <gtsam/geometry/Pose2.h>
+#include <iostream>
 
 int main()
 {
@@ -42,26 +43,27 @@ int main()
 
         nt.pubInited(localizer.isInited());
 
-        switch (command)
-        {
-        case 0:
-            break;
-        case 1:
-            nt.respondCommand(1);
-            localizer.resetPose(nt.getCommandPose());
-            nt.respondCommand(0);
-            break;
-        case 2:
-            nt.respondCommand(1);
-            localizer.resetTranslation(nt.getCommandPose().x(), nt.getCommandPose().y());
-            nt.respondCommand(0);
-            break;
-        default:
-            nt.respondCommand(0);
-            break;
-        }
+        // switch (command)
+        // {
+        // case 0:
+        //     break;
+        // case 1:
+        //     nt.respondCommand(1);
+        //     localizer.resetPose(nt.getCommandPose());
+        //     nt.respondCommand(0);
+        //     break;
+        // case 2:
+        //     nt.respondCommand(1);
+        //     localizer.resetTranslation(nt.getCommandPose().x(), nt.getCommandPose().y());
+        //     nt.respondCommand(0);
+        //     break;
+        // default:
+        //     nt.respondCommand(0);
+        //     break;
+        // }
 
         nt.publishOptimizedPose(pose, poseTimestamp);
+        std::cout << "Pose: " << pose << "\n";
 
         // std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
