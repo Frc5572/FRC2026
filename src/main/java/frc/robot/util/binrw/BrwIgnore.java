@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
  *     &#64;Binrw
  *     public class Sensor {
  *         public double voltage;
- *         @BrwIgnore
+ *         &#64;BrwIgnore
  *         public double debugValue;
  *
  *         public Sensor(double voltage) {} // constructor does not take debugValue
