@@ -6,10 +6,11 @@ import java.util.TreeMap;
 /**
  * Bilinear interpolation over a sparse 2D grid.
  *
- * <p>Entries are stored at (key1, key2) grid points. Missing grid points are handled:
- * a query that lacks one surrounding axis row degrades to 1D interpolation along the other axis,
- * and queries outside the populated region clamp to the nearest boundary value. Returns empty only
- * when the map contains no data at all.
+ * <p>
+ * Entries are stored at (key1, key2) grid points. Missing grid points are handled: a query that
+ * lacks one surrounding axis row degrades to 1D interpolation along the other axis, and queries
+ * outside the populated region clamp to the nearest boundary value. Returns empty only when the map
+ * contains no data at all.
  *
  * @param <T> value type; arithmetic is defined by a {@link MulAdd} instance
  */
@@ -31,7 +32,9 @@ public class BilinearMap<T> {
      * when the query falls outside it.
      */
     public Optional<T> get(double key1, double key2) {
-        if (data.isEmpty()) return Optional.empty();
+        if (data.isEmpty()) {
+            return Optional.empty();
+        }
 
         var lo1 = data.floorEntry(key1);
         var hi1 = data.ceilingEntry(key1);
@@ -39,22 +42,38 @@ public class BilinearMap<T> {
         Optional<T> atLo = lo1 == null ? Optional.empty() : interp1D(lo1.getValue(), key2);
         Optional<T> atHi = hi1 == null ? Optional.empty() : interp1D(hi1.getValue(), key2);
 
-        if (atLo.isEmpty()) return atHi;
-        if (atHi.isEmpty()) return atLo;
+        if (atLo.isEmpty()) {
+            return atHi;
+        }
+        if (atHi.isEmpty()) {
+            return atLo;
+        }
 
-        double d0 = lo1.getKey(), d1 = hi1.getKey();
-        if (d0 == d1) return atLo;
+        double d0 = lo1.getKey();
+        double d1 = hi1.getKey();
+        if (d0 == d1) {
+            return atLo;
+        }
         return Optional.of(lerp(atLo.get(), atHi.get(), (key1 - d0) / (d1 - d0)));
     }
 
     private Optional<T> interp1D(TreeMap<Double, T> row, double key) {
-        if (row.isEmpty()) return Optional.empty();
+        if (row.isEmpty()) {
+            return Optional.empty();
+        }
         var lo = row.floorEntry(key);
         var hi = row.ceilingEntry(key);
-        if (lo == null) return Optional.of(hi.getValue());
-        if (hi == null) return Optional.of(lo.getValue());
-        double k0 = lo.getKey(), k1 = hi.getKey();
-        if (k0 == k1) return Optional.of(lo.getValue());
+        if (lo == null) {
+            return Optional.of(hi.getValue());
+        }
+        if (hi == null) {
+            return Optional.of(lo.getValue());
+        }
+        double k0 = lo.getKey();
+        double k1 = hi.getKey();
+        if (k0 == k1) {
+            return Optional.of(lo.getValue());
+        }
         return Optional.of(lerp(lo.getValue(), hi.getValue(), (key - k0) / (k1 - k0)));
     }
 
