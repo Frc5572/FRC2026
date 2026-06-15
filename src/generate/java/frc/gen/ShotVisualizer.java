@@ -69,9 +69,12 @@ public class ShotVisualizer {
         StringBuilder traj = new StringBuilder("[");
         boolean first = true;
         for (Map.Entry<Double, double[]> e : byAngle.entrySet()) {
-            double a = e.getKey(), vLo = e.getValue()[0], vHi = e.getValue()[1];
-            if (!first)
+            double a = e.getKey();
+            double vLo = e.getValue()[0];
+            double vHi = e.getValue()[1];
+            if (!first) {
                 traj.append(",");
+            }
             double xMax = distM + hoopRM + 0.5;
             traj.append("{\"t\":\"min\",\"pts\":").append(trajJson(vLo, a, rvMs, bsRadS, xMax))
                 .append("}");
@@ -85,8 +88,9 @@ public class ShotVisualizer {
         StringBuilder vr = new StringBuilder("[");
         first = true;
         for (Map.Entry<Double, double[]> e : byAngle.entrySet()) {
-            if (!first)
+            if (!first) {
                 vr.append(",");
+            }
             vr.append(String.format(Locale.US, "{\"a\":%.3f,\"lo\":%.4f,\"hi\":%.4f}",
                 Math.toDegrees(e.getKey()), e.getValue()[0], e.getValue()[1]));
             first = false;
@@ -118,10 +122,12 @@ public class ShotVisualizer {
         sb.append(String.format(Locale.US, "[%.3f,%.3f]", s.getX(), s.getY()));
         for (double t = TRAJ_DT; t < MAX_T; t += TRAJ_DT) {
             s.step(TRAJ_DT);
-            double x = s.getX(), y = s.getY();
+            double x = s.getX();
+            double y = s.getY();
             sb.append(String.format(Locale.US, ",[%.3f,%.3f]", x, y));
-            if (x > maxX || y < -1.5)
+            if (x > maxX || y < -1.5) {
                 break;
+            }
         }
         return sb.append("]").toString();
     }
@@ -215,13 +221,23 @@ public class ShotVisualizer {
               ctx.globalAlpha=1;
 
               // Dashed reference line at hoop height
-              ctx.save();ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
-              ctx.beginPath();ctx.moveTo(xf.wx(0),xf.wy(HOOP.height));ctx.lineTo(xf.wx(xMax),xf.wy(HOOP.height));ctx.stroke();
+              ctx.save();
+              ctx.setLineDash([6,5]);
+              ctx.strokeStyle='rgba(255,255,255,0.15)';
+              ctx.lineWidth=1;
+              ctx.beginPath();
+              ctx.moveTo(xf.wx(0),xf.wy(HOOP.height));
+              ctx.lineTo(xf.wx(xMax),xf.wy(HOOP.height));
+              ctx.stroke();
               ctx.restore();
 
               // Vertical reference line at hoop distance
-              ctx.strokeStyle='rgba(200,50,50,0.5)';ctx.lineWidth=1;
-              ctx.beginPath();ctx.moveTo(xf.wx(HOOP.dist),xf.wy(yMin));ctx.lineTo(xf.wx(HOOP.dist),xf.wy(yMax));ctx.stroke();
+              ctx.strokeStyle='rgba(200,50,50,0.5)';
+              ctx.lineWidth=1;
+              ctx.beginPath();
+              ctx.moveTo(xf.wx(HOOP.dist),xf.wy(yMin));
+              ctx.lineTo(xf.wx(HOOP.dist),xf.wy(yMax));
+              ctx.stroke();
 
               // Optimal trajectory
               ctx.strokeStyle='#4488ff';ctx.lineWidth=2;
@@ -244,20 +260,33 @@ public class ShotVisualizer {
               ctx.fillStyle='#0a0e1a';ctx.fillRect(0,0,c.width,c.height);
 
               let aMin=Infinity,aMax=-Infinity,vMin=Infinity,vMax=-Infinity;
-              for(const{a,lo,hi}of VR){aMin=Math.min(aMin,a);aMax=Math.max(aMax,a);vMin=Math.min(vMin,lo);vMax=Math.max(vMax,hi);}
+              for(const{a,lo,hi}of VR){
+                aMin=Math.min(aMin,a);
+                aMax=Math.max(aMax,a);
+                vMin=Math.min(vMin,lo);
+                vMax=Math.max(vMax,hi);
+              }
               const ap=(aMax-aMin)*0.12,vp=(vMax-vMin)*0.18;
               const xf=xform(aMin-ap,aMax+ap,vMin-vp,vMax+vp,52,12,28,42,c.width,c.height);
               grid(ctx,xf,5,0.5);
 
               // upper boundary (green): max speed per angle
               ctx.strokeStyle='#44ff88';ctx.lineWidth=2;ctx.globalAlpha=0.9;
-              ctx.beginPath();VR.forEach(({a,hi},i)=>i?ctx.lineTo(xf.wx(a),xf.wy(hi)):ctx.moveTo(xf.wx(a),xf.wy(hi)));ctx.stroke();
+              ctx.beginPath();
+              VR.forEach(({a,hi},i)=>i?ctx.lineTo(xf.wx(a),xf.wy(hi)):ctx.moveTo(xf.wx(a),xf.wy(hi)));
+              ctx.stroke();
               ctx.fillStyle='#44ff88';
-              for(const{a,hi}of VR){ctx.beginPath();ctx.arc(xf.wx(a),xf.wy(hi),2.5,0,Math.PI*2);ctx.fill();}
+              for(const{a,hi}of VR){
+                ctx.beginPath();
+                ctx.arc(xf.wx(a),xf.wy(hi),2.5,0,Math.PI*2);
+                ctx.fill();
+              }
 
               // lower boundary (red): min speed per angle
               ctx.strokeStyle='#ff4444';ctx.lineWidth=2;
-              ctx.beginPath();VR.forEach(({a,lo},i)=>i?ctx.lineTo(xf.wx(a),xf.wy(lo)):ctx.moveTo(xf.wx(a),xf.wy(lo)));ctx.stroke();
+              ctx.beginPath();
+              VR.forEach(({a,lo},i)=>i?ctx.lineTo(xf.wx(a),xf.wy(lo)):ctx.moveTo(xf.wx(a),xf.wy(lo)));
+              ctx.stroke();
               ctx.fillStyle='#ff4444';
               for(const{a,lo}of VR){ctx.beginPath();ctx.arc(xf.wx(a),xf.wy(lo),2.5,0,Math.PI*2);ctx.fill();}
 
@@ -278,8 +307,8 @@ public class ShotVisualizer {
               const f2=n=>n.toFixed(2),f1=n=>n.toFixed(1);
               document.getElementById('info').innerHTML=
                 `<div class="ol">Optimal: ${f1(OPT.angle)}° @ ${f2(OPT.speed)} m/s</div>`+
-                `<div class="sl">Speed: −${f2(OPT.spdM)}+${f2(OPT.spdP)} m/s</div>`+
-                `<div class="al">Angle: −${f1(OPT.angM)}°+${f1(OPT.angP)}°  Optimal TOF: ${f2(OPT.tof)} s</div>`;
+                `<div class="sl">Speed: -${f2(OPT.spdM)}+${f2(OPT.spdP)} m/s</div>`+
+                `<div class="al">Angle: -${f1(OPT.angM)}°+${f1(OPT.angP)}°  Optimal TOF: ${f2(OPT.tof)} s</div>`;
             }
 
             function render(){drawTraj();drawRegion();fillInfo();}

@@ -90,7 +90,8 @@ public class SimulatedShot {
      * </ul>
      */
     private double[] deriv(double[] s) {
-        double pvx = s[2], pvy = s[3];
+        double pvx = s[2];
+        double pvy = s[3];
         double speed = Math.sqrt(pvx * pvx + pvy * pvy);
 
         double kDrag = 0.5 * AIR_DENSITY * DRAG_COEFF * BALL_AREA_M2 * speed / BALL_MASS_KG;

@@ -33,7 +33,8 @@ public class HoopSolver {
 
     private final double hoopHeight; // m above shooter
     private final double hoopRadius; // m — hoop opening radius
-    private final double lipHeight; // m — additional clearance above hoopHeight required at the near rim
+    private final double lipHeight; // m — additional clearance above hoopHeight required at the
+                                    // near rim
     private final double backspin; // rad/s — positive = backspin on a forward shot
 
     /**
@@ -88,8 +89,12 @@ public class HoopSolver {
             }
 
             // past the far rim and below hoop height; missed
-            if (x > distanceM + hoopRadius && y < hoopHeight) return -1;
-            if (y < -0.5) return -1;
+            if (x > distanceM + hoopRadius && y < hoopHeight) {
+                return -1;
+            }
+            if (y < -0.5) {
+                return -1;
+            }
 
             prevX = x;
             prevY = y;
@@ -141,8 +146,8 @@ public class HoopSolver {
                 double angle = angleMinRad + (angleMaxRad - angleMinRad) * ai / (angleSteps - 1);
                 double tof = simulate(distM, rvMs, v, angle);
                 if (tof >= 0) {
-                    valid.add(new ShotParams(MetersPerSecond.of(v), Radians.of(angle),
-                        Seconds.of(tof)));
+                    valid.add(
+                        new ShotParams(MetersPerSecond.of(v), Radians.of(angle), Seconds.of(tof)));
                 }
             }
         }
@@ -150,15 +155,17 @@ public class HoopSolver {
     }
 
     /** The optimal shot and the semi-axes of the largest inscribed ellipse in the valid region. */
-    public record OptimalResult(ShotParams shot, Angle angleSemiAxis, LinearVelocity speedSemiAxis) {
+    public record OptimalResult(ShotParams shot, Angle angleSemiAxis,
+        LinearVelocity speedSemiAxis) {
     }
 
     /**
      * From a list of valid shots, returns the shot whose centered, axis-aligned ellipse inscribed
      * in the valid (angle, speed) region has the largest area.
      *
-     * <p>For each candidate center angle, the center speed is the midpoint of the valid speed range
-     * at that angle. The algorithm then tries every discrete angle step as the ellipse semi-axis
+     * <p>
+     * For each candidate center angle, the center speed is the midpoint of the valid speed range at
+     * that angle. The algorithm then tries every discrete angle step as the ellipse semi-axis
      * {@code a}, and for each {@code a} computes the largest {@code b} (speed semi-axis) such that
      * the ellipse {@code ((α−α₀)/a)²+((v−v₀)/b)²≤1} is fully enclosed by the sampled valid region.
      * The pair {@code (a, b)} that maximises {@code a·b} is returned.
@@ -170,7 +177,9 @@ public class HoopSolver {
      */
     public Optional<OptimalResult> findOptimal(List<ShotParams> validShots, Distance distance,
         LinearVelocity radialVelocity) {
-        if (validShots.isEmpty()) return Optional.empty();
+        if (validShots.isEmpty()) {
+            return Optional.empty();
+        }
 
         double distM = distance.in(Meters);
         double rvMs = radialVelocity.in(MetersPerSecond);
@@ -180,17 +189,18 @@ public class HoopSolver {
         for (ShotParams sp : validShots) {
             double angle = sp.exitAngle().in(Radians);
             double v = sp.exitVelocity().in(MetersPerSecond);
-            double[] r = byAngle.computeIfAbsent(angle, k -> new double[]{v, v});
+            double[] r = byAngle.computeIfAbsent(angle, k -> new double[] {v, v});
             r[0] = Math.min(r[0], v);
             r[1] = Math.max(r[1], v);
         }
 
         List<Double> angles = new ArrayList<>(byAngle.keySet());
-        int N = angles.size();
+        int _N = angles.size();
 
         // Global hard limits: ellipse must not extend outside the overall valid region.
         double globalAngleMin = angles.get(0);
-        double globalVMin = Double.MAX_VALUE, globalVMax = -Double.MAX_VALUE;
+        double globalVMin = Double.MAX_VALUE;
+        double globalVMax = -Double.MAX_VALUE;
         for (double[] r : byAngle.values()) {
             globalVMin = Math.min(globalVMin, r[0]);
             globalVMax = Math.max(globalVMax, r[1]);
@@ -199,31 +209,37 @@ public class HoopSolver {
         double bestArea = -1;
         OptimalResult best = null;
 
-        for (int ci = 0; ci < N; ci++) {
+        for (int ci = 0; ci < _N; ci++) {
             double alpha0 = angles.get(ci);
             double[] r0 = byAngle.get(alpha0);
             double v0 = (r0[0] + r0[1]) / 2.0;
             // b is bounded by the local speed range AND the global speed limits.
             double maxB = Math.min(v0 - globalVMin, globalVMax - v0);
             double centerB = Math.min((r0[1] - r0[0]) / 2.0, maxB);
-            if (centerB <= 0) continue;
+            if (centerB <= 0) {
+                continue;
+            }
 
             // Try each possible angle semi-axis 'a', defined by extending to grid point ri.
-            for (int ri = ci + 1; ri < N; ri++) {
+            for (int ri = ci + 1; ri < _N; ri++) {
                 double a = angles.get(ri) - alpha0;
 
                 // Hard limit: the left edge of the symmetric ellipse must stay within bounds.
                 // Right edge is angles[ri] <= globalAngleMax by construction.
-                if (alpha0 - a < globalAngleMin) break;
+                if (alpha0 - a < globalAngleMin) {
+                    break;
+                }
 
                 // Compute the largest b that keeps the ellipse inside the valid region at all
                 // interior grid points (strictly inside: |dalpha| < a).
                 double b = centerB;
                 boolean valid = true;
 
-                for (int k = 0; k < N; k++) {
+                for (int k = 0; k < _N; k++) {
                     double dalpha = angles.get(k) - alpha0;
-                    if (Math.abs(dalpha) >= a) continue; // at or outside the ellipse edge
+                    if (Math.abs(dalpha) >= a) {
+                        continue;
+                    } // at or outside the ellipse edge
 
                     double[] rk = byAngle.get(angles.get(k));
                     if (v0 < rk[0] || v0 > rk[1]) {
@@ -238,17 +254,22 @@ public class HoopSolver {
                     b = Math.min(b, clearance / sinTheta);
                 }
 
-                if (!valid) break;
-                if (b <= 0) continue;
+                if (!valid) {
+                    break;
+                }
+                if (b <= 0) {
+                    continue;
+                }
 
                 double area = a * b;
                 if (area > bestArea) {
                     bestArea = area;
                     double tof = simulate(distM, rvMs, v0, alpha0);
-                    best = new OptimalResult(
-                        new ShotParams(MetersPerSecond.of(v0), Radians.of(alpha0),
-                            Seconds.of(Math.max(0, tof))),
-                        Radians.of(a), MetersPerSecond.of(b));
+                    best =
+                        new OptimalResult(
+                            new ShotParams(MetersPerSecond.of(v0), Radians.of(alpha0),
+                                Seconds.of(Math.max(0, tof))),
+                            Radians.of(a), MetersPerSecond.of(b));
                 }
             }
         }

@@ -28,8 +28,6 @@ public class GenerateLUTs {
 
     /**
      * Entrypoint for generateLUTs gradle task
-     *
-     * @throws IOException
      */
     public static void main(String[] argv) throws IOException {
         Distance hubHeight =
