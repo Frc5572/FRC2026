@@ -32,10 +32,9 @@ public class HoopSolver {
     private static final double MAX_TIME = 5.0; // bail-out (s)
 
     private final double hoopHeight; // m above shooter
-    private final double hoopRadius; // m — hoop opening radius
-    private final double lipHeight; // m — additional clearance above hoopHeight required at the
-                                    // near rim
-    private final double backspin; // rad/s — positive = backspin on a forward shot
+    private final double hoopRadius; // m - hoop opening radius
+    private final double lipHeight; // m - additional clearance above hoopHeight for rim
+    private final double backspin; // rad/s - positive = backspin on a forward shot
 
     /**
      * @param hoopHeight vertical distance from shooter to hoop center
