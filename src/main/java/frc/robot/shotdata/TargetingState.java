@@ -8,7 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.FieldConstants;
-import frc.robot.RobotState;
+import frc.robot.localization.RobotState;
 import frc.robot.util.AllianceFlipUtil;
 
 /** Computes and stores the current targeting state for the robot's shooter. */
@@ -20,9 +20,9 @@ public class TargetingState {
     /**
      * Creates a new TargetingState.
      *
-     * @param drivetrainState reference to the robot's state estimator, used for pose and
-     *                        turret position in the field frame
-     * @param shotData        shot lookup table used to determine flywheel speed and hood angle
+     * @param drivetrainState reference to the robot's state estimator, used for pose and turret
+     *        position in the field frame
+     * @param shotData shot lookup table used to determine flywheel speed and hood angle
      */
     public TargetingState(RobotState drivetrainState, ShotData shotData) {
         this.drivetrainState = drivetrainState;
@@ -92,16 +92,16 @@ public class TargetingState {
     /**
      * Gets the current horizontal/heading trim.
      *
-     * @return trimLeft in degrees; positive values rotate the turret CCW relative
-     *         to the computed heading
+     * @return trimLeft in degrees; positive values rotate the turret CCW relative to the computed
+     *         heading
      */
     public double getTrimLeft() {
         return this.trimLeft;
     }
 
     /**
-     * Recomputes the current targeting solution based on the latest robot state,
-     * trims, and current flywheel speed.
+     * Recomputes the current targeting solution based on the latest robot state, trims, and current
+     * flywheel speed.
      */
     public void updateTargeting() {
         updateShootingTarget();
@@ -191,8 +191,9 @@ public class TargetingState {
     /**
      * Updates the currently measured flywheel speed used for targeting calculations.
      *
-     * <p>This value is used, for example, to decide whether to perform motion
-     * compensation and whether to trust the current shot solution.
+     * <p>
+     * This value is used, for example, to decide whether to perform motion compensation and whether
+     * to trust the current shot solution.
      *
      * @param flywheelSpeed current flywheel speed in rotations per second (RPS)
      */
