@@ -63,6 +63,7 @@ import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.tunable.ShotDataHelper;
+import frc.robot.util.tunable.ShotDataHelperTunable;
 import frc.robot.viz.RobotViz;
 
 
@@ -323,14 +324,15 @@ public final class RobotContainer {
         }));
     }
 
-    private ShotDataHelper helper = new ShotDataHelper();
+    private ShotDataHelperTunable helper =
+        new ShotDataHelperTunable("ShotDataHelper", new ShotDataHelper());
 
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
         tuner.rightTrigger()
-            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
+            .whileTrue(shooter.shoot(() -> helper.get().flywheelSpeed)
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.get().hoodAngle))))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         boolean[] firstShotFlag = {false};
         double[] firstShot = {0.0};
@@ -357,8 +359,8 @@ public final class RobotContainer {
 
     private void setupPit() {
         pit.rightTrigger()
-            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
+            .whileTrue(shooter.shoot(() -> helper.get().flywheelSpeed)
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.get().hoodAngle))))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         pit.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 1.0));
         pit.a().whileTrue(shooter.characterization()).onFalse(shooter.shoot(0));
@@ -401,6 +403,9 @@ public final class RobotContainer {
         }
         viz.periodic();
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
+
+        helper.ifDirty(_x -> {
+        });
 
         Logger.recordOutput("test",
             AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());

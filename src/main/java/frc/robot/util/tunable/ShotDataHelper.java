@@ -1,10 +1,8 @@
 package frc.robot.util.tunable;
 
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTableInstance;
-
 /** Utility tunable for testing out different shot parameters. */
-public class ShotDataHelper implements Tunable {
+@Tunable
+public class ShotDataHelper {
 
     /** Hood angle in degrees */
     public double hoodAngle = 5.0;
@@ -13,14 +11,9 @@ public class ShotDataHelper implements Tunable {
     /** Distance from target in feet */
     public double distanceFromTarget = 10.0;
 
-    private final DoublePublisher timeLastGenerated;
-
     /** Create new helper. */
     public ShotDataHelper() {
-        var nt = NetworkTableInstance.getDefault();
-        timeLastGenerated = nt.getDoubleTopic("/ShotDataHelper/TimeLastGenerated").publish();
-        Tunable.setupTunable("/ShotDataHelper", this, ShotDataHelper.class, () -> {
-        });
+
     }
 
 }

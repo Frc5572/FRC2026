@@ -8,7 +8,8 @@ import frc.robot.util.typestate.TypeStateBuilder;
 
 /** Per-module constants */
 @NullMarked
-public class ModuleConstants implements Tunable {
+@Tunable
+public class ModuleConstants {
 
     /** Constants for vendor swerve modules */
     public static enum ModuleKind {
