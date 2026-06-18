@@ -397,8 +397,7 @@ public class AutoCommandFactory {
         return Commands.sequence(Commands.waitSeconds(delayTime),
             CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood)
                 .alongWith(intake.jerkIntake(),
-                    turret.goToAngleFieldRelative(
-                        () -> targetingState.getDesiredTurretHeadingFieldRelative()))
+                    turret.goToAngleFieldRelative(() -> targetingState.getAimAtHubRotation()))
                 .withTimeout(shootingTime))
             .andThen(intake.retractHopper(1));
     }

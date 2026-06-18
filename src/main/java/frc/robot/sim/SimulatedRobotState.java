@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.TimedRobot;
+import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
 import frc.robot.subsystems.indexer.IndexerSim;
@@ -36,10 +37,12 @@ public class SimulatedRobotState {
     public final IndexerSim indexer;
     public final ClimberSim climber;
     public final VisionSim visionSim;
+    public final ShotData shotData;
     // Turret, intake, and hood state would go here too.
 
     /** Create new robot simulation */
-    public SimulatedRobotState(Pose2d initialPose) {
+    public SimulatedRobotState(Pose2d initialPose, ShotData shotData) {
+        this.shotData = shotData;
         this.random = new Random(5572);
         this.swerveDrive = new SwerveSim(initialPose);
         this.turret = new TurretSim(random);
@@ -79,7 +82,7 @@ public class SimulatedRobotState {
                 var speeds =
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
 
-                double exitVelocity = 5.0;
+                double exitVelocity = speedRotationsPerSecond / shotData.linearParameter;
 
                 double vert = Math.sin(effectiveHoodAngle) * exitVelocity;
                 double horiz = Math.cos(effectiveHoodAngle) * exitVelocity;

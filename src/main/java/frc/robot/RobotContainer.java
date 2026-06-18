@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.commands.WaitSupplierCommand;
 import frc.robot.shotdata.ShotData;
+import frc.robot.shotdata.ShotDataTunable;
 import frc.robot.shotdata.TargetingState;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
@@ -103,6 +104,7 @@ public final class RobotContainer {
     private final FieldObject2d autoStoppingPoint = field.getObject("Auto End Point");
 
     private final TargetingState targetingState;
+    private final ShotDataTunable shotData;
 
     /**
      * Robot Container
@@ -110,7 +112,7 @@ public final class RobotContainer {
      * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
-        ShotData shotData = new ShotData();
+        shotData = new ShotDataTunable("ShotTuner", new ShotData());
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -126,7 +128,8 @@ public final class RobotContainer {
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
                 sim = new SimulatedRobotState(
-                    new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
+                    new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg),
+                    shotData.get());
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
                     () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),
@@ -165,7 +168,7 @@ public final class RobotContainer {
 
                 break;
         }
-        targetingState = new TargetingState(swerve.state, shotData);
+        targetingState = new TargetingState(swerve.state, shotData.get());
         switch (runtimeType) {
             case kReal:
                 shooter = new Shooter(new ShooterReal(), targetingState);
@@ -222,8 +225,8 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(turret
-            .goToAngleFieldRelative(() -> targetingState.getDesiredTurretHeadingFieldRelative()));
+        turret.setDefaultCommand(
+            turret.goToAngleFieldRelative(() -> targetingState.getAimAtHubRotation()));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
@@ -268,6 +271,7 @@ public final class RobotContainer {
         driver.rightTrigger()
             .whileTrue(Commands.parallel(
                 CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood),
+                turret.goToAngleFieldRelative(() -> targetingState.getAimForShootingRotation()),
                 swerve.driveUserRelative(TeleopControls.teleopControls(
                     () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
                     () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
@@ -405,6 +409,8 @@ public final class RobotContainer {
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
 
         helper.ifDirty(_x -> {
+        });
+        shotData.ifDirty(_x -> {
         });
 
         Logger.recordOutput("test",

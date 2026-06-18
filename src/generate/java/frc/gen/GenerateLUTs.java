@@ -67,7 +67,12 @@ public class GenerateLUTs {
                     var params = optimalShot.get().shot();
                     lock.lock();
                     entries.add(new ShotEntry(targetDistance, radialVelocity, params.exitAngle(),
-                        params.exitVelocity(), params.tof()));
+                        params.exitAngle().minus(optimalShot.get().angleSemiAxis()),
+                        params.exitAngle().plus(optimalShot.get().angleSemiAxis()),
+                        params.exitVelocity(),
+                        params.exitVelocity().minus(optimalShot.get().speedSemiAxis().times(0.5)),
+                        params.exitVelocity().plus(optimalShot.get().speedSemiAxis().times(0.5)),
+                        params.tof()));
                     lock.unlock();
                 }
             });

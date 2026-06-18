@@ -6,7 +6,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.localization.RobotState;
 import frc.robot.util.AllianceFlipUtil;
@@ -63,7 +63,8 @@ public class TargetingState {
     private double desiredFlywheelSpeed = 0.0;
     private double desiredHoodAngleDeg = 0.0;
     private boolean okayToShoot = false;
-    private Rotation2d desiredTurretHeadingFieldRelative = Rotation2d.kZero;
+    private Rotation2d aimAtHubRotation = Rotation2d.kZero;
+    private Rotation2d aimForShootingRotation = Rotation2d.kZero;
     private double currentFlywheelSpeed;
     private double trimUp = 0.0;
     private double trimLeft = 0.0;
@@ -106,50 +107,66 @@ public class TargetingState {
     public void updateTargeting() {
         updateShootingTarget();
 
-        Translation2d adjustedTarget = shootingTarget;
-        if (currentFlywheelSpeed > 10.0) {
-            // for (int i = 0; i < 5; i++) {
-            // double distance =
-            // adjustedTarget.getDistance(getTurretCenterFieldFrame().getTranslation())
-            // + Units.feetToMeters(trimUp);
-            // var parameters = targetIsGround
-            // ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
-            // : ShotData.getShotParameters(distance, currentFlywheelSpeed, false);
-            // double tof = parameters.timeOfFlight();
-            // var forward = getFieldRelativeSpeeds().times(tof);
-            // adjustedTarget = shootingTarget
-            // .minus(new Translation2d(forward.vxMetersPerSecond, forward.vyMetersPerSecond));
-            // }
+        Pose2d robotPose = drivetrainState.getGlobalPoseEstimate();
+        Translation2d shooterOffset =
+            Constants.Vision.turretCenter.getTranslation().toTranslation2d();
+
+        okayToShoot = true;
+        var motion = RadialVelocityUtil.getDistanceRadialTangentialVector(
+            drivetrainState.getFieldRelativeSpeeds(), robotPose, shooterOffset, shootingTarget);
+
+        Logger.recordOutput("TargetingState/motion/distanceMeters", motion.distanceMeters());
+        Logger.recordOutput("TargetingState/motion/radialVelocityMetersPerSecond",
+            motion.radialVelocityMetersPerSecond());
+        Logger.recordOutput("TargetingState/motion/tangentialVelocityField",
+            motion.tangentialVelocityField());
+
+        var parameters_ = shotData.getShotEntry(Meters.of(motion.distanceMeters()),
+            MetersPerSecond.of(motion.radialVelocityMetersPerSecond()));
+
+        Logger.recordOutput("TargetingState/hasParameters", parameters_.isPresent());
+        Logger.recordOutput("TargetingState/currentFlywheelSpeed", currentFlywheelSpeed);
+
+        Translation2d shooterPosField =
+            robotPose.getTranslation().plus(shooterOffset.rotateBy(robotPose.getRotation()));
+        aimAtHubRotation = shootingTarget.minus(shooterPosField).getAngle();
+
+        if (parameters_.isPresent()) {
+            var parameters = parameters_.get();
+
+            Logger.recordOutput("TargetingState/parameters/flywheelSpeedRps",
+                parameters.flywheelSpeedRps());
+            Logger.recordOutput("TargetingState/parameters/minFlywheelSpeed",
+                parameters.minFlywheelSpeed());
+            Logger.recordOutput("TargetingState/parameters/maxFlywheelSpeed",
+                parameters.maxFlywheelSpeed());
+
+            Logger.recordOutput("TargetingState/parameters/hoodAngle", parameters.hoodAngle());
+            Logger.recordOutput("TargetingState/parameters/minHoodAngle",
+                parameters.minHoodAngle());
+            Logger.recordOutput("TargetingState/parameters/maxHoodAngle",
+                parameters.maxHoodAngle());
+
+            Logger.recordOutput("TargetingState/parameters/tof", parameters.tof());
+
+            double tof = parameters.tof();
+            Translation2d aimOffset = motion.tangentialVelocityField().times(tof);
+            Translation2d futureAimPoint = shootingTarget.plus(aimOffset);
+
+            Logger.recordOutput("TargetingState/parameters/futureAimPoint", futureAimPoint);
+
+            desiredFlywheelSpeed = parameters.flywheelSpeedRps();
+            desiredHoodAngleDeg = parameters.hoodAngle();
+
+            aimForShootingRotation = futureAimPoint.minus(shooterPosField).getAngle();
+            if (currentFlywheelSpeed < parameters.minFlywheelSpeed()) {
+                okayToShoot = false;
+            }
         } else {
-            adjustedTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+            okayToShoot = false;
         }
 
-        Logger.recordOutput("State/AdjustedShootingTarget", adjustedTarget);
-        double distance =
-            adjustedTarget.getDistance(drivetrainState.getTurretCenterFieldFrame().getTranslation())
-                + Units.feetToMeters(trimUp);
-        Logger.recordOutput("State/distance", distance);
-        var parameters = shotData.getShotEntry(Meters.of(distance), MetersPerSecond.of(0));
-
-        if (parameters.isPresent()) {
-            var parameters_ = parameters.get();
-            this.desiredFlywheelSpeed = parameters_.flywheelSpeedRps();
-            this.desiredHoodAngleDeg = parameters_.hoodAngle();
-        }
-        this.okayToShoot = parameters.isPresent();
-
-        this.desiredTurretHeadingFieldRelative =
-            adjustedTarget.minus(drivetrainState.getTurretCenterFieldFrame().getTranslation())
-                .getAngle().plus(Rotation2d.fromDegrees(trimLeft));
-        Logger.recordOutput("State/desiredTurretHeading", this.desiredTurretHeadingFieldRelative);
-        Logger.recordOutput("State/Trim/TrimUp", trimUp);
-        Logger.recordOutput("State/Trim/TrimLeft", trimLeft);
-
-        Translation2d[] turretDirection = new Translation2d[2];
-        turretDirection[0] = drivetrainState.getTurretCenterFieldFrame().getTranslation();
-        turretDirection[1] = drivetrainState.getTurretCenterFieldFrame().getTranslation()
-            .plus(new Translation2d(2.0, this.desiredTurretHeadingFieldRelative));
-        Logger.recordOutput("State/DesiredTurretDirection", turretDirection);
+        Logger.recordOutput("TargetingState/okayToShoot", okayToShoot);
     }
 
     /**
@@ -180,15 +197,6 @@ public class TargetingState {
     }
 
     /**
-     * Gets the desired turret heading in the field reference frame.
-     *
-     * @return desired turret heading (field-relative) as a {@link Rotation2d}
-     */
-    public Rotation2d getDesiredTurretHeadingFieldRelative() {
-        return desiredTurretHeadingFieldRelative;
-    }
-
-    /**
      * Updates the currently measured flywheel speed used for targeting calculations.
      *
      * <p>
@@ -199,6 +207,14 @@ public class TargetingState {
      */
     public void setFlywheelSpeed(double flywheelSpeed) {
         this.currentFlywheelSpeed = flywheelSpeed;
+    }
+
+    public Rotation2d getAimAtHubRotation() {
+        return aimAtHubRotation;
+    }
+
+    public Rotation2d getAimForShootingRotation() {
+        return aimForShootingRotation;
     }
 
 }

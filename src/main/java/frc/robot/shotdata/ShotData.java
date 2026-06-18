@@ -3,6 +3,7 @@ package frc.robot.shotdata;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 import java.io.IOException;
 import java.util.Optional;
 import edu.wpi.first.units.measure.Angle;
@@ -13,6 +14,7 @@ import frc.robot.math.interp2d.BilinearMap;
 import frc.robot.math.interp2d.MulAdd;
 import frc.robot.util.binrw.BinaryData;
 import frc.robot.util.binrw.Binrw;
+import frc.robot.util.tunable.Tunable;
 
 /**
  * Stores and interpolates shooter parameters for FRC robot shooting mechanics.
@@ -22,9 +24,10 @@ import frc.robot.util.binrw.Binrw;
  * optimal flywheel speed, hood angle, and time of flight for a given target distance and current
  * flywheel speed.
  */
+@Tunable
 public class ShotData {
 
-    public double linearParameter = 0.4;
+    public double linearParameter = 9.7;
 
     /** Set of shot entries. */
     @Binrw
@@ -40,11 +43,13 @@ public class ShotData {
      */
     @Binrw
     public static record ShotEntry(Distance targetDistance, LinearVelocity radialVelocity,
-        Angle exitAngle, LinearVelocity exitVelocity, Time tof) {
+        Angle exitAngle, Angle minAngle, Angle maxAngle, LinearVelocity exitVelocity,
+        LinearVelocity minVelocity, LinearVelocity maxVelocity, Time tof) {
     }
 
     /** Setpoints for a given shot */
-    public static record ShotParameters(double hoodAngle, double flywheelSpeedRps) {
+    public static record ShotParameters(double hoodAngle, double minHoodAngle, double maxHoodAngle,
+        double flywheelSpeedRps, double minFlywheelSpeed, double maxFlywheelSpeed, double tof) {
     }
 
     /**
@@ -56,14 +61,18 @@ public class ShotData {
         @Override
         public ShotEntry mul(ShotEntry a, double b) {
             return new ShotEntry(a.targetDistance.times(b), a.radialVelocity.times(b),
-                a.exitAngle.times(b), a.exitVelocity.times(b), a.tof.times(b));
+                a.exitAngle.times(b), a.minAngle.times(b), a.maxAngle.times(b),
+                a.exitVelocity.times(b), a.minVelocity.times(b), a.maxVelocity.times(b),
+                a.tof.times(b));
         }
 
         @Override
         public ShotEntry add(ShotEntry a, ShotEntry b) {
             return new ShotEntry(a.targetDistance.plus(b.targetDistance),
                 a.radialVelocity.plus(b.radialVelocity), a.exitAngle.plus(b.exitAngle),
-                a.exitVelocity.plus(b.exitVelocity), a.tof.plus(b.tof));
+                a.minAngle.plus(b.minAngle), a.maxAngle.plus(b.maxAngle),
+                a.exitVelocity.plus(b.exitVelocity), a.minVelocity.plus(b.minVelocity),
+                a.maxVelocity.plus(b.maxVelocity), a.tof.plus(b.tof));
         }
 
     };
@@ -86,8 +95,15 @@ public class ShotData {
     /** Get shot parameters for a given distance and radial velocity. */
     public Optional<ShotParameters> getShotEntry(Distance distance, LinearVelocity radialVelocity) {
         var entry = shotEntries.get(distance.in(Meters), radialVelocity.in(MetersPerSecond));
-        return entry.map(entry_ -> new ShotParameters(90 - entry_.exitAngle.in(Degrees) - 12.985,
-            linearParameter * entry_.exitVelocity.in(MetersPerSecond)));
+        return entry.map(entry_ -> new ShotParameters(hoodAngle(entry_.exitAngle),
+            hoodAngle(entry_.minAngle), hoodAngle(entry_.maxAngle),
+            linearParameter * entry_.exitVelocity.in(MetersPerSecond),
+            linearParameter * entry_.minVelocity.in(MetersPerSecond),
+            linearParameter * entry_.maxVelocity.in(MetersPerSecond), entry_.tof().in(Seconds)));
+    }
+
+    private static double hoodAngle(Angle exitAngle) {
+        return 90 - exitAngle.in(Degrees) - 12.985;
     }
 
 }
