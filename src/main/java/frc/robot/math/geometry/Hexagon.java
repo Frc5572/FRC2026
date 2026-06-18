@@ -13,6 +13,7 @@ public class Hexagon implements ConvexShape {
     private final Translation2d[] vertices;
 
     private final Translation2d center;
+    @SuppressWarnings("unused")
     private final String name;
 
     /** A static hexagon shape. */

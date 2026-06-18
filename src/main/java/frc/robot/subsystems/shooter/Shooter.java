@@ -25,6 +25,7 @@ public final class Shooter extends SubsystemBase {
     private final ShooterIO io;
     public final ShooterInputsAutoLogged inputs = new ShooterInputsAutoLogged();
     private final TargetingState state;
+    @SuppressWarnings("unused")
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.1, DebounceType.kFalling);
 
     private LinearFilter flywheelSpeedFilter = LinearFilter.movingAverage(10);

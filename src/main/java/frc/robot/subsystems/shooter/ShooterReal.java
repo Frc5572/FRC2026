@@ -31,6 +31,7 @@ public final class ShooterReal implements ShooterIO {
     private final StatusSignal<Current> shooterCurrent1;
     private final StatusSignal<Current> shooterCurrent2;
 
+    @SuppressWarnings("unused")
     private final VelocityDutyCycle velocityDutyCycle = new VelocityDutyCycle(0.0);
     private final VoltageOut voltageOut = new VoltageOut(0.0);
     private final VelocityVoltage velocityVoltage = new VelocityVoltage(0.0).withSlot(1);

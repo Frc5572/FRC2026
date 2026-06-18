@@ -821,6 +821,7 @@ public class FieldConstants {
         /** Empty layout intended for tests/simulation without tags. */
         NONE("2026-none");
 
+        @SuppressWarnings("unused")
         private final String name;
         private volatile AprilTagFieldLayout layout;
         private volatile String layoutString;

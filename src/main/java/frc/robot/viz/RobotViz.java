@@ -75,6 +75,7 @@ public class RobotViz {
     private final AdjustableHood hood;
     private final Intake intake;
     private final Climber climber;
+    @SuppressWarnings("unused")
     private final Shooter shooter;
 
     /**

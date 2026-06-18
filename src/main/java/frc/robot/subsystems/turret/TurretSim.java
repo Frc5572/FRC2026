@@ -31,6 +31,7 @@ import frc.robot.util.tunable.PIDConstants;
  */
 public class TurretSim implements TurretIO {
 
+    @SuppressWarnings("unused")
     private final Random random;
 
     private static final double start = 0.0;
