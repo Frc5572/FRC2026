@@ -8,14 +8,22 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.FieldConstants;
-import frc.robot.RobotState;
+import frc.robot.localization.RobotState;
 import frc.robot.util.AllianceFlipUtil;
 
+/** Computes and stores the current targeting state for the robot's shooter. */
 public class TargetingState {
 
     private final RobotState drivetrainState;
     private final ShotData shotData;
 
+    /**
+     * Creates a new TargetingState.
+     *
+     * @param drivetrainState reference to the robot's state estimator, used for pose and turret
+     *        position in the field frame
+     * @param shotData shot lookup table used to determine flywheel speed and hood angle
+     */
     public TargetingState(RobotState drivetrainState, ShotData shotData) {
         this.drivetrainState = drivetrainState;
         this.shotData = shotData;
@@ -72,14 +80,29 @@ public class TargetingState {
         this.trimLeft += incLeft;
     }
 
+    /**
+     * Gets the current vertical/distance trim.
+     *
+     * @return trimUp in feet; positive values increase effective shooting distance
+     */
     public double getTrimUp() {
         return this.trimUp;
     }
 
+    /**
+     * Gets the current horizontal/heading trim.
+     *
+     * @return trimLeft in degrees; positive values rotate the turret CCW relative to the computed
+     *         heading
+     */
     public double getTrimLeft() {
         return this.trimLeft;
     }
 
+    /**
+     * Recomputes the current targeting solution based on the latest robot state, trims, and current
+     * flywheel speed.
+     */
     public void updateTargeting() {
         updateShootingTarget();
 
@@ -129,22 +152,51 @@ public class TargetingState {
         Logger.recordOutput("State/DesiredTurretDirection", turretDirection);
     }
 
+    /**
+     * Gets the desired flywheel speed
+     *
+     * @return desired flywheel speed in rotations per second (RPS)
+     */
     public double getDesiredFlywheelSpeed() {
         return desiredFlywheelSpeed;
     }
 
+    /**
+     * Gets the desired hood angle
+     *
+     * @return desired hood angle in degrees
+     */
     public double getDesiredHoodAngleDeg() {
         return desiredHoodAngleDeg;
     }
 
+    /**
+     * Indicates whether it is currently okay to shoot.
+     *
+     * @return {@code true} if a valid shot solution is available, {@code false} otherwise
+     */
     public boolean isOkayToShoot() {
         return okayToShoot;
     }
 
+    /**
+     * Gets the desired turret heading in the field reference frame.
+     *
+     * @return desired turret heading (field-relative) as a {@link Rotation2d}
+     */
     public Rotation2d getDesiredTurretHeadingFieldRelative() {
         return desiredTurretHeadingFieldRelative;
     }
 
+    /**
+     * Updates the currently measured flywheel speed used for targeting calculations.
+     *
+     * <p>
+     * This value is used, for example, to decide whether to perform motion compensation and whether
+     * to trust the current shot solution.
+     *
+     * @param flywheelSpeed current flywheel speed in rotations per second (RPS)
+     */
     public void setFlywheelSpeed(double flywheelSpeed) {
         this.currentFlywheelSpeed = flywheelSpeed;
     }

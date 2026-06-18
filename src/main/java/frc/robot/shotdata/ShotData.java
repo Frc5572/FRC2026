@@ -21,19 +21,12 @@ import frc.robot.util.binrw.Binrw;
  * Contains manually acquired shot data entries and provides interpolation functions for computing
  * optimal flywheel speed, hood angle, and time of flight for a given target distance and current
  * flywheel speed.
- *
- * <p>
- * Three interpolation modes are supported:
- * <ul>
- * <li>{@link #shootFunc} - shooting into the hub</li>
- * <li>{@link #passFunc} - passing along the ground</li>
- * <li>{@link #simFunc} - simulation mode (uses ground entries)</li>
- * </ul>
  */
 public class ShotData {
 
     public double linearParameter = 0.4;
 
+    /** Set of shot entries. */
     @Binrw
     public static record ShotEntrySet(ShotEntry[] entries) {
     }
@@ -50,6 +43,7 @@ public class ShotData {
         Angle exitAngle, LinearVelocity exitVelocity, Time tof) {
     }
 
+    /** Setpoints for a given shot */
     public static record ShotParameters(double hoodAngle, double flywheelSpeedRps) {
     }
 
@@ -89,6 +83,7 @@ public class ShotData {
         }
     }
 
+    /** Get shot parameters for a given distance and radial velocity. */
     public Optional<ShotParameters> getShotEntry(Distance distance, LinearVelocity radialVelocity) {
         var entry = shotEntries.get(distance.in(Meters), radialVelocity.in(MetersPerSecond));
         return entry.map(entry_ -> new ShotParameters(90 - entry_.exitAngle.in(Degrees) - 12.985,

@@ -27,7 +27,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
-import frc.robot.RobotState;
+import frc.robot.localization.RobotState;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.GyroInputsAutoLogged;
 import frc.robot.subsystems.swerve.mod.SwerveModule;
