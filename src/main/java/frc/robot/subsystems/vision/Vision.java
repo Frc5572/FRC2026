@@ -13,7 +13,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.localization.RobotState;
+import frc.robot.localization.DrivetrainState;
+import frc.robot.subsystems.shooter.TargetingState;
 import frc.robot.util.Tuples.Tuple2;
 
 /**
@@ -22,7 +23,7 @@ import frc.robot.util.Tuples.Tuple2;
  *
  * <p>
  * This subsystem acts as a bridge between one or more vision pipelines (e.g. PhotonVision) and the
- * {@link RobotState} pose estimator.
+ * {@link TargetingState} pose estimator.
  *
  * <h2>Timestamp handling</h2> Vision measurements are frequently delayed relative to the control
  * loop. This subsystem ensures measurements are applied in chronological order so that the pose
@@ -42,7 +43,7 @@ public class Vision extends SubsystemBase {
     private final VisionIO io;
     private final VisionIO.CameraInputs[] cameraInputs;
     private final String[] cameraInputKeys;
-    private final RobotState state;
+    private final DrivetrainState state;
     private final Translation3d[][] cameraViz;
     private final String[] cameraVizKeys;
     private final boolean[] cameraContributed;
@@ -57,7 +58,7 @@ public class Vision extends SubsystemBase {
      * @param state shared swerve pose estimator to receive vision updates
      * @param io vision IO implementation responsible for acquiring camera results
      */
-    public Vision(RobotState state, VisionIO io) {
+    public Vision(DrivetrainState state, VisionIO io) {
         super("Vision");
         this.io = io;
         this.state = state;
