@@ -19,6 +19,13 @@ public class TargetingState {
     private final Supplier<ChassisSpeeds> speedSource;
     private final DoubleSupplier flywheelSource;
 
+    /**
+     * constructor for targeting state
+     * 
+     * @param poseSource pose supplier
+     * @param speedSource bot chassis speeds supplier
+     * @param flywheelSource flywheel velocity supplier
+     */
     public TargetingState(Supplier<Pose2d> poseSource, Supplier<ChassisSpeeds> speedSource,
         DoubleSupplier flywheelSource) {
 
