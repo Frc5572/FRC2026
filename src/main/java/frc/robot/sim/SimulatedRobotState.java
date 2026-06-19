@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
@@ -82,10 +83,12 @@ public class SimulatedRobotState {
                 var speeds =
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
 
+                double exitAngle = Units
+                    .degreesToRadians(90 - Units.radiansToDegrees(effectiveHoodAngle) - 12.895);
                 double exitVelocity = speedRotationsPerSecond / shotData.linearParameter;
 
-                double vert = Math.sin(effectiveHoodAngle) * exitVelocity;
-                double horiz = Math.cos(effectiveHoodAngle) * exitVelocity;
+                double vert = Math.sin(exitAngle) * exitVelocity;
+                double horiz = Math.cos(exitAngle) * exitVelocity;
                 double x = Math.cos(effectiveTurretAngle) * horiz + speeds.vxMetersPerSecond;
                 double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
                 Translation3d initial =
@@ -95,8 +98,8 @@ public class SimulatedRobotState {
                 Translation3d velocity = new Translation3d(x, y, vert);
                 double backspin = RotationsPerSecond.of(5).in(RadiansPerSecond);
 
-                Translation3d omega = new Translation3d(-backspin * Math.sin(effectiveTurretAngle),
-                    backspin * Math.cos(effectiveTurretAngle), 0);
+                Translation3d omega = new Translation3d(backspin * Math.sin(effectiveTurretAngle),
+                    -backspin * Math.cos(effectiveTurretAngle), 0);
 
                 FuelSim.getInstance().launchFuel(initial, velocity, omega);
                 // this.indexer.numFuel--;

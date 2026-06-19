@@ -151,7 +151,7 @@ public class TargetingState {
 
             double tof = parameters.tof();
             Translation2d aimOffset = motion.tangentialVelocityField().times(tof);
-            Translation2d futureAimPoint = shootingTarget.plus(aimOffset);
+            Translation2d futureAimPoint = shootingTarget.minus(aimOffset);
 
             Logger.recordOutput("TargetingState/parameters/futureAimPoint", futureAimPoint);
 

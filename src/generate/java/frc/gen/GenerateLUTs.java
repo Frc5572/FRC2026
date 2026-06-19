@@ -54,9 +54,9 @@ public class GenerateLUTs {
         Lock lock = new ReentrantLock();
         for (double distanceFeet = 3.0; distanceFeet < 30.0; distanceFeet += 1.0) {
             System.out.println(distanceFeet);
+            Distance targetDistance = Feet.of(distanceFeet);
             Arrays.stream(speeds).parallel().forEach(speed -> {
-                Distance targetDistance = Feet.of(12);
-                var radialVelocity = MetersPerSecond.of(2.0);
+                var radialVelocity = MetersPerSecond.of(speed);
 
                 var shots =
                     solver.findValidShots(targetDistance, radialVelocity, MetersPerSecond.of(0.1),
