@@ -58,7 +58,7 @@ public class CommandFactory {
     public static Command shoot(TargetingState state, Shooter shooter, Indexer indexer,
         AdjustableHood hood) {
         return Commands.parallel(shooter.shoot(() -> state.getDesiredFlywheelSpeed()),
-            hood.setGoal(Degrees.of(state.getDesiredHoodAngle())),
+            hood.setGoal(() -> Degrees.of(state.getDesiredHoodAngle())),
             indexer.runSpindexer(() -> state.isOkayToShoot()));
     }
 
