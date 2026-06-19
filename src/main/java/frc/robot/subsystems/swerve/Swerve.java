@@ -299,7 +299,7 @@ public final class Swerve extends SubsystemBase {
      *
      * <p>
      * If you only want to update the odometry/estimator without affecting any simulation state, use
-     * {@link TargetingState#resetPose(Pose2d)} instead.
+     * {@link DrivetrainState#resetPose(Pose2d)} instead.
      *
      * @param newPose a supplier that provides the new robot pose in field coordinates
      * @return a command that applies the pose override once when scheduled
