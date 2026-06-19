@@ -99,9 +99,9 @@ public final class RobotContainer {
     // private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot
     // Location");
     private final FieldObject2d autoStoppingPoint = field.getObject("Auto End Point");
-    private final TargetingState targetingState =
-        new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-            () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
+    private final TargetingState targetingState; // =
+    // new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
+    // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
 
     /**
      * Robot Container
@@ -116,12 +116,12 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
-                shooter = new Shooter(new ShooterReal(), targetingState);
+                shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
-                // targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+                targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
+                    () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
                 break;
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
@@ -144,16 +144,16 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, sim.visionSim);
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
-                shooter = new Shooter(sim.shooter, targetingState);
+                shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
 
-                // targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
-                // FuelSim.getInstance().spawnStartingFuel();
+                targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
+                    () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+                FuelSim.getInstance().spawnStartingFuel();
 
                 break;
             default:
@@ -162,12 +162,12 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
-                shooter = new Shooter(new ShooterIOEmpty(), targetingState);
+                shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
-                // targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+                targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
+                    () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
                 break;
         }
         // DASHBOARD STUFF

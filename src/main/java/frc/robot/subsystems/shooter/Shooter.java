@@ -34,9 +34,8 @@ public final class Shooter extends SubsystemBase {
      *
      * @param io Shooter IO implementation
      */
-    public Shooter(ShooterIO io, TargetingState targetingState) {
+    public Shooter(ShooterIO io) {
         this.io = io;
-        this.targetingState = targetingState;
     }
 
     @Override
