@@ -208,6 +208,17 @@ public final class Swerve extends SubsystemBase {
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
 
+        Constants.Swerve.angleMotorPID.ifDirty(x -> {
+            for (int i = 0; i < 4; i++) {
+                modules[i].io.setAnglePID(x);
+            }
+        });
+        Constants.Swerve.driveMotorPID.ifDirty(x -> {
+            for (int i = 0; i < 4; i++) {
+                modules[i].io.setDrivePID(x);
+            }
+        });
+
         state.updateTargeting();
     }
 

@@ -183,8 +183,8 @@ public final class Constants {
             SensorDirectionValue.CounterClockwise_Positive;
 
         /* Swerve Current Limiting */
-        public static final int angleCurrentLimit = 25;
-        public static final int angleCurrentLowerLimit = 40;
+        public static final int angleCurrentLimit = 20;
+        public static final int angleCurrentLowerLimit = 10;
         public static final double angleCurrentLowerTimeThreshold = 0.1;
         public static final boolean angleEnableCurrentLimit = true;
 
@@ -203,7 +203,7 @@ public final class Constants {
         // @formatter:off
         public static final PIDConstants angleMotorPID =
             new PIDConstantsBuilder("Swerve/angle", GravityTypeValue.Elevator_Static)
-                .kP(100.0)
+                .kP(40.0)
                 .kI(0.0)
                 .kD(0.0)
                 .kV(0.0)

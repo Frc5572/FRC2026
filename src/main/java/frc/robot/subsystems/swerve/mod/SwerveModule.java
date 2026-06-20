@@ -14,7 +14,7 @@ import frc.robot.Constants;
 public class SwerveModule {
 
     private final String inputsName;
-    private final SwerveModuleIO io;
+    public final SwerveModuleIO io;
     public final SwerveModuleInputsAutoLogged inputs = new SwerveModuleInputsAutoLogged();
 
     /**

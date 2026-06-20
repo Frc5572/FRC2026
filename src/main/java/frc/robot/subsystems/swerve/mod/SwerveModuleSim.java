@@ -11,6 +11,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import frc.robot.Constants;
+import frc.robot.util.tunable.PIDConstants;
 
 /** Simulation implementation for Swerve Module */
 @NullMarked
@@ -121,12 +122,12 @@ public class SwerveModuleSim implements SwerveModuleIO {
     }
 
     @Override
-    public void setDrivePID(double kP, double kI, double kD, double kS, double kV, double kA) {
+    public void setDrivePID(PIDConstants constants) {
         // Changing PID not handled in sim
     }
 
     @Override
-    public void setAnglePID(double kP, double kI, double kD) {
+    public void setAnglePID(PIDConstants constants) {
         // Changing PID not handled in sim
     }
 

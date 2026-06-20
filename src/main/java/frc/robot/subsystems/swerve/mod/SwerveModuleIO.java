@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.util.GenerateEmptyIO;
+import frc.robot.util.tunable.PIDConstants;
 
 /** IO for swerve module */
 @GenerateEmptyIO({int.class, PhoenixOdometryThread.class})
@@ -52,10 +53,10 @@ public interface SwerveModuleIO {
     public void runAnglePosition(Rotation2d rotation);
 
     /** Set PID constants for drive motor */
-    public void setDrivePID(double kP, double kI, double kD, double kS, double kV, double kA);
+    public void setDrivePID(PIDConstants constants);
 
     /** Set PID constants for angle motor */
-    public void setAnglePID(double kP, double kI, double kD);
+    public void setAnglePID(PIDConstants constants);
 
     /** Set drive brake mode */
     public void setDriveBrakeMode(boolean enabled);

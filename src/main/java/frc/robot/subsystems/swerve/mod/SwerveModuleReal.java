@@ -26,6 +26,7 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.util.PhoenixSignals;
+import frc.robot.util.tunable.PIDConstants;
 
 /** Real swerve module implementation (assumes two TalonFXs) */
 @NullMarked
@@ -158,9 +159,9 @@ public class SwerveModuleReal implements SwerveModuleIO {
         angleConfig.ClosedLoopGeneral.ContinuousWrap = true;
 
         /* Current Limiting */
-        angleConfig.CurrentLimits.SupplyCurrentLimitEnable =
+        angleConfig.CurrentLimits.StatorCurrentLimitEnable =
             Constants.Swerve.angleEnableCurrentLimit;
-        angleConfig.CurrentLimits.SupplyCurrentLimit = Constants.Swerve.angleCurrentLimit;
+        angleConfig.CurrentLimits.StatorCurrentLimit = Constants.Swerve.angleCurrentLimit;
         angleConfig.CurrentLimits.SupplyCurrentLowerLimit = Constants.Swerve.angleCurrentLowerLimit;
         angleConfig.CurrentLimits.SupplyCurrentLowerTime =
             Constants.Swerve.angleCurrentLowerTimeThreshold;
@@ -245,21 +246,14 @@ public class SwerveModuleReal implements SwerveModuleIO {
     }
 
     @Override
-    public void setDrivePID(double kP, double kI, double kD, double kS, double kV, double kA) {
-        driveConfig.Slot0.kP = kP;
-        driveConfig.Slot0.kI = kI;
-        driveConfig.Slot0.kD = kD;
-        driveConfig.Slot0.kS = kS;
-        driveConfig.Slot0.kV = kV;
-        driveConfig.Slot0.kA = kA;
+    public void setDrivePID(PIDConstants constants) {
+        constants.apply(driveConfig.Slot0);
         PhoenixSignals.tryUntilOk(5, () -> driveMotor.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override
-    public void setAnglePID(double kP, double kI, double kD) {
-        angleConfig.Slot0.kP = kP;
-        angleConfig.Slot0.kI = kI;
-        angleConfig.Slot0.kD = kD;
+    public void setAnglePID(PIDConstants constants) {
+        constants.apply(angleConfig.Slot0);
         PhoenixSignals.tryUntilOk(5, () -> angleMotor.getConfigurator().apply(angleConfig, 0.25));
     }
 
