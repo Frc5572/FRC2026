@@ -27,7 +27,6 @@ public final class Shooter extends SubsystemBase {
     private LinearFilter flywheelSpeedFilter = LinearFilter.movingAverage(10);
     private double lastShot = 0.0;
     private boolean shooting = false;
-    private TargetingState targetingState;
 
     /**
      * Shooter Subsystem Constructor

@@ -272,7 +272,7 @@ public final class Swerve extends SubsystemBase {
      *
      * <p>
      * The supplied field-relative speeds are transformed into robot-relative speeds using the
-     * current pose estimate from {@link TargetingState}.
+     * current pose estimate from {@link DrivetrainState}.
      *
      * @param driveSpeeds supplier of field-relative chassis speeds
      * @return a command that drives the robot while scheduled

@@ -120,8 +120,7 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
-                targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                    () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+                
                 break;
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
@@ -151,8 +150,7 @@ public final class RobotContainer {
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
 
-                targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                    () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+                
                 FuelSim.getInstance().spawnStartingFuel();
 
                 break;
@@ -166,9 +164,11 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
+                
+                break;
+
                 targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
                     () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
-                break;
         }
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
