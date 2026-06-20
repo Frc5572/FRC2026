@@ -167,8 +167,8 @@ public final class RobotContainer {
                 
                 break;
 
-                targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                    () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+            targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
+                () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
         }
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
