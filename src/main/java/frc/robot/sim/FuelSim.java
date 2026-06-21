@@ -47,7 +47,7 @@ import edu.wpi.first.networktables.StructArrayPublisher;
  *
  * <p>
  * Usage:
- * 
+ *
  * <pre>
  * FuelSim fuelSim = new FuelSim("Sim/Fuel");
  * fuelSim.enable();
@@ -61,14 +61,13 @@ public class FuelSim {
 
     // Physics constants
 
-    private static final double GRAVITY = 9.81; // m/s^2
-    private static final double AIR_DENSITY = 1.225; // kg/m^3, standard atmosphere
-    private static final double BALL_MASS = 0.215; // kg, game manual 5.10.1 midpoint
-    private static final double BALL_DIAMETER = 0.1501; // m, game manual 5.10.1
-    private static final double BALL_RADIUS = BALL_DIAMETER / 2.0;
-    private static final double BALL_CROSS_AREA = Math.PI * BALL_RADIUS * BALL_RADIUS;
-    private static final double BALL_MOMENT_OF_INERTIA =
-        0.4 * BALL_MASS * BALL_RADIUS * BALL_RADIUS; // 2/5
+    public static final double GRAVITY = 9.81; // m/s^2
+    public static final double AIR_DENSITY = 1.225; // kg/m^3, standard atmosphere
+    public static final double BALL_MASS = 0.215; // kg, game manual 5.10.1 midpoint
+    public static final double BALL_DIAMETER = 0.1501; // m, game manual 5.10.1
+    public static final double BALL_RADIUS = BALL_DIAMETER / 2.0;
+    public static final double BALL_CROSS_AREA = Math.PI * BALL_RADIUS * BALL_RADIUS;
+    public static final double BALL_MOMENT_OF_INERTIA = 0.4 * BALL_MASS * BALL_RADIUS * BALL_RADIUS; // 2/5
     // *
     // m
     // *
@@ -77,14 +76,14 @@ public class FuelSim {
     // sphere
 
     // Aerodynamic coefficients
-    private static final double DEFAULT_CD = 0.47; // drag coefficient, smooth sphere
-    private static final double DEFAULT_CM = 0.2; // Magnus coefficient, conservative estimate
+    public static final double DEFAULT_CD = 0.47; // drag coefficient, smooth sphere
+    public static final double DEFAULT_CM = 0.2; // Magnus coefficient, conservative estimate
 
     // Precomputed force factors (divided by mass to get acceleration factors)
-    private static final double DRAG_ACCEL_FACTOR =
+    public static final double DRAG_ACCEL_FACTOR =
         0.5 * AIR_DENSITY * DEFAULT_CD * BALL_CROSS_AREA / BALL_MASS;
     // Extra BALL_RADIUS factor converts the omega x v cross product to acceleration
-    private static final double MAGNUS_ACCEL_FACTOR =
+    public static final double MAGNUS_ACCEL_FACTOR =
         0.5 * AIR_DENSITY * DEFAULT_CM * BALL_CROSS_AREA * BALL_RADIUS / BALL_MASS;
 
     // Coefficients of restitution (per-material, from field element build instructions)

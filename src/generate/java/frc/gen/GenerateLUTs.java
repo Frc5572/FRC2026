@@ -35,7 +35,7 @@ public class GenerateLUTs {
         Distance hubRadius = Meters.of(FieldConstants.Hub.width / 2.0);
         Distance lip = Centimeters.of(15).div(2);
         var backspin = RotationsPerSecond.of(0);
-        HoopSolver solver = new HoopSolver(hubHeight, hubRadius, lip, backspin);
+        HoopSolver solver = new HoopSolver(hubHeight, hubRadius, lip);
 
         List<ShotEntry> entries = new ArrayList<>();
 

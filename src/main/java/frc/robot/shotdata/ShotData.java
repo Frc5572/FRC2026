@@ -17,17 +17,17 @@ import frc.robot.util.binrw.Binrw;
 import frc.robot.util.tunable.Tunable;
 
 /**
- * Stores and interpolates shooter parameters for FRC robot shooting mechanics.
+ * Loads the solver-generated shot table ({@code shots-rt.bin}) and interpolates it.
  *
  * <p>
- * Contains manually acquired shot data entries and provides interpolation functions for computing
- * optimal flywheel speed, hood angle, and time of flight for a given target distance and current
- * flywheel speed.
+ * The table is keyed by target distance and radial velocity. A lookup returns the flywheel speed,
+ * hood angle, and time of flight, bilinearly interpolated between the surrounding entries.
  */
 @Tunable
 public class ShotData {
 
     public double linearParameter = 9.7;
+    public static final double backspinParameter = 0.1;
 
     /** Set of shot entries. */
     @Binrw
@@ -35,11 +35,8 @@ public class ShotData {
     }
 
     /**
-     * Represents a single data point mapping a target distance to shooter parameters.
-     *
-     * <p>
-     * Can be constructed either with typed unit measures or with raw primitive values (feet,
-     * rotations per second, degrees, seconds) for convenience.
+     * One table entry: the solved shooter parameters for a single (target distance, radial
+     * velocity) pair.
      */
     @Binrw
     public static record ShotEntry(Distance targetDistance, LinearVelocity radialVelocity,
@@ -53,8 +50,8 @@ public class ShotData {
     }
 
     /**
-     * Defines addition and scalar multiplication over {@link ShotEntry} objects, enabling weighted
-     * interpolation between entries.
+     * Addition and scalar multiplication over {@link ShotEntry} objects, used by the bilinear map
+     * to interpolate between entries.
      */
     public static final MulAdd<ShotEntry> mulAdd = new MulAdd<ShotEntry>() {
 

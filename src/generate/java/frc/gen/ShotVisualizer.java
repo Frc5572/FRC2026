@@ -44,7 +44,7 @@ public class ShotVisualizer {
         double rvMs = radialVelocity.in(MetersPerSecond);
         double bsRadS = backspin.in(RadiansPerSecond);
 
-        HoopSolver solver = new HoopSolver(hoopHeight, hoopRadius, lipHeight, backspin);
+        HoopSolver solver = new HoopSolver(hoopHeight, hoopRadius, lipHeight);
         Optional<HoopSolver.OptimalResult> optOpt =
             solver.findOptimal(validShots, targetDistance, radialVelocity);
         if (optOpt.isEmpty()) {

@@ -6,20 +6,21 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
+import frc.robot.sim.FuelSim;
 
 /** Simulated shot trajectory utility. */
 public class SimulatedShot {
 
     // physical constants; update for the actual game piece
-    private static final double BALL_RADIUS_M = 0.12065; // 9.5 in diameter
-    private static final double BALL_MASS_KG = 0.148;
+    private static final double BALL_RADIUS_M = FuelSim.BALL_RADIUS; // 9.5 in diameter
+    private static final double BALL_MASS_KG = FuelSim.BALL_MASS;
     private static final double BALL_AREA_M2 = Math.PI * BALL_RADIUS_M * BALL_RADIUS_M;
 
-    private static final double AIR_DENSITY = 1.225; // kg/m³ at sea level, 20 °C
-    private static final double DRAG_COEFF = 0.47; // smooth sphere
-    private static final double MAGNUS_COEFF = 0.50; // C_L; tune empirically
+    private static final double AIR_DENSITY = FuelSim.AIR_DENSITY; // kg/m³ at sea level, 20 °C
+    private static final double DRAG_COEFF = FuelSim.DEFAULT_CD; // smooth sphere
+    private static final double MAGNUS_COEFF = FuelSim.DEFAULT_CM; // C_L; tune empirically
 
-    private static final double G = 9.81; // m/s²
+    private static final double G = FuelSim.GRAVITY; // m/s²
 
     private double x;
     private double y;
@@ -86,7 +87,7 @@ public class SimulatedShot {
      * <li>Gravity: (0, -mg)
      * <li>Aerodynamic drag: -½ρ C_d A |v| · v
      * <li>Magnus lift from backspin: ½ρ C_L A r · (ω × v) In 2D with ω on the z-axis: (-ω·vy,
-     * +ω·vx) — backspin gives upward lift.
+     * +ω·vx) - backspin gives upward lift.
      * </ul>
      */
     private double[] deriv(double[] s) {

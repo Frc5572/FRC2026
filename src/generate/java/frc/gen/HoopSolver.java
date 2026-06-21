@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
+import frc.robot.shotdata.ShotData;
 
 /**
  * Finds exit-velocity / exit-angle pairs that cause a simulated ball to enter a horizontal hoop.
@@ -34,7 +34,6 @@ public class HoopSolver {
     private final double hoopHeight; // m above shooter
     private final double hoopRadius; // m - hoop opening radius
     private final double lipHeight; // m - additional clearance above hoopHeight for rim
-    private final double backspin; // rad/s - positive = backspin on a forward shot
 
     /**
      * @param hoopHeight vertical distance from shooter to hoop center
@@ -43,12 +42,10 @@ public class HoopSolver {
      *        shots that arc too flat and would clip the near lip
      * @param backspin ball backspin (positive = backspin for a forward shot)
      */
-    public HoopSolver(Distance hoopHeight, Distance hoopRadius, Distance lipHeight,
-        AngularVelocity backspin) {
+    public HoopSolver(Distance hoopHeight, Distance hoopRadius, Distance lipHeight) {
         this.hoopHeight = hoopHeight.in(Meters);
         this.hoopRadius = hoopRadius.in(Meters);
         this.lipHeight = lipHeight.in(Meters);
-        this.backspin = backspin.in(RadiansPerSecond);
     }
 
     /**
@@ -58,7 +55,8 @@ public class HoopSolver {
     private double simulate(double distanceM, double rvMs, double exitVelocityMs,
         double exitAngleRad) {
         SimulatedShot shot = new SimulatedShot(MetersPerSecond.of(exitVelocityMs),
-            Radians.of(exitAngleRad), MetersPerSecond.of(rvMs), RadiansPerSecond.of(backspin));
+            Radians.of(exitAngleRad), MetersPerSecond.of(rvMs),
+            RadiansPerSecond.of(ShotData.backspinParameter * exitVelocityMs));
 
         double nearRimX = distanceM - hoopRadius;
         boolean clearedLip = false;

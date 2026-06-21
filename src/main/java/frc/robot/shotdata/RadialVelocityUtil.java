@@ -29,7 +29,8 @@ public class RadialVelocityUtil {
      * perpendicular to the line-of-sight (no radial component).</li>
      * </ul>
      *
-     * @param chassisSpeeds Robot chassis speeds (robot-relative vx, vy, omega).
+     * @param chassisSpeeds Robot chassis speeds (field-relative vx, vy, omega). All shooting math is
+     *        done in field coordinates; robot-relative conversion is each subsystem's concern.
      * @param robotPose Robot pose in the field frame.
      * @param pointOffsetRobot Offset of the point from the robot center in robot frame.
      * @param targetPositionField Target position in the field frame.
@@ -39,12 +40,9 @@ public class RadialVelocityUtil {
 
         Rotation2d heading = robotPose.getRotation();
 
-        // 1) Robot linear velocity in field frame
-        double vxRobot = chassisSpeeds.vxMetersPerSecond;
-        double vyRobot = chassisSpeeds.vyMetersPerSecond;
-
-        double vxField = vxRobot * heading.getCos() - vyRobot * heading.getSin();
-        double vyField = vxRobot * heading.getSin() + vyRobot * heading.getCos();
+        // 1) Robot linear velocity in field frame (chassisSpeeds is already field-relative)
+        double vxField = chassisSpeeds.vxMetersPerSecond;
+        double vyField = chassisSpeeds.vyMetersPerSecond;
 
         // 2) Point position in field frame (robot center + rotated offset)
         Translation2d robotTranslation = robotPose.getTranslation();

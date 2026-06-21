@@ -1,5 +1,6 @@
 package frc.robot.sim;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -12,6 +13,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.TimedRobot;
+import frc.robot.Constants;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.adjustable_hood.AdjustableHoodSim;
 import frc.robot.subsystems.climber.ClimberSim;
@@ -84,7 +86,7 @@ public class SimulatedRobotState {
                     this.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
 
                 double exitAngle = Units
-                    .degreesToRadians(90 - Units.radiansToDegrees(effectiveHoodAngle) - 12.895);
+                    .degreesToRadians(90 - Units.radiansToDegrees(effectiveHoodAngle) - 12.985);
                 double exitVelocity = speedRotationsPerSecond / shotData.linearParameter;
 
                 double vert = Math.sin(exitAngle) * exitVelocity;
@@ -93,10 +95,13 @@ public class SimulatedRobotState {
                 double y = Math.sin(effectiveTurretAngle) * horiz + speeds.vyMetersPerSecond;
                 Translation3d initial =
                     new Pose3d(swerveDrive.mapleSim.getSimulatedDriveTrainPose())
-                        .plus(new Transform3d(-0.1651, 0.0, 0.367722, Rotation3d.kZero))
+                        .plus(new Transform3d(Constants.Vision.turretCenter.getX(),
+                            Constants.Vision.turretCenter.getY(),
+                            Constants.Shooter.shooterHeight.in(Meters), Rotation3d.kZero))
                         .getTranslation();
                 Translation3d velocity = new Translation3d(x, y, vert);
-                double backspin = RotationsPerSecond.of(5).in(RadiansPerSecond);
+                double backspin = RotationsPerSecond.of(exitVelocity * ShotData.backspinParameter)
+                    .in(RadiansPerSecond);
 
                 Translation3d omega = new Translation3d(backspin * Math.sin(effectiveTurretAngle),
                     -backspin * Math.cos(effectiveTurretAngle), 0);
