@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.localization.RobotState;
 
 
 /**
@@ -24,9 +23,7 @@ import frc.robot.localization.RobotState;
 public final class Shooter extends SubsystemBase {
     private final ShooterIO io;
     public final ShooterInputsAutoLogged inputs = new ShooterInputsAutoLogged();
-    private final RobotState state;
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.1, DebounceType.kFalling);
-
     private LinearFilter flywheelSpeedFilter = LinearFilter.movingAverage(10);
     private double lastShot = 0.0;
     private boolean shooting = false;
@@ -36,9 +33,8 @@ public final class Shooter extends SubsystemBase {
      *
      * @param io Shooter IO implementation
      */
-    public Shooter(ShooterIO io, RobotState state) {
+    public Shooter(ShooterIO io) {
         this.io = io;
-        this.state = state;
     }
 
     @Override
@@ -52,7 +48,7 @@ public final class Shooter extends SubsystemBase {
             torqueCurrentDebouncer =
                 new Debouncer(constants.atSpeedDebounce, DebounceType.kFalling);
         });
-        state.setFlywheelSpeed(inputs.shooterAngularVelocity1.in(RotationsPerSecond));
+        // targetingState.setFlywheelSpeed(inputs.shooterAngularVelocity1.in(RotationsPerSecond));
         if (shooting && inputs.shooterAngularVelocity1.in(RotationsPerSecond) < flywheelSpeedFilter
             .calculate(inputs.shooterAngularVelocity1.in(RotationsPerSecond)) - 3.0) {
             lastShot = Timer.getFPGATimestamp();
@@ -83,6 +79,10 @@ public final class Shooter extends SubsystemBase {
     /** Shoot at a given velocity */
     public Command shoot(DoubleSupplier velocity) {
         return run(() -> setVelocity(velocity.getAsDouble()));
+    }
+
+    public DoubleSupplier getFlyWheelVeloRPS() {
+        return () -> inputs.shooterAngularVelocity1.in(RotationsPerSecond);
     }
 
     /**

@@ -13,11 +13,11 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.localization.RobotState;
 import frc.robot.shotdata.ShotData;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.TargetingState;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.AllianceFlipUtil;
@@ -55,10 +55,10 @@ public class CommandFactory {
     }
 
     /** Shoot at a given target. */
-    public static Command shoot(RobotState state, Shooter shooter, Indexer indexer,
+    public static Command shoot(TargetingState state, Shooter shooter, Indexer indexer,
         AdjustableHood hood) {
         return Commands.parallel(shooter.shoot(() -> state.getDesiredFlywheelSpeed()),
-            hood.setGoal(() -> Degrees.of(state.getDesiredHoodAngleDeg())),
+            hood.setGoal(() -> Degrees.of(state.getDesiredHoodAngle())),
             indexer.runSpindexer(() -> state.isOkayToShoot()));
     }
 
