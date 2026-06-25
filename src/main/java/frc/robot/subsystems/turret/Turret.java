@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.localization.DrivetrainState;
+import frc.robot.localization.TurretCameraAdapter;
 
 /**
  * Subsystem representing the robot turret.
@@ -27,6 +28,7 @@ public class Turret extends SubsystemBase {
 
     private final TurretIO io;
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
+    private final TurretCameraAdapter adapter;
     private final DrivetrainState state;
 
     /**
@@ -34,10 +36,11 @@ public class Turret extends SubsystemBase {
      *
      * @param io Hardware abstraction used to read sensors and control actuators
      */
-    public Turret(TurretIO io, DrivetrainState state) {
+    public Turret(TurretIO io, DrivetrainState state, TurretCameraAdapter adapter) {
         super("Turret");
         this.io = io;
         this.state = state;
+        this.adapter = adapter;
     }
 
     @Override
@@ -48,8 +51,8 @@ public class Turret extends SubsystemBase {
         Constants.Turret.pid.ifDirty(io::setPID);
 
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
-
-        state.setTurretRawAngle(MathSharedStore.getTimestamp(), Rotations.of(inputs.relativeAngle));
+        adapter.recordTurretAngle(MathSharedStore.getTimestamp(),
+            new Rotation2d(Rotations.of(inputs.relativeAngle)));
     }
 
     public Rotation2d getTurretHeading() {

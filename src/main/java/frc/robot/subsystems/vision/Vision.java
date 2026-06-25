@@ -13,8 +13,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.localization.CameraProcessor;
 import frc.robot.localization.DrivetrainState;
-import frc.robot.subsystems.shooter.TargetingState;
+import frc.robot.localization.TurretCameraAdapter;
 import frc.robot.util.Tuples.Tuple2;
 
 /**
@@ -51,6 +52,7 @@ public class Vision extends SubsystemBase {
     private boolean seesMultitag;
     public Trigger seesTwoAprilTags =
         new Trigger(() -> twoAprilTags()).debounce(.3, Debouncer.DebounceType.kBoth);
+    private final CameraProcessor[] cameraProcessor;
 
     /**
      * Creates the vision subsystem.
@@ -73,6 +75,14 @@ public class Vision extends SubsystemBase {
         this.cameraContributed = new boolean[Constants.Vision.cameraConstants.length];
         this.cameraContributedKeys = IntStream.range(0, Constants.Vision.cameraConstants.length)
             .mapToObj((i) -> "Vision/Contributed_" + i).toArray(String[]::new);
+        this.cameraProcessor =
+            IntStream.range(0, Constants.Vision.cameraConstants.length).mapToObj(i -> {
+                CameraConstants constants_ = Constants.Vision.cameraConstants[i];
+                TurretCameraAdapter adapter = constants_.isTurret
+                    ? new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation())
+                    : null;
+                return new CameraProcessor(constants_, adapter);
+            }).toArray(CameraProcessor[]::new);
     }
 
     @Override
@@ -100,8 +110,8 @@ public class Vision extends SubsystemBase {
             cameraViz[i] = new Translation3d[0];
         }
         for (var result : results) {
-            cameraContributed[result._0()] = state
-                .addVisionObservation(Constants.Vision.cameraConstants[result._0()], result._1());
+            cameraContributed[result._0()] =
+                cameraProcessor.process(Constants.Vision.cameraConstants[result._0()], result._1());
             if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
             } else if (result._0() == 0 && !result._1().multitagResult.isPresent()) {

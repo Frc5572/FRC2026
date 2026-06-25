@@ -2,12 +2,10 @@ package frc.robot.localization;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.littletonrobotics.junction.Logger;
-import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.VecBuilder;
@@ -31,7 +29,6 @@ import frc.robot.FieldConstants;
 import frc.robot.math.geometry.Rectangle;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
-import frc.robot.subsystems.vision.CameraConstants;
 
 /** Total state of the robot */
 public class DrivetrainState {
@@ -159,19 +156,6 @@ public class DrivetrainState {
     }
 
     /** Get robot to camera for camera mounted on the turret */
-    public static Transform3d getTurretRobotToCamera(Transform3d turretToCamera,
-        Rotation2d turretRotation) {
-        Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
-
-        Transform3d robotToTurret =
-            new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
-
-        Transform3d robotToCamera = robotToTurret.plus(turretToCamera);
-
-        return robotToCamera;
-    }
-
-    /** Get robot to camera for camera mounted on the turret */
     public Optional<Transform3d> getTurretRobotToCamera(Transform3d turretToCamera,
         double timestamp) {
         var maybeRotation = currentTurretAngle.getSample(timestamp);
@@ -223,130 +207,6 @@ public class DrivetrainState {
         Logger.recordOutput("State/VisionRobotPose", robotPose);
     }
 
-    /** Add potentially asequent observation from camera */
-    public boolean addVisionObservation(CameraConstants camera,
-        PhotonPipelineResult pipelineResult) {
-        var multiTag = pipelineResult.getMultiTagResult();
-        Transform3d robotToCamera_ = camera.robotToCamera;
-        double translationSpeed =
-            Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
-        double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
-        if (camera.isTurret) {
-            var maybeTurretRotation =
-                currentTurretAngle.getSample(pipelineResult.getTimestampSeconds());
-            // var maybeTurretRotationM1 =
-            // currentTurretAngle.getSample(pipelineResult.getTimestampSeconds() - 0.1);
-            // var maybeTurretRotationP1 =
-            // currentTurretAngle.getSample(pipelineResult.getTimestampSeconds() + 0.1);
-            if (maybeTurretRotation.isEmpty()) {
-                return false;
-            }
-            // if (Math.abs(angleDiff(maybeTurretRotationM1.get(), maybeTurretRotationP1.get())
-            // .in(Degrees)) > 5) {
-            // return false;
-            // }
-            robotToCamera_ = getTurretRobotToCamera(robotToCamera_, maybeTurretRotation.get());
-        }
-        if (!initted) {
-            final Transform3d robotToCamera = robotToCamera_;
-            multiTag.ifPresent(multiTag_ -> {
-                Transform3d best = multiTag_.estimatedPose.best;
-                Pose3d cameraPose =
-                    new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
-                Pose3d robotPose = cameraPose.plus(robotToCamera.inverse());
-                // reading - gyroOffset = actual
-                // gyroOffset = reading - actual
-                gyroOffset = prevGyroReading.minus(robotPose.toPose2d().getRotation());
-                visionAdjustedOdometry.resetPose(robotPose.toPose2d());
-                Logger.recordOutput("State/initPose", getGlobalPoseEstimate());
-                currentTurretAngle.clear();
-                initted = true;
-            });
-            return initted;
-        } else {
-            double velocityStdDev = camera.simLatencyStdDev.in(Seconds);
-            double velocityTranslationError = translationSpeed * velocityStdDev;
-            double velocityRotationError = rotationSpeed * velocityStdDev;
-            Logger.recordOutput("State/velocityTranslationError", velocityTranslationError);
-            Logger.recordOutput("State/velocityRotationError", velocityRotationError);
-
-            var bestTarget = pipelineResult.hasTargets() ? pipelineResult.getBestTarget() : null;
-            if (bestTarget == null) {
-                return false;
-            }
-            var bestTagPose = Constants.Vision.fieldLayout.getTagPose(bestTarget.getFiducialId());
-            if (bestTagPose.isEmpty()) {
-                return false;
-            }
-
-            if (multiTag.isPresent()) {
-                // Multi Tag
-                Transform3d best = multiTag.get().estimatedPose.best;
-                Pose3d cameraPose =
-                    new Pose3d().plus(best).relativeTo(Constants.Vision.fieldLayout.getOrigin());
-                Logger.recordOutput("State/Camera/" + camera.name + "/cameraPose", cameraPose);
-                Logger.recordOutput("State/Camera/" + camera.name + "/correctedCameraPose",
-                    cameraPose);
-                Pose3d estRobotPose = cameraPose.plus(robotToCamera_.inverse());
-                Logger.recordOutput("State/Camera/" + camera.name + "/estRobotPose", estRobotPose);
-                double stdDevMultiplier = stdDevMultiplier(pipelineResult.targets, cameraPose);
-                double translationStdDev =
-                    stdDevMultiplier * velocityTranslationError + camera.translationError;
-                double rotationStdDev =
-                    stdDevMultiplier * velocityRotationError + camera.rotationError;
-                if (camera.isTurret) {
-                    boolean isStationary =
-                        this.lastTimeMoved + 0.5 < pipelineResult.getTimestampSeconds();
-                    Logger.recordOutput("State/Camera/" + camera.name + "/isStationary",
-                        isStationary);
-                    Logger.recordOutput("State/Camera/" + camera.name + "/stationaryValue",
-                        this.lastTimeMoved - pipelineResult.getTimestampSeconds());
-                    Logger.recordOutput("State/Camera/" + camera.name + "/lastMoved",
-                        this.lastTimeMoved);
-                    Logger.recordOutput("State/Camera/" + camera.name + "/timestamp",
-                        pipelineResult.getTimestampSeconds());
-                    if (isStationary || (RobotBase.isReal()
-                        && FieldConstants.isOnBump(getGlobalPoseEstimate()))) {
-                        var estRobotPose2d = estRobotPose.toPose2d();
-                        if (estRobotPose2d.getTranslation()
-                            .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
-                                .pow(Units.inchesToMeters(3), 2)) {
-                            visionAdjustedOdometry
-                                .resetTranslation(estRobotPose2d.getTranslation());
-                        }
-                    }
-                    if (!isStationary) {
-                        rotationStdDev = 10000.0;
-                    }
-                }
-                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevMultipler",
-                    stdDevMultiplier);
-                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevTranslation",
-                    translationStdDev);
-                Logger.recordOutput("State/Camera/" + camera.name + "/stdDevRotation",
-                    rotationStdDev);
-                if (camera.findConstants) {
-                    var transform =
-                        new Transform3d(new Pose3d(getGlobalPoseEstimate()), cameraPose);
-                    Logger.recordOutput(
-                        "State/Camera/" + camera.name + "/foundConstant/translation",
-                        transform.getTranslation());
-                    Logger.recordOutput("State/Camera/" + camera.name + "/foundConstant/rotation/x",
-                        Units.radiansToDegrees(transform.getRotation().getX()));
-                    Logger.recordOutput("State/Camera/" + camera.name + "/foundConstant/rotation/y",
-                        Units.radiansToDegrees(transform.getRotation().getY()));
-                    Logger.recordOutput("State/Camera/" + camera.name + "/foundConstant/rotation/z",
-                        Units.radiansToDegrees(transform.getRotation().getZ()));
-                    return false;
-                }
-                VisionObservation observations = new VisionObservation(cameraPose, robotToCamera_,
-                    translationStdDev, rotationStdDev, pipelineResult.getTimestampSeconds());
-                addVisionObservation(observations);
-                return true;
-            }
-        }
-        return false;
-    }
 
     private static double stdDevMultiplier(List<PhotonTrackedTarget> targets, Pose3d cameraPose) {
         double totalDistance = 0.0;
