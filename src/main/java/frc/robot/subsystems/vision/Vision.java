@@ -14,8 +14,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.localization.CameraProcessor;
+import frc.robot.localization.CameraProcessor.Result;
 import frc.robot.localization.DrivetrainState;
+import frc.robot.localization.RejectionReason;
 import frc.robot.localization.TurretCameraAdapter;
+import frc.robot.localization.VisionObservation;
 import frc.robot.util.Tuples.Tuple2;
 
 /**
@@ -47,7 +50,7 @@ public class Vision extends SubsystemBase {
     private final DrivetrainState state;
     private final Translation3d[][] cameraViz;
     private final String[] cameraVizKeys;
-    private final boolean[] cameraContributed;
+    private final Result<VisionObservation, RejectionReason>[] cameraContributed;
     private final String[] cameraContributedKeys;
     private boolean seesMultitag;
     public Trigger seesTwoAprilTags =
@@ -60,7 +63,7 @@ public class Vision extends SubsystemBase {
      * @param state shared swerve pose estimator to receive vision updates
      * @param io vision IO implementation responsible for acquiring camera results
      */
-    public Vision(DrivetrainState state, VisionIO io) {
+    public Vision(DrivetrainState state, VisionIO io, TurretCameraAdapter adapter) {
         super("Vision");
         this.io = io;
         this.state = state;
@@ -72,16 +75,14 @@ public class Vision extends SubsystemBase {
             .mapToObj((_x) -> new Translation3d[0]).toArray(Translation3d[][]::new);
         this.cameraVizKeys = IntStream.range(0, Constants.Vision.cameraConstants.length)
             .mapToObj((i) -> "Vision/AprilTagViz_" + i).toArray(String[]::new);
-        this.cameraContributed = new boolean[Constants.Vision.cameraConstants.length];
+        this.cameraContributed = new Result[Constants.Vision.cameraConstants.length];
         this.cameraContributedKeys = IntStream.range(0, Constants.Vision.cameraConstants.length)
             .mapToObj((i) -> "Vision/Contributed_" + i).toArray(String[]::new);
         this.cameraProcessor =
             IntStream.range(0, Constants.Vision.cameraConstants.length).mapToObj(i -> {
                 CameraConstants constants_ = Constants.Vision.cameraConstants[i];
-                TurretCameraAdapter adapter = constants_.isTurret
-                    ? new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation())
-                    : null;
-                return new CameraProcessor(constants_, adapter);
+                TurretCameraAdapter adapter_ = constants_.isTurret ? adapter : null;
+                return new CameraProcessor(constants_, adapter_);
             }).toArray(CameraProcessor[]::new);
     }
 
@@ -111,7 +112,7 @@ public class Vision extends SubsystemBase {
         }
         for (var result : results) {
             cameraContributed[result._0()] =
-                cameraProcessor.process(Constants.Vision.cameraConstants[result._0()], result._1());
+                cameraProcessor[result._0()].process(result._1(), state.getFieldRelativeSpeeds());
             if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
             } else if (result._0() == 0 && !result._1().multitagResult.isPresent()) {
@@ -137,7 +138,12 @@ public class Vision extends SubsystemBase {
         }
 
         for (int i = 0; i < Constants.Vision.cameraConstants.length; i++) {
-            Logger.recordOutput(cameraContributedKeys[i], cameraContributed[i]);
+            Logger.recordOutput(cameraContributedKeys[i] + "/ok",
+                cameraContributed[i] != null && cameraContributed[i].isOk());
+            if (cameraContributed[i] != null && !cameraContributed[i].isOk()) {
+                Logger.recordOutput(cameraContributedKeys[i] + "/rejection",
+                    cameraContributed[i].getErr().toString());
+            }
             if (cameraViz[i].length == 0) {
                 continue;
             }
@@ -145,8 +151,8 @@ public class Vision extends SubsystemBase {
         }
 
         boolean seesAprilTag = false;
-        for (boolean contributed : cameraContributed) {
-            if (contributed) {
+        for (var contributed : cameraContributed) {
+            if (contributed.isOk()) {
                 seesAprilTag = true;
                 break;
             }

@@ -28,7 +28,8 @@ public class Turret extends SubsystemBase {
 
     private final TurretIO io;
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
-    private final TurretCameraAdapter adapter;
+    public final TurretCameraAdapter adapter =
+        new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
     private final DrivetrainState state;
 
     /**
@@ -36,11 +37,10 @@ public class Turret extends SubsystemBase {
      *
      * @param io Hardware abstraction used to read sensors and control actuators
      */
-    public Turret(TurretIO io, DrivetrainState state, TurretCameraAdapter adapter) {
+    public Turret(TurretIO io, DrivetrainState state) {
         super("Turret");
         this.io = io;
         this.state = state;
-        this.adapter = adapter;
     }
 
     @Override
