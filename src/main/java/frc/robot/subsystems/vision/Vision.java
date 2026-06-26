@@ -154,6 +154,7 @@ public class Vision extends SubsystemBase {
         for (var contributed : cameraContributed) {
             if (contributed.isOk()) {
                 seesAprilTag = true;
+                state.addVisionObservation(contributed.getOk());
                 break;
             }
         }
