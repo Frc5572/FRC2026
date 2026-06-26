@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 
+/** Turret Camera Adapter */
 public class TurretCameraAdapter {
     private static final double BUFFER_SECONDS = 1.5;
     private final Translation3d turretCenter;

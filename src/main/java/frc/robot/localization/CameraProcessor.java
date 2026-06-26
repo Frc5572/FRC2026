@@ -18,9 +18,9 @@ import frc.robot.subsystems.vision.CameraConstants;
  * {@link DrivetrainState}.
  *
  * <p>
- * This class is stateless with respect to the robot pose — it only decides whether a camera frame
- * is trustworthy and computes the appropriate standard deviations. Pose-estimator mutations remain
- * the exclusive responsibility of {@link DrivetrainState}.
+ * This class is stateless with respect to the robot pose it only decides whether a camera frame is
+ * trustworthy and computes the appropriate standard deviations. Pose-estimator mutations remain the
+ * exclusive responsibility of {@link DrivetrainState}.
  *
  * <p>
  * For fixed cameras, use the single-argument constructor. For turreted cameras, supply a
@@ -60,7 +60,13 @@ public class CameraProcessor {
     }
 
 
-
+    /**
+     * processes photon results to get robots pose
+     *
+     * @param result photon results
+     * @param currentSpeeds robot speeds
+     * @return position data
+     */
     public Result<VisionObservation, RejectionReason> process(PhotonPipelineResult result,
         ChassisSpeeds currentSpeeds) {
 
@@ -150,6 +156,9 @@ public class CameraProcessor {
         return stddev;
     }
 
+    /**
+     * return class for processes method
+     */
     public static final class Result<T, E> {
         private final T ok;
         private final E err;
