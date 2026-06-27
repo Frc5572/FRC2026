@@ -29,7 +29,6 @@ import frc.robot.Robot.RobotRunType;
 import frc.robot.commands.WaitSupplierCommand;
 import frc.robot.shotdata.ShotData;
 import frc.robot.shotdata.ShotDataTunable;
-import frc.robot.shotdata.TargetingState;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.LEDs;
@@ -48,6 +47,7 @@ import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOEmpty;
 import frc.robot.subsystems.shooter.ShooterReal;
+import frc.robot.subsystems.shooter.TargetingState;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
@@ -102,7 +102,6 @@ public final class RobotContainer {
     // private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot
     // Location");
     private final FieldObject2d autoStoppingPoint = field.getObject("Auto End Point");
-
     private final TargetingState targetingState;
     private final ShotDataTunable shotData;
 
@@ -120,10 +119,11 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
+                shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
-
+                
                 break;
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
@@ -147,13 +147,15 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, sim.visionSim);
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
+                shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
                 indexer = new Indexer(sim.indexer);
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
 
-                // FuelSim.getInstance().spawnStartingFuel();
+                
+                FuelSim.getInstance().spawnStartingFuel();
 
                 break;
             default:
@@ -162,25 +164,18 @@ public final class RobotContainer {
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
+                shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
-
-                break;
-        }
-        targetingState = new TargetingState(swerve.state, shotData.get());
-        switch (runtimeType) {
-            case kReal:
-                shooter = new Shooter(new ShooterReal(), targetingState);
-                break;
-            case kSimulation:
-                shooter = new Shooter(sim.shooter, targetingState);
-                break;
-            default:
-                shooter = new Shooter(new ShooterIOEmpty(), targetingState);
+                
                 break;
 
+            
         }
+        targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
+            () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS(),
+            shotData.get());
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
         SmartDashboard.putNumber(Constants.DashboardValues.shootX,
@@ -419,7 +414,6 @@ public final class RobotContainer {
             AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());
         Logger.recordOutput("test1",
             FieldConstants.LeftBump.nearLeftCorner.getX() - Units.inchesToMeters(10));
-
         targetingState.updateTargeting();
     }
 

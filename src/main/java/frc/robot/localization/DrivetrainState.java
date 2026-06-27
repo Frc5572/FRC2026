@@ -34,7 +34,7 @@ import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /** Total state of the robot */
-public class RobotState {
+public class DrivetrainState {
 
     /** Whether the pose estimator has been initialized from vision */
     private boolean initted = false;
@@ -56,7 +56,7 @@ public class RobotState {
      * @param wheelPositions the initial swerve module positions used to seed odometry
      * @param gyroYaw the initial reported gyro yaw
      */
-    public RobotState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
+    public DrivetrainState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
         prevGyroReading = gyroYaw;
         SwerveDriveOdometry swerveOdometry =
             new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);

@@ -5,10 +5,10 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.shotdata.TargetingState;
 import frc.robot.subsystems.adjustable_hood.AdjustableHood;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.TargetingState;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.AllianceFlipUtil;
@@ -20,7 +20,7 @@ public class CommandFactory {
     public static Command shoot(TargetingState state, Shooter shooter, Indexer indexer,
         AdjustableHood hood) {
         return Commands.parallel(shooter.shoot(() -> state.getDesiredFlywheelSpeed()),
-            hood.setGoal(() -> Degrees.of(state.getDesiredHoodAngleDeg())),
+            hood.setGoal(() -> Degrees.of(state.getDesiredHoodAngle())),
             indexer.runSpindexer(() -> state.isOkayToShoot()));
     }
 

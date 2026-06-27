@@ -1,39 +1,49 @@
-package frc.robot.shotdata;
+package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
-import frc.robot.localization.RobotState;
+import frc.robot.shotdata.RadialVelocityUtil;
+import frc.robot.shotdata.ShotData;
 import frc.robot.util.AllianceFlipUtil;
 
 /** Computes and stores the current targeting state for the robot's shooter. */
 public class TargetingState {
 
-    private final RobotState drivetrainState;
+    private final Supplier<Pose2d> poseSource;
+    private final Supplier<ChassisSpeeds> speedSource;
+    private final DoubleSupplier flywheelSource;
     private final ShotData shotData;
 
     /**
      * Creates a new TargetingState.
      *
-     * @param drivetrainState reference to the robot's state estimator, used for pose and turret
-     *        position in the field frame
+     * @param poseSource supplies the robot's global field pose
+     * @param speedSource supplies the robot's field-relative chassis speeds
+     * @param flywheelSource supplies the measured flywheel speed in rotations per second (RPS)
      * @param shotData shot lookup table used to determine flywheel speed and hood angle
      */
-    public TargetingState(RobotState drivetrainState, ShotData shotData) {
-        this.drivetrainState = drivetrainState;
+    public TargetingState(Supplier<Pose2d> poseSource, Supplier<ChassisSpeeds> speedSource,
+        DoubleSupplier flywheelSource, ShotData shotData) {
+        this.poseSource = poseSource;
+        this.speedSource = speedSource;
+        this.flywheelSource = flywheelSource;
         this.shotData = shotData;
     }
 
     private Translation2d shootingTarget = FieldConstants.Hub.centerHub;
     private boolean targetIsGround = false;
 
-    private void updateShootingTarget() {
-        Pose2d bluePose = AllianceFlipUtil.apply(drivetrainState.getGlobalPoseEstimate());
+    private void updateShootingTarget(Pose2d globalEst) {
+        Pose2d bluePose = AllianceFlipUtil.apply(globalEst);
         if (bluePose.getX() > FieldConstants.Hub.centerHub.getX()) {
             targetIsGround = true;
             if (bluePose.getY() > FieldConstants.fieldWidth / 2) {
@@ -75,13 +85,11 @@ public class TargetingState {
     private double trimUp = 0.0;
     private double trimLeft = 0.0;
 
-    /** Set trim values for autoshooting */
     public void setTrims(double trimUp, double trimLeft) {
         this.trimUp = trimUp;
         this.trimLeft = trimLeft;
     }
 
-    /** Increment trim values for autoshooting */
     public void incTrims(double incUp, double incLeft) {
         this.trimUp += incUp;
         this.trimLeft += incLeft;
@@ -111,14 +119,17 @@ public class TargetingState {
      * flywheel speed.
      */
     public void updateTargeting() {
-        updateShootingTarget();
+        Pose2d robotPose = poseSource.get();
+        ChassisSpeeds speeds = speedSource.get();
+        currentFlywheelSpeed = flywheelSource.getAsDouble();
 
-        Pose2d robotPose = drivetrainState.getGlobalPoseEstimate();
+        updateShootingTarget(robotPose);
+
         Translation2d shooterOffset =
             Constants.Vision.turretCenter.getTranslation().toTranslation2d();
 
-        var motion = RadialVelocityUtil.getDistanceRadialTangentialVector(
-            drivetrainState.getFieldRelativeSpeeds(), robotPose, shooterOffset, shootingTarget);
+        var motion = RadialVelocityUtil.getDistanceRadialTangentialVector(speeds, robotPose,
+            shooterOffset, shootingTarget);
 
         Logger.recordOutput("TargetingState/motion/distanceMeters", motion.distanceMeters());
         Logger.recordOutput("TargetingState/motion/radialVelocityMetersPerSecond",
@@ -209,7 +220,7 @@ public class TargetingState {
      *
      * @return desired hood angle in degrees
      */
-    public double getDesiredHoodAngleDeg() {
+    public double getDesiredHoodAngle() {
         return desiredHoodAngleDeg;
     }
 
@@ -220,19 +231,6 @@ public class TargetingState {
      */
     public boolean isOkayToShoot() {
         return okayToShoot;
-    }
-
-    /**
-     * Updates the currently measured flywheel speed used for targeting calculations.
-     *
-     * <p>
-     * This value is used, for example, to decide whether to perform motion compensation and whether
-     * to trust the current shot solution.
-     *
-     * @param flywheelSpeed current flywheel speed in rotations per second (RPS)
-     */
-    public void setFlywheelSpeed(double flywheelSpeed) {
-        this.currentFlywheelSpeed = flywheelSpeed;
     }
 
     public Rotation2d getAimAtHubRotation() {
