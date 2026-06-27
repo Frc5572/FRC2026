@@ -188,6 +188,12 @@ public class TargetingState {
             // it recovers near the setpoint before re-arming. This replaces the single-threshold
             // gate that flip-flopped the indexer on every shot.
             double armThreshold = desiredFlywheelSpeed - burstGate.armFraction * (max - min);
+
+
+            Logger.recordOutput("TargetingState/schmitt/target", desiredFlywheelSpeed);
+            Logger.recordOutput("TargetingState/schmitt/armThreshold", armThreshold);
+            Logger.recordOutput("TargetingState/schmitt/minThreshold", min);
+
             if (bursting) {
                 if (currentFlywheelSpeed < min) {
                     bursting = false;

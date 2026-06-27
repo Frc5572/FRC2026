@@ -26,7 +26,7 @@ import frc.robot.util.tunable.Tunable;
 @Tunable
 public class ShotData {
 
-    public double linearParameter = 9.7;
+    public double linearParameter = 6.25;
     public static final double backspinParameter = 0.1;
 
     /** Set of shot entries. */
