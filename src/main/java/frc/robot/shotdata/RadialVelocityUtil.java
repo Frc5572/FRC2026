@@ -87,7 +87,7 @@ public class RadialVelocityUtil {
         double vx = vxPointField;
         double vy = vyPointField;
 
-        // Radial component vector = (v · u) * u
+        // Radial component vector = (v dot u) * u
         double vxRadial = radialVel * ux;
         double vyRadial = radialVel * uy;
 
