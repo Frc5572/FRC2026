@@ -5,6 +5,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
+/**
+ * Geometry helpers for the distance, radial velocity, and tangential velocity of a robot point
+ * relative to a field target.
+ */
 public class RadialVelocityUtil {
 
     /** Result: distance, radial velocity, and tangential velocity vector (field frame). */
@@ -20,6 +24,7 @@ public class RadialVelocityUtil {
      * <li>tangential velocity vector of that point relative to the target (field frame)</li>
      * </ul>
      *
+     * <p>
      * Conventions:
      * <ul>
      * <li>distanceMeters: |target -> point|</li>

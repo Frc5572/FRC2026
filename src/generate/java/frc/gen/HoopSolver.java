@@ -40,7 +40,6 @@ public class HoopSolver {
      * @param hoopRadius radius of the hoop opening
      * @param lipHeight minimum height (above shooter) the ball must reach before the hoop; excludes
      *        shots that arc too flat and would clip the near lip
-     * @param backspin ball backspin (positive = backspin for a forward shot)
      */
     public HoopSolver(Distance hoopHeight, Distance hoopRadius, Distance lipHeight) {
         this.hoopHeight = hoopHeight.in(Meters);
