@@ -28,8 +28,8 @@ public class RadialVelocityUtil {
      * Conventions:
      * <ul>
      * <li>distanceMeters: |target -> point|</li>
-     * <li>radialVelocityMetersPerSecond: > 0 => moving away from target along line of sight < 0 =>
-     * moving toward target</li>
+     * <li>radialVelocityMetersPerSecond: &gt; 0 =&gt; moving away from target along line of sight;
+     * &lt; 0 =&gt; moving toward target</li>
      * <li>tangentialVelocityField: Vector in field coords representing only the component
      * perpendicular to the line-of-sight (no radial component).</li>
      * </ul>
