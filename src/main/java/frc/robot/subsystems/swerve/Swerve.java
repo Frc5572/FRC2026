@@ -7,10 +7,10 @@ import java.util.function.BiFunction;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
@@ -568,6 +568,15 @@ public final class Swerve extends SubsystemBase {
      */
     public Command toggleVerticalLock() {
         return Commands.startEnd(() -> verticalLocked = true, () -> verticalLocked = false);
+    }
+
+    public static record Bundle(Swerve swerve, DrivetrainState drivetrainState) {
+    }
+
+    public static Bundle create(Function<PhoenixOdometryThread, SwerveIO> swerveIo,
+        Function<PhoenixOdometryThread, GyroIO> gyroIo,
+        BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn) {
+
     }
 
 }

@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+import java.lang.System.Logger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -10,7 +11,6 @@ import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
 import org.jspecify.annotations.NullMarked;
-import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.commands.WaitSupplierCommand;
+import frc.robot.localization.DrivetrainState;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.LEDs;
@@ -84,8 +85,10 @@ public final class RobotContainer {
     private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
+    Swerve.Bundle bundle = Swerve.create(null, null, null);
+    DrivetrainState drivetrainState = bundle.drivetrainState();
     private final LEDs leds = new LEDs();
-    private final Swerve swerve;
+    private final Swerve swerve = bundle.swerve();
     private final Vision vision;
     private final AdjustableHood adjustableHood;
     private final Turret turret;
@@ -120,7 +123,7 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
-                
+
                 break;
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
@@ -150,7 +153,7 @@ public final class RobotContainer {
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
 
-                
+
                 FuelSim.getInstance().spawnStartingFuel();
 
                 break;
@@ -164,14 +167,14 @@ public final class RobotContainer {
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
-                
+
                 break;
 
-            
+
         }
 
         targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+            () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
         SmartDashboard.putNumber(Constants.DashboardValues.shootX,
