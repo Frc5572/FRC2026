@@ -27,6 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.commands.WaitSupplierCommand;
+import frc.robot.shotdata.ShotData;
+import frc.robot.shotdata.ShotDataTunable;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.LEDs;
@@ -62,6 +64,7 @@ import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.tunable.ShotDataHelper;
+import frc.robot.util.tunable.ShotDataHelperTunable;
 import frc.robot.viz.RobotViz;
 
 
@@ -99,9 +102,8 @@ public final class RobotContainer {
     // private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot
     // Location");
     private final FieldObject2d autoStoppingPoint = field.getObject("Auto End Point");
-    private final TargetingState targetingState; // =
-    // new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-    // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
+    private final TargetingState targetingState;
+    private final ShotDataTunable shotData;
 
     /**
      * Robot Container
@@ -109,6 +111,7 @@ public final class RobotContainer {
      * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
+        shotData = new ShotDataTunable("ShotTuner", new ShotData());
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -125,7 +128,8 @@ public final class RobotContainer {
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
                 sim = new SimulatedRobotState(
-                    new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
+                    new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg),
+                    shotData.get());
                 FuelSim.getInstance().registerRobot(Constants.Swerve.bumperFront.in(Meters) * 2,
                     Constants.Swerve.bumperRight.in(Meters), Units.inchesToMeters(5.0),
                     () -> sim.swerveDrive.mapleSim.getSimulatedDriveTrainPose(),
@@ -169,9 +173,9 @@ public final class RobotContainer {
 
             
         }
-
         targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+            () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS(),
+            shotData.get());
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
         SmartDashboard.putNumber(Constants.DashboardValues.shootX,
@@ -216,8 +220,8 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(turret
-            .goToAngleFieldRelative(() -> targetingState.getDesiredTurretHeadingFieldRelative()));
+        turret.setDefaultCommand(
+            turret.goToAngleFieldRelative(() -> targetingState.getAimAtHubRotation()));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
@@ -262,6 +266,7 @@ public final class RobotContainer {
         driver.rightTrigger()
             .whileTrue(Commands.parallel(
                 CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood),
+                turret.goToAngleFieldRelative(() -> targetingState.getAimForShootingRotation()),
                 swerve.driveUserRelative(TeleopControls.teleopControls(
                     () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
                     () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
@@ -318,14 +323,15 @@ public final class RobotContainer {
         }));
     }
 
-    private ShotDataHelper helper = new ShotDataHelper();
+    private ShotDataHelperTunable helper =
+        new ShotDataHelperTunable("ShotDataHelper", new ShotDataHelper());
 
     private void setupTuner() {
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
         tuner.rightTrigger()
-            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
+            .whileTrue(shooter.shoot(() -> helper.get().flywheelSpeed)
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.get().hoodAngle))))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         boolean[] firstShotFlag = {false};
         double[] firstShot = {0.0};
@@ -352,8 +358,8 @@ public final class RobotContainer {
 
     private void setupPit() {
         pit.rightTrigger()
-            .whileTrue(shooter.shoot(() -> helper.flywheelSpeed)
-                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.hoodAngle))))
+            .whileTrue(shooter.shoot(() -> helper.get().flywheelSpeed)
+                .alongWith(adjustableHood.setGoal(() -> Degrees.of(helper.get().hoodAngle))))
             .onFalse(shooter.shoot(0).alongWith(adjustableHood.setGoal(Degrees.of(0))));
         pit.leftTrigger().whileTrue(indexer.setSpeedCommand(1.0, 1.0));
         pit.a().whileTrue(shooter.characterization()).onFalse(shooter.shoot(0));
@@ -396,6 +402,13 @@ public final class RobotContainer {
         }
         viz.periodic();
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
+
+        helper.ifDirty(_x -> {
+        });
+        shotData.ifDirty(_x -> {
+        });
+        Constants.Shooter.burstGate.ifDirty(_x -> {
+        });
 
         Logger.recordOutput("test",
             AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());

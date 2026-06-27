@@ -19,9 +19,13 @@ public class Line {
         this.c = c;
     }
 
+    @SuppressWarnings("unused")
     private static final double minX = -20.0;
+    @SuppressWarnings("unused")
     private static final double maxX = FieldConstants.fieldLength + 20.0;
+    @SuppressWarnings("unused")
     private static final double minY = -20.0;
+    @SuppressWarnings("unused")
     private static final double maxY = FieldConstants.fieldWidth + 20.0;
 
 

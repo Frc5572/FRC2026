@@ -382,6 +382,10 @@ public class DrivetrainState {
         return currentSpeeds;
     }
 
+    public boolean isInitted() {
+        return initted;
+    }
+
     private final Rectangle robotRect = new Rectangle("pose", Pose2d.kZero,
         Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);
 

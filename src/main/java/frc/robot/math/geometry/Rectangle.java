@@ -15,6 +15,7 @@ public class Rectangle implements ConvexShape {
 
     private Pose2d pose;
 
+    @SuppressWarnings("unused")
     private final String name;
 
     /** Rotating Rectangle Shape */

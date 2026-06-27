@@ -50,14 +50,15 @@ import frc.robot.util.tunable.Tunable;
  * https://www.youtube.com/watch?v=vUtVXz7ebEE</a>
  */
 @NullMarked
-public class SwerveRateLimiter implements Tunable {
+@Tunable
+public class SwerveRateLimiter {
 
-    private double forwardLimit = Constants.Swerve.forwardLimit;
-    private double forwardTiltLimit = Constants.Swerve.forwardTiltLimit;
-    private double leftTiltLimit = Constants.Swerve.leftTiltLimit;
-    private double rightTiltLimit = Constants.Swerve.rightTiltLimit;
-    private double backTiltLimit = Constants.Swerve.backTiltLimit;
-    private double skidLimit = Constants.Swerve.skidLimit;
+    public double forwardLimit = Constants.Swerve.forwardLimit;
+    public double forwardTiltLimit = Constants.Swerve.forwardTiltLimit;
+    public double leftTiltLimit = Constants.Swerve.leftTiltLimit;
+    public double rightTiltLimit = Constants.Swerve.rightTiltLimit;
+    public double backTiltLimit = Constants.Swerve.backTiltLimit;
+    public double skidLimit = Constants.Swerve.skidLimit;
 
     /**
      * Creates a new {@code SwerveRateLimiter} and publishes all acceleration limits to
@@ -67,10 +68,7 @@ public class SwerveRateLimiter implements Tunable {
      * Any updates received via NetworkTables will immediately modify the corresponding limit used
      * by the rate limiter.
      */
-    public SwerveRateLimiter() {
-        Tunable.setupTunable("/SwerveRateLimiter", this, SwerveRateLimiter.class, () -> {
-        });
-    }
+    public SwerveRateLimiter() {}
 
     /**
      * Updates the current robot-relative chassis velocity used as the basis for acceleration

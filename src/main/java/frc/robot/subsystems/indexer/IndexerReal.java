@@ -31,8 +31,8 @@ public class IndexerReal implements IndexerIO {
     public IndexerReal() {
         spindexerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         magazineConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        setSpindexerConstants(Constants.Indexer.spindexerConstants);
-        setMagazineConstants(Constants.Indexer.magazineConstants);
+        setSpindexerConstants(Constants.Indexer.spindexerConstants.get());
+        setMagazineConstants(Constants.Indexer.magazineConstants.get());
         PhoenixSignals.registerSignals(false, spinMotorVelocity);
         PhoenixSignals.registerSignals(false, magazineStatusVelocity);
     }

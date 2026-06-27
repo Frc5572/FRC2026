@@ -3,6 +3,7 @@ package frc.robot.math.geometry;
 /** Result type for {@link SeparatingAxis}. */
 public class Penetration {
 
+    @SuppressWarnings("unused")
     private final String name;
 
     /** Result type for {@link SeparatingAxis}. */

@@ -17,6 +17,7 @@ public class Circle implements ConvexShape {
         this.radius = radius;
     }
 
+    @SuppressWarnings("unused")
     private static final int RESOLUTION = 20;
 
 
