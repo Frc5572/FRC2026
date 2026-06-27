@@ -31,6 +31,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.CameraConstantsBuilder;
+import frc.robot.util.tunable.BurstGateConstants;
+import frc.robot.util.tunable.BurstGateConstantsTunable;
 import frc.robot.util.tunable.FlywheelConstantsBuilder;
 import frc.robot.util.tunable.FlywheelConstantsTunable;
 import frc.robot.util.tunable.ModuleConstants;
@@ -621,6 +623,10 @@ public final class Constants {
         public static final double shooterVelocity = 0.0;
 
         public static final double atSpeedThreshold = 50.0;
+
+        /** Tunable burst gate / run-hot setpoint parameters. */
+        public static final BurstGateConstantsTunable burstGate =
+            new BurstGateConstantsTunable("BurstGate", new BurstGateConstants());
 
         // @formatter:off
         public static final FlywheelConstantsTunable constants =

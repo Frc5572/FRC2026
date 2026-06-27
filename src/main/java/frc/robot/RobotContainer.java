@@ -412,6 +412,8 @@ public final class RobotContainer {
         });
         shotData.ifDirty(_x -> {
         });
+        Constants.Shooter.burstGate.ifDirty(_x -> {
+        });
 
         Logger.recordOutput("test",
             AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());

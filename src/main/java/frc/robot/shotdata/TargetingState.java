@@ -63,6 +63,12 @@ public class TargetingState {
     private double desiredFlywheelSpeed = 0.0;
     private double desiredHoodAngleDeg = 0.0;
     private boolean okayToShoot = false;
+    /**
+     * Hysteresis state for the burst gate. While {@code true} the indexer keeps running as the
+     * flywheel sags toward the bottom of the shot window; it only re-arms after the flywheel
+     * recovers near the top. Prevents the per-shot flip-flopping of {@link #okayToShoot}.
+     */
+    private boolean bursting = false;
     private Rotation2d aimAtHubRotation = Rotation2d.kZero;
     private Rotation2d aimForShootingRotation = Rotation2d.kZero;
     private double currentFlywheelSpeed;
@@ -111,7 +117,6 @@ public class TargetingState {
         Translation2d shooterOffset =
             Constants.Vision.turretCenter.getTranslation().toTranslation2d();
 
-        okayToShoot = true;
         var motion = RadialVelocityUtil.getDistanceRadialTangentialVector(
             drivetrainState.getFieldRelativeSpeeds(), robotPose, shooterOffset, shootingTarget);
 
@@ -155,16 +160,37 @@ public class TargetingState {
 
             Logger.recordOutput("TargetingState/parameters/futureAimPoint", futureAimPoint);
 
-            desiredFlywheelSpeed = parameters.flywheelSpeedRps();
+            var burstGate = Constants.Shooter.burstGate.get();
+
+            // Run hot: target somewhere between the nominal and the top of the shot window so
+            // there is sag headroom for a continuous burst. Always between nominal and max.
+            double nominal = parameters.flywheelSpeedRps();
+            double max = parameters.maxFlywheelSpeed();
+            double min = parameters.minFlywheelSpeed();
+            desiredFlywheelSpeed = nominal + burstGate.setpointFraction * (max - nominal);
             desiredHoodAngleDeg = parameters.hoodAngle();
 
             aimForShootingRotation = futureAimPoint.minus(shooterPosField).getAngle();
-            if (currentFlywheelSpeed < parameters.minFlywheelSpeed()) {
-                okayToShoot = false;
+
+            // Hysteresis (Schmitt-trigger) burst gate. Once a burst starts, keep indexing as the
+            // flywheel sags all the way down to the bottom of the window, then stop and wait until
+            // it recovers near the setpoint before re-arming. This replaces the single-threshold
+            // gate that flip-flopped the indexer on every shot.
+            double armThreshold = desiredFlywheelSpeed - burstGate.armFraction * (max - min);
+            if (bursting) {
+                if (currentFlywheelSpeed < min) {
+                    bursting = false;
+                }
+            } else if (currentFlywheelSpeed >= armThreshold) {
+                bursting = true;
             }
+            okayToShoot = bursting;
         } else {
+            bursting = false;
             okayToShoot = false;
         }
+
+        Logger.recordOutput("TargetingState/bursting", bursting);
 
         Logger.recordOutput("TargetingState/okayToShoot", okayToShoot);
     }
