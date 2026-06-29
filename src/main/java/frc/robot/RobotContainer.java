@@ -113,14 +113,14 @@ public final class RobotContainer {
             case kReal:
                 sim = null;
                 swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
-                vision = new Vision(swerve.state, new VisionReal());
-                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
+                vision = new Vision(swerve.state, new VisionReal(), turret.adapter);
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
                 indexer = new Indexer(new IndexerReal());
-                
+
                 break;
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
@@ -140,9 +140,9 @@ public final class RobotContainer {
                 FuelSim.getInstance().start();
                 swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
                     sim.swerveDrive::moduleProvider);
-                vision = new Vision(swerve.state, sim.visionSim);
-                adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
+                vision = new Vision(swerve.state, sim.visionSim, turret.adapter);
+                adjustableHood = new AdjustableHood(sim.adjustableHood);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
@@ -150,28 +150,28 @@ public final class RobotContainer {
 
                 SmartDashboard.putNumber("VisionFudge", 0.0);
 
-                
+
                 FuelSim.getInstance().spawnStartingFuel();
 
                 break;
             default:
                 sim = null;
                 swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
-                vision = new Vision(swerve.state, new VisionIOEmpty());
-                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
+                vision = new Vision(swerve.state, new VisionIOEmpty(), turret.adapter);
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());
                 indexer = new Indexer(new IndexerIOEmpty());
-                
+
                 break;
 
-            
+
         }
 
         targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
-                () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
+            () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
         // DASHBOARD STUFF
         SmartDashboard.putData(Constants.DashboardValues.autoChooser, autoChooser);
         SmartDashboard.putNumber(Constants.DashboardValues.shootX,

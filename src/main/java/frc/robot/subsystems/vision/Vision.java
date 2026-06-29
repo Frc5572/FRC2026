@@ -13,8 +13,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.localization.CameraProcessor;
+import frc.robot.localization.CameraProcessor.Result;
 import frc.robot.localization.DrivetrainState;
-import frc.robot.subsystems.shooter.TargetingState;
+import frc.robot.localization.TurretCameraAdapter;
+import frc.robot.localization.VisionObservation;
 import frc.robot.util.Tuples.Tuple2;
 
 /**
@@ -51,6 +54,8 @@ public class Vision extends SubsystemBase {
     private boolean seesMultitag;
     public Trigger seesTwoAprilTags =
         new Trigger(() -> twoAprilTags()).debounce(.3, Debouncer.DebounceType.kBoth);
+    private final CameraProcessor[] cameraProcessors;
+    private final Result[] processorResults;
 
     /**
      * Creates the vision subsystem.
@@ -58,7 +63,7 @@ public class Vision extends SubsystemBase {
      * @param state shared swerve pose estimator to receive vision updates
      * @param io vision IO implementation responsible for acquiring camera results
      */
-    public Vision(DrivetrainState state, VisionIO io) {
+    public Vision(DrivetrainState state, VisionIO io, TurretCameraAdapter adapter) {
         super("Vision");
         this.io = io;
         this.state = state;
@@ -73,6 +78,13 @@ public class Vision extends SubsystemBase {
         this.cameraContributed = new boolean[Constants.Vision.cameraConstants.length];
         this.cameraContributedKeys = IntStream.range(0, Constants.Vision.cameraConstants.length)
             .mapToObj((i) -> "Vision/Contributed_" + i).toArray(String[]::new);
+        this.cameraProcessors =
+            IntStream.range(0, Constants.Vision.cameraConstants.length).mapToObj(i -> {
+                CameraConstants constants_ = Constants.Vision.cameraConstants[i];
+                TurretCameraAdapter adapter_ = constants_.isTurret ? adapter : null;
+                return new CameraProcessor(constants_, adapter_);
+            }).toArray(CameraProcessor[]::new);
+        this.processorResults = new Result[Constants.Vision.cameraConstants.length];
     }
 
     @Override
@@ -100,12 +112,19 @@ public class Vision extends SubsystemBase {
             cameraViz[i] = new Translation3d[0];
         }
         for (var result : results) {
-            cameraContributed[result._0()] = state
-                .addVisionObservation(Constants.Vision.cameraConstants[result._0()], result._1());
+            processorResults[result._0()] =
+                cameraProcessors[result._0()].process(result._1(), state.getFieldRelativeSpeeds());
+            if (processorResults[result._0()] instanceof CameraProcessor.Err<?, ?> err) {
+                cameraContributed[result._0()] = err != null;
+                Logger.recordOutput(cameraContributedKeys[result._0()] + "/rejection",
+                    err.toString());
+            } else if (processorResults[result._0()] instanceof CameraProcessor.Ok<?, ?> ok) {
+                cameraContributed[result._0()] = true;
+                var obs = (VisionObservation) ok.value();
+                state.addVisionObservation(obs);
+            }
             if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
-            } else if (result._0() == 0 && !result._1().multitagResult.isPresent()) {
-                seesMultitag = false;
             }
             for (int i = 0; i < result._1().targets.size(); i++) {
                 var robotToCamera = Constants.Vision.cameraConstants[result._0()].robotToCamera;
