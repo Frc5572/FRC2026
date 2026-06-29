@@ -17,6 +17,7 @@ import frc.robot.localization.CameraProcessor;
 import frc.robot.localization.CameraProcessor.Result;
 import frc.robot.localization.DrivetrainState;
 import frc.robot.localization.TurretCameraAdapter;
+import frc.robot.localization.VisionObservation;
 import frc.robot.util.Tuples.Tuple2;
 
 /**
@@ -117,11 +118,13 @@ public class Vision extends SubsystemBase {
                 cameraContributed[result._0()] = err != null;
                 Logger.recordOutput(cameraContributedKeys[result._0()] + "/rejection",
                     err.toString());
+            } else if (processorResults[result._0()] instanceof CameraProcessor.Ok<?, ?> ok) {
+                cameraContributed[result._0()] = true;
+                var obs = (VisionObservation) ok.value();
+                state.addVisionObservation(obs);
             }
             if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
-            } else if (result._0() == 0 && !result._1().multitagResult.isPresent()) {
-                seesMultitag = false;
             }
             for (int i = 0; i < result._1().targets.size(); i++) {
                 var robotToCamera = Constants.Vision.cameraConstants[result._0()].robotToCamera;
