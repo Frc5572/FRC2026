@@ -113,10 +113,13 @@ public class Vision extends SubsystemBase {
         for (var result : results) {
             processorResults[result._0()] =
                 cameraProcessors[result._0()].process(result._1(), state.getFieldRelativeSpeeds());
-            cameraContributed[result._0()] = !processorResults[result._0()].isErr();
-            if (!cameraContributed[result._0()]) {
+            if (processorResults[result._0()] instanceof CameraProcessor.Err<?, ?> err) {
+                cameraContributed[result._0()] = err != null;
                 Logger.recordOutput(cameraContributedKeys[result._0()] + "/rejection",
-                    processorResults[result._0()].asErr().toString());
+                    err.toString());
+            }
+            if (!cameraContributed[result._0()]) {
+
             }
             if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
