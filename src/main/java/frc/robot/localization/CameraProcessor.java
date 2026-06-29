@@ -69,8 +69,6 @@ public class CameraProcessor {
      */
     public Result<VisionObservation, RejectionReason> process(PhotonPipelineResult result,
         ChassisSpeeds currentSpeeds) {
-
-
         var multiTag = result.getMultiTagResult();
         Transform3d robotToCamera_ = cameraConstants.robotToCamera;
 
@@ -82,7 +80,7 @@ public class CameraProcessor {
             var maybeRobotToCamera =
                 adapter.getRobotToCameraAt(robotToCamera_, result.getTimestampSeconds());
             if (maybeRobotToCamera.isEmpty()) {
-                return Result.err(RejectionReason.MISSING_TURRET_ANGLE);
+                return Results.err(RejectionReason.MISSING_TURRET_ANGLE);
             }
             robotToCamera_ = maybeRobotToCamera.get();
         }
@@ -95,12 +93,12 @@ public class CameraProcessor {
 
         var bestTarget = result.hasTargets() ? result.getBestTarget() : null;
         if (bestTarget == null) {
-            return Result.err(RejectionReason.NO_TARGETS);
+            return Results.err(RejectionReason.NO_TARGETS);
         }
 
         var bestTagPose = Constants.Vision.fieldLayout.getTagPose(bestTarget.getFiducialId());
         if (bestTagPose.isEmpty()) {
-            return Result.err(RejectionReason.NO_TARGETS);
+            return Results.err(RejectionReason.NO_TARGETS);
         }
 
         if (multiTag.isPresent()) {
@@ -130,15 +128,16 @@ public class CameraProcessor {
                 rotationStdDev);
 
             if (cameraConstants.findConstants) {
-                return Result.err(RejectionReason.NO_TARGETS);
+                return Results.err(RejectionReason.NO_TARGETS);
             }
 
-            return Result.ok(new VisionObservation(cameraPose, robotToCamera_, translationStdDev,
+            return Results.ok(new VisionObservation(cameraPose, robotToCamera_, translationStdDev,
                 rotationStdDev, result.getTimestampSeconds()));
         }
 
-        return Result.err(RejectionReason.SINGLE_TAG_ONLY);
+        return Results.err(RejectionReason.SINGLE_TAG_ONLY);
     }
+
 
     private static double stdDevMultiplier(List<PhotonTrackedTarget> targets, Pose3d cameraPose) {
         double totalDistance = 0.0;
@@ -156,40 +155,39 @@ public class CameraProcessor {
         return stddev;
     }
 
-    /**
-     * return class for processes method
-     */
-    public static final class Result<T, E> {
-        private final T ok;
-        private final E err;
-
-        private Result(T ok, E err) {
-            this.ok = ok;
-            this.err = err;
+    public sealed interface Result<T, E> permits Ok, Err {
+        default boolean isOk() {
+            return this instanceof Ok<T, E>;
         }
 
+        default boolean isErr() {
+            return this instanceof Err<T, E>;
+        }
+
+        default Ok<T, E> asOk() {
+            return (Ok<T, E>) this;
+        }
+
+        default Err<T, E> asErr() {
+            return (Err<T, E>) this;
+        }
+    }
+
+    public record Ok<T, E>(T value) implements Result<T, E> {
+    }
+    public record Err<T, E>(E error) implements Result<T, E> {
+    }
+
+
+    public final class Results {
+        private Results() {}
+
         public static <T, E> Result<T, E> ok(T value) {
-            return new Result<>(value, null);
+            return new Ok<>(value);
         }
 
         public static <T, E> Result<T, E> err(E error) {
-            return new Result<>(null, error);
-        }
-
-        public boolean isOk() {
-            return ok != null;
-        }
-
-        public boolean isErr() {
-            return err != null;
-        }
-
-        public T getOk() {
-            return ok;
-        }
-
-        public E getErr() {
-            return err;
+            return new Err<>(error);
         }
     }
 }
