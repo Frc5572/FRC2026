@@ -118,9 +118,6 @@ public class Vision extends SubsystemBase {
                 Logger.recordOutput(cameraContributedKeys[result._0()] + "/rejection",
                     err.toString());
             }
-            if (!cameraContributed[result._0()]) {
-
-            }
             if (result._0() == 0 && result._1().multitagResult.isPresent()) {
                 seesMultitag = true;
             } else if (result._0() == 0 && !result._1().multitagResult.isPresent()) {
