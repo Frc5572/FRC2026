@@ -155,6 +155,7 @@ public class CameraProcessor {
         return stddev;
     }
 
+    /** results tuple */
     public sealed interface Result<T, E> permits Ok, Err {
         default boolean isOk() {
             return this instanceof Ok<T, E>;
@@ -173,12 +174,17 @@ public class CameraProcessor {
         }
     }
 
+    /** Ok results */
     public record Ok<T, E>(T value) implements Result<T, E> {
     }
+
+    /** Err results */
     public record Err<T, E>(E error) implements Result<T, E> {
     }
 
-
+    /**
+     * Helper class for Results
+     */
     public final class Results {
         private Results() {}
 
