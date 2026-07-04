@@ -95,6 +95,8 @@ public final class RobotContainer {
     private final Indexer indexer;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
+    /** True in kReplayCompare: record maple-sim drivetrain predictions under SimCompare/Drive. */
+    private final boolean simCompareMode;
     private final Field2d field = new Field2d();
     // private final FieldObject2d autoJustShootLocation = field.getObject("Auto Just Shoot
     // Location");
@@ -109,6 +111,7 @@ public final class RobotContainer {
      * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
+        this.simCompareMode = runtimeType == RobotRunType.kReplayCompare;
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -122,6 +125,13 @@ public final class RobotContainer {
                 indexer = new Indexer(new IndexerReal());
                 
                 break;
+            case kReplayCompare:
+                // Replay with the full simulation stack running as a shadow. Control uses the
+                // replayed real inputs (processInputs overwrites every input table), while maple-sim
+                // and each sim IO are driven by the commands the control code issues and record
+                // their predictions under SimCompare/* for overlay against the recorded real
+                // signals. Shares the kSimulation wiring below; the only differences (the WPILOG
+                // replay source and the extra SimCompare/Drive output) live outside this switch.
             case kSimulation:
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
                 sim = new SimulatedRobotState(
@@ -393,6 +403,21 @@ public final class RobotContainer {
             SimulatedArena.getInstance().simulationPeriodic();
             FuelSim.getInstance().tick();
             sim.update();
+            if (simCompareMode) {
+                // Drivetrain shadow: maple-sim is driven open-loop by the replayed module commands.
+                // Compare its field-relative chassis speeds against the recorded real
+                // /RealOutputs/State/currentSpeeds (same frame). Speed magnitude is drift-robust;
+                // the absolute pose drifts because maple has no vision corrections.
+                var mapleSpeeds =
+                    sim.swerveDrive.mapleSim.getDriveTrainSimulatedChassisSpeedsFieldRelative();
+                Logger.recordOutput("SimCompare/Drive/predictedFieldSpeeds", mapleSpeeds);
+                Logger.recordOutput("SimCompare/Drive/predictedSpeedMag",
+                    Math.hypot(mapleSpeeds.vxMetersPerSecond, mapleSpeeds.vyMetersPerSecond));
+                Logger.recordOutput("SimCompare/Drive/predictedPose",
+                    sim.getGroundTruthPose().toPose2d());
+                Logger.recordOutput("SimCompare/Drive/mapleMaxLinearMps", sim.swerveDrive.mapleSim
+                    .maxLinearVelocity().in(edu.wpi.first.units.Units.MetersPerSecond));
+            }
         }
         viz.periodic();
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());

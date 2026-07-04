@@ -137,7 +137,7 @@ public class RobotViz {
         if (sim != null) {
             Logger.recordOutput("Viz/ActualPose", sim.getGroundTruthPose());
             update(gtState, Rotation2d.fromRadians(sim.turret.turretTarget),
-                Radians.of(sim.adjustableHood.hood.position), climber.inputs.positionPivot,
+                Radians.of(sim.adjustableHood.getAngleRad()), climber.inputs.positionPivot,
                 climber.inputs.positionTelescope, intake.inputs.rightHopperPosition,
                 Arrays.stream(sim.swerveDrive.mapleSim.getModules())
                     .map(mod -> mod.getSteerAbsoluteFacing()).toArray(Rotation2d[]::new));

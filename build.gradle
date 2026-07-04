@@ -119,7 +119,9 @@ test {
 }
 
 // Simulation configuration (e.g. environment variables).
-wpi.sim.addGui().defaultEnabled = true
+// AdvantageKit replay requires all HAL sim extensions (incl. the GUI) to be disabled. Keep the GUI
+// on for normal `simulateJava`, but off whenever a replay log is supplied via AKIT_LOG_PATH.
+wpi.sim.addGui().defaultEnabled = System.getenv("AKIT_LOG_PATH") == null
 wpi.sim.addDriverstation().defaultEnabled = false
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')

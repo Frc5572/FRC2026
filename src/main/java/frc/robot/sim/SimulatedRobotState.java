@@ -72,11 +72,11 @@ public class SimulatedRobotState {
             double p = random.nextDouble();
             if (p < avgBallsPerTick) {
                 double speedRotationsPerSecond =
-                    (shooter.flywheel.position + 0.02 * random.nextFloat() - 0.01);
+                    (shooter.getSpeedRevPerSec() + 0.02 * random.nextFloat() - 0.01);
                 Logger.recordOutput("FuelSim/speedRotationsPerSecond", speedRotationsPerSecond);
                 shooter.shootOne();
                 double effectiveHoodAngle =
-                    adjustableHood.hood.position + 0.02 * random.nextFloat() - 0.01;
+                    adjustableHood.getAngleRad() + 0.02 * random.nextFloat() - 0.01;
                 double effectiveTurretAngle =
                     this.swerveDrive.mapleSim.getSimulatedDriveTrainPose().getRotation()
                         .getRadians() + turret.turretTarget + 0.02 * random.nextFloat() - 0.01;

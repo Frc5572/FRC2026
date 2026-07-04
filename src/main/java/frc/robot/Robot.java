@@ -38,7 +38,14 @@ public class Robot extends LoggedRobot {
         /** Simulation runtime. */
         kSimulation,
         /** Replay runtime. */
-        kReplay;
+        kReplay,
+        /**
+         * Replay runtime that additionally drives the simulation models with the same commands the
+         * control code issues, recording their predictions under {@code SimCompare/*} so they can be
+         * overlaid against the recorded real signals to tune the simulation. Selected by replaying a
+         * log with the {@code SIM_COMPARE} environment variable set.
+         */
+        kReplayCompare;
     }
 
     public RobotRunType robotRunType = RobotRunType.kReal;
@@ -90,7 +97,10 @@ public class Robot extends LoggedRobot {
                     .addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
                 // Save outputs to a new log
                 setUseTiming(false); // Run as fast as possible
-                robotRunType = RobotRunType.kReplay;
+                // SIM_COMPARE drives the sim models alongside replay so their predictions can be
+                // compared against the recorded real signals (see RobotRunType.kReplayCompare).
+                robotRunType = System.getenv("SIM_COMPARE") != null ? RobotRunType.kReplayCompare
+                    : RobotRunType.kReplay;
 
             }
         }
