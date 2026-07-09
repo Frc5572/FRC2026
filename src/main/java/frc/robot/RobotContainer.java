@@ -2,7 +2,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import java.lang.System.Logger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +10,7 @@ import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
 import org.jspecify.annotations.NullMarked;
+import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -85,10 +85,9 @@ public final class RobotContainer {
     private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
-    Swerve.Bundle bundle = Swerve.create(null, null, null);
-    DrivetrainState drivetrainState = bundle.drivetrainState();
+    private final DrivetrainState drivetrainState;
+    private final Swerve swerve;
     private final LEDs leds = new LEDs();
-    private final Swerve swerve = bundle.swerve();
     private final Vision vision;
     private final AdjustableHood adjustableHood;
     private final Turret turret;
@@ -115,7 +114,11 @@ public final class RobotContainer {
         switch (runtimeType) {
             case kReal:
                 sim = null;
-                swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
+                Swerve.Bundle realBundle =
+                    Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
+                this.drivetrainState = realBundle.drivetrainState();
+                this.swerve = realBundle.swerve();
+
                 vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
@@ -141,8 +144,11 @@ public final class RobotContainer {
                         sim.indexer.addFuel();
                     });
                 FuelSim.getInstance().start();
-                swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
-                    sim.swerveDrive::moduleProvider);
+                Swerve.Bundle simBundle = Swerve.create(sim.swerveDrive::simProvider,
+                    sim.swerveDrive::gyroProvider, sim.swerveDrive::moduleProvider);
+                this.drivetrainState = simBundle.drivetrainState();
+                this.swerve = simBundle.swerve();
+
                 vision = new Vision(swerve.state, sim.visionSim);
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
@@ -159,7 +165,11 @@ public final class RobotContainer {
                 break;
             default:
                 sim = null;
-                swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
+                Swerve.Bundle defaultBundle =
+                    Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
+                this.drivetrainState = defaultBundle.drivetrainState();
+                this.swerve = defaultBundle.swerve();
+
                 vision = new Vision(swerve.state, new VisionIOEmpty());
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
