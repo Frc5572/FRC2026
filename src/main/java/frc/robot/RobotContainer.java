@@ -118,10 +118,9 @@ public final class RobotContainer {
                     Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
-
-                vision = new Vision(swerve.state, new VisionReal());
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
+                vision = new Vision(swerve.state, new VisionReal(), turret.adapter);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
@@ -149,9 +148,9 @@ public final class RobotContainer {
                 this.drivetrainState = simBundle.drivetrainState();
                 this.swerve = simBundle.swerve();
 
-                vision = new Vision(swerve.state, sim.visionSim);
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
+                vision = new Vision(swerve.state, sim.visionSim, turret.adapter);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
@@ -170,9 +169,9 @@ public final class RobotContainer {
                 this.drivetrainState = defaultBundle.drivetrainState();
                 this.swerve = defaultBundle.swerve();
 
-                vision = new Vision(swerve.state, new VisionIOEmpty());
-                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
+                vision = new Vision(swerve.state, new VisionIOEmpty(), turret.adapter);
+                adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
                 intake = new Intake(new IntakeIOEmpty());
                 climber = new Climber(new ClimberSim());

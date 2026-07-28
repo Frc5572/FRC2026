@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.localization.DrivetrainState;
+import frc.robot.localization.TurretCameraAdapter;
 
 /**
  * Subsystem representing the robot turret.
@@ -27,6 +28,8 @@ public class Turret extends SubsystemBase {
 
     private final TurretIO io;
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
+    public final TurretCameraAdapter adapter =
+        new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
     private final DrivetrainState state;
 
     /**
@@ -48,8 +51,8 @@ public class Turret extends SubsystemBase {
         Constants.Turret.pid.ifDirty(io::setPID);
 
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
-
-        state.setTurretRawAngle(MathSharedStore.getTimestamp(), Rotations.of(inputs.relativeAngle));
+        adapter.recordTurretAngle(MathSharedStore.getTimestamp(),
+            new Rotation2d(Rotations.of(inputs.relativeAngle)));
     }
 
     public Rotation2d getTurretHeading() {
