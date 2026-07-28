@@ -94,13 +94,17 @@ public final class Swerve extends SubsystemBase {
     private static boolean verticalLocked = false;
 
     /**
-     * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
-     * background odometry processing.
+     * Simple container type that bundles together the {@link Swerve} subsystem and its associated
+     * {@link DrivetrainState} estimator.
      *
-     * Bundle
+     * <p>
+     * This record is used to pass around both the high-level swerve drive control interface and the
+     * underlying drivetrain state estimation as a single unit. It does not itself construct or
+     * initialize any hardware or background processing; it only stores references to the provided
+     * instances.
      *
-     * @param swerve swerve subsystem
-     * @param drivetrainState drivetrain estimator
+     * @param swerve the swerve drive subsystem instance
+     * @param drivetrainState the drivetrain state estimator associated with the swerve subsystem
      */
     public static record Bundle(Swerve swerve, DrivetrainState drivetrainState) {
     }
