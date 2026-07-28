@@ -109,6 +109,7 @@ public final class Swerve extends SubsystemBase {
     public static record Bundle(Swerve swerve, DrivetrainState drivetrainState) {
     }
 
+    /** Creates Swerve and DrivetrainState static factory */
     public static Bundle create(Function<PhoenixOdometryThread, SwerveIO> swerveIo,
         Function<PhoenixOdometryThread, GyroIO> gyroIo,
         BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn) {
