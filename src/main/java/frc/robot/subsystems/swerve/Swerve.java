@@ -73,13 +73,13 @@ import frc.robot.util.AllianceFlipUtil;
 @NullMarked
 public final class Swerve extends SubsystemBase {
 
-    private final Lock odometryLock = new ReentrantLock();
+    private final Lock odometryLock;
     private final PhoenixOdometryThread odometryThread;
     public final SwerveModule[] modules;
     private final GyroIO gyro;
-    private final GyroInputsAutoLogged gyroInputs = new GyroInputsAutoLogged();
+    private final GyroInputsAutoLogged gyroInputs;
     private final SwerveIO io;
-    private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
+    private final SwerveInputsAutoLogged inputs;
 
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
 
@@ -93,46 +93,82 @@ public final class Swerve extends SubsystemBase {
 
     private static boolean verticalLocked = false;
 
-
     /**
-     * Constructs the swerve subsystem and initializes all hardware interfaces, estimator state, and
-     * background odometry processing.
+     * Simple container type that bundles together the {@link Swerve} subsystem and its associated
+     * {@link DrivetrainState} estimator.
      *
      * <p>
-     * The provided factories are invoked with a shared {@link PhoenixOdometryThread} instance to
-     * allow sensors and motors to register high-frequency signals for synchronized sampling.
+     * This record is used to pass around both the high-level swerve drive control interface and the
+     * underlying drivetrain state estimation as a single unit. It does not itself construct or
+     * initialize any hardware or background processing; it only stores references to the provided
+     * instances.
      *
-     * @param swerveIo factory for creating the drivetrain-level IO implementation
-     * @param gyroIo factory for creating the gyro IO implementation
-     * @param moduleIoFn factory for creating per-module IO implementations
+     * @param swerve the swerve drive subsystem instance
+     * @param drivetrainState the drivetrain state estimator associated with the swerve subsystem
      */
-    public Swerve(Function<PhoenixOdometryThread, SwerveIO> swerveIo,
+    public static record Bundle(Swerve swerve, DrivetrainState drivetrainState) {
+    }
+
+    /** Creates Swerve and DrivetrainState static factory */
+    public static Bundle create(Function<PhoenixOdometryThread, SwerveIO> swerveIo,
         Function<PhoenixOdometryThread, GyroIO> gyroIo,
         BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn) {
-        super("Swerve");
-        this.odometryThread = new PhoenixOdometryThread(this.odometryLock);
-        this.gyro = gyroIo.apply(this.odometryThread);
-        this.modules = IntStream.range(0, Constants.Swerve.modulesConstants.length)
-            .mapToObj(i -> new SwerveModule(i, moduleIoFn.apply(i, this.odometryThread)))
+        Lock localLock = new ReentrantLock();
+        PhoenixOdometryThread localOdometryThread = new PhoenixOdometryThread(localLock);
+
+        GyroIO localGyro = gyroIo.apply(localOdometryThread);
+        GyroInputsAutoLogged localGyroInputs = new GyroInputsAutoLogged();
+        SwerveIO localIo = swerveIo.apply(localOdometryThread);
+
+        SwerveInputsAutoLogged localInputs = new SwerveInputsAutoLogged();
+
+        SwerveModule[] localModules = IntStream.range(0, Constants.Swerve.modulesConstants.length)
+            .mapToObj(i -> new SwerveModule(i, moduleIoFn.apply(i, localOdometryThread)))
             .toArray(SwerveModule[]::new);
-        this.io = swerveIo.apply(odometryThread);
-        this.odometryThread.start();
-        this.odometryLock.lock();
-        SwerveModulePosition[] initPositions = new SwerveModulePosition[modules.length];
+
+        localOdometryThread.start();
+
+        localLock.lock();
+        SwerveModulePosition[] initPositions = new SwerveModulePosition[localModules.length];
         try {
-            Arrays.stream(modules).map(mod -> {
+            Arrays.stream(localModules).map(mod -> {
                 mod.updateInputs();
                 return mod.getPosition();
             }).toArray(_i -> initPositions);
-            this.gyro.updateInputs(this.gyroInputs);
-            Logger.processInputs("Swerve/Gyro", this.gyroInputs);
+
+            localGyro.updateInputs(localGyroInputs);
+            Logger.processInputs("Swerve/Gyro", localGyroInputs);
         } finally {
-            this.odometryLock.unlock();
+            localLock.unlock();
         }
-        this.state = new DrivetrainState(initPositions, this.gyroInputs.yaw);
-        autoFactory = new AutoFactory(state::getGlobalPoseEstimate, state::resetPose,
+
+        DrivetrainState instantiatedState = new DrivetrainState(initPositions, localGyroInputs.yaw);
+
+        Swerve instantiatedSwerve = new Swerve(localLock, localOdometryThread, localModules,
+            localGyro, localGyroInputs, localIo, localInputs, instantiatedState);
+
+        return new Bundle(instantiatedSwerve, instantiatedState);
+    }
+
+
+    private Swerve(Lock odometryLock, PhoenixOdometryThread odometryThread, SwerveModule[] modules,
+        GyroIO gyro, GyroInputsAutoLogged gyroInputs, SwerveIO io, SwerveInputsAutoLogged inputs,
+        DrivetrainState state) {
+        super("Swerve");
+
+        this.odometryLock = odometryLock;
+        this.odometryThread = odometryThread;
+        this.modules = modules;
+        this.gyro = gyro;
+        this.gyroInputs = gyroInputs;
+        this.io = io;
+        this.inputs = inputs; // B. Assign it here to fix the error!
+        this.state = state;
+
+        this.autoFactory = new AutoFactory(state::getGlobalPoseEstimate, state::resetPose,
             this::followTrajectory, true, this);
     }
+
 
     /**
      * Set this to true to flip trajectories about the y axis (left/right) for auto paths.

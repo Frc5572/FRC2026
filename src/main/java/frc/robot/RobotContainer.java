@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot.RobotRunType;
 import frc.robot.commands.WaitSupplierCommand;
+import frc.robot.localization.DrivetrainState;
 import frc.robot.sim.FuelSim;
 import frc.robot.sim.SimulatedRobotState;
 import frc.robot.subsystems.LEDs;
@@ -84,8 +85,9 @@ public final class RobotContainer {
     private final AutoCommandFactory autoCommandFactory;
 
     /* Subsystems */
-    private final LEDs leds = new LEDs();
+    private final DrivetrainState drivetrainState;
     private final Swerve swerve;
+    private final LEDs leds = new LEDs();
     private final Vision vision;
     private final AdjustableHood adjustableHood;
     private final Turret turret;
@@ -112,10 +114,13 @@ public final class RobotContainer {
         switch (runtimeType) {
             case kReal:
                 sim = null;
-                swerve = new Swerve(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
+                Swerve.Bundle realBundle =
+                    Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
+                this.drivetrainState = realBundle.drivetrainState();
+                this.swerve = realBundle.swerve();
+                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 turret = new Turret(new TurretReal(), swerve.state);
                 vision = new Vision(swerve.state, new VisionReal(), turret.adapter);
-                adjustableHood = new AdjustableHood(new AdjustableHoodReal());
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
                 climber = new Climber(new ClimberIOEmpty());
@@ -138,11 +143,14 @@ public final class RobotContainer {
                         sim.indexer.addFuel();
                     });
                 FuelSim.getInstance().start();
-                swerve = new Swerve(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
-                    sim.swerveDrive::moduleProvider);
+                Swerve.Bundle simBundle = Swerve.create(sim.swerveDrive::simProvider,
+                    sim.swerveDrive::gyroProvider, sim.swerveDrive::moduleProvider);
+                this.drivetrainState = simBundle.drivetrainState();
+                this.swerve = simBundle.swerve();
+
+                adjustableHood = new AdjustableHood(sim.adjustableHood);
                 turret = new Turret(sim.turret, swerve.state);
                 vision = new Vision(swerve.state, sim.visionSim, turret.adapter);
-                adjustableHood = new AdjustableHood(sim.adjustableHood);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
                 climber = new Climber(sim.climber);
@@ -156,7 +164,11 @@ public final class RobotContainer {
                 break;
             default:
                 sim = null;
-                swerve = new Swerve(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
+                Swerve.Bundle defaultBundle =
+                    Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
+                this.drivetrainState = defaultBundle.drivetrainState();
+                this.swerve = defaultBundle.swerve();
+
                 turret = new Turret(new TurretIOEmpty(), swerve.state);
                 vision = new Vision(swerve.state, new VisionIOEmpty(), turret.adapter);
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
