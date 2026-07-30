@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.List;
+import org.littletonrobotics.junction.LoggedRobot;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -45,6 +46,13 @@ import frc.robot.util.tunable.PIDConstantsBuilder;
 public final class Constants {
 
     public static final double visionFudgeFactor = 0.0;
+
+    /**
+     * Robot control loop period, in seconds. This is the nominal period, not a measured dt —
+     * discretization and rate limiting are more stable with a fixed timestep, which is the same
+     * choice WPILib makes internally.
+     */
+    public static final double loopPeriodSecs = LoggedRobot.defaultPeriodSecs;
 
     public static final boolean tunable = true;
 
@@ -242,13 +250,29 @@ public final class Constants {
 
         public static final double odometryFrequency = 100.0;
 
-        /* Teleop limits */
-        public static final double forwardLimit = 10.0;
-        public static final double forwardTiltLimit = 1000.0;
-        public static final double leftTiltLimit = 1000.0;
-        public static final double rightTiltLimit = 1000.0;
-        public static final double backTiltLimit = 1000.0;
-        public static final double skidLimit = 1000.0;
+        /*
+         * Acceleration limits enforced by SwerveRateLimiter. These apply to driver-commanded
+         * motion and to moveToPose, but not to the Choreo follower, which is already
+         * feasibility-checked. Use Double.POSITIVE_INFINITY to disable an individual limit.
+         */
+
+        /** Peak acceleration the drive motors can deliver at rest, in m/s^2. */
+        public static final double tractionAccelLimit = 10.0;
+        /** Acceleration that tips the robot backwards over its rear wheels, in m/s^2. */
+        public static final double tipForwardAccelLimit = Double.POSITIVE_INFINITY;
+        /** Acceleration that tips the robot forwards over its front wheels, in m/s^2. */
+        public static final double tipBackAccelLimit = Double.POSITIVE_INFINITY;
+        /** Acceleration that tips the robot over its right wheels, in m/s^2. */
+        public static final double tipLeftAccelLimit = Double.POSITIVE_INFINITY;
+        /** Acceleration that tips the robot over its left wheels, in m/s^2. */
+        public static final double tipRightAccelLimit = Double.POSITIVE_INFINITY;
+        /**
+         * Total module acceleration the tires can hold before slipping, in m/s^2. Shared by
+         * translation and rotation; see {@link frc.robot.subsystems.swerve.util.SwerveRateLimiter}.
+         */
+        public static final double skidAccelLimit = Double.POSITIVE_INFINITY;
+        /** Maximum angular acceleration of the chassis, in rad/s^2. */
+        public static final double angularAccelLimit = Double.POSITIVE_INFINITY;
 
         /* Module Specific Constants */
 

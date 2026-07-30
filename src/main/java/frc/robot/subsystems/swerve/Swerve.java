@@ -50,7 +50,7 @@ import frc.robot.util.AllianceFlipUtil;
  * <li>Gyro integration</li>
  * <li>High-frequency odometry sampling via {@link PhoenixOdometryThread}</li>
  * <li>Pose estimation and vision fusion via {@link TargetingState}</li>
- * <li>Acceleration, tilt, and skid limiting via {@link SwerveRateLimiter}</li>
+ * <li>Traction, tip, angular, and skid limiting via {@link SwerveRateLimiter}</li>
  * </ul>
  *
  * <h2>Threading model</h2> Odometry-related sensor signals are updated on a dedicated background
@@ -63,8 +63,9 @@ import frc.robot.util.AllianceFlipUtil;
  * for autonomous and field-relative driving.
  *
  * <h2>Driving model</h2> All drive commands ultimately resolve to robot-relative
- * {@link ChassisSpeeds}. These speeds are passed through a {@link SwerveRateLimiter} before being
- * discretized and converted to per-module states.
+ * {@link ChassisSpeeds}, which are discretized and converted to per-module states. Driver-commanded
+ * motion and {@code moveToPose} pass through a {@link SwerveRateLimiter} first; the Choreo follower
+ * does not, since its trajectories are already feasibility-checked.
  *
  * <p>
  * This class exposes convenience commands for robot-relative, field-relative, and user-relative
@@ -81,7 +82,14 @@ public final class Swerve extends SubsystemBase {
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs = new SwerveInputsAutoLogged();
 
+    /** Shared zero-speed request. Safe to share: the rate limiter never mutates its inputs. */
+    private static final ChassisSpeeds ZERO_SPEEDS = new ChassisSpeeds();
+
     private final SwerveRateLimiter limiter = new SwerveRateLimiter();
+    /** Robot-relative chassis speeds measured from the modules, refreshed every {@link #periodic}. */
+    private final ChassisSpeeds measuredSpeeds = new ChassisSpeeds();
+    /** Scratch buffer the limiter writes into, so the steady-state drive path allocates nothing. */
+    private final ChassisSpeeds limitedSpeeds = new ChassisSpeeds();
 
     private boolean flipTrajectories = false;
 
@@ -203,7 +211,11 @@ public final class Swerve extends SubsystemBase {
         }
         ChassisSpeeds currentSpeeds =
             Constants.Swerve.swerveKinematics.toChassisSpeeds(wheelStates);
-        limiter.update(currentSpeeds);
+        // Retained robot-relative, because state.updateMeasuredSpeeds converts to field-relative
+        // and the rate limiter needs the robot frame.
+        measuredSpeeds.vxMetersPerSecond = currentSpeeds.vxMetersPerSecond;
+        measuredSpeeds.vyMetersPerSecond = currentSpeeds.vyMetersPerSecond;
+        measuredSpeeds.omegaRadiansPerSecond = currentSpeeds.omegaRadiansPerSecond;
         state.updateMeasuredSpeeds(currentSpeeds);
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
@@ -223,9 +235,8 @@ public final class Swerve extends SubsystemBase {
      */
     public Command driveRobotRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return this.run(() -> {
-            ChassisSpeeds speeds = driveSpeeds.get();
-            speeds = limiter.limit(speeds);
-            setModuleStates(speeds);
+            limiter.limit(measuredSpeeds, driveSpeeds.get(), limitedSpeeds);
+            setModuleStates(limitedSpeeds);
         });
     }
 
@@ -285,7 +296,10 @@ public final class Swerve extends SubsystemBase {
     private void driveFieldRelative(ChassisSpeeds driveSpeeds) {
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(driveSpeeds,
             state.getGlobalPoseEstimate().getRotation());
-        // speeds = limiter.limit(speeds);
+        // Deliberately not rate-limited: this is the Choreo follower path. The trajectory is
+        // already generated against the drivetrain's feasibility constraints and the SwerveSample
+        // carries ax/ay/alpha feedforwards, so limiting here would fight the follower rather than
+        // protect the robot.
         setModuleStates(speeds);
     }
 
@@ -323,8 +337,8 @@ public final class Swerve extends SubsystemBase {
      */
     public MoveToPoseBuilder moveToPose() {
         var builder = new MoveToPoseBuilder(this, (speeds) -> {
-            limiter.limit(speeds);
-            setModuleStates(speeds);
+            limiter.limit(measuredSpeeds, speeds, limitedSpeeds);
+            setModuleStates(limitedSpeeds);
         });
         return builder;
     }
@@ -405,13 +419,13 @@ public final class Swerve extends SubsystemBase {
      *
      * <p>
      * This command commands zero desired chassis speeds and allows the {@link SwerveRateLimiter} to
-     * decelerate the robot within configured acceleration, tilt, and skid constraints rather than
-     * stopping abruptly.
+     * decelerate the robot within configured traction, tip, angular, and skid constraints rather
+     * than stopping abruptly.
      *
      * <p>
-     * The command completes once the rate-limited translational speed falls below a small
-     * threshold, indicating the robot is effectively stationary. After completion, a final
-     * zero-speed command is issued to ensure all modules are explicitly commanded to stop.
+     * The command completes once the measured translational speed falls below a small threshold,
+     * indicating the robot is effectively stationary. After completion, a final zero-speed command
+     * is issued to ensure all modules are explicitly commanded to stop.
      *
      * <p>
      * This is intended for use when transitioning between driving modes, autonomous steps, or
@@ -420,10 +434,10 @@ public final class Swerve extends SubsystemBase {
      * @return a command that decelerates and stops the drivetrain
      */
     public Command stop() {
-        return this.driveRobotRelative(ChassisSpeeds::new).until(() -> {
-            var speeds = limiter.limit(new ChassisSpeeds());
-            return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.1;
-        }).andThen(this.emergencyStop());
+        return this.driveRobotRelative(() -> ZERO_SPEEDS)
+            .until(() -> Math.hypot(measuredSpeeds.vxMetersPerSecond,
+                measuredSpeeds.vyMetersPerSecond) < 0.1)
+            .andThen(this.emergencyStop());
     }
 
 
@@ -499,7 +513,8 @@ public final class Swerve extends SubsystemBase {
     }
 
     private void setModuleStates(ChassisSpeeds chassisSpeeds) {
-        ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
+        ChassisSpeeds targetSpeeds =
+            ChassisSpeeds.discretize(chassisSpeeds, Constants.loopPeriodSecs);
         SwerveModuleState[] swerveModuleStates =
             Constants.Swerve.swerveKinematics.toSwerveModuleStates(targetSpeeds);
         setModuleStates(swerveModuleStates);
