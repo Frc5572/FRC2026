@@ -17,6 +17,12 @@ public class BallisticsDerivative3D implements DerivativeFunction {
         this.mass = mass;
     }
 
+    public BallisticsDerivative3D() {
+        this(RebuiltBallConstants.AIR_DENSITY, RebuiltBallConstants.CD,
+            RebuiltBallConstants.BALL_CROSS_AREA, RebuiltBallConstants.GRAVITY,
+            RebuiltBallConstants.BALL_MASS);
+    }
+
     @Override
     public double[] derivative(double[] input) {
         @SuppressWarnings("unused")
