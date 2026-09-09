@@ -37,27 +37,22 @@ public class Integrators {
 
         // a (stage coefficients) as lower-triangular matrix
         private static final double[][] A = {{}, // k1 (unused)
-
-            {0.161},
-
-            {-0.008480655492356989, 0.3354806554923570},
-
-            {2.539096252201595, -10.0, 8.0},
-
-            {0.1225166447228320, -0.9161211633952258, 10.0, -7.0},
-
-            {0.0, 0.0, 0.0, 0.5, 0.5},
-
-            {0.0, 0.0, 0.0, 0.5, 0.5} // same as stage 6 for FSAL structure
-        };
+            {0.161}, {-0.008480655492356989, 0.335480655492357},
+            {2.8971530571054935, -6.359448489975075, 4.3622954328695815},
+            {5.325864828439257, -11.748883564062828, 7.4955393428898365, -0.09249506636175525},
+            {5.86145544294642, -12.92096931784711, 8.159367898576159, -0.071584973281401,
+                -0.028269050394068383},
+            {0.09646076681806523, 0.01, 0.4798896504144996, 1.379008574103742, -3.290069515436081,
+                2.324710524099774}};
 
         // 5th-order weights (b)
-        private static final double[] B5 = {0.1185185185185185, 0.0, 0.5189863547758285,
-            -0.1276921739809084, 0.0, 0.5052088636714740, -0.0150215629859320};
+        private static final double[] B5 = {0.09646076681806523, 0.01, 0.4798896504144996,
+            1.379008574103742, -3.290069515436081, 2.324710524099774, 0.0};
 
         // 4th-order weights (b-tilde) for error estimate
-        private static final double[] B4 = {0.1185185185185185, 0.0, 0.5189863547758285,
-            -0.1276921739809084, 0.0, 0.5, -0.0108126993134380};
+        private static final double[] BTILDE = {-0.00178001105222577714, -0.0008164344596567469,
+            0.007880878010261995, -0.1447110071732629, 0.5823571654525552, -0.45808210592918697,
+            0.015151515151515152};
 
         public static StepData step(DerivativeFunction f, double[] xn, double h, double[] xnp1) {
             return step(f, xn, h, xnp1, null);
@@ -81,15 +76,12 @@ public class Integrators {
 
             // 5th order soln
             double[] temp = weightedSum(B5, k1, k2, k3, k4, k5, k6, k7);
-            for (int i = 0; i < xn.length; i++) {
-                xnp1[i] = xn[i] + h * temp[i];
-            }
+            double[] res = add(xn, scale(temp, h));
 
-            // 4th order soln
-            temp = weightedSum(B4, k1, k2, k3, k4, k5, k6, k7);
-            double[] y4th = add(xn, scale(temp, h));
+            double[] errVec = scale(weightedSum(BTILDE, k1, k2, k3, k4, k5, k6, k7), h);
+            double err = computeErrorNorm(xn, res, errVec, 0.01, 0.01);
 
-            double err = computeErrorNorm(xn, xnp1, y4th, 0.01, 0.01);
+            System.arraycopy(res, 0, xnp1, 0, xn.length);
 
             return new StepData(err, k7);
         }
@@ -106,11 +98,11 @@ public class Integrators {
             return ret;
         }
 
-        private static double computeErrorNorm(double[] xn, double[] x5th, double[] x4th,
+        private static double computeErrorNorm(double[] xn, double[] x5th, double[] errVec,
             double relTol, double absTol) {
             double sum = 0.0;
             for (int i = 0; i < xn.length; i++) {
-                double err = x5th[i] - x4th[i];
+                double err = errVec[i];
                 double scale = absTol + relTol * Math.max(Math.abs(xn[i]), Math.abs(x5th[i]));
                 double ratio = err / scale;
                 sum += ratio * ratio;
@@ -143,7 +135,7 @@ public class Integrators {
         double[] ret = new double[ks[0].length];
         for (int i = 0; i < a.length; i++) {
             for (int j = 0; j < ks[i].length; j++) {
-                ret[j] += a[i] + ks[i][j];
+                ret[j] += a[i] * ks[i][j];
             }
         }
         return ret;
