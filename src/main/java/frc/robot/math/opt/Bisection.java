@@ -6,9 +6,17 @@ import java.util.function.DoubleUnaryOperator;
 public class Bisection {
 
     /** Root solver using bisection method */
-    public static final double bisection(DoubleUnaryOperator f, double min, double max) {
+    public static final double bisection(DoubleUnaryOperator f, double min, double max,
+        double absTol) {
         double fMin = f.applyAsDouble(min);
         double fMax = f.applyAsDouble(max);
+
+        if (Math.abs(fMin) < absTol) {
+            return min;
+        }
+        if (Math.abs(fMax) < absTol) {
+            return max;
+        }
 
         assert fMax * fMin < 0.0;
 
@@ -16,7 +24,7 @@ public class Bisection {
             double mid = (min + max) / 2.0;
             double fMid = f.applyAsDouble(mid);
             double det = fMid * fMin;
-            if (Math.abs(det) < 1e-3) {
+            if (Math.abs(fMid) < absTol) {
                 return mid;
             } else if (det < 0.0) {
                 max = mid;
