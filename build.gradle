@@ -120,7 +120,9 @@ test {
 
 // Simulation configuration (e.g. environment variables).
 wpi.sim.addGui().defaultEnabled = true
-wpi.sim.addDriverstation().defaultEnabled = false
+// The teaching-pendant simulator needs the normal simulated Driver Station so operators can
+// explicitly enable Test or Teleop before manual drive commands are honored.
+wpi.sim.addDriverstation().defaultEnabled = true
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
@@ -210,6 +212,16 @@ tasks.register('generateLUTs', JavaExec) {
     classpath = sourceSets.generate.runtimeClasspath
     mainClass = 'frc.gen.GenerateLUTs'
     systemProperty("java.library.path", layout.buildDir.dir("jni/release").get())
+}
+
+// Desktop editor for .jrtp teaching-pendant autonomous routines.  This deliberately uses the
+// same main/runtime classpath as the robot so it speaks the same NT4 protocol and JSON format.
+tasks.register('teachingPendant', JavaExec) {
+    group = 'Execution'
+    description = 'Launch the ROSBots Teaching Pendant desktop application'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'frc.robot.teachingpendant.TeachingPendantApp'
+    systemProperty('java.library.path', layout.buildDirectory.dir('jni/release').get())
 }
 
 project.ext.rioctlVersion = "1.0.4"

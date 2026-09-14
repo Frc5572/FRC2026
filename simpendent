@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Launch the project simulator and the ROSBots Teaching Pendant together.
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+./gradlew simulateJava &
+simpendent_sim_pid=$!
+
+cleanup() {
+  kill "$simpendent_sim_pid" 2>/dev/null || true
+  wait "$simpendent_sim_pid" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+# The pendant can open immediately; it automatically connects to the local NT server once the
+# simulator finishes starting.
+./gradlew teachingPendant

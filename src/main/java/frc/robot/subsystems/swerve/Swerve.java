@@ -177,6 +177,13 @@ public final class Swerve extends SubsystemBase {
         this.flipTrajectories = doFlip;
     }
 
+    /** Sets brake/coast for disabled teaching and pit work. The command restores brake on exit. */
+    public Command setDriveBrakeMode(boolean enabled) {
+        return Commands.startEnd(() -> Arrays.stream(modules)
+            .forEach(module -> module.setBrakeMode(enabled)), () -> Arrays.stream(modules)
+                .forEach(module -> module.setBrakeMode(true)), this);
+    }
+
     /**
      * Follow a Choreo Trajectory
      *

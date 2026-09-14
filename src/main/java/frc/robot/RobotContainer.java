@@ -64,6 +64,8 @@ import frc.robot.subsystems.vision.VisionReal;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
+import frc.robot.teachingpendant.JrtpAutoRunner;
+import frc.robot.teachingpendant.TeachingPendantControl;
 
 
 /**
@@ -83,6 +85,8 @@ public final class RobotContainer {
     /* Auto utilities */
     private final AutoChooser autoChooser = new AutoChooser();
     private final AutoCommandFactory autoCommandFactory;
+    private final TeachingPendantControl teachingPendantControl = new TeachingPendantControl();
+    private final JrtpAutoRunner jrtpAutoRunner;
 
     /* Subsystems */
     private final DrivetrainState drivetrainState;
@@ -210,6 +214,15 @@ public final class RobotContainer {
         // AUTO STUFF
         autoCommandFactory = new AutoCommandFactory(swerve.autoFactory, swerve, adjustableHood,
             climber, intake, indexer, shooter, turret, targetingState);
+        jrtpAutoRunner = new JrtpAutoRunner(swerve, (step, checkpointValues) -> {
+            if ("Shoot".equals(step.command)) {
+                return CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood);
+            }
+            edu.wpi.first.wpilibj.DriverStation.reportWarning(
+                "No existing-command binding for .jrtp command: " + step.command
+                    + " (checkpoint values: " + checkpointValues + ")", false);
+            return Commands.none();
+        });
         autoChooser.addRoutine(Constants.Auto.cmpSpecial, autoCommandFactory::cmpSpecial);
         autoChooser.addRoutine(Constants.Auto.halfSweepTrenchRamp,
             autoCommandFactory::halfSweepTrenchRamp);
@@ -221,7 +234,8 @@ public final class RobotContainer {
         RobotModeTriggers.autonomous()
             .whileTrue(new WaitSupplierCommand(() -> SmartDashboard
                 .getNumber(Constants.DashboardValues.delay, Constants.DashboardValues.delayDefault))
-                    .andThen(autoChooser.selectedCommandScheduler())
+                    .andThen(Commands.defer(() -> jrtpAutoRunner.hasLoadedAuto()
+                        ? jrtpAutoRunner.command() : autoChooser.selectedCommandScheduler(), Set.of()))
                     .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
                     .andThen(Commands.runOnce(() -> swerve.stop())));
         // END AUTO STUFF
@@ -232,9 +246,12 @@ public final class RobotContainer {
             .goToAngleFieldRelative(() -> targetingState.getDesiredTurretHeadingFieldRelative()));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
-            () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
-            () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
-            () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
+            () -> teachingPendantControl.active() ? teachingPendantControl.x()
+                : -combineControllers(CommandXboxController::getLeftY, driver, tuner),
+            () -> teachingPendantControl.active() ? teachingPendantControl.y()
+                : -combineControllers(CommandXboxController::getLeftX, driver, tuner),
+            () -> teachingPendantControl.active() ? teachingPendantControl.rotation()
+                : -combineControllers(CommandXboxController::getRightX, driver, tuner),
             Constants.DriverControls.driverTranslationalMaxSpeed,
             Constants.DriverControls.driverRotationalMaxSpeed)));
         shooter.setDefaultCommand(shooter.shoot(0.0));
@@ -242,6 +259,8 @@ public final class RobotContainer {
         // TRIGGERS
         RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
+        RobotModeTriggers.disabled().and(teachingPendantControl::pushModeRequested)
+            .whileTrue(swerve.setDriveBrakeMode(false));
         RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
         // RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
         // swerve.state.setTrims(0.0, swerve.state.getTrimLeft());
@@ -408,6 +427,18 @@ public final class RobotContainer {
         }
         viz.periodic();
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
+        var pendantTelemetry = edu.wpi.first.networktables.NetworkTableInstance.getDefault()
+            .getTable("/ROSBots/TeachingPendant/Telemetry");
+        pendantTelemetry.getEntry("X").setDouble(swerve.state.getGlobalPoseEstimate().getX());
+        pendantTelemetry.getEntry("Y").setDouble(swerve.state.getGlobalPoseEstimate().getY());
+        pendantTelemetry.getEntry("HeadingDegrees")
+            .setDouble(swerve.state.getGlobalPoseEstimate().getRotation().getDegrees());
+        pendantTelemetry.getEntry("ManualControlAccepted").setBoolean(teachingPendantControl.active());
+        pendantTelemetry.getEntry("DriverStationEnabled")
+            .setBoolean(edu.wpi.first.wpilibj.DriverStation.isEnabled());
+        pendantTelemetry.getEntry("DriverStationMode").setString(
+            edu.wpi.first.wpilibj.DriverStation.isTestEnabled() ? "Test"
+                : edu.wpi.first.wpilibj.DriverStation.isTeleopEnabled() ? "Teleop" : "Disabled");
 
         Logger.recordOutput("test",
             AllianceFlipUtil.apply(swerve.state.getGlobalPoseEstimate()).getX());
@@ -421,6 +452,7 @@ public final class RobotContainer {
      * Runs during disabled
      */
     public void disabledPeriodic() {
+        jrtpAutoRunner.refreshRequestedAuto();
         String selectedAuto =
             SmartDashboard.getString(Constants.DashboardValues.autoChooser + "/active", "");
         // System.out.println(selectedAuto);
@@ -544,4 +576,3 @@ public final class RobotContainer {
         }
     }
 }
-

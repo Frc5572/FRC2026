@@ -1,0 +1,66 @@
+{
+  "format" : "jrtp",
+  "version" : 1,
+  "name" : "Example Four Piece",
+  "maximumTime" : 15.0,
+  "startingPose" : {
+    "x" : 1.25,
+    "y" : 5.48,
+    "rotationDegrees" : 180.0
+  },
+  "steps" : [ {
+    "type" : "checkpoint",
+    "name" : "FirstScore",
+    "x" : null,
+    "y" : null,
+    "rotationDegrees" : null,
+    "maxSpeed" : null,
+    "command" : null,
+    "parameters" : { },
+    "inputs" : {
+      "target" : {
+        "type" : "selection",
+        "options" : [ "ReefLeft", "ReefCenter", "ReefRight" ],
+        "minimum" : null,
+        "maximum" : null,
+        "default" : "ReefLeft"
+      },
+      "scoringLevel" : {
+        "type" : "selection",
+        "options" : [ "L1", "L2", "L3", "L4" ],
+        "minimum" : null,
+        "maximum" : null,
+        "default" : "L4"
+      },
+      "speed" : {
+        "type" : "number",
+        "options" : [ ],
+        "minimum" : 0.5,
+        "maximum" : 3.5,
+        "default" : 2.5
+      }
+    }
+  }, {
+    "type" : "driveToPose",
+    "name" : null,
+    "x" : 3.42,
+    "y" : 5.2,
+    "rotationDegrees" : 180.0,
+    "maxSpeed" : 2.5,
+    "command" : null,
+    "parameters" : { },
+    "inputs" : { }
+  }, {
+    "type" : "existingCommand",
+    "name" : null,
+    "x" : null,
+    "y" : null,
+    "rotationDegrees" : null,
+    "maxSpeed" : null,
+    "command" : "Shoot",
+    "parameters" : {
+      "checkpoint" : "FirstScore"
+    },
+    "inputs" : { }
+  } ]
+}
