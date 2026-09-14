@@ -93,6 +93,10 @@ public final class Swerve extends SubsystemBase {
 
     private static boolean verticalLocked = false;
 
+    private boolean hasTargetHeading = false;
+    private Rotation2d targetHeading = Rotation2d.kZero;
+    private final PIDController headingController = new PIDController(5.0, 0.0, 0.2);
+
     /**
      * Simple container type that bundles together the {@link Swerve} subsystem and its associated
      * {@link DrivetrainState} estimator.
@@ -167,6 +171,8 @@ public final class Swerve extends SubsystemBase {
 
         this.autoFactory = new AutoFactory(state::getGlobalPoseEstimate, state::resetPose,
             this::followTrajectory, true, this);
+
+        this.headingController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
 
@@ -282,30 +288,51 @@ public final class Swerve extends SubsystemBase {
      * @param driveSpeeds supplier of field-relative chassis speeds
      * @return a command that drives the robot while scheduled
      */
+    private ChassisSpeeds applyHeadingStabilization(ChassisSpeeds speeds, Rotation2d currentRotation) {
+        if (sideLocked) {
+            // normalize between (-180, 180]
+            double rotationTarget = currentRotation.getDegrees() < 0 ? -90 : 90;
+            Rotation2d rotationError =
+                Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
+            double omega = rotationError.getRadians() * 5.0;
+            omega = MathUtil.clamp(omega, -Constants.Swerve.maxAngularVelocity,
+                Constants.Swerve.maxAngularVelocity);
+            speeds.omegaRadiansPerSecond = omega;
+            hasTargetHeading = false;
+        } else if (verticalLocked) {
+            // normalize between (-180, 180]
+            double rotationTarget = Math.abs(currentRotation.getDegrees()) < 90 ? 0 : 180;
+            Rotation2d rotationError =
+                Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
+            double omega = rotationError.getRadians() * 5.0;
+            omega = MathUtil.clamp(omega, -Constants.Swerve.maxAngularVelocity,
+                Constants.Swerve.maxAngularVelocity);
+            speeds.omegaRadiansPerSecond = omega;
+            hasTargetHeading = false;
+        } else if (Math.abs(speeds.omegaRadiansPerSecond) > 0.05) {
+            hasTargetHeading = false;
+        } else if (Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) > 0.05) {
+            if (!hasTargetHeading) {
+                targetHeading = currentRotation;
+                hasTargetHeading = true;
+                headingController.reset();
+            }
+            double omega = headingController.calculate(
+                currentRotation.getRadians(), targetHeading.getRadians());
+            omega = MathUtil.clamp(omega, -Constants.Swerve.maxAngularVelocity,
+                Constants.Swerve.maxAngularVelocity);
+            speeds.omegaRadiansPerSecond = omega;
+        } else {
+            hasTargetHeading = false;
+        }
+        return speeds;
+    }
+
     public Command driveUserRelative(Supplier<ChassisSpeeds> driveSpeeds) {
         return driveRobotRelative(() -> {
             ChassisSpeeds speeds = driveSpeeds.get();
-            if (sideLocked) {
-                Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
-                // normalize between (-180, 180]
-                double rotationTarget = currentRotation.getDegrees() < 0 ? -90 : 90;
-                Rotation2d rotationError =
-                    Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
-                double omega = rotationError.getRadians() * 5.0;
-                omega = Math.max(-Constants.Swerve.maxAngularVelocity,
-                    Math.min(Constants.Swerve.maxAngularVelocity, omega));
-                speeds.omegaRadiansPerSecond = omega;
-            } else if (verticalLocked) {
-                Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
-                // normalize between (-180, 180]
-                double rotationTarget = Math.abs(currentRotation.getDegrees()) < 90 ? 0 : 180;
-                Rotation2d rotationError =
-                    Rotation2d.fromDegrees(rotationTarget).minus(currentRotation);
-                double omega = rotationError.getRadians() * 5.0;
-                omega = Math.max(-Constants.Swerve.maxAngularVelocity,
-                    Math.min(Constants.Swerve.maxAngularVelocity, omega));
-                speeds.omegaRadiansPerSecond = omega;
-            }
+            Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
+            speeds = applyHeadingStabilization(speeds, currentRotation);
             return ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getUserRelativeHeading());
         });
     }
@@ -321,8 +348,12 @@ public final class Swerve extends SubsystemBase {
      * @return a command that drives the robot while scheduled
      */
     public Command driveFieldRelative(Supplier<ChassisSpeeds> driveSpeeds) {
-        return driveRobotRelative(() -> ChassisSpeeds.fromFieldRelativeSpeeds(driveSpeeds.get(),
-            state.getGlobalPoseEstimate().getRotation()));
+        return driveRobotRelative(() -> {
+            ChassisSpeeds speeds = driveSpeeds.get();
+            Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
+            speeds = applyHeadingStabilization(speeds, currentRotation);
+            return ChassisSpeeds.fromFieldRelativeSpeeds(speeds, currentRotation);
+        });
     }
 
     private void driveFieldRelative(ChassisSpeeds driveSpeeds) {
@@ -412,7 +443,8 @@ public final class Swerve extends SubsystemBase {
      */
     public Command setFieldRelativeOffset(Supplier<Rotation2d> knownHeading) {
         return Commands.runOnce(
-            () -> fieldOffset = gyroInputs.yaw.getRotations() - knownHeading.get().getRotations());
+            () -> fieldOffset = state.getGlobalPoseEstimate().getRotation().getRotations()
+                - knownHeading.get().getRotations());
     }
 
     /**
@@ -538,7 +570,7 @@ public final class Swerve extends SubsystemBase {
      * @return user-relative field heading
      */
     public Rotation2d getUserRelativeHeading() {
-        return Rotation2d.fromRotations(gyroInputs.yaw.getRotations() - fieldOffset);
+        return Rotation2d.fromRotations(state.getGlobalPoseEstimate().getRotation().getRotations() - fieldOffset);
     }
 
     private void setModuleStates(ChassisSpeeds chassisSpeeds) {

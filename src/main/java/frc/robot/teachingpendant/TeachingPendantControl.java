@@ -1,9 +1,9 @@
 package frc.robot.teachingpendant;
 
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 
@@ -11,11 +11,13 @@ import edu.wpi.first.wpilibj.Timer;
 public final class TeachingPendantControl {
     private static final double HEARTBEAT_TIMEOUT_SECONDS = 0.30;
     private final NetworkTable table =
-        NetworkTableInstance.getDefault().getTable("/ROSBots/TeachingPendant/Manual");
+        NetworkTableInstance.getDefault().getTable("/rosbots/TeachingPendant/Manual");
     private final BooleanSubscriber enabled = table.getBooleanTopic("Enabled").subscribe(false);
     private final DoubleSubscriber heartbeat = table.getDoubleTopic("Heartbeat").subscribe(0.0);
-    private final DoubleSubscriber translationX = table.getDoubleTopic("TranslationX").subscribe(0.0);
-    private final DoubleSubscriber translationY = table.getDoubleTopic("TranslationY").subscribe(0.0);
+    private final DoubleSubscriber translationX =
+        table.getDoubleTopic("TranslationX").subscribe(0.0);
+    private final DoubleSubscriber translationY =
+        table.getDoubleTopic("TranslationY").subscribe(0.0);
     private final DoubleSubscriber rotation = table.getDoubleTopic("Rotation").subscribe(0.0);
     private final BooleanSubscriber pushMode = table.getBooleanTopic("PushMode").subscribe(false);
     private double lastHeartbeatValue;

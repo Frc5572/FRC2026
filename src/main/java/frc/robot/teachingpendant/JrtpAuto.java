@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-/** Portable JSON representation of a ROSBots teaching-pendant autonomous routine. */
+/** Portable JSON representation of a rosbots teaching-pendant autonomous routine. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class JrtpAuto {
     public String format = "jrtp";
@@ -31,7 +31,9 @@ public final class JrtpAuto {
         }
     }
 
-    /** A step is deliberately extensible so newer pendant versions remain loadable by old robots. */
+    /**
+     * A step is deliberately extensible so newer pendant versions remain loadable by old robots.
+     */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static final class Step {
         public String type;

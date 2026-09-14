@@ -16,7 +16,6 @@ import java.util.Comparator;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -25,43 +24,47 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
-import javax.swing.JTree;
-import javax.swing.JTextField;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringSubscriber;
 
 /** Desktop application launched by {@code ./gradlew teachingPendant}. */
 public final class TeachingPendantApp {
     private static final Path AUTOS = Path.of("src", "main", "deploy", "jrtp-autos");
     private final NetworkTableInstance nt = NetworkTableInstance.getDefault();
-    private final NetworkTable manual = nt.getTable("/ROSBots/TeachingPendant/Manual");
-    private final NetworkTable telemetry = nt.getTable("/ROSBots/TeachingPendant/Telemetry");
-    private final BooleanSubscriber manualEnabled = manual.getBooleanTopic("Enabled").subscribe(false);
+    private final NetworkTable manual = nt.getTable("/rosbots/TeachingPendant/Manual");
+    private final NetworkTable telemetry = nt.getTable("/rosbots/TeachingPendant/Telemetry");
+    private final BooleanSubscriber manualEnabled =
+        manual.getBooleanTopic("Enabled").subscribe(false);
     private final BooleanSubscriber pushMode = manual.getBooleanTopic("PushMode").subscribe(false);
     private final BooleanPublisher enabledPublisher = manual.getBooleanTopic("Enabled").publish();
     private final BooleanPublisher pushModePublisher = manual.getBooleanTopic("PushMode").publish();
     private final DoublePublisher heartbeatPublisher = manual.getDoubleTopic("Heartbeat").publish();
-    private final DoublePublisher translationXPublisher = manual.getDoubleTopic("TranslationX").publish();
-    private final DoublePublisher translationYPublisher = manual.getDoubleTopic("TranslationY").publish();
+    private final DoublePublisher translationXPublisher =
+        manual.getDoubleTopic("TranslationX").publish();
+    private final DoublePublisher translationYPublisher =
+        manual.getDoubleTopic("TranslationY").publish();
     private final DoublePublisher rotationPublisher = manual.getDoubleTopic("Rotation").publish();
-    private final BooleanSubscriber manualAccepted = telemetry.getBooleanTopic("ManualControlAccepted")
-        .subscribe(false);
-    private final StringSubscriber driverStationMode = telemetry.getStringTopic("DriverStationMode")
-        .subscribe("Disabled");
+    private final BooleanSubscriber manualAccepted =
+        telemetry.getBooleanTopic("ManualControlAccepted").subscribe(false);
+    private final StringSubscriber driverStationMode =
+        telemetry.getStringTopic("DriverStationMode").subscribe("Disabled");
     private final DoubleSubscriber robotX = telemetry.getDoubleTopic("X").subscribe(0.0);
     private final DoubleSubscriber robotY = telemetry.getDoubleTopic("Y").subscribe(0.0);
-    private final DoubleSubscriber robotHeading = telemetry.getDoubleTopic("HeadingDegrees").subscribe(0.0);
+    private final DoubleSubscriber robotHeading =
+        telemetry.getDoubleTopic("HeadingDegrees").subscribe(0.0);
     private final DefaultListModel<Path> autos = new DefaultListModel<>();
     private final JList<Path> autoList = new JList<>(autos);
     private final JTextField name = new JTextField();
@@ -83,7 +86,7 @@ public final class TeachingPendantApp {
     }
 
     private void show() {
-        JFrame frame = new JFrame("ROSBots Teaching Pendant");
+        JFrame frame = new JFrame("rosbots Teaching Pendant");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout(8, 8));
         frame.add(makeConnectionPanel(), BorderLayout.NORTH);
@@ -97,7 +100,8 @@ public final class TeachingPendantApp {
             public void windowClosing(WindowEvent event) {
                 stopManual();
                 nt.stopClient();
-                if (simulatorProcess != null && simulatorProcess.isAlive()) simulatorProcess.destroy();
+                if (simulatorProcess != null && simulatorProcess.isAlive())
+                    simulatorProcess.destroy();
             }
         });
         autoList.addListSelectionListener(event -> {
@@ -109,7 +113,8 @@ public final class TeachingPendantApp {
             boolean accepted = manualAccepted.get();
             String mode = driverStationMode.get();
             connectionStatus.setText(nt.isConnected()
-                ? (accepted ? "Connected — joystick accepted" : "Connected — enable Test or Teleop for joystick")
+                ? (accepted ? "Connected — joystick accepted"
+                    : "Connected — enable Test or Teleop for joystick")
                 : "Offline — local auto builder ready");
             teachStatus.setText(accepted ? "Joystick is live (" + mode + ")"
                 : "Joystick locked — select Test or Teleop and enable the Driver Station");
@@ -123,19 +128,16 @@ public final class TeachingPendantApp {
     private JPanel makeConnectionPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton connect = new JButton("Connect");
-        JButton offline = new JButton("Work offline");
         JButton localSimulator = new JButton("Start local simulator");
         connect.addActionListener(event -> {
             nt.stopClient();
             nt.setServer(server.getText().trim());
-            nt.startClient4("ROSBots Teaching Pendant");
+            nt.startClient4("rosbots Teaching Pendant");
         });
-        offline.addActionListener(event -> { stopManual(); nt.stopClient(); });
         localSimulator.addActionListener(event -> startLocalSimulator());
         panel.add(new JLabel("Robot NT server:"));
         panel.add(server);
         panel.add(connect);
-        panel.add(offline);
         panel.add(localSimulator);
         panel.add(connectionStatus);
         return panel;
@@ -175,13 +177,14 @@ public final class TeachingPendantApp {
 
     private JPanel makeTeachPanel() {
         JPanel panel = new JPanel(new BorderLayout(8, 4));
-        JSlider translation = new JSlider(10, 100, 40);
-        JSlider rotation = new JSlider(10, 100, 30);
-        TeachDrivePanel drivePad = new TeachDrivePanel(translation, rotation);
+        JSlider translationLimit = new JSlider(10, 100, 40);
+        TeachDrivePanel drivePad = new TeachDrivePanel(translationLimit);
         JTextArea scopeInfo = new JTextArea("Visualization is provided by AdvantageScope.\n"
             + "Connect AdvantageScope to NT4 at 127.0.0.1:5810 for local sim, or the robot IP:5810.\n"
             + "Use the Field tab for the Field2d robot pose and 3D Field for Viz/EstState + Viz/ActualState.");
-        scopeInfo.setEditable(false); scopeInfo.setLineWrap(true); scopeInfo.setWrapStyleWord(true);
+        scopeInfo.setEditable(false);
+        scopeInfo.setLineWrap(true);
+        scopeInfo.setWrapStyleWord(true);
         JButton stop = new JButton("STOP");
         JButton pushRobot = new JButton("Enable Push Robot (disabled only)");
         stop.addActionListener(event -> stopManual());
@@ -190,13 +193,18 @@ public final class TeachingPendantApp {
             pushModePublisher.set(enable);
             pushRobot.setText(enable ? "Disable Push Robot" : "Enable Push Robot (disabled only)");
         });
-        panel.setBorder(BorderFactory.createTitledBorder("Teach mode (enable Test or Teleop first)"));
+        panel.setBorder(
+            BorderFactory.createTitledBorder("Teach mode (enable Test or Teleop first)"));
         JPanel limits = new JPanel(new GridLayout(0, 1));
-        limits.add(new JLabel("Translation limit")); limits.add(translation);
-        limits.add(new JLabel("Rotation limit")); limits.add(rotation); limits.add(stop); limits.add(pushRobot);
+        limits.add(new JLabel("Translation Speed"));
+        limits.add(translationLimit);
+        limits.add(stop);
+        limits.add(pushRobot);
         JPanel center = new JPanel(new BorderLayout());
-        center.add(teachStatus, BorderLayout.NORTH); center.add(scopeInfo, BorderLayout.CENTER);
-        panel.add(drivePad, BorderLayout.WEST); panel.add(center, BorderLayout.CENTER);
+        center.add(teachStatus, BorderLayout.NORTH);
+        center.add(scopeInfo, BorderLayout.CENTER);
+        panel.add(drivePad, BorderLayout.WEST);
+        panel.add(center, BorderLayout.CENTER);
         panel.add(limits, BorderLayout.EAST);
         return panel;
     }
@@ -215,7 +223,9 @@ public final class TeachingPendantApp {
     private void startLocalSimulator() {
         if (simulatorProcess != null && simulatorProcess.isAlive()) {
             server.setText("127.0.0.1");
-            nt.stopClient(); nt.setServer("127.0.0.1"); nt.startClient4("ROSBots Teaching Pendant");
+            nt.stopClient();
+            nt.setServer("127.0.0.1");
+            nt.startClient4("rosbots Teaching Pendant");
             return;
         }
         try {
@@ -223,10 +233,12 @@ public final class TeachingPendantApp {
                 .directory(Path.of(System.getProperty("user.dir")).toFile())
                 .redirectErrorStream(true).start();
             server.setText("127.0.0.1");
-            nt.stopClient(); nt.setServer("127.0.0.1"); nt.startClient4("ROSBots Teaching Pendant");
+            nt.stopClient();
+            nt.setServer("127.0.0.1");
+            nt.startClient4("rosbots Teaching Pendant");
         } catch (Exception exception) {
-            showError(new IllegalStateException("Could not start ./gradlew simulateJava: "
-                + exception.getMessage()));
+            showError(new IllegalStateException(
+                "Could not start ./gradlew simulateJava: " + exception.getMessage()));
         }
     }
 
@@ -279,7 +291,7 @@ public final class TeachingPendantApp {
         try {
             JrtpAuto.Step step = new JrtpAuto.Step();
             step.type = "driveToPose";
-            NetworkTable pose = nt.getTable("/ROSBots/TeachingPendant/Telemetry");
+            NetworkTable pose = nt.getTable("/rosbots/TeachingPendant/Telemetry");
             if (nt.isConnected()) {
                 step.x = robotX.get();
                 step.y = robotY.get();
@@ -287,7 +299,8 @@ public final class TeachingPendantApp {
             } else {
                 step.x = Double.parseDouble(JOptionPane.showInputDialog(null, "X meters:", "3.0"));
                 step.y = Double.parseDouble(JOptionPane.showInputDialog(null, "Y meters:", "5.0"));
-                step.rotationDegrees = Double.parseDouble(JOptionPane.showInputDialog(null, "Heading degrees:", "180"));
+                step.rotationDegrees = Double
+                    .parseDouble(JOptionPane.showInputDialog(null, "Heading degrees:", "180"));
             }
             step.maxSpeed = 2.5;
             current.steps.add(step);
@@ -326,7 +339,8 @@ public final class TeachingPendantApp {
         if (current != null)
             try {
                 NetworkTable autonomous = nt.getTable(AudibleManager.ROOT);
-                autonomous.getEntry("RequestedAuto").setString(currentFile.getFileName().toString());
+                autonomous.getEntry("RequestedAuto")
+                    .setString(currentFile.getFileName().toString());
                 autonomous.getEntry("RequestedAutoJson").setString(JrtpFiles.encode(current));
             } catch (Exception exception) {
                 showError(exception);
@@ -357,40 +371,56 @@ public final class TeachingPendantApp {
     private void refreshCommandTree() {
         commandRoot.removeAllChildren();
         commandRoot.setUserObject(current == null ? "Auto commands" : current.name);
-        if (current != null) for (JrtpAuto.Step step : current.steps) {
-            String label = switch (step.type) {
-                case "driveToPose" -> String.format("Drive to (%.2f, %.2f, %.0f°)", step.x, step.y, step.rotationDegrees);
-                case "checkpoint" -> "Checkpoint: " + step.name + "  " + step.inputs.keySet();
-                case "existingCommand" -> "Command: " + step.command;
-                default -> step.type;
-            };
-            commandRoot.add(new DefaultMutableTreeNode(label));
-        }
+        if (current != null)
+            for (JrtpAuto.Step step : current.steps) {
+                String label = switch (step.type) {
+                    case "driveToPose" -> String.format("Drive to (%.2f, %.2f, %.0f°)", step.x,
+                        step.y, step.rotationDegrees);
+                    case "checkpoint" -> "Checkpoint: " + step.name + "  " + step.inputs.keySet();
+                    case "existingCommand" -> "Command: " + step.command;
+                    default -> step.type;
+                };
+                commandRoot.add(new DefaultMutableTreeNode(label));
+            }
         ((DefaultTreeModel) commandTree.getModel()).reload();
-        for (int row = 0; row < commandTree.getRowCount(); row++) commandTree.expandRow(row);
+        for (int row = 0; row < commandTree.getRowCount(); row++)
+            commandTree.expandRow(row);
     }
 
     private void stopManual() {
         enabledPublisher.set(false);
+        translationXPublisher.set(0.0);
+        translationYPublisher.set(0.0);
+        rotationPublisher.set(0.0);
     }
 
-    /** Drag the center puck to command translation; hold the left/right edges to rotate. */
+    /** Drag the center puck to command translation. */
     private final class TeachDrivePanel extends JPanel {
         private final JSlider translationLimit;
-        private final JSlider rotationLimit;
         private double x;
         private double y;
 
-        TeachDrivePanel(JSlider translationLimit, JSlider rotationLimit) {
+        TeachDrivePanel(JSlider translationLimit) {
             this.translationLimit = translationLimit;
-            this.rotationLimit = rotationLimit;
             setPreferredSize(new Dimension(190, 150));
             addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override public void mousePressed(java.awt.event.MouseEvent event) { command(event); }
-                @Override public void mouseReleased(java.awt.event.MouseEvent event) { stopManual(); x = y = 0; repaint(); }
+                @Override
+                public void mousePressed(java.awt.event.MouseEvent event) {
+                    command(event);
+                }
+
+                @Override
+                public void mouseReleased(java.awt.event.MouseEvent event) {
+                    stopManual();
+                    x = y = 0;
+                    repaint();
+                }
             });
             addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-                @Override public void mouseDragged(java.awt.event.MouseEvent event) { command(event); }
+                @Override
+                public void mouseDragged(java.awt.event.MouseEvent event) {
+                    command(event);
+                }
             });
         }
 
@@ -399,44 +429,62 @@ public final class TeachingPendantApp {
             x = Math.max(-1, Math.min(1, (event.getX() - cx) / (double) (cx - 16)));
             y = Math.max(-1, Math.min(1, (cy - event.getY()) / (double) (cy - 16)));
             double translate = translationLimit.getValue() / 100.0;
-            double rotate = rotationLimit.getValue() / 100.0;
-            // Horizontal extreme provides turn-in-place; the rest is field-relative translation.
-            double turn = Math.abs(x) > .82 ? Math.signum(x) * rotate : 0.0;
-            translationXPublisher.set(y * translate);
-            translationYPublisher.set(-x * translate);
-            rotationPublisher.set(turn);
+            translationXPublisher.set(x * translate);
+            translationYPublisher.set(y * translate);
+            rotationPublisher.set(0.0);
             enabledPublisher.set(true);
             repaint();
         }
 
-        @Override protected void paintComponent(Graphics graphics) {
-            super.paintComponent(graphics); Graphics2D g = (Graphics2D) graphics;
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
+            Graphics2D g = (Graphics2D) graphics;
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int cx = getWidth() / 2, cy = getHeight() / 2;
-            g.setColor(new Color(235, 235, 235)); g.fillRoundRect(8, 8, getWidth() - 16, getHeight() - 16, 12, 12);
-            g.setColor(Color.GRAY); g.drawLine(cx, 14, cx, getHeight() - 14); g.drawLine(14, cy, getWidth() - 14, cy);
-            g.setColor(new Color(0, 100, 190)); g.fillOval((int) (cx + x * (cx - 22)) - 12,
-                (int) (cy - y * (cy - 22)) - 12, 24, 24);
-            g.setColor(Color.DARK_GRAY); g.drawString("Drag to drive • outer left/right = turn", 15, getHeight() - 7);
+            g.setColor(new Color(235, 235, 235));
+            g.fillRoundRect(8, 8, getWidth() - 16, getHeight() - 16, 12, 12);
+            g.setColor(Color.GRAY);
+            g.drawLine(cx, 14, cx, getHeight() - 14);
+            g.drawLine(14, cy, getWidth() - 14, cy);
+            g.setColor(new Color(0, 100, 190));
+            g.fillOval((int) (cx + x * (cx - 22)) - 12, (int) (cy - y * (cy - 22)) - 12, 24, 24);
+            g.setColor(Color.DARK_GRAY);
+            g.drawString("Drag to translate", 15, getHeight() - 7);
         }
     }
 
     /** Simple live field graphic backed by pose telemetry published by the robot. */
     private final class RobotFieldPanel extends JPanel {
-        RobotFieldPanel() { setPreferredSize(new Dimension(260, 150)); new Timer(50, event -> repaint()).start(); }
-        @Override protected void paintComponent(Graphics graphics) {
-            super.paintComponent(graphics); Graphics2D g = (Graphics2D) graphics;
-            g.setColor(new Color(42, 106, 55)); g.fillRect(0, 0, getWidth(), getHeight());
-            NetworkTable telemetry = nt.getTable("/ROSBots/TeachingPendant/Telemetry");
+        RobotFieldPanel() {
+            setPreferredSize(new Dimension(260, 150));
+            new Timer(50, event -> repaint()).start();
+        }
+
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
+            Graphics2D g = (Graphics2D) graphics;
+            g.setColor(new Color(42, 106, 55));
+            g.fillRect(0, 0, getWidth(), getHeight());
+            NetworkTable telemetry = nt.getTable("/rosbots/TeachingPendant/Telemetry");
             double x = robotX.get();
             double y = robotY.get();
             double heading = robotHeading.get();
             int px = (int) (12 + Math.max(0, Math.min(1, x / 16.54)) * (getWidth() - 24));
-            int py = (int) (getHeight() - 12 - Math.max(0, Math.min(1, y / 8.21)) * (getHeight() - 24));
-            g.setColor(Color.WHITE); g.drawRect(10, 10, getWidth() - 20, getHeight() - 20);
-            g.translate(px, py); g.rotate(-Math.toRadians(heading)); g.setColor(new Color(255, 190, 0));
-            g.fillRect(-12, -9, 24, 18); g.setColor(Color.BLACK); g.fillPolygon(new int[] {12, 20, 12}, new int[] {-7, 0, 7}, 3);
-            g.rotate(Math.toRadians(heading)); g.translate(-px, -py); g.setColor(Color.WHITE);
+            int py =
+                (int) (getHeight() - 12 - Math.max(0, Math.min(1, y / 8.21)) * (getHeight() - 24));
+            g.setColor(Color.WHITE);
+            g.drawRect(10, 10, getWidth() - 20, getHeight() - 20);
+            g.translate(px, py);
+            g.rotate(-Math.toRadians(heading));
+            g.setColor(new Color(255, 190, 0));
+            g.fillRect(-12, -9, 24, 18);
+            g.setColor(Color.BLACK);
+            g.fillPolygon(new int[] {12, 20, 12}, new int[] {-7, 0, 7}, 3);
+            g.rotate(Math.toRadians(heading));
+            g.translate(-px, -py);
+            g.setColor(Color.WHITE);
             g.drawString(String.format("X %.2f  Y %.2f  %.0f°", x, y, heading), 14, 22);
         }
     }

@@ -218,7 +218,7 @@ tasks.register('generateLUTs', JavaExec) {
 // same main/runtime classpath as the robot so it speaks the same NT4 protocol and JSON format.
 tasks.register('teachingPendant', JavaExec) {
     group = 'Execution'
-    description = 'Launch the ROSBots Teaching Pendant desktop application'
+    description = 'Launch the rosbots Teaching Pendant desktop application'
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'frc.robot.teachingpendant.TeachingPendantApp'
     systemProperty('java.library.path', layout.buildDirectory.dir('jni/release').get())

@@ -10,7 +10,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
  * The external dashboard owns presentation; this class owns defaults and validation only.
  */
 public final class AudibleManager {
-    public static final String ROOT = "/Rosbots/Autonomous";
+    public static final String ROOT = "/rosbots/Autonomous";
     private final NetworkTable root = NetworkTableInstance.getDefault().getTable(ROOT);
     private JrtpAuto auto;
 

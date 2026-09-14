@@ -61,11 +61,11 @@ import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
+import frc.robot.teachingpendant.JrtpAutoRunner;
+import frc.robot.teachingpendant.TeachingPendantControl;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
-import frc.robot.teachingpendant.JrtpAutoRunner;
-import frc.robot.teachingpendant.TeachingPendantControl;
 
 
 /**
@@ -218,8 +218,8 @@ public final class RobotContainer {
             if ("Shoot".equals(step.command)) {
                 return CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood);
             }
-            edu.wpi.first.wpilibj.DriverStation.reportWarning(
-                "No existing-command binding for .jrtp command: " + step.command
+            edu.wpi.first.wpilibj.DriverStation
+                .reportWarning("No existing-command binding for .jrtp command: " + step.command
                     + " (checkpoint values: " + checkpointValues + ")", false);
             return Commands.none();
         });
@@ -234,8 +234,9 @@ public final class RobotContainer {
         RobotModeTriggers.autonomous()
             .whileTrue(new WaitSupplierCommand(() -> SmartDashboard
                 .getNumber(Constants.DashboardValues.delay, Constants.DashboardValues.delayDefault))
-                    .andThen(Commands.defer(() -> jrtpAutoRunner.hasLoadedAuto()
-                        ? jrtpAutoRunner.command() : autoChooser.selectedCommandScheduler(), Set.of()))
+                    .andThen(Commands
+                        .defer(() -> jrtpAutoRunner.hasLoadedAuto() ? jrtpAutoRunner.command()
+                            : autoChooser.selectedCommandScheduler(), Set.of()))
                     .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
                     .andThen(Commands.runOnce(() -> swerve.stop())));
         // END AUTO STUFF
@@ -245,15 +246,25 @@ public final class RobotContainer {
         turret.setDefaultCommand(turret
             .goToAngleFieldRelative(() -> targetingState.getDesiredTurretHeadingFieldRelative()));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
-        swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
-            () -> teachingPendantControl.active() ? teachingPendantControl.x()
-                : -combineControllers(CommandXboxController::getLeftY, driver, tuner),
-            () -> teachingPendantControl.active() ? teachingPendantControl.y()
-                : -combineControllers(CommandXboxController::getLeftX, driver, tuner),
-            () -> teachingPendantControl.active() ? teachingPendantControl.rotation()
-                : -combineControllers(CommandXboxController::getRightX, driver, tuner),
-            Constants.DriverControls.driverTranslationalMaxSpeed,
-            Constants.DriverControls.driverRotationalMaxSpeed)));
+        swerve
+            .setDefaultCommand(
+                swerve
+                    .driveUserRelative(
+                        TeleopControls.teleopControls(
+                            () -> teachingPendantControl.active()
+                                ? teachingPendantControl.x()
+                                : -combineControllers(CommandXboxController::getLeftY, driver,
+                                    tuner),
+                            () -> teachingPendantControl.active()
+                                ? teachingPendantControl.y()
+                                : -combineControllers(CommandXboxController::getLeftX, driver,
+                                    tuner),
+                            () -> teachingPendantControl.active()
+                                ? teachingPendantControl.rotation()
+                                : -combineControllers(CommandXboxController::getRightX, driver,
+                                    tuner),
+                            Constants.DriverControls.driverTranslationalMaxSpeed,
+                            Constants.DriverControls.driverRotationalMaxSpeed)));
         shooter.setDefaultCommand(shooter.shoot(0.0));
 
         // TRIGGERS
@@ -261,7 +272,8 @@ public final class RobotContainer {
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
         RobotModeTriggers.disabled().and(teachingPendantControl::pushModeRequested)
             .whileTrue(swerve.setDriveBrakeMode(false));
-        RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
+        RobotModeTriggers.teleop().or(RobotModeTriggers.test())
+            .onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
         // RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
         // swerve.state.setTrims(0.0, swerve.state.getTrimLeft());
         // }));
@@ -428,16 +440,17 @@ public final class RobotContainer {
         viz.periodic();
         field.setRobotPose(swerve.state.getGlobalPoseEstimate());
         var pendantTelemetry = edu.wpi.first.networktables.NetworkTableInstance.getDefault()
-            .getTable("/ROSBots/TeachingPendant/Telemetry");
+            .getTable("/rosbots/TeachingPendant/Telemetry");
         pendantTelemetry.getEntry("X").setDouble(swerve.state.getGlobalPoseEstimate().getX());
         pendantTelemetry.getEntry("Y").setDouble(swerve.state.getGlobalPoseEstimate().getY());
         pendantTelemetry.getEntry("HeadingDegrees")
             .setDouble(swerve.state.getGlobalPoseEstimate().getRotation().getDegrees());
-        pendantTelemetry.getEntry("ManualControlAccepted").setBoolean(teachingPendantControl.active());
+        pendantTelemetry.getEntry("ManualControlAccepted")
+            .setBoolean(teachingPendantControl.active());
         pendantTelemetry.getEntry("DriverStationEnabled")
             .setBoolean(edu.wpi.first.wpilibj.DriverStation.isEnabled());
-        pendantTelemetry.getEntry("DriverStationMode").setString(
-            edu.wpi.first.wpilibj.DriverStation.isTestEnabled() ? "Test"
+        pendantTelemetry.getEntry("DriverStationMode")
+            .setString(edu.wpi.first.wpilibj.DriverStation.isTestEnabled() ? "Test"
                 : edu.wpi.first.wpilibj.DriverStation.isTeleopEnabled() ? "Teleop" : "Disabled");
 
         Logger.recordOutput("test",
