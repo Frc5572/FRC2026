@@ -9,8 +9,18 @@ import org.junit.jupiter.api.Test;
 /**
  * The MultiDimensionalBallistics class is meant to compare the 2D values of both the Ballistics2D
  * and Ballistics3D arrays.
+ * 
+ * This test is plausable because it could happen due to a logical error within either of the
+ * Ballistics2D or Ballistics3D array code where the calculations could be altered to the point of
+ * completely different 2D values.
+ * 
+ * It matters if the 2D portions of the arrays aren't equal because our robot could have a distorted
+ * value of our goal, and might have an unaccurate shot.
  */
 public class MultiDimensionalBallistics {
+    /**
+     * This test is protecting against
+     */
     @Test
     public void multiDTest() {
         BallisticsDerivative2D derivatives2D = new BallisticsDerivative2D();
