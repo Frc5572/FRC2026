@@ -6,7 +6,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
-public class MultiDBallistics {
+/**
+ * The MultiDimensionalBallistics class is meant to compare the 2D values of both the Ballistics2D
+ * and Ballistics3D arrays.
+ */
+public class MultiDimensionalBallistics {
     @Test
     public void multiDTest() {
         BallisticsDerivative2D derivatives2D = new BallisticsDerivative2D();
@@ -23,6 +27,6 @@ public class MultiDBallistics {
 
         derivatives3DResult = list.stream().mapToDouble(Double::doubleValue).toArray();
 
-        assertArrayEquals(derivatives3DResult, derivatives2DResult, 0.1);
+        assertArrayEquals(derivatives3DResult, derivatives2DResult, 0.01);
     }
 }
