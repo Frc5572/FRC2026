@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
  */
 public class MultiDimensionalBallistics {
     /**
-     * This test is protecting against
+     * This test is making sure the 2D values of Ballistics2D and Ballistics3D are in sync.
      */
     @Test
     public void multiDTest() {
@@ -33,7 +33,7 @@ public class MultiDimensionalBallistics {
         List<Double> list = Arrays.stream(derivatives3DResult).boxed().collect(Collectors.toList());
 
         list.remove(1);
-        list.remove(4);
+        list.remove(3);
 
         derivatives3DResult = list.stream().mapToDouble(Double::doubleValue).toArray();
 
