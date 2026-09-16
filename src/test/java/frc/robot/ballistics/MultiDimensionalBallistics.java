@@ -22,7 +22,7 @@ public class MultiDimensionalBallistics {
      * This test is making sure the 2D values of Ballistics2D and Ballistics3D are in sync.
      */
     @Test
-    public void multiDTest() {
+    public void multiDimensionalTest() {
         BallisticsDerivative2D derivatives2D = new BallisticsDerivative2D();
         BallisticsDerivative3D derivatives3D = new BallisticsDerivative3D();
 
