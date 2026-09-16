@@ -37,6 +37,6 @@ public class MultiDimensionalBallistics {
 
         derivatives3DResult = list.stream().mapToDouble(Double::doubleValue).toArray();
 
-        assertArrayEquals(derivatives3DResult, derivatives2DResult, 0.01);
+        assertArrayEquals(derivatives2DResult, derivatives3DResult, 0.01);
     }
 }

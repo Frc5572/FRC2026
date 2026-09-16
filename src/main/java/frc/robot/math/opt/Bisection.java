@@ -12,7 +12,6 @@ public class Bisection {
 
         assert fMax * fMin < 0.0;
 
-        // original value
         for (int i = 0; i < 100; i++) {
             double mid = (min + max) / 2.0;
             double fMid = f.applyAsDouble(mid);
