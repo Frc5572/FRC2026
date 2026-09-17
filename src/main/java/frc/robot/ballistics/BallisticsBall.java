@@ -22,7 +22,7 @@ public class BallisticsBall implements DerivableFunction {
         double vMag = Math.abs(velocity); // Math of both velocities
         double dragForce = -0.5 * dragCoeffient * density * area * vMag;
         double gravityForce = mass * gravity;
-        double totalForce = dragForce * gravityForce;
+        double totalForce = dragForce + gravityForce;
         double acceleration = totalForce / mass;
 
         return new double[] {velocity, acceleration};

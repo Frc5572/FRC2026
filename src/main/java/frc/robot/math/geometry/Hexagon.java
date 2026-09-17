@@ -27,6 +27,10 @@ public class Hexagon implements ConvexShape {
         this.vertices[6] = this.vertices[0];
     }
 
+    public Translation2d[] getVertices() {
+        return vertices;
+    }
+
     @Override
     public Axis[] getAxes() {
         return axes;

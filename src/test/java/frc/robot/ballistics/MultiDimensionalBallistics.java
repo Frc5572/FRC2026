@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 /**
- * The MultiDimensionalBallistics class is meant to compare the 2D values of both the Ballistics2D
- * and Ballistics3D arrays.
+ * The MultiDimensionalBallistics class is a metamorphic test meant to compare the 2D values of both
+ * the Ballistics2D and Ballistics3D arrays.
  * 
  * This test is plausable because it could happen due to a logical error within either of the
  * Ballistics2D or Ballistics3D array code where the calculations could be altered to the point of
