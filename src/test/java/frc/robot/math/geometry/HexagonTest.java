@@ -31,7 +31,11 @@ public class HexagonTest {
         double[][] expectedVerticies = {{5.0, 0.0}, {2.5, 4.33}, {-2.5, 4.33}, {-5.0, 0.0},
             {-2.5, -4.33}, {2.5, -4.33}, {5.0, 0.0}};
         assertTrue(checkExpectedVerticies(expectedVerticies, hexVerticies));
+
+        // Checks if hexagon correctly returns false if x and y values aren't within the hexagon
         assertTrue(testHexagon.contains(new Translation2d(3, 3)));
+
+        // Checks if hexagon correctly returns false if x and y values aren't within the hexagon
         assertFalse(testHexagon.contains(new Translation2d(5, 5)));
     }
 
