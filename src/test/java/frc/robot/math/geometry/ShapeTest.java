@@ -1,6 +1,5 @@
 package frc.robot.math.geometry;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
@@ -21,7 +20,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
  */
 public class ShapeTest {
     /**
-     * The hexagon method makes sure the verticies are in the correct coordinates
+     * The hexagon method makes sure the verticies are in the correct coordinates.
      */
     @Test
     public void hexagon() {
@@ -29,23 +28,56 @@ public class ShapeTest {
         Hexagon testHexagon =
             new Hexagon("Test Hex", new Translation2d(0, 0), 5, new Rotation2d(0));
         List<Translation2d> hexVerticies = List.of(testHexagon.getVertices());
-        DataLogManager.log("Results: " + hexVerticies.toString());
-        // assertArrayEquals(new Translation2d[] {new Translation2d(5.00, 0.00),
-        // new Translation2d(2.50, 4.33), new Translation2d(-2.50, 4.33),
-        // new Translation2d(-5.00, 0.00), new Translation2d(-2.50, -4.33),
-        // new Translation2d(2.50, -4.33), new Translation2d(5.00, 0.00)}, hexVerticies.toArray());
+        double[][] expectedVerticies = {{5.0, 0.0}, {2.5, 4.33}, {-2.5, 4.33}, {-5.0, 0.0},
+            {-2.5, -4.33}, {2.5, -4.33}, {5.0, 0.0}};
+        assertTrue(checkExpectedVerticies(expectedVerticies, hexVerticies));
         assertTrue(testHexagon.contains(new Translation2d(3, 3)));
         assertFalse(testHexagon.contains(new Translation2d(5, 5)));
     }
 
+    /**
+     * 
+     */
     @Test
     public void hexagonRotation() {
         DataLogManager.start();
         Hexagon testHexagon =
             new Hexagon("Test Hex", new Translation2d(0, 0), 5, new Rotation2d(30));
-        Translation2d hexVerticie = testHexagon.getVertices()[0];
-        DataLogManager.log("X: " + hexVerticie.getX() + "Y: " + hexVerticie.getY());
-        assertEquals(4.33012701892, hexVerticie.getX());
-        assertEquals(2.50, hexVerticie.getY());
+        List<Translation2d> hexVerticies = List.of(testHexagon.getVertices());
+        double[][] expectedVerticies = {{0.77, -4.94}, {4.66, -1.8}, {3.89, 3.14}, {-0.77, 4.94},
+            {-4.66, 1.8}, {-3.89, -3.14}, {0.77, -4.94}};
+        assertTrue(checkExpectedVerticies(expectedVerticies, hexVerticies));
+    }
+
+    public boolean checkExpectedVerticies(double[][] expectedVerticies,
+        double[][] actualVerticies) {
+        boolean isEqual = true;
+        for (int i = 0; i < expectedVerticies.length; i++) {
+            double x = Math.round(actualVerticies[i][0] * 100.0) / 100.0;
+            double y = Math.round(actualVerticies[i][1] * 100.0) / 100.0;
+            if (!(x == expectedVerticies[i][0] && y == expectedVerticies[i][1])) {
+                DataLogManager.log("ERROR: " + i + "(" + x + ", " + y + ")");
+                isEqual = false;
+            } else {
+                DataLogManager.log(i + "(" + x + ", " + y + ")");
+            }
+        }
+        return isEqual;
+    }
+
+    public boolean checkExpectedVerticies(double[][] expectedVerticies,
+        List<Translation2d> actualVerticies) {
+        boolean isEqual = true;
+        for (int i = 0; i < expectedVerticies.length; i++) {
+            double x = Math.round(actualVerticies.get(i).getX() * 100.0) / 100.0;
+            double y = Math.round(actualVerticies.get(i).getY() * 100.0) / 100.0;
+            if (!(x == expectedVerticies[i][0] && y == expectedVerticies[i][1])) {
+                DataLogManager.log("ERROR: " + i + "(" + x + ", " + y + ")");
+                isEqual = false;
+            } else {
+                DataLogManager.log(i + "(" + x + ", " + y + ")");
+            }
+        }
+        return isEqual;
     }
 }
