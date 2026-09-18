@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
  * The consequences for this is if the geometry is invalid, the areas the robot needs to calculate
  * may be unaccurate.
  */
-public class ShapeTest {
+public class HexagonTest {
     /**
      * The hexagon method makes sure the verticies are in the correct coordinates.
      */
@@ -36,7 +36,8 @@ public class ShapeTest {
     }
 
     /**
-     * 
+     * The hexagonRotation method goes through an array of expected verticies and actual verticies
+     * to see if they line up with each other.
      */
     @Test
     public void hexagonRotation() {
@@ -49,7 +50,12 @@ public class ShapeTest {
         assertTrue(checkExpectedVerticies(expectedVerticies, hexVerticies));
     }
 
-    public boolean checkExpectedVerticies(double[][] expectedVerticies,
+    /*
+     * The overloaded methods checkExpectedVerticies go through two arrays, one predetermined
+     * expected, one actual and returns false if at least one verticie doesn't match.
+     */
+    @SuppressWarnings("unused")
+    private boolean checkExpectedVerticies(double[][] expectedVerticies,
         double[][] actualVerticies) {
         boolean isEqual = true;
         for (int i = 0; i < expectedVerticies.length; i++) {
@@ -65,7 +71,7 @@ public class ShapeTest {
         return isEqual;
     }
 
-    public boolean checkExpectedVerticies(double[][] expectedVerticies,
+    private boolean checkExpectedVerticies(double[][] expectedVerticies,
         List<Translation2d> actualVerticies) {
         boolean isEqual = true;
         for (int i = 0; i < expectedVerticies.length; i++) {
