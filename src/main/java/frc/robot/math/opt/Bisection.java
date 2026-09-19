@@ -16,7 +16,7 @@ public class Bisection {
             double mid = (min + max) / 2.0;
             double fMid = f.applyAsDouble(mid);
             double det = fMid * fMin;
-            if (Math.abs(det) < 1e-3) {
+            if (Math.abs(fMid) < 1e-3) {
                 return mid;
             } else if (det < 0.0) {
                 max = mid;
