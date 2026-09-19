@@ -11,8 +11,9 @@ import edu.wpi.first.math.geometry.Translation2d;
  * work properly against two different shapes.
  * 
  * This test is plausable, because we need to check if a shape can correctly be detected within
- * another shape.
+ * another shape when performing calculations with multiple shapes.
  * 
+ * If a shape cannot be detected within another shape, there may be a distortion.
  */
 public class SeparatingAxisTest {
     /**

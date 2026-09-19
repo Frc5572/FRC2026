@@ -16,8 +16,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
  * it initializes correctly, as well as having the correct verticie positions when the hexagon
  * rotates.
  * 
- * The consequences for this is if the geometry is invalid, the areas the robot needs to calculate
- * may be unaccurate.
+ * If the geometry is invalid, the areas the robot needs to calculate may be unaccurate.
  */
 public class HexagonTest {
     /**
