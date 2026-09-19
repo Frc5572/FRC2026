@@ -267,7 +267,7 @@ public class BallisticsTest {
     @Test
     @DisplayName("Analytic Test: Projectile range formula validation (no drag)")
     void analyticTest_rangeFormula() {
-        // For projectile motion without drag: R = v^2 * sin(2θ) / g
+        // For projectile motion without drag: R = v^2 * sin(2*angle) / g
         Ballistics model = new Ballistics(9.81, 0.0, 0.5, 1.0, 0.47);
         double speed = 30.0;
         double gravity = 9.81;
