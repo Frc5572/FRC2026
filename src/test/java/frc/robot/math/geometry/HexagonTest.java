@@ -12,15 +12,17 @@ import edu.wpi.first.wpilibj.DataLogManager;
  * The ShapeTest class is an analytic test used to check if the calculations for the different
  * shapes in the geometry package works.
  * 
- * This is plausable because someone could make a shape class, but not actually calculate the
- * dimensions correctly.
+ * This is plausable because we need to make sure that whenever the Hexagon class is instantiated,
+ * it initializes correctly, as well as having the correct verticie positions when the hexagon
+ * rotates.
  * 
  * The consequences for this is if the geometry is invalid, the areas the robot needs to calculate
  * may be unaccurate.
  */
 public class HexagonTest {
     /**
-     * The hexagon method makes sure the verticies are in the correct coordinates.
+     * The hexagon method makes sure the verticies are in the correct coordinates. Intended to be an
+     * invariant test.
      */
     @Test
     public void hexagon() {
@@ -43,7 +45,8 @@ public class HexagonTest {
      * The hexagonRotation method goes through an array of expected verticies and actual verticies
      * to see if they line up with each other.
      * 
-     * This also makes sure that the value is in radians, not degrees.
+     * This also makes sure that the value is in radians, not degrees. Intended to be an invariant
+     * test.
      */
     @Test
     public void hexagonRotation() {

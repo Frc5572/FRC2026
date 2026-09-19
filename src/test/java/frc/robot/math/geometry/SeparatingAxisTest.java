@@ -6,7 +6,19 @@ import org.junit.jupiter.api.Test;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
+/**
+ * The SeparatingAxisTest class is a regression test used to check wheter the method .solve() would
+ * work properly against two different shapes.
+ * 
+ * This test is plausable, because we need to check if a shape can correctly be detected within
+ * another shape.
+ * 
+ */
 public class SeparatingAxisTest {
+    /**
+     * Checks if the .solve() method correctly checks if two hexagons are overlapping, and if the
+     * hexagon and third hexagon isn't
+     */
     @Test
     public void solveAxis() {
         Circle testCircle = new Circle("Test Circle", new Translation2d(0, 0), 5);
