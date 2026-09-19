@@ -1,22 +1,20 @@
 package frc.robot.math.opt.ballistics;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.bolistics.Ballistics;
 
 /**
  * Unit tests for Ballistics physics simulation.
- * 
- * Test types included:
- * - Smoke Test: Basic ballistic calculations work
- * - Regression Test: Ensures expected physics behaviors are correctly modeled
- * - Metamorphic Test: Verifies relationships between simulation parameters
- * - Invariant Test: Confirms physical laws are always satisfied
- * - Round Trip Test: Validates simulation properties and energy conservation
- * - Analytic Test: Compares with known physics solutions
+ *
+ * Test types included: - Smoke Test: Basic ballistic calculations work - Regression Test: Ensures
+ * expected physics behaviors are correctly modeled - Metamorphic Test: Verifies relationships
+ * between simulation parameters - Invariant Test: Confirms physical laws are always satisfied -
+ * Round Trip Test: Validates simulation properties and energy conservation - Analytic Test:
+ * Compares with known physics solutions
  */
 @DisplayName("Ballistics Physics Simulation Tests")
 public class BallisticsTest {
@@ -123,7 +121,8 @@ public class BallisticsTest {
         double range60 = simulateRange(model, speed, Rotation2d.fromDegrees(60));
 
         // Without drag, complementary angles should have similar ranges
-        assertEquals(range30, range60, 0.5, "Complementary angles should have similar ranges (no drag)");
+        assertEquals(range30, range60, 0.5,
+            "Complementary angles should have similar ranges (no drag)");
     }
 
     @Test
@@ -139,7 +138,8 @@ public class BallisticsTest {
         double rangeHeavyRange = simulateRange(heavyModel, speed, angle);
 
         // Heavier object experiences proportionally more drag
-        assertTrue(rangeHeavyRange > rangeLightRange, "Heavier object should travel farther (less drag effect)");
+        assertTrue(rangeHeavyRange > rangeLightRange,
+            "Heavier object should travel farther (less drag effect)");
     }
 
     // ============ INVARIANT TEST ============
@@ -211,7 +211,7 @@ public class BallisticsTest {
         double vx0 = speed * angle.getCos();
         double vy0 = speed * angle.getSin();
 
-        double[] x = new double[]{0, 0.5, vx0, vy0};
+        double[] x = new double[] {0, 0.5, vx0, vy0};
         double h = 0.01;
         int iterations = 0;
         int maxIterations = 10000;
@@ -277,7 +277,7 @@ public class BallisticsTest {
         double theoreticalRange = (speed * speed * Math.sin(2 * Math.toRadians(angle))) / gravity;
 
         // Should be close to theoretical value
-        assertEquals(theoreticalRange, simulatedRange, 1.0, 
+        assertEquals(theoreticalRange, simulatedRange, 1.0,
             "Simulated range should match theoretical range formula");
     }
 
@@ -294,7 +294,7 @@ public class BallisticsTest {
 
         // Run simulation to measure actual time
         double vx0 = initialSpeed * Math.cos(Math.toRadians(angle));
-        double[] x = new double[]{0, 0.5, vx0, vy0};
+        double[] x = new double[] {0, 0.5, vx0, vy0};
         double h = 0.001;
         double time = 0.0;
 
@@ -313,22 +313,22 @@ public class BallisticsTest {
         double vx0 = speed * angle.getCos();
         double vy0 = speed * angle.getSin();
 
-        double[] x = new double[]{0, 0.5, vx0, vy0};
+        double[] x = new double[] {0, 0.5, vx0, vy0};
         double h = 0.01;
 
         while (x[1] > 0.0) {
             // Simple RK4 integration step
             double[] k1 = sim.derivative(x);
-            double[] x_k1 = new double[]{x[0] + k1[0] * h / 2, x[1] + k1[1] * h / 2};
-            
+            double[] x_k1 = new double[] {x[0] + k1[0] * h / 2, x[1] + k1[1] * h / 2};
+
             double[] k2 = sim.derivative(x_k1);
-            double[] x_k2 = new double[]{x[0] + k2[0] * h / 2, x[1] + k2[1] * h / 2};
-            
+            double[] x_k2 = new double[] {x[0] + k2[0] * h / 2, x[1] + k2[1] * h / 2};
+
             double[] k3 = sim.derivative(x_k2);
-            double[] x_k3 = new double[]{x[0] + k3[0] * h, x[1] + k3[1] * h};
-            
+            double[] x_k3 = new double[] {x[0] + k3[0] * h, x[1] + k3[1] * h};
+
             double[] k4 = sim.derivative(x_k3);
-            
+
             x[0] = x[0] + (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) * h / 6;
             x[1] = x[1] + (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) * h / 6;
         }
