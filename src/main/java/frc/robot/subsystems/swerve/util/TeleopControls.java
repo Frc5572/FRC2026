@@ -6,6 +6,7 @@ import org.jspecify.annotations.NullMarked;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.controls.ControlsConfig;
+import frc.robot.controls.ControlsCurve;
 
 /**
  * Control scheme utilities for teleoperated swerve driving.
@@ -23,7 +24,8 @@ import frc.robot.controls.ControlsConfig;
  * rescaled so that motion begins smoothly from zero.</li>
  * <li>The magnitude saturates at {@link ControlsConfig#translationSaturation()} of full
  * deflection, so a driver need not bottom the stick out to reach full speed.</li>
- * <li>The response curve is {@code magnitude ^ exponent}; an exponent of 1.0 is linear.</li>
+ * <li>The remaining travel is passed through the profile's {@link ControlsCurve}, which is
+ * either a power curve or a monotone spline drawn in the tuner.</li>
  * <li>The result is clamped to the unit circle, so a diagonal commands the same speed as a
  * straight push. Scaling the axes independently, as this class previously did, made diagonals
  * about 41% faster than straight-ahead.</li>
@@ -75,7 +77,8 @@ public class TeleopControls {
                 double yaxis = forward.getAsDouble();
                 double xaxis = right.getAsDouble();
                 double scale = shapeMagnitude(Math.hypot(xaxis, yaxis), cfg.translationDeadband(),
-                    cfg.translationSaturation(), cfg.translationExponent());
+                    cfg.translationSaturation(), cfg.translationCurve(),
+                    cfg.translationExponent());
 
                 double vx;
                 double vy;
@@ -94,7 +97,7 @@ public class TeleopControls {
 
                 double raxis = turnCcw.getAsDouble();
                 double turn = shapeMagnitude(Math.abs(raxis), cfg.rotationDeadband(), 1.0,
-                    cfg.rotationExponent()) * Math.signum(raxis);
+                    cfg.rotationCurve(), cfg.rotationExponent()) * Math.signum(raxis);
                 return new ChassisSpeeds(vx, vy, turn * maxRotSpeed.getAsDouble());
             }
         };
@@ -106,17 +109,18 @@ public class TeleopControls {
      * @param magnitude raw stick magnitude, normally in [0, 1]
      * @param deadband fraction of travel ignored around centre
      * @param saturation fraction of travel at which full output is reached
-     * @param exponent response curve exponent; 1.0 is linear
+     * @param curve the response curve applied to the rescaled travel
+     * @param exponent exponent used when the curve is in power mode
      * @return the shaped magnitude, in [0, 1]
      */
     public static double shapeMagnitude(double magnitude, double deadband, double saturation,
-        double exponent) {
+        ControlsCurve curve, double exponent) {
         double top = Math.max(saturation, deadband + 1e-6);
         if (magnitude <= deadband) {
             return 0.0;
         }
         double normalized = Math.min(1.0, (magnitude - deadband) / (top - deadband));
-        return Math.pow(normalized, exponent);
+        return curve.evaluate(normalized, exponent);
     }
 
     /**

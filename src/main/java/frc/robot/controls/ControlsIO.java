@@ -27,6 +27,18 @@ public interface ControlsIO {
         public String activeProfile = ControlsProfiles.DEFAULT_PROFILE;
         /** Values of the active profile, indexed by {@link ControlsField#ordinal()}. */
         public double[] values = ControlsField.defaults();
+        /** Which set of driver bindings is in force, as a {@link ControlScheme} name. */
+        public String scheme = ControlScheme.defaultScheme().name();
+        /** Which fields take effect, indexed by {@link ControlsField#ordinal()}. */
+        public boolean[] enabled = ControlsField.defaultEnabledFlags();
+        /** Translation response curve mode, as a {@link ControlsCurve.Mode} name. */
+        public String translationCurveMode = ControlsCurve.Mode.POWER.name();
+        /** Translation curve knots, as {@code [x0, y0, x1, y1, ...]}. */
+        public double[] translationCurveKnots = ControlsCurve.defaultKnots();
+        /** Rotation response curve mode, as a {@link ControlsCurve.Mode} name. */
+        public String rotationCurveMode = ControlsCurve.Mode.POWER.name();
+        /** Rotation curve knots, as {@code [x0, y0, x1, y1, ...]}. */
+        public double[] rotationCurveKnots = ControlsCurve.defaultKnots();
         /** True when the in-memory profiles differ from what is on disk. */
         public boolean dirty = false;
     }

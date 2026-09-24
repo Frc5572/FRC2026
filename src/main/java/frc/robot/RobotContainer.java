@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -61,6 +62,7 @@ import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
+import frc.robot.controls.ControlScheme;
 import frc.robot.controls.Controls;
 import frc.robot.controls.ControlsIOEmpty;
 import frc.robot.controls.ControlsReal;
@@ -244,7 +246,7 @@ public final class RobotContainer {
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
             () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
-            () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
+            this::driverTurnInput,
             controls::config, () -> controls.config().translationMaxSpeed(),
             () -> controls.config().rotationMaxSpeed())));
         shooter.setDefaultCommand(shooter.shoot(0.0));
@@ -276,20 +278,55 @@ public final class RobotContainer {
         return value;
     }
 
+    /**
+     * The driver's turn input, in [-1, 1] counterclockwise-positive.
+     *
+     * <p>
+     * Under {@link ControlScheme#TRIGGER_TURN} this is the left trigger minus the right, so left
+     * turns counterclockwise and pulling both cancels out. The value is read live, so switching
+     * schemes takes effect without rebinding anything.
+     */
+    private double driverTurnInput() {
+        if (controls.config().scheme() == ControlScheme.TRIGGER_TURN) {
+            return combineControllers(CommandXboxController::getLeftTriggerAxis, driver, tuner)
+                - combineControllers(CommandXboxController::getRightTriggerAxis, driver, tuner);
+        }
+        return -combineControllers(CommandXboxController::getRightX, driver, tuner);
+    }
+
+    /**
+     * The shoot action, together with the reduced-speed drive that goes with it.
+     *
+     * <p>
+     * Built fresh on each call because the same command instance cannot be bound to two triggers,
+     * and this is bound once per control scheme.
+     */
+    private Command shootWhileDriving() {
+        return Commands.parallel(
+            CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood),
+            swerve.driveUserRelative(TeleopControls.teleopControls(
+                () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
+                () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
+                this::driverTurnInput,
+                controls::config, () -> controls.config().shootTranslationMaxSpeed(),
+                () -> controls.config().shootRotationMaxSpeed())));
+    }
+
     private void setupDriver() {
         driver.y().onTrue(swerve.setFieldRelativeOffset());
-        // driver.b().whileTrue(turret.goToAngleRobotRelative(() -> Rotation2d.kZero));
         driver.x().whileTrue(swerve.wheelsIn());
 
-        driver.rightTrigger()
-            .whileTrue(Commands.parallel(
-                CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood),
-                swerve.driveUserRelative(TeleopControls.teleopControls(
-                    () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
-                    () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
-                    () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
-                    controls::config, () -> controls.config().shootTranslationMaxSpeed(),
-                    () -> controls.config().shootRotationMaxSpeed()))));
+        // Both schemes are bound at once, each gated on which is active, so a driver can switch
+        // between them from the tuner mid-practice without a redeploy. Under TRIGGER_TURN the
+        // triggers become the turn axis, so shooting and intaking move to the free face buttons.
+        Trigger triggerTurn =
+            new Trigger(() -> controls.config().scheme() == ControlScheme.TRIGGER_TURN);
+        Trigger shootInput = driver.rightTrigger().and(triggerTurn.negate())
+            .or(driver.a().and(triggerTurn));
+        Trigger intakeInput = driver.leftTrigger().and(triggerTurn.negate())
+            .or(driver.b().and(triggerTurn));
+
+        shootInput.whileTrue(shootWhileDriving());
 
         driver.povUp().onTrue(Commands.runOnce(() -> {
             targetingState.incTrims(0.5, 0);
@@ -304,11 +341,10 @@ public final class RobotContainer {
             // swerve.state.incTrims(0.0, -2.0);
         }));
 
-        driver.leftTrigger().whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
+        intakeInput.whileTrue(intake.extendHopper(1.0).andThen(intake.intakeBalls()))
             .onFalse(intake.retractHopper(1.0));
 
-        driver.leftTrigger().and(driver.rightTrigger().negate())
-            .whileTrue(indexer.spinWhileIntake());
+        intakeInput.and(shootInput.negate()).whileTrue(indexer.spinWhileIntake());
 
         // driver.rightBumper()
         // .whileTrue(swerve.driveFacingSides(

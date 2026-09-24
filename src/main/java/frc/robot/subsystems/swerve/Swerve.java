@@ -13,7 +13,6 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -37,6 +36,7 @@ import frc.robot.subsystems.swerve.util.MoveToPoseBuilder;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.controls.ControlsConfig;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
+import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.swerve.util.TuningCommands;
 import frc.robot.util.AllianceFlipUtil;
 
@@ -578,12 +578,15 @@ public final class Swerve extends SubsystemBase {
             double omega = 0.0;
             double xaxis = right.getAsDouble();
             double yaxis = forward.getAsDouble();
-            double deadband = controlsConfig.get().translationDeadband();
-            double exponent = controlsConfig.get().translationExponent();
-            yaxis = MathUtil.applyDeadband(yaxis, deadband);
-            xaxis = MathUtil.applyDeadband(xaxis, deadband);
-            xaxis = Math.pow(Math.abs(xaxis), exponent) * Math.signum(xaxis);
-            yaxis = Math.pow(Math.abs(yaxis), exponent) * Math.signum(yaxis);
+            var cfg = controlsConfig.get();
+            double sx = Math.signum(xaxis);
+            double sy = Math.signum(yaxis);
+            xaxis = TeleopControls.shapeMagnitude(Math.abs(xaxis), cfg.translationDeadband(),
+                cfg.translationSaturation(), cfg.translationCurve(), cfg.translationExponent())
+                * sx;
+            yaxis = TeleopControls.shapeMagnitude(Math.abs(yaxis), cfg.translationDeadband(),
+                cfg.translationSaturation(), cfg.translationCurve(), cfg.translationExponent())
+                * sy;
             Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
             // normalize between (-180, 180]
             double normalizedAngle = ((currentRotation.getDegrees() + 180) % 360 + 360) % 360 - 180;

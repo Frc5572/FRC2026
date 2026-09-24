@@ -7,6 +7,7 @@ import java.util.Map;
 import org.jspecify.annotations.NullMarked;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -134,13 +135,60 @@ public final class ControlsProfiles {
         if (node == null || !node.isObject()) {
             return cfg;
         }
+        JsonNode enabledNode = node.get("enabled");
         for (ControlsField field : ControlsField.values()) {
             JsonNode value = node.get(field.key());
             if (value != null && value.isNumber()) {
-                cfg = cfg.with(field, value.asDouble());
+                double raw = value.asDouble();
+                // Before limits could be switched off, "off" was written as a value too large to
+                // bind. Read those back as disabled rather than clamping them to the new maximum,
+                // which would silently turn a dormant limit into an active one.
+                if (field.canDisable() && raw >= ControlsField.LIMIT_DISABLED) {
+                    cfg = cfg.withEnabled(field, false);
+                } else {
+                    cfg = cfg.with(field, raw);
+                }
+            }
+            if (enabledNode != null && enabledNode.isObject()) {
+                JsonNode flag = enabledNode.get(field.key());
+                if (flag != null && flag.isBoolean()) {
+                    cfg = cfg.withEnabled(field, flag.asBoolean());
+                }
             }
         }
+        JsonNode schemeNode = node.get("scheme");
+        if (schemeNode != null && schemeNode.isTextual()) {
+            cfg = cfg.withScheme(ControlScheme.fromName(schemeNode.asText()));
+        }
+        cfg = cfg.withTranslationCurve(readCurve(node.get("translationCurve")));
+        cfg = cfg.withRotationCurve(readCurve(node.get("rotationCurve")));
         return cfg;
+    }
+
+    private static ControlsCurve readCurve(JsonNode node) {
+        if (node == null || !node.isObject()) {
+            return ControlsCurve.power();
+        }
+        JsonNode modeNode = node.get("mode");
+        String mode = modeNode == null ? ControlsCurve.Mode.POWER.name() : modeNode.asText();
+        JsonNode knotsNode = node.get("knots");
+        if (knotsNode == null || !knotsNode.isArray()) {
+            return ControlsCurve.of(mode, ControlsCurve.defaultKnots());
+        }
+        double[] knots = new double[knotsNode.size()];
+        for (int i = 0; i < knotsNode.size(); i++) {
+            knots[i] = knotsNode.get(i).asDouble();
+        }
+        return ControlsCurve.of(mode, knots);
+    }
+
+    private static void writeCurve(ObjectNode parent, String name, ControlsCurve curve) {
+        ObjectNode node = parent.putObject(name);
+        node.put("mode", curve.mode().name());
+        ArrayNode knots = node.putArray("knots");
+        for (double value : curve.knots()) {
+            knots.add(value);
+        }
     }
 
     /** Serialise this profile set as pretty-printed JSON suitable for checking into git. */
@@ -153,6 +201,15 @@ public final class ControlsProfiles {
             for (ControlsField field : ControlsField.values()) {
                 node.put(field.key(), cfg.get(field));
             }
+            ObjectNode enabledNode = node.putObject("enabled");
+            for (ControlsField field : ControlsField.values()) {
+                if (field.canDisable()) {
+                    enabledNode.put(field.key(), cfg.isEnabled(field));
+                }
+            }
+            node.put("scheme", cfg.scheme().name());
+            writeCurve(node, "translationCurve", cfg.translationCurve());
+            writeCurve(node, "rotationCurve", cfg.rotationCurve());
         });
         try {
             return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(root) + "\n";

@@ -34,15 +34,24 @@ public class Controls extends SubsystemBase {
         this.io = io;
         io.updateInputs(inputs);
         Logger.processInputs("Controls", inputs);
-        this.config = ControlsConfig.of(inputs.values);
+        this.config = rebuild();
+    }
+
+    /** Reassemble the configuration from the logged inputs, so replay matches the real run. */
+    private ControlsConfig rebuild() {
+        return ControlsConfig.of(inputs.values, inputs.enabled,
+            ControlsCurve.of(inputs.translationCurveMode, inputs.translationCurveKnots),
+            ControlsCurve.of(inputs.rotationCurveMode, inputs.rotationCurveKnots))
+            .withScheme(ControlScheme.fromName(inputs.scheme));
     }
 
     @Override
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Controls", inputs);
-        this.config = ControlsConfig.of(inputs.values);
+        this.config = rebuild();
         Logger.recordOutput("Controls/ActiveProfile", inputs.activeProfile);
+        Logger.recordOutput("Controls/Scheme", inputs.scheme);
         Logger.recordOutput("Controls/Dirty", inputs.dirty);
     }
 

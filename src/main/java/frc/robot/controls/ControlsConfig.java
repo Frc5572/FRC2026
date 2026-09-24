@@ -20,14 +20,25 @@ import org.jspecify.annotations.NullMarked;
 public final class ControlsConfig {
 
     private final double[] values;
+    private final boolean[] enabled;
+    private final ControlsCurve translationCurve;
+    private final ControlsCurve rotationCurve;
+    private final ControlScheme scheme;
 
-    private ControlsConfig(double[] values) {
+    private ControlsConfig(double[] values, boolean[] enabled, ControlsCurve translationCurve,
+        ControlsCurve rotationCurve, ControlScheme scheme) {
         this.values = values;
+        this.enabled = enabled;
+        this.translationCurve = translationCurve;
+        this.rotationCurve = rotationCurve;
+        this.scheme = scheme;
     }
 
     /** The factory-default configuration. */
     public static ControlsConfig defaults() {
-        return new ControlsConfig(ControlsField.defaults());
+        return new ControlsConfig(ControlsField.defaults(),
+            ControlsField.defaultEnabledFlags(), ControlsCurve.power(), ControlsCurve.power(),
+            ControlScheme.defaultScheme());
     }
 
     /**
@@ -41,12 +52,31 @@ public final class ControlsConfig {
      * @return a configuration holding a defensive, validated copy of {@code raw}
      */
     public static ControlsConfig of(double[] raw) {
+        return of(raw, ControlsField.defaultEnabledFlags(), ControlsCurve.power(),
+            ControlsCurve.power());
+    }
+
+    /**
+     * Wrap a raw value array and a pair of response curves.
+     *
+     * @param raw values indexed by {@link ControlsField#ordinal()}
+     * @param translationCurve the translation response curve
+     * @param rotationCurve the rotation response curve
+     * @return a configuration holding a defensive, validated copy of the inputs
+     */
+    public static ControlsConfig of(double[] raw, boolean[] rawEnabled,
+        ControlsCurve translationCurve, ControlsCurve rotationCurve) {
         ControlsField[] fields = ControlsField.values();
         double[] out = ControlsField.defaults();
+        boolean[] flags = ControlsField.defaultEnabledFlags();
         for (int i = 0; i < fields.length && i < raw.length; i++) {
             out[i] = fields[i].clamp(raw[i]);
         }
-        return new ControlsConfig(out);
+        for (int i = 0; i < fields.length && i < rawEnabled.length; i++) {
+            flags[i] = !fields[i].canDisable() || rawEnabled[i];
+        }
+        return new ControlsConfig(out, flags, translationCurve, rotationCurve,
+            ControlScheme.defaultScheme());
     }
 
     /** Read a single field. */
@@ -64,7 +94,76 @@ public final class ControlsConfig {
     public ControlsConfig with(ControlsField field, double value) {
         double[] out = values.clone();
         out[field.ordinal()] = field.clamp(value);
-        return new ControlsConfig(out);
+        return new ControlsConfig(out, enabled.clone(), translationCurve, rotationCurve, scheme);
+    }
+
+    /**
+     * Return a copy of this configuration with one field switched on or off.
+     *
+     * <p>
+     * A field that cannot be disabled ignores the request and stays on.
+     *
+     * @param field the field to toggle
+     * @param on whether the field should take effect
+     * @return a new configuration; this one is unchanged
+     */
+    public ControlsConfig withEnabled(ControlsField field, boolean on) {
+        boolean[] out = enabled.clone();
+        out[field.ordinal()] = !field.canDisable() || on;
+        return new ControlsConfig(values.clone(), out, translationCurve, rotationCurve, scheme);
+    }
+
+    /** Whether the given field currently takes effect. */
+    public boolean isEnabled(ControlsField field) {
+        return enabled[field.ordinal()];
+    }
+
+    /** A defensive copy of the enabled flags, for logging and serialisation. */
+    public boolean[] enabledFlags() {
+        return enabled.clone();
+    }
+
+    /**
+     * The effective value of a limit field: its configured value, or
+     * {@link ControlsField#LIMIT_DISABLED_VALUE} when it has been switched off.
+     *
+     * @param field the limit to read
+     * @return the value the drivetrain should apply
+     */
+    public double limit(ControlsField field) {
+        return enabled[field.ordinal()] ? values[field.ordinal()]
+            : ControlsField.LIMIT_DISABLED_VALUE;
+    }
+
+    /** A copy of this configuration with a different translation response curve. */
+    public ControlsConfig withTranslationCurve(ControlsCurve curve) {
+        return new ControlsConfig(values.clone(), enabled.clone(), curve, rotationCurve, scheme);
+    }
+
+    /** A copy of this configuration with a different rotation response curve. */
+    public ControlsConfig withRotationCurve(ControlsCurve curve) {
+        return new ControlsConfig(values.clone(), enabled.clone(), translationCurve, curve, scheme);
+    }
+
+    /** A copy of this configuration using a different set of driver bindings. */
+    public ControlsConfig withScheme(ControlScheme newScheme) {
+        return new ControlsConfig(values.clone(), enabled.clone(), translationCurve,
+            rotationCurve, newScheme);
+    }
+
+    /** Which set of driver bindings is in force. */
+    public ControlScheme scheme() {
+        return scheme;
+    }
+
+    /** The translation response curve. */
+    public ControlsCurve translationCurve() {
+        return translationCurve;
+    }
+
+    /** The rotation response curve. */
+    public ControlsCurve rotationCurve() {
+        return rotationCurve;
     }
 
     /** A defensive copy of the backing array, for logging and serialisation. */
@@ -124,42 +223,45 @@ public final class ControlsConfig {
 
     /** Acceleration limit along the current direction of travel, in m/s^2. */
     public double forwardAccelLimit() {
-        return values[ControlsField.FORWARD_ACCEL_LIMIT.ordinal()];
+        return limit(ControlsField.FORWARD_ACCEL_LIMIT);
     }
 
     /** Lateral acceleration limit before the command is treated as a skid, in m/s^2. */
     public double skidLimit() {
-        return values[ControlsField.SKID_LIMIT.ordinal()];
+        return limit(ControlsField.SKID_LIMIT);
     }
 
     /** Forward tipping acceleration limit, in m/s^2. */
     public double forwardTiltLimit() {
-        return values[ControlsField.FORWARD_TILT_LIMIT.ordinal()];
+        return limit(ControlsField.FORWARD_TILT_LIMIT);
     }
 
     /** Rearward tipping acceleration limit, in m/s^2. */
     public double backTiltLimit() {
-        return values[ControlsField.BACK_TILT_LIMIT.ordinal()];
+        return limit(ControlsField.BACK_TILT_LIMIT);
     }
 
     /** Leftward tipping acceleration limit, in m/s^2. */
     public double leftTiltLimit() {
-        return values[ControlsField.LEFT_TILT_LIMIT.ordinal()];
+        return limit(ControlsField.LEFT_TILT_LIMIT);
     }
 
     /** Rightward tipping acceleration limit, in m/s^2. */
     public double rightTiltLimit() {
-        return values[ControlsField.RIGHT_TILT_LIMIT.ordinal()];
+        return limit(ControlsField.RIGHT_TILT_LIMIT);
     }
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof ControlsConfig cfg && Arrays.equals(values, cfg.values);
+        return other instanceof ControlsConfig cfg && Arrays.equals(values, cfg.values)
+            && Arrays.equals(enabled, cfg.enabled)
+            && translationCurve.equals(cfg.translationCurve)
+            && rotationCurve.equals(cfg.rotationCurve) && scheme == cfg.scheme;
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(values);
+        return Arrays.hashCode(values) * 31 + translationCurve.hashCode();
     }
 
     @Override

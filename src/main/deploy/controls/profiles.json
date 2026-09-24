@@ -5,7 +5,7 @@
       "translationDeadband" : 0.1,
       "translationExponent" : 1.0,
       "translationSaturation" : 0.95,
-      "translationMaxSpeed" : 7.0,
+      "translationMaxSpeed" : 4.0,
       "rotationDeadband" : 0.1,
       "rotationExponent" : 1.0,
       "rotationMaxSpeed" : 7.0,
@@ -13,11 +13,28 @@
       "shootTranslationMaxSpeed" : 1.0,
       "shootRotationMaxSpeed" : 1.5,
       "forwardAccelLimit" : 10.0,
-      "skidLimit" : 1000.0,
-      "forwardTiltLimit" : 1000.0,
-      "backTiltLimit" : 1000.0,
-      "leftTiltLimit" : 1000.0,
-      "rightTiltLimit" : 1000.0
+      "skidLimit" : 20.0,
+      "forwardTiltLimit" : 20.0,
+      "backTiltLimit" : 20.0,
+      "leftTiltLimit" : 20.0,
+      "rightTiltLimit" : 20.0,
+      "enabled" : {
+        "forwardAccelLimit" : true,
+        "skidLimit" : false,
+        "forwardTiltLimit" : false,
+        "backTiltLimit" : false,
+        "leftTiltLimit" : false,
+        "rightTiltLimit" : false
+      },
+      "scheme" : "STICK_TURN",
+      "translationCurve" : {
+        "mode" : "POWER",
+        "knots" : [ 0.0, 0.0, 1.0, 1.0 ]
+      },
+      "rotationCurve" : {
+        "mode" : "POWER",
+        "knots" : [ 0.0, 0.0, 1.0, 1.0 ]
+      }
     },
     "legacy" : {
       "translationDeadband" : 0.1,
@@ -31,11 +48,63 @@
       "shootTranslationMaxSpeed" : 1.0,
       "shootRotationMaxSpeed" : 1.5,
       "forwardAccelLimit" : 10.0,
-      "skidLimit" : 1000.0,
-      "forwardTiltLimit" : 1000.0,
-      "backTiltLimit" : 1000.0,
-      "leftTiltLimit" : 1000.0,
-      "rightTiltLimit" : 1000.0
+      "skidLimit" : 20.0,
+      "forwardTiltLimit" : 20.0,
+      "backTiltLimit" : 20.0,
+      "leftTiltLimit" : 20.0,
+      "rightTiltLimit" : 20.0,
+      "enabled" : {
+        "forwardAccelLimit" : true,
+        "skidLimit" : false,
+        "forwardTiltLimit" : false,
+        "backTiltLimit" : false,
+        "leftTiltLimit" : false,
+        "rightTiltLimit" : false
+      },
+      "scheme" : "STICK_TURN",
+      "translationCurve" : {
+        "mode" : "POWER",
+        "knots" : [ 0.0, 0.0, 1.0, 1.0 ]
+      },
+      "rotationCurve" : {
+        "mode" : "POWER",
+        "knots" : [ 0.0, 0.0, 1.0, 1.0 ]
+      }
+    },
+    "wilson" : {
+      "translationDeadband" : 0.15,
+      "translationExponent" : 2.0,
+      "translationSaturation" : 0.95,
+      "translationMaxSpeed" : 4.0,
+      "rotationDeadband" : 0.1,
+      "rotationExponent" : 2.0,
+      "rotationMaxSpeed" : 7.0,
+      "releaseTimeConstant" : 0.33,
+      "shootTranslationMaxSpeed" : 1.0,
+      "shootRotationMaxSpeed" : 1.5,
+      "forwardAccelLimit" : 10.0,
+      "skidLimit" : 20.0,
+      "forwardTiltLimit" : 20.0,
+      "backTiltLimit" : 20.0,
+      "leftTiltLimit" : 20.0,
+      "rightTiltLimit" : 20.0,
+      "enabled" : {
+        "forwardAccelLimit" : true,
+        "skidLimit" : false,
+        "forwardTiltLimit" : false,
+        "backTiltLimit" : false,
+        "leftTiltLimit" : false,
+        "rightTiltLimit" : false
+      },
+      "scheme" : "STICK_TURN",
+      "translationCurve" : {
+        "mode" : "CUSTOM",
+        "knots" : [ 0.0, 0.0, 0.25, 0.0625, 0.5, 0.25, 0.6828125, 0.459130859375, 0.8640625, 0.984130859375, 1.0, 1.0 ]
+      },
+      "rotationCurve" : {
+        "mode" : "CUSTOM",
+        "knots" : [ 0.0, 0.0, 0.25, 0.0625, 0.5, 0.25, 0.6921875, 0.636474609375, 0.8765625, 0.986474609375, 1.0, 1.0 ]
+      }
     }
   }
 }

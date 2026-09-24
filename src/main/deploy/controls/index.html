@@ -53,6 +53,60 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;
   }
   .val.changed { color: var(--warn); }
+  .row.off input[type=range] { opacity: .3; }
+  .row.off .val { opacity: .3; }
+  .toggle {
+    position: relative; width: 38px; height: 21px; flex: none; cursor: pointer;
+    background: #3a414d; border-radius: 11px; border: 1px solid var(--edge);
+    transition: background .12s;
+  }
+  .toggle::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
+    border-radius: 50%; background: #9aa3b2; transition: transform .12s, background .12s;
+  }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle.on::after { transform: translateX(17px); background: #07111d; }
+  .row label .lbl { display: flex; align-items: center; gap: 8px; }
+  .scheme {
+    background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 9px; padding: 12px; margin-bottom: 6px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .scheme .opt {
+    flex: 1 1 200px; text-align: left; padding: 9px 12px; border-radius: 7px;
+    background: #272c35; border: 1px solid var(--edge); color: var(--text); cursor: pointer;
+  }
+  .scheme .opt .sum { display: block; color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+  .scheme .opt.active { background: var(--accent); border-color: var(--accent); color: #07111d; }
+  .scheme .opt.active .sum { color: #0c2136; }
+  .curve {
+    background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 9px; padding: 12px; margin-bottom: 6px;
+  }
+  .curve .head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .curve .head .title { font-size: 14px; }
+  .curve .head .spacer { flex: 1; }
+  .curve .preset {
+    padding: 5px 11px; font-size: 13px; border-radius: 6px;
+    background: #272c35; border: 1px solid var(--edge); color: var(--muted); cursor: pointer;
+  }
+  .curve .preset.active {
+    background: var(--accent); border-color: var(--accent); color: #07111d; font-weight: 600;
+  }
+  .plot { width: 100%; max-width: 320px; aspect-ratio: 1; display: block; margin: 0 auto;
+          touch-action: none; cursor: crosshair; }
+  .plot .frame { fill: #12141a; stroke: var(--edge); stroke-width: .6; }
+  .plot .grid { stroke: #262b34; stroke-width: .4; }
+  .plot .dead { fill: #2a2f39; opacity: .55; }
+  .plot .ref  { stroke: #3a414d; stroke-width: .6; stroke-dasharray: 2 2; fill: none; }
+  .plot .line { stroke: var(--accent); stroke-width: 1.8; fill: none;
+                stroke-linejoin: round; stroke-linecap: round; }
+  .plot .knot { fill: var(--panel); stroke: var(--accent); stroke-width: 1.4; cursor: grab; }
+  .plot .knot.pinned { stroke: #5c6675; cursor: not-allowed; }
+  .plot .knot.drag { fill: var(--accent); cursor: grabbing; }
+  .curve .tip { color: var(--muted); font-size: 11.5px; text-align: center; margin-top: 8px; }
   #status { color: var(--muted); font-size: 13px; min-height: 18px; }
   #path { color: #6b7483; font-size: 11.5px; font-family: ui-monospace, monospace; }
   @media (max-width: 620px) {
@@ -89,14 +143,14 @@ import { NT4_Client } from "/scripts/NT4.js";
 const GROUPS = [
   ["Translation", [
     ["translationDeadband",   "Deadband",        "Stick travel ignored around centre"],
-    ["translationExponent",   "Response curve",  "1.0 linear · 2.0 squared"],
+    ["translationExponent",   "Preset exponent", "Used by the Linear / Squared presets"],
     ["translationSaturation", "Saturation",      "Stick travel that reaches full speed"],
     ["translationMaxSpeed",   "Max speed",       "m/s"],
     ["releaseTimeConstant",   "Coast on release","Seconds to coast down · 0 stops instantly"],
   ]],
   ["Rotation", [
     ["rotationDeadband", "Deadband",       "Stick travel ignored around centre"],
-    ["rotationExponent", "Response curve", "1.0 linear · 2.0 squared"],
+    ["rotationExponent", "Preset exponent", "Used by the Linear / Squared presets"],
     ["rotationMaxSpeed", "Max speed",      "rad/s"],
   ]],
   ["While shooting", [
@@ -105,16 +159,24 @@ const GROUPS = [
   ]],
   ["Acceleration limits", [
     ["forwardAccelLimit", "Forward accel", "m/s² · lower is gentler off the line"],
-    ["skidLimit",         "Skid limit",    "m/s² · 1000 disables"],
-    ["forwardTiltLimit",  "Tilt forward",  "m/s² · 1000 disables"],
-    ["backTiltLimit",     "Tilt back",     "m/s² · 1000 disables"],
-    ["leftTiltLimit",     "Tilt left",     "m/s² · 1000 disables"],
-    ["rightTiltLimit",    "Tilt right",    "m/s² · 1000 disables"],
+    ["skidLimit",         "Skid limit",    "m/s²"],
+    ["forwardTiltLimit",  "Tilt forward",  "m/s²"],
+    ["backTiltLimit",     "Tilt back",     "m/s²"],
+    ["leftTiltLimit",     "Tilt left",     "m/s²"],
+    ["rightTiltLimit",    "Tilt right",    "m/s²"],
   ]],
 ];
 
-const VALUES = "/Controls/values/";
-const META   = "/Controls/meta/";
+// The robot owns VALUES and CURVES; the page only reads them. The page owns the SET_* topics
+// and the robot only reads those. See ControlsReal's javadoc for why the directions are split.
+const VALUES   = "/Controls/values/";
+const ENABLED  = "/Controls/enabled/";
+const SET_SCHEME = "/Controls/set/scheme";
+const SET_EN   = "/Controls/set/enabled/";
+const META     = "/Controls/meta/";
+const SET_VALS = "/Controls/set/values/";
+const CURVES   = "/Controls/curves/";
+const SET_CURVES = "/Controls/set/curves/";
 
 const fields = new Map();   // key -> {min,max,def,value,row,slider,out,dragging}
 let profiles = [], active = "", dirty = false, built = false;
@@ -125,8 +187,13 @@ const setStatus = (t) => { $("status").textContent = t; };
 // Publish lazily: a field discovered after onConnect would otherwise never have its topic
 // published, and addSample throws on an unpublished topic.
 function writeValue(key, v) {
-  client.publishTopic(VALUES + key, "double");
-  client.addSample(VALUES + key, v);
+  client.publishTopic(SET_VALS + key, "double");
+  client.addSample(SET_VALS + key, v);
+}
+
+function writeEnabled(key, on) {
+  client.publishTopic(SET_EN + key, "boolean");
+  client.addSample(SET_EN + key, on);
 }
 
 function step(min, max) {
@@ -136,20 +203,44 @@ function step(min, max) {
   return 1;
 }
 
+// Every piece of metadata the robot publishes for a field. The UI must have all of it before
+// it can lay a row out: the slider range comes from min/max, and whether a row gets an on/off
+// switch comes from canDisable. These arrive as separate NetworkTables messages, so a field is
+// not ready just because it exists.
+const META_KEYS = ["default", "min", "max", "canDisable"];
+
 function ensureField(key) {
   let f = fields.get(key);
-  if (!f) { f = { min: 0, max: 1, def: 0, value: 0, dragging: false }; fields.set(key, f); }
+  if (!f) {
+    f = { min: 0, max: 1, def: 0, value: 0, dragging: false,
+          canDisable: false, enabled: true, meta: new Set() };
+    fields.set(key, f);
+  }
   return f;
+}
+
+function fieldReady(key) {
+  const f = fields.get(key);
+  return !!f && META_KEYS.every((m) => f.meta.has(m));
 }
 
 // Build the UI once every field has its metadata, so sliders get correct ranges immediately.
 function build() {
   if (built) return;
+  // Wait for complete metadata, not merely for the field to exist. A field entry is created by
+  // whichever message arrives first, so building on existence alone can lay out a row before its
+  // canDisable has landed -- and since the toggle is only created here, that row would silently
+  // never get its switch. The last field the robot publishes is the one that loses this race.
   for (const [, rows] of GROUPS) {
-    for (const [key] of rows) if (!fields.has(key)) return;
+    for (const [key] of rows) if (!fieldReady(key)) return;
   }
   built = true;
   const container = $("groups");
+  const schemeSection = document.createElement("div");
+  schemeSection.className = "group";
+  schemeSection.innerHTML = `<h2>Control scheme</h2>`;
+  schemeSection.appendChild(schemePicker.root);
+  container.appendChild(schemeSection);
   const placed = new Set();
   const sections = GROUPS.map(([title, rows]) => [title, rows.slice()]);
   const others = [...fields.keys()].filter(
@@ -166,8 +257,14 @@ function build() {
       const f = fields.get(key);
       const row = document.createElement("div");
       row.className = "row";
+      if (key === "translationDeadband" || key === "rotationDeadband") {
+        const which = key.startsWith("translation") ? "translation" : "rotation";
+        sec.appendChild(editors[which].root);
+      }
       row.innerHTML =
-        `<label for="s-${key}">${label}<span class="hint">${hint}</span></label>` +
+        `<label for="s-${key}"><span class="lbl">` +
+        (f.canDisable ? `<span class="toggle" id="t-${key}"></span>` : ``) +
+        `<span>${label}</span></span><span class="hint">${hint}</span></label>` +
         `<input type="range" id="s-${key}">` +
         `<div class="val" id="v-${key}"></div>`;
       sec.appendChild(row);
@@ -180,6 +277,7 @@ function build() {
         f.value = v;
         render(key);
         writeValue(key, v);
+        for (const ed of Object.values(editors)) ed.draw();
       });
       const release = () => { f.dragging = false; };
       slider.addEventListener("change", release);
@@ -187,6 +285,11 @@ function build() {
       slider.addEventListener("blur", release);
       f.slider = slider;
       f.out = row.querySelector(".val");
+      f.row = row;
+      if (f.canDisable) {
+        f.toggle = row.querySelector(".toggle");
+        f.toggle.addEventListener("click", () => writeEnabled(key, !f.enabled));
+      }
       render(key);
     }
     if (sec.children.length > 1) container.appendChild(sec);
@@ -199,6 +302,11 @@ function render(key) {
   const span = f.max - f.min;
   f.out.textContent = f.value.toFixed(span <= 2 ? 2 : span <= 20 ? 2 : 0);
   f.out.classList.toggle("changed", Math.abs(f.value - f.def) > 1e-9);
+  if (f.canDisable) {
+    if (f.toggle) f.toggle.classList.toggle("on", f.enabled);
+    if (f.row) f.row.classList.toggle("off", !f.enabled);
+    if (f.slider) f.slider.disabled = !f.enabled;
+  }
 }
 
 function renderProfiles() {
@@ -213,6 +321,317 @@ function renderProfiles() {
   }
   $("delete").disabled = profiles.length <= 1;
 }
+
+// ---------------------------------------------------------------------------
+// Response curves
+//
+// This is a direct port of ControlsCurve.java. The two must agree: if the shape drawn here did
+// not match what the robot evaluates, the editor would be actively misleading. Monotone cubic
+// Hermite (Fritsch-Carlson) is used so a curve can never dip or run backwards.
+// ---------------------------------------------------------------------------
+const MIN_SPACING = 1e-3;
+const MAX_KNOTS = 10;
+const DEFAULT_KNOTS = [0, 0, 1, 1];
+
+function sanitizeKnots(flat) {
+  if (!flat || flat.length < 4 || flat.length % 2 !== 0) return DEFAULT_KNOTS.slice();
+  const pts = [];
+  for (let i = 0; i < flat.length / 2; i++) {
+    const x = flat[2 * i], y = flat[2 * i + 1];
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return DEFAULT_KNOTS.slice();
+    pts.push([Math.min(1, Math.max(0, x)), Math.min(1, Math.max(0, y))]);
+  }
+  pts.sort((a, b) => a[0] - b[0]);
+  const out = [];
+  for (const pt of pts) {
+    if (out.length && pt[0] - out[out.length - 2] < MIN_SPACING) continue;
+    if (out.length / 2 >= MAX_KNOTS) break;
+    out.push(pt[0], pt[1]);
+  }
+  if (out.length < 4) return DEFAULT_KNOTS.slice();
+  out[0] = 0; out[1] = 0;
+  out[out.length - 2] = 1; out[out.length - 1] = 1;
+  return out;
+}
+
+function pchip(k, x) {
+  const n = k.length / 2;
+  if (n < 2) return x;
+  let i = 0;
+  for (let j = 0; j < n - 1; j++) { i = j; if (x >= k[2 * j] && x <= k[2 * j + 2]) break; }
+  const x0 = k[2 * i], y0 = k[2 * i + 1], x1 = k[2 * i + 2], y1 = k[2 * i + 3];
+  const h = x1 - x0;
+  if (h <= 0) return y1;
+  const sec = (j) => {
+    const hh = k[2 * j + 2] - k[2 * j];
+    return hh <= 0 ? 0 : (k[2 * j + 3] - k[2 * j + 1]) / hh;
+  };
+  const tan = (j) => {
+    if (j === 0) return sec(0);
+    if (j === n - 1) return sec(n - 2);
+    const p = sec(j - 1), q = sec(j);
+    if (p * q <= 0) return 0;
+    const hp = k[2 * j] - k[2 * j - 2], hn = k[2 * j + 2] - k[2 * j];
+    const w1 = 2 * hn + hp, w2 = hn + 2 * hp;
+    return (w1 + w2) / (w1 / p + w2 / q);
+  };
+  const m0 = tan(i), m1 = tan(i + 1);
+  const t = (x - x0) / h, t2 = t * t, t3 = t2 * t;
+  return (2 * t3 - 3 * t2 + 1) * y0 + (t3 - 2 * t2 + t) * h * m0
+       + (-2 * t3 + 3 * t2) * y1 + (t3 - t2) * h * m1;
+}
+
+function evalCurve(curve, x, exponent) {
+  const c = Math.min(1, Math.max(0, x));
+  if (curve.mode === "POWER") return Math.pow(c, Math.max(exponent, 1e-6));
+  return Math.min(1, Math.max(0, pchip(curve.knots, c)));
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs) => {
+  const n = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  return n;
+};
+
+/**
+ * A Blender-style curve widget. `which` is "translation" or "rotation"; it drives the NT topic
+ * names and which deadband/exponent fields the overlay reads.
+ */
+class CurveEditor {
+  constructor(which, title) {
+    this.which = which;
+    this.modeTopic  = `${SET_CURVES}${which}Mode`;
+    this.knotsTopic = `${SET_CURVES}${which}Knots`;
+    this.curve = { mode: "POWER", knots: DEFAULT_KNOTS.slice() };
+    this.drag = -1;
+
+    this.root = document.createElement("div");
+    this.root.className = "curve";
+    this.root.innerHTML =
+      `<div class="head"><span class="title">${title}</span><span class="spacer"></span>` +
+      `<button class="preset" data-p="linear">Linear</button>` +
+      `<button class="preset" data-p="squared">Squared</button>` +
+      `<button class="preset" data-p="custom">Custom</button></div>`;
+
+    this.svg = el("svg", { class: "plot", viewBox: "0 0 100 100" });
+    this.root.appendChild(this.svg);
+    const tip = document.createElement("div");
+    tip.className = "tip";
+    tip.textContent = "Drag knots · click the plot to add · double-click a knot to remove";
+    this.root.appendChild(tip);
+
+    this.root.querySelectorAll(".preset").forEach((b) =>
+      b.addEventListener("click", () => this.preset(b.dataset.p)));
+    this.svg.addEventListener("pointerdown", (e) => this.onDown(e));
+    this.svg.addEventListener("pointermove", (e) => this.onMove(e));
+    this.svg.addEventListener("pointerup", (e) => this.onUp(e));
+    this.svg.addEventListener("pointercancel", (e) => this.onUp(e));
+    this.draw();
+  }
+
+  exponentKey() {
+    return this.which === "translation" ? "translationExponent" : "rotationExponent";
+  }
+
+  exponent() {
+    const f = fields.get(this.exponentKey());
+    return f ? f.value : 1.0;
+  }
+
+  deadband() {
+    const f = fields.get(this.which === "translation"
+      ? "translationDeadband" : "rotationDeadband");
+    return f ? f.value : 0;
+  }
+
+  // Convert an event to plot coordinates in [0,1], y up.
+  toPlot(e) {
+    const r = this.svg.getBoundingClientRect();
+    return [
+      Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
+      Math.min(1, Math.max(0, 1 - (e.clientY - r.top) / r.height)),
+    ];
+  }
+
+  hitKnot(px, py) {
+    const k = this.curve.knots;
+    for (let i = 0; i < k.length / 2; i++) {
+      if (Math.hypot(k[2 * i] - px, k[2 * i + 1] - py) < 0.055) return i;
+    }
+    return -1;
+  }
+
+  onDown(e) {
+    const [px, py] = this.toPlot(e);
+    const hit = this.hitKnot(px, py);
+    if (hit > 0 && hit < this.curve.knots.length / 2 - 1) {
+      this.drag = hit;
+      this.svg.setPointerCapture(e.pointerId);
+      this.draw();
+      return;
+    }
+    if (hit !== -1) return;                       // an endpoint: pinned, ignore
+    this.addKnot(px, py);                         // empty space: add a knot
+  }
+
+  onMove(e) {
+    if (this.drag < 0) return;
+    const [px, py] = this.toPlot(e);
+    const k = this.curve.knots;
+    const lo = k[2 * this.drag - 2] + 0.02;
+    const hi = k[2 * this.drag + 2] - 0.02;
+    k[2 * this.drag] = Math.min(hi, Math.max(lo, px));
+    k[2 * this.drag + 1] = py;
+    this.draw();
+  }
+
+  onUp(e) {
+    if (this.drag < 0) return;
+    this.drag = -1;
+    try { this.svg.releasePointerCapture(e.pointerId); } catch (_) { /* already released */ }
+    this.commit();
+  }
+
+  // Sample the current shape so switching POWER -> CUSTOM does not change the feel.
+  seedFromCurrent() {
+    const exp = this.exponent();
+    const xs = [0, 0.25, 0.5, 0.75, 1];
+    const knots = [];
+    for (const x of xs) knots.push(x, evalCurve(this.curve, x, exp));
+    return sanitizeKnots(knots);
+  }
+
+  addKnot(px, py) {
+    if (this.curve.mode !== "CUSTOM") {
+      this.curve = { mode: "CUSTOM", knots: this.seedFromCurrent() };
+    }
+    if (this.curve.knots.length / 2 >= MAX_KNOTS) {
+      setStatus(`At most ${MAX_KNOTS} knots.`);
+      return;
+    }
+    this.curve.knots = sanitizeKnots(this.curve.knots.concat([px, py]));
+    this.commit();
+  }
+
+  removeKnot(i) {
+    const k = this.curve.knots;
+    if (i <= 0 || i >= k.length / 2 - 1) return;
+    this.curve.knots = sanitizeKnots(k.slice(0, 2 * i).concat(k.slice(2 * i + 2)));
+    this.commit();
+  }
+
+  preset(kind) {
+    if (kind === "custom") {
+      this.curve = { mode: "CUSTOM", knots: this.seedFromCurrent() };
+    } else {
+      this.curve = { mode: "POWER", knots: this.curve.knots.slice() };
+      writeValue(this.exponentKey(), kind === "squared" ? 2.0 : 1.0);
+    }
+    this.commit();
+  }
+
+  commit() {
+    client.publishTopic(this.modeTopic, "string");
+    client.publishTopic(this.knotsTopic, "double[]");
+    client.addSample(this.modeTopic, this.curve.mode);
+    client.addSample(this.knotsTopic, this.curve.knots);
+    this.draw();
+  }
+
+  // Accept a curve pushed by the robot, unless the operator is mid-drag.
+  receive(mode, knots) {
+    if (this.drag >= 0) return;
+    if (mode !== undefined) this.curve.mode = mode;
+    if (knots !== undefined) this.curve.knots = sanitizeKnots(Array.from(knots));
+    this.draw();
+  }
+
+  draw() {
+    const svg = this.svg;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.appendChild(el("rect", { class: "frame", x: 0, y: 0, width: 100, height: 100 }));
+    for (let g = 1; g < 4; g++) {
+      svg.appendChild(el("line", { class: "grid", x1: g * 25, y1: 0, x2: g * 25, y2: 100 }));
+      svg.appendChild(el("line", { class: "grid", x1: 0, y1: g * 25, x2: 100, y2: g * 25 }));
+    }
+    svg.appendChild(el("line", { class: "ref", x1: 0, y1: 100, x2: 100, y2: 0 }));
+
+    // The deadband is applied before the curve, so shade it as unreachable travel.
+    const dead = this.deadband();
+    if (dead > 0) {
+      svg.appendChild(el("rect",
+        { class: "dead", x: 0, y: 0, width: dead * 100, height: 100 }));
+    }
+
+    const exp = this.exponent();
+    let d = "";
+    for (let i = 0; i <= 100; i++) {
+      const x = i / 100;
+      const y = evalCurve(this.curve, x, exp);
+      d += `${i === 0 ? "M" : "L"}${(x * 100).toFixed(2)},${((1 - y) * 100).toFixed(2)}`;
+    }
+    svg.appendChild(el("path", { class: "line", d }));
+
+    if (this.curve.mode === "CUSTOM") {
+      const k = this.curve.knots;
+      for (let i = 0; i < k.length / 2; i++) {
+        const pinned = i === 0 || i === k.length / 2 - 1;
+        const c = el("circle", {
+          class: "knot" + (pinned ? " pinned" : "") + (this.drag === i ? " drag" : ""),
+          cx: k[2 * i] * 100, cy: (1 - k[2 * i + 1]) * 100, r: 3.2,
+        });
+        if (!pinned) {
+          c.addEventListener("dblclick", (e) => { e.stopPropagation(); this.removeKnot(i); });
+        }
+        svg.appendChild(c);
+      }
+    }
+
+    this.root.querySelectorAll(".preset").forEach((b) => {
+      const isCustom = this.curve.mode === "CUSTOM";
+      const on = b.dataset.p === "custom" ? isCustom
+        : !isCustom && Math.abs(exp - (b.dataset.p === "squared" ? 2 : 1)) < 0.05;
+      b.classList.toggle("active", on);
+    });
+  }
+}
+
+/**
+ * Picker for the driver binding scheme. The options come from the robot (name|label|summary),
+ * so adding a ControlScheme needs no change here.
+ */
+const schemePicker = {
+  root: Object.assign(document.createElement("div"), { className: "scheme" }),
+  options: [],
+  active: "",
+  render() {
+    this.root.innerHTML = "";
+    for (const { name, label, summary } of this.options) {
+      const b = document.createElement("button");
+      b.className = "opt" + (name === this.active ? " active" : "");
+      b.innerHTML = `${label}<span class="sum">${summary}</span>`;
+      b.addEventListener("click", () => {
+        client.publishTopic(SET_SCHEME, "string");
+        client.addSample(SET_SCHEME, name);
+      });
+      this.root.appendChild(b);
+    }
+  },
+  setOptions(list) {
+    this.options = list.map((entry) => {
+      const [name, label, summary] = String(entry).split("|");
+      return { name, label: label || name, summary: summary || "" };
+    });
+    this.render();
+  },
+  setActive(name) { this.active = name; this.render(); },
+};
+
+const editors = {
+  translation: new CurveEditor("translation", "Translation response"),
+  rotation: new CurveEditor("rotation", "Rotation response"),
+};
 
 const client = new NT4_Client(
   window.location.hostname,
@@ -230,6 +649,8 @@ const client = new NT4_Client(
       if (which === "min") f.min = value;
       else if (which === "max") f.max = value;
       else if (which === "default") f.def = value;
+      else if (which === "canDisable") f.canDisable = value;
+      if (META_KEYS.includes(which)) f.meta.add(which);
       build();
     } else if (name.startsWith(VALUES)) {
       const key = name.slice(VALUES.length);
@@ -239,6 +660,24 @@ const client = new NT4_Client(
       if (f.slider) f.slider.value = value;
       render(key);
       build();
+    } else if (name.startsWith(ENABLED)) {
+      const key = name.slice(ENABLED.length);
+      const f = ensureField(key);
+      f.enabled = value;
+      render(key);
+      build();
+    } else if (name === CURVES + "translationMode") {
+      editors.translation.receive(value, undefined);
+    } else if (name === CURVES + "translationKnots") {
+      editors.translation.receive(undefined, value);
+    } else if (name === CURVES + "rotationMode") {
+      editors.rotation.receive(value, undefined);
+    } else if (name === CURVES + "rotationKnots") {
+      editors.rotation.receive(undefined, value);
+    } else if (name === "/Controls/schemes") {
+      schemePicker.setOptions(Array.from(value));
+    } else if (name === "/Controls/scheme") {
+      schemePicker.setActive(value);
     } else if (name === "/Controls/profiles") {
       profiles = Array.from(value); renderProfiles();
     } else if (name === "/Controls/activeProfile") {
@@ -254,7 +693,14 @@ const client = new NT4_Client(
   () => {
     $("conn").classList.add("on");
     setStatus("Connected.");
-    for (const key of fields.keys()) client.publishTopic(VALUES + key, "double");
+    for (const [key, f] of fields) {
+      client.publishTopic(SET_VALS + key, "double");
+      if (f.canDisable) client.publishTopic(SET_EN + key, "boolean");
+    }
+    for (const ed of Object.values(editors)) {
+      client.publishTopic(ed.modeTopic, "string");
+      client.publishTopic(ed.knotsTopic, "double[]");
+    }
     client.publishTopic("/Controls/activeProfile", "string");
     client.publishTopic("/Controls/command/save", "boolean");
     client.publishTopic("/Controls/command/reload", "boolean");

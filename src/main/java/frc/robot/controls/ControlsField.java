@@ -47,31 +47,77 @@ public enum ControlsField {
     SHOOT_ROTATION_MAX_SPEED("shootRotationMaxSpeed", 1.5, 0.25, 6.0),
 
     /** Acceleration limit along the current direction of travel, in m/s^2. */
-    FORWARD_ACCEL_LIMIT("forwardAccelLimit", 10.0, 1.0, 30.0),
+    FORWARD_ACCEL_LIMIT("forwardAccelLimit", 10.0, 5.0, 50.0, true, true),
     /** Lateral acceleration limit before the command is treated as a skid, in m/s^2. */
-    SKID_LIMIT("skidLimit", 1000.0, 1.0, 1000.0),
+    SKID_LIMIT("skidLimit", 20.0, 5.0, 50.0, true, false),
     /** Forward acceleration limit imposed to avoid tipping, in m/s^2. */
-    FORWARD_TILT_LIMIT("forwardTiltLimit", 1000.0, 1.0, 1000.0),
+    FORWARD_TILT_LIMIT("forwardTiltLimit", 20.0, 5.0, 50.0, true, false),
     /** Rearward acceleration limit imposed to avoid tipping, in m/s^2. */
-    BACK_TILT_LIMIT("backTiltLimit", 1000.0, 1.0, 1000.0),
+    BACK_TILT_LIMIT("backTiltLimit", 20.0, 5.0, 50.0, true, false),
     /** Leftward acceleration limit imposed to avoid tipping, in m/s^2. */
-    LEFT_TILT_LIMIT("leftTiltLimit", 1000.0, 1.0, 1000.0),
+    LEFT_TILT_LIMIT("leftTiltLimit", 20.0, 5.0, 50.0, true, false),
     /** Rightward acceleration limit imposed to avoid tipping, in m/s^2. */
-    RIGHT_TILT_LIMIT("rightTiltLimit", 1000.0, 1.0, 1000.0);
+    RIGHT_TILT_LIMIT("rightTiltLimit", 20.0, 5.0, 50.0, true, false);
+
+    /** Smallest acceleration limit the tuner offers, in m/s^2. Mirrored in the constants above. */
+    public static final double LIMIT_MIN = 5.0;
+
+    /** Largest acceleration limit the tuner offers, in m/s^2. Mirrored in the constants above. */
+    public static final double LIMIT_MAX = 50.0;
 
     /** Limits at or above this value are treated as disabled by {@code SwerveRateLimiter}. */
     public static final double LIMIT_DISABLED = 800.0;
+
+    /**
+     * The value a disabled limit reports.
+     *
+     * <p>
+     * Disabling a limit is currently expressed by reporting a number too large to ever bind,
+     * which is why {@link #LIMIT_DISABLED} exists to recognise it. Every path that needs "no
+     * limit" goes through this constant, so replacing the convention with a real sentinel is a
+     * change in one place rather than a hunt through the drivetrain code.
+     */
+    public static final double LIMIT_DISABLED_VALUE = 1000.0;
 
     private final String key;
     private final double defaultValue;
     private final double minimum;
     private final double maximum;
+    private final boolean canDisable;
+    private final boolean defaultEnabled;
 
     ControlsField(String key, double defaultValue, double minimum, double maximum) {
+        this(key, defaultValue, minimum, maximum, false, true);
+    }
+
+    ControlsField(String key, double defaultValue, double minimum, double maximum,
+        boolean canDisable, boolean defaultEnabled) {
         this.key = key;
         this.defaultValue = defaultValue;
         this.minimum = minimum;
         this.maximum = maximum;
+        this.canDisable = canDisable;
+        this.defaultEnabled = defaultEnabled;
+    }
+
+    /** Whether this field can be switched off entirely, rather than only adjusted. */
+    public boolean canDisable() {
+        return canDisable;
+    }
+
+    /** Whether this field is on by default. Meaningless unless {@link #canDisable()}. */
+    public boolean defaultEnabled() {
+        return defaultEnabled;
+    }
+
+    /** A fresh array of every field's default enabled state, indexed by {@link #ordinal()}. */
+    public static boolean[] defaultEnabledFlags() {
+        ControlsField[] fields = values();
+        boolean[] out = new boolean[fields.length];
+        for (int i = 0; i < fields.length; i++) {
+            out[i] = fields[i].defaultEnabled;
+        }
+        return out;
     }
 
     /** The JSON key and NetworkTables topic name for this value. */
