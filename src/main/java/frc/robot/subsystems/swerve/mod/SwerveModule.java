@@ -8,6 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
+import frc.robot.tuning.DrivetrainTuning;
 
 /** Swerve Module */
 @NullMarked
@@ -48,6 +49,29 @@ public class SwerveModule {
             desiredState.speedMetersPerSecond / Constants.Swerve.wheelRadius.in(Meters), 0);
     }
 
+    /**
+     * Push new drive gains to the motor controller.
+     *
+     * <p>
+     * This performs a blocking CAN configuration write, so it must only be called when the gains
+     * have actually changed &mdash; see the {@code ifDirty} guard in {@code Swerve.periodic()}.
+     *
+     * @param tuning the tuning to apply
+     */
+    public void setDriveGains(DrivetrainTuning tuning) {
+        io.setDrivePID(tuning.driveKp(), 0.0, tuning.driveKd(), tuning.driveKs(), tuning.driveKv(),
+            tuning.driveKa());
+    }
+
+    /**
+     * Push new azimuth gains to the motor controller. Blocking, as {@link #setDrivePID} is.
+     *
+     * @param tuning the tuning to apply
+     */
+    public void setAngleGains(DrivetrainTuning tuning) {
+        io.setAnglePID(tuning.angleKp(), 0.0, tuning.angleKd());
+    }
+
     /** Get the current Swerve Module State */
     public SwerveModuleState getState() {
         return new SwerveModuleState(
@@ -73,9 +97,17 @@ public class SwerveModule {
         return inputs.drivePositionRad;
     }
 
-    /** Returns the module velocity in rotations/sec (Phoenix native units). */
+    /**
+     * Returns the module velocity in the same units the velocity command uses.
+     *
+     * <p>
+     * {@link #setDesiredState} passes rad/s to {@code runDriveVelocity}, so a feedforward fitted
+     * against this value is directly usable as {@code driveKv}. It previously returned
+     * rotations/sec, which made the fitted gain a factor of 2*pi away from the one the control
+     * loop actually applies.
+     */
     public double getFFCharacterizationVelocity() {
-        return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
+        return inputs.driveVelocityRadPerSec;
     }
 
     /** Set drive motor brake mode */

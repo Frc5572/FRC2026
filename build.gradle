@@ -204,83 +204,120 @@ task(eventDeploy) {
 }
 createVersionFile.dependsOn(eventDeploy)
 
-// Pull live-tuned driver controls off the robot before a deploy, so that whatever the drivers
-// tuned in the pit ends up in git rather than being overwritten by the checked-in copy.
+// Pull live-tuned configuration off the robot before a deploy, so whatever was tuned in the pit
+// ends up in git rather than being overwritten by the checked-in copy.
 //
-// The robot serves its writable controls directory (on the USB stick, since the deploy directory
-// is read-only to lvuser) over HTTP on ControlsReal.WEB_PORT. Fetching over HTTP rather than SSH
-// keeps this working identically on every platform with no extra tooling.
-project.ext.controlsPort = 5801
-project.ext.controlsFile = file('src/main/deploy/controls/profiles.json')
+// The robot serves its writable config directory (on the USB stick, since the deploy directory is
+// read-only to lvuser) over HTTP on ConfigStore.WEB_PORT. Fetching over HTTP rather than SSH keeps
+// this working identically on every platform with no extra tooling.
+//
+// WebServer offers no directory index, so the robot publishes manifest.json listing its documents;
+// this task reads that first and then fetches each file it names.
+project.ext.configPort = 5801
+project.ext.configDir = file('src/main/deploy/controls')
+project.ext.configManifest = 'manifest.json'
 
-task(pullControls) {
+task(pullConfigs) {
     group = 'Execution'
-    description = 'Fetch live-tuned driver controls from the roboRIO into src/main/deploy'
+    description = 'Fetch live-tuned configuration from the roboRIO into src/main/deploy'
     doLast {
         if (!project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
-            println "Not running deploy task, skipping controls pull"
+            println "Not running deploy task, skipping config pull"
             return
         }
 
         def team = project.frc.getTeamNumber()
-        def hosts = ["roborio-${team}-frc.local",
-                     "10.${(team / 100) as int}.${team % 100}.2",
-                     "172.22.11.2"]
+        // -PconfigHost=<host> targets a specific host, for testing against a simulator. It is not
+        // in the default list on purpose: silently pulling from a stray local sim when the robot
+        // is simply switched off would put simulated values into a real deploy.
+        def hosts = project.hasProperty('configHost') ? [project.property('configHost')]
+            : ["roborio-${team}-frc.local",
+               "10.${(team / 100) as int}.${team % 100}.2",
+               "172.22.11.2"]
 
-        def fetched = null
+        def fetch = { host, name ->
+            def conn = new URL("http://${host}:${configPort}/${name}").openConnection()
+            conn.connectTimeout = 2000
+            conn.readTimeout = 3000
+            return conn.inputStream.getText('UTF-8')
+        }
+
         def usedHost = null
+        def manifest = null
         for (host in hosts) {
             try {
-                def url = new URL("http://${host}:${controlsPort}/profiles.json")
-                def conn = url.openConnection()
-                conn.connectTimeout = 2000
-                conn.readTimeout = 3000
-                fetched = conn.inputStream.getText('UTF-8')
+                manifest = fetch(host, configManifest)
                 usedHost = host
                 break
             } catch (Exception e) {
-                logger.info("controls pull: ${host} unreachable (${e.message})")
+                logger.info("config pull: ${host} unreachable (${e.message})")
             }
         }
 
         def branch = 'git branch --show-current'.execute().text.trim()
         def onEventBranch = branch.startsWith('event')
 
-        if (fetched == null) {
-            def msg = "Could not reach the roboRIO on port ${controlsPort} (tried ${hosts.join(', ')})."
+        if (manifest == null) {
+            def msg = "Could not reach the roboRIO on port ${configPort} (tried ${hosts.join(', ')})."
             if (onEventBranch) {
-                // At an event, committing stale controls is the dangerous failure, so stop.
+                // At an event, committing stale configuration is the dangerous failure, so stop.
                 throw new GradleException("${msg}\nRefusing to deploy from event branch " +
-                    "'${branch}' without confirming the robot's live controls. " +
-                    "Power on the robot, or run with -PskipControlsPull to override.")
+                    "'${branch}' without confirming the robot's live configuration. " +
+                    "Power on the robot, or run with -PskipConfigPull to override.")
             }
-            println "WARNING: ${msg} Keeping the checked-in controls profiles."
+            println "WARNING: ${msg} Keeping the checked-in configuration."
             return
         }
 
-        // Reject anything that is not parseable, rather than committing a corrupt file.
+        def names
         try {
-            new groovy.json.JsonSlurper().parseText(fetched)
+            names = new groovy.json.JsonSlurper().parseText(manifest).files
         } catch (Exception e) {
-            throw new GradleException("Controls pulled from ${usedHost} are not valid JSON: ${e.message}")
+            throw new GradleException("Manifest from ${usedHost} is not valid JSON: ${e.message}")
+        }
+        if (!names) {
+            println "Robot reported no configuration documents; nothing to pull."
+            return
         }
 
-        if (controlsFile.exists() && controlsFile.getText('UTF-8') == fetched) {
-            println "Controls already up to date with ${usedHost}"
-        } else {
-            controlsFile.parentFile.mkdirs()
-            controlsFile.write(fetched, 'UTF-8')
-            println "Pulled controls from ${usedHost} -> ${controlsFile}"
+        def updated = 0
+        names.each { name ->
+            // Only ever write plain file names into the source tree.
+            if (!(name ==~ /[A-Za-z0-9_.-]+/) || name.startsWith('.')) {
+                throw new GradleException("Refusing to pull suspicious config name '${name}'")
+            }
+            def body
+            try {
+                body = fetch(usedHost, name)
+            } catch (FileNotFoundException e) {
+                // Listed but not present: nothing has been saved for it yet.
+                println "Robot has no ${name} yet; leaving the checked-in copy alone."
+                return
+            }
+            try {
+                new groovy.json.JsonSlurper().parseText(body)
+            } catch (Exception e) {
+                throw new GradleException("${name} from ${usedHost} is not valid JSON: ${e.message}")
+            }
+            def target = new File(configDir, name)
+            if (!target.exists() || target.getText('UTF-8') != body) {
+                target.parentFile.mkdirs()
+                target.write(body, 'UTF-8')
+                println "Pulled ${name} from ${usedHost}"
+                updated++
+            }
         }
+        println updated == 0 ? "Configuration already up to date with ${usedHost}" :
+            "Pulled ${updated} config file(s) from ${usedHost}"
     }
     onlyIf {
-        !project.hasProperty('skipControlsPull')
+        !project.hasProperty('skipConfigPull')
     }
 }
 
-// Ordering matters: pullControls must land before eventDeploy's "git add -A", so that controls
-// tuned in the pit are part of the event commit.
-eventDeploy.dependsOn(pullControls)
+// Ordering matters: pullConfigs must land before eventDeploy's "git add -A", so that anything
+// tuned in the pit is part of the event commit.
+eventDeploy.dependsOn(pullConfigs)
 
 tasks.register('generateLUTs', JavaExec) {
     group = 'Execution'

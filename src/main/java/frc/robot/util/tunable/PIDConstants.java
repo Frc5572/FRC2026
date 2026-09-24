@@ -101,14 +101,14 @@ public class PIDConstants implements LoggableInputs, Cloneable, Tunable {
         this.kV = table.get("kV", this.kV);
         this.kG = table.get("kG", this.kG);
         this.kS = table.get("kS", this.kS);
-        this.kS = table.get("kA", this.kA);
+        this.kA = table.get("kA", this.kA);
         this.isArm = table.get("isArm", this.isArm);
     }
 
     @Override
     public PIDConstants clone() {
         PIDConstants copy = new PIDConstants(name,
-            isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static, kP, kD, kI, kV,
+            isArm ? GravityTypeValue.Arm_Cosine : GravityTypeValue.Elevator_Static, kP, kI, kD, kV,
             kS, kG, kA);
         return copy;
     }

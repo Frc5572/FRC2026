@@ -1,7 +1,5 @@
 package frc.robot.controls;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.EnumMap;
 import java.util.Map;
 import org.jspecify.annotations.NullMarked;
@@ -18,7 +16,7 @@ import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.networktables.StringEntry;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringSubscriber;
-import edu.wpi.first.net.WebServer;
+import frc.robot.config.ConfigStore;
 
 /**
  * NetworkTables-backed control tuning, persisted to the robot's USB stick.
@@ -64,12 +62,12 @@ import edu.wpi.first.net.WebServer;
 @NullMarked
 public class ControlsReal implements ControlsIO {
 
-    /** Port serving the controls directory, so the build can pull profiles over HTTP. */
-    public static final int WEB_PORT = 5801;
+    /** Name of this subsystem's document in the shared configuration directory. */
+    public static final String FILE_NAME = "profiles.json";
 
     private static final String ROOT = "Controls";
 
-    private final ControlsStore store;
+    private final ConfigStore store;
     private ControlsProfiles profiles;
 
     private final Map<ControlsField, DoublePublisher> valuePublishers =
@@ -115,8 +113,8 @@ public class ControlsReal implements ControlsIO {
 
     /** Wire up the topics, load the stored profiles, and start the controls web server. */
     public ControlsReal() {
-        this.store = new ControlsStore();
-        this.profiles = store.load();
+        this.store = ConfigStore.getInstance();
+        this.profiles = loadProfiles();
 
         NetworkTableInstance nt = NetworkTableInstance.getDefault();
         NetworkTable table = nt.getTable(ROOT);
@@ -201,19 +199,14 @@ public class ControlsReal implements ControlsIO {
         pathPublisher = status.getStringTopic("path").publish();
 
         publishProfileList();
-        pathPublisher.set(store.file().toString());
+        pathPublisher.set(store.file(FILE_NAME).toString());
         setMessage("loaded " + profiles.names().size() + " profile(s)");
-        startWebServer();
     }
 
-    private void startWebServer() {
-        try {
-            Files.createDirectories(store.directory());
-            WebServer.start(WEB_PORT, store.directory().toString());
-            System.out.println("[Controls] serving " + store.directory() + " on port " + WEB_PORT);
-        } catch (IOException e) {
-            System.err.println("[Controls] could not start controls web server: " + e);
-        }
+    /** Read the stored profiles, falling back to factory defaults when there are none. */
+    private ControlsProfiles loadProfiles() {
+        String json = store.load(FILE_NAME);
+        return json == null ? new ControlsProfiles() : ControlsProfiles.fromJson(json);
     }
 
     @Override
@@ -234,6 +227,28 @@ public class ControlsReal implements ControlsIO {
         inputs.rotationCurveKnots = active.rotationCurve().knots();
         inputs.dirty = dirty;
         dirtyPublisher.set(dirty);
+    }
+
+    @Override
+    public void requestValue(ControlsField field, double value) {
+        ControlsConfig updated = profiles.active().with(field, value);
+        profiles.putActive(updated);
+        dirty = true;
+        double applied = updated.get(field);
+        valuePublishers.get(field).set(applied);
+        // Treat whatever the tuner currently asks for as already seen, so a page left open does
+        // not immediately undo a value the robot set itself.
+        lastRequest.put(field, valueRequests.get(field).get(applied));
+    }
+
+    @Override
+    public void requestEnabled(ControlsField field, boolean enabled) {
+        ControlsConfig updated = profiles.active().withEnabled(field, enabled);
+        profiles.putActive(updated);
+        dirty = true;
+        boolean applied = updated.isEnabled(field);
+        enabledPublishers.get(field).set(applied);
+        lastEnabledRequest.put(field, enabledRequests.get(field).get(applied));
     }
 
     private void handleProfileSwitch() {
@@ -331,16 +346,16 @@ public class ControlsReal implements ControlsIO {
     private void handleCommands() {
         if (saveCommand.get(false)) {
             saveCommand.set(false);
-            if (store.save(profiles)) {
+            if (store.save(FILE_NAME, profiles.toJson())) {
                 dirty = false;
-                setMessage("saved to " + store.file());
+                setMessage("saved to " + store.file(FILE_NAME));
             } else {
                 setMessage("save failed: " + store.lastError());
             }
         }
         if (reloadCommand.get(false)) {
             reloadCommand.set(false);
-            profiles = store.load();
+            profiles = loadProfiles();
             dirty = false;
             adoptActiveProfile();
             publishProfileList();

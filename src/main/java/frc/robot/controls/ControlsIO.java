@@ -46,4 +46,21 @@ public interface ControlsIO {
     /** Sample the current configuration. */
     public void updateInputs(ControlsInputs inputs);
 
+    /**
+     * Set a value from the robot side, as a tuning procedure does when it applies a candidate
+     * limit. Routed through the IO so the change is logged and a replay sees it.
+     *
+     * @param field the field to set
+     * @param value the value to store
+     */
+    public void requestValue(ControlsField field, double value);
+
+    /**
+     * Switch a field on or off from the robot side.
+     *
+     * @param field the field to change
+     * @param enabled whether it should take effect
+     */
+    public void requestEnabled(ControlsField field, boolean enabled);
+
 }

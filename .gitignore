@@ -199,3 +199,7 @@ BuildConstants.java
 *.txt
 
 /ref
+
+# Written by the robot at runtime to index its config directory; in simulation the store resolves
+# to the deploy tree, so this appears here as a side effect of running the sim.
+src/main/deploy/controls/manifest.json

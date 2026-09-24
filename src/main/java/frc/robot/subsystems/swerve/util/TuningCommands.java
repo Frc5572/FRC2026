@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
+import org.jspecify.annotations.Nullable;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -31,6 +32,18 @@ import frc.robot.subsystems.swerve.Swerve;
  * This class is non-instantiable and only contains static factory methods.
  */
 public final class TuningCommands {
+
+    /** Receives the two fitted feedforward gains. */
+    @FunctionalInterface
+    public interface DoubleBinaryConsumer {
+        /**
+         * Accept a fitted result.
+         *
+         * @param kS the static gain, in volts
+         * @param kV the velocity gain, in volts per rad/s
+         */
+        void accept(double kS, double kV);
+    }
 
     private TuningCommands() {}
 
@@ -76,6 +89,26 @@ public final class TuningCommands {
      */
     public static Command feedforwardCharacterization(Swerve swerve,
         DoubleConsumer runCharacterization, DoubleSupplier getFFCharacterizationVelocity) {
+        return feedforwardCharacterization(swerve, runCharacterization,
+            getFFCharacterizationVelocity, null);
+    }
+
+    /**
+     * Characterize the drive feedforward, handing the fitted gains to a callback.
+     *
+     * <p>
+     * The fit is in volts per rad/s, matching the units the velocity command uses, so the result
+     * can be stored as {@code driveKv} without conversion.
+     *
+     * @param swerve the drivetrain, required by the command
+     * @param runCharacterization applies an open-loop drive voltage
+     * @param getFFCharacterizationVelocity reads wheel velocity in rad/s
+     * @param onResult receives (kS, kV) when the command ends, or null to only log them
+     * @return the characterization command
+     */
+    public static Command feedforwardCharacterization(Swerve swerve,
+        DoubleConsumer runCharacterization, DoubleSupplier getFFCharacterizationVelocity,
+        @Nullable DoubleBinaryConsumer onResult) {
         List<Double> velocitySamples = new LinkedList<>();
         List<Double> voltageSamples = new LinkedList<>();
         Timer timer = new Timer();
@@ -123,6 +156,9 @@ public final class TuningCommands {
                     System.out.println("\tkV: " + formatter.format(kV));
                     Logger.recordOutput("Sysid/FF/kS", kS);
                     Logger.recordOutput("Sysid/FF/kV", kV);
+                    if (onResult != null && Double.isFinite(kS) && Double.isFinite(kV)) {
+                        onResult.accept(kS, kV);
+                    }
                 }));
     }
 

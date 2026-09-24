@@ -3,6 +3,7 @@ package frc.robot.controls;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.tuning.LimitApplier;
 
 /**
  * Owns the driver-tunable control configuration and republishes it as logged inputs.
@@ -18,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  * log, which keeps a replay faithful to the configuration the robot actually drove with.
  */
 @NullMarked
-public class Controls extends SubsystemBase {
+public class Controls extends SubsystemBase implements LimitApplier {
 
     private final ControlsIO io;
     private final ControlsInputsAutoLogged inputs = new ControlsInputsAutoLogged();
@@ -63,6 +64,26 @@ public class Controls extends SubsystemBase {
     /** The name of the profile currently selected. */
     public String activeProfile() {
         return inputs.activeProfile;
+    }
+
+    /**
+     * Set one value from the robot side.
+     *
+     * <p>
+     * Used by the acceleration-limit procedures to apply a candidate limit so its effect can be
+     * measured. Goes through the IO, so the change is logged like any other.
+     *
+     * @param field the field to set
+     * @param value the value to store
+     */
+    @Override
+    public void setValue(ControlsField field, double value) {
+        io.requestValue(field, value);
+    }
+
+    @Override
+    public void setEnabled(ControlsField field, boolean enabled) {
+        io.requestEnabled(field, enabled);
     }
 
     /** True when there are live edits that have not been written to disk. */

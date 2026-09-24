@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drivetrain Tuning</title>
+<style>
+  :root {
+    --bg:#14161a; --panel:#1d2026; --edge:#2c313a; --text:#e7eaf0; --muted:#98a1b0;
+    --accent:#4da3ff; --ok:#36c48b; --warn:#e8b64c; --bad:#e8604c; --meas:#e8b64c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--bg);color:var(--text);
+    font:15px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  h1{font-size:19px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel);
+    border:1px solid var(--edge);border-radius:10px;padding:10px 12px;margin-bottom:14px;
+    position:sticky;top:8px;z-index:5}
+  button{background:#272c35;color:var(--text);border:1px solid var(--edge);border-radius:7px;
+    padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+  button:hover:not(:disabled){border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#07111d;font-weight:600}
+  button.run{border-color:var(--warn);color:var(--warn)}
+  button.run.active{background:var(--warn);color:#241a05;font-weight:600}
+  .spacer{flex:1}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--bad);flex:none}
+  .dot.on{background:var(--ok)}
+  .group{margin-bottom:18px}
+  .group>h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);
+    margin:0 0 8px;font-weight:600}
+  .row{display:grid;grid-template-columns:minmax(150px,1.1fr) 3fr 110px;gap:12px;
+    align-items:center;background:var(--panel);border:1px solid var(--edge);border-radius:9px;
+    padding:9px 12px;margin-bottom:6px}
+  .row .hint{display:block;color:var(--muted);font-size:11.5px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .val{text-align:right;font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+  .val.changed{color:var(--warn)}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:9px;padding:12px;
+    margin-bottom:6px}
+  .card .head{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .card .head .title{font-size:14px}
+  .metrics{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px}
+  .metrics div{color:var(--muted)}
+  .metrics b{color:var(--text);font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,monospace;font-weight:600}
+  .plot{width:100%;height:190px;display:block;background:#12141a;border:1px solid var(--edge);
+    border-radius:7px}
+  .plot .grid{stroke:#262b34;stroke-width:.5}
+  .plot .sp{stroke:var(--accent);stroke-width:1.6;fill:none}
+  .plot .mv{stroke:var(--meas);stroke-width:1.6;fill:none}
+  .legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:6px}
+  .legend i{display:inline-block;width:10px;height:2px;vertical-align:middle;margin-right:5px}
+  .det{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;
+    margin-bottom:10px}
+  .det .box{background:#12141a;border:1px solid var(--edge);border-radius:7px;padding:10px}
+  .det .box .lab{color:var(--muted);font-size:11.5px;text-transform:uppercase;
+    letter-spacing:.07em}
+  .det .box .num{font-size:22px;font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,monospace;margin-top:3px}
+  .det .box .num.trip{color:var(--bad)}
+  .det .box .pk{color:var(--muted);font-size:11.5px;font-family:ui-monospace,monospace}
+  .ramp{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px}
+  .ramp .res{font-size:13px;color:var(--muted)}
+  .ramp .res b{color:var(--ok);font-family:ui-monospace,monospace}
+  #status{color:var(--muted);font-size:13px;min-height:18px}
+  #path{color:#6b7483;font-size:11.5px;font-family:ui-monospace,monospace}
+  @media (max-width:620px){.row{grid-template-columns:1fr 78px}
+    .row input[type=range]{grid-column:1/-1}}
+</style>
+</head>
+<body>
+
+<h1>Drivetrain Tuning</h1>
+<div class="sub">Shop and pit use. Procedures move the robot &mdash; make sure it is on blocks or
+  has clear floor. <strong>Save</strong> writes to the robot so
+  <code>./gradlew pullConfigs</code> brings the values back into git.</div>
+
+<div class="bar">
+  <span class="dot" id="conn" title="NetworkTables connection"></span>
+  <span id="dirty" style="font-size:13px;color:var(--muted)"></span>
+  <span class="spacer"></span>
+  <button id="revert">Revert</button>
+  <button id="save" class="primary">Save</button>
+</div>
+
+<div class="group">
+  <h2>Acceleration limits</h2>
+  <div class="card">
+    <div class="head">
+      <span class="title">Live failure detectors</span>
+      <span class="spacer"></span>
+      <button id="det-reset">Reset peaks</button>
+    </div>
+    <div class="det">
+      <div class="box">
+        <div class="lab">Follow error</div>
+        <div class="num" id="d-follow">&ndash;</div>
+        <div class="pk">peak <span id="p-follow">0.00</span> m/s &middot; trips above 0.50</div>
+      </div>
+      <div class="box">
+        <div class="lab">Tilt</div>
+        <div class="num" id="d-tilt">&ndash;</div>
+        <div class="pk">peak <span id="p-tilt">0.0</span>&deg; &middot; trips above 4.0&deg;</div>
+      </div>
+      <div class="box">
+        <div class="lab">Skid ratio</div>
+        <div class="num" id="d-skid">&ndash;</div>
+        <div class="pk">peak <span id="p-skid">1.00</span> &middot; trips above 1.25</div>
+      </div>
+    </div>
+    <div style="color:var(--muted);font-size:12px">
+      These read live whenever the robot drives, so the procedures below can also be run by hand:
+      nudge a limit, drive, and watch for the condition.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="head"><span class="title">Automated ramps</span></div>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:10px">
+      Each drives straight-line bursts and steps its limit until the condition appears, opening the
+      other limits so the one under test binds. <strong>Needs about six metres of clear
+      floor.</strong> Hold the button; releasing stops the robot and restores every limit.
+    </div>
+    <div class="ramp">
+      <button class="run" id="run-forwardLimit">Forward</button>
+      <button class="run" id="run-tiltLimit">Tilt</button>
+      <button class="run" id="run-skidLimit">Skid</button>
+      <span class="spacer"></span>
+      <span class="res">candidate <b id="r-cand">&ndash;</b></span>
+      <span class="res">recommended <b id="r-rec">&ndash;</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="group">
+  <h2>Step response</h2>
+  <div class="card">
+    <div class="head">
+      <span class="title">Drive velocity step</span>
+      <span class="spacer"></span>
+      <button class="run" id="run-driveStep">Hold to run</button>
+    </div>
+    <svg class="plot" id="plot" viewBox="0 0 600 190" preserveAspectRatio="none"></svg>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>setpoint</span>
+      <span><i style="background:var(--meas)"></i>measured</span>
+    </div>
+    <div class="metrics">
+      <div>rise <b id="m-rise">&ndash;</b></div>
+      <div>overshoot <b id="m-over">&ndash;</b></div>
+      <div>steady error <b id="m-sse">&ndash;</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="group">
+  <h2>Characterization</h2>
+  <div class="card">
+    <div class="head">
+      <span class="title">Drive feedforward &mdash; fits k<sub>S</sub> and k<sub>V</sub></span>
+      <span class="spacer"></span>
+      <button class="run" id="run-feedforward">Hold to run</button>
+    </div>
+    <div class="metrics">
+      <div>fitted k<sub>S</sub> <b id="c-ks">&ndash;</b></div>
+      <div>fitted k<sub>V</sub> <b id="c-kv">&ndash;</b></div>
+      <div style="color:var(--muted)">written straight into the gains below</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="head">
+      <span class="title">Wheel radius</span>
+      <span class="spacer"></span>
+      <button class="run" id="run-wheelRadius">Hold to run</button>
+    </div>
+    <div class="metrics">
+      <div>measured <b id="c-radius">&ndash;</b></div>
+      <div style="color:var(--muted)">spins in place; cancel when the reading settles</div>
+    </div>
+  </div>
+</div>
+
+<div id="groups"></div>
+<div id="status">Connecting&hellip;</div>
+<div id="path"></div>
+
+<script type="module">
+import { NT4_Client } from "/scripts/NT4.js";
+
+// The robot owns VALUES; this page only reads them and writes to SET. Same split-direction
+// contract as the controls page -- see ControlsReal's javadoc for why a single topic per value
+// cannot be made reliable.
+const VALUES = "/Tuning/values/";
+const META   = "/Tuning/meta/";
+const SET    = "/Tuning/set/values/";
+const PROC   = "/Tuning/procedure";
+// AdvantageKit publishes outputs live under /AdvantageKit/RealOutputs/; the bare /RealOutputs/
+// path only exists inside a .wpilog, so subscribing to that would leave every readout blank.
+const OUT    = "/AdvantageKit/RealOutputs/";
+const META_KEYS = ["default", "min", "max", "units"];
+
+const GROUPS = [
+  ["Drive gains", [
+    ["driveKs", "k<sub>S</sub>", "static friction, volts"],
+    ["driveKv", "k<sub>V</sub>", "volts per rad/s &mdash; logs suggest the shipped value is ~1.45x too high"],
+    ["driveKa", "k<sub>A</sub>", "volts per rad/s²"],
+    ["driveKp", "k<sub>P</sub>", "feedback; per 1690, add only a little, and only after the model fits"],
+    ["driveKd", "k<sub>D</sub>", "feedback"],
+  ]],
+  ["Azimuth gains", [
+    ["angleKp", "k<sub>P</sub>", "position loop"],
+    ["angleKd", "k<sub>D</sub>", "position loop"],
+  ]],
+  ["Geometry", [
+    ["wheelRadiusInches", "Wheel radius", "inches; output of the characterization above"],
+  ]],
+  ["Step test", [
+    ["stepAmplitude", "Amplitude", "m/s"],
+    ["stepPeriod", "Hold", "seconds per half-cycle"],
+  ]],
+];
+
+const fields = new Map();
+const $ = (id) => document.getElementById(id);
+const setStatus = (t) => { $("status").textContent = t; };
+let built = false;
+
+function ensureField(key) {
+  let f = fields.get(key);
+  if (!f) {
+    f = { min: 0, max: 1, def: 0, value: 0, units: "", dragging: false, meta: new Set() };
+    fields.set(key, f);
+  }
+  return f;
+}
+const fieldReady = (key) => {
+  const f = fields.get(key);
+  return !!f && META_KEYS.every((m) => f.meta.has(m));
+};
+
+function writeValue(key, v) {
+  client.publishTopic(SET + key, "double");
+  client.addSample(SET + key, v);
+}
+
+function fmt(v, f) {
+  const span = f.max - f.min;
+  return span <= 1 ? v.toFixed(4) : span <= 20 ? v.toFixed(3) : v.toFixed(1);
+}
+
+function render(key) {
+  const f = fields.get(key);
+  if (!f || !f.out) return;
+  f.out.textContent = fmt(f.value, f) + (f.units ? " " + f.units : "");
+  f.out.classList.toggle("changed", Math.abs(f.value - f.def) > 1e-12);
+}
+
+// Build only once every field has complete metadata -- a row laid out before its min/max arrive
+// would get a placeholder 0..1 slider range.
+function build() {
+  if (built) return;
+  for (const [, rows] of GROUPS) {
+    for (const [key] of rows) if (!fieldReady(key)) return;
+  }
+  built = true;
+  const container = $("groups");
+  for (const [title, rows] of GROUPS) {
+    const sec = document.createElement("div");
+    sec.className = "group";
+    sec.innerHTML = `<h2>${title}</h2>`;
+    for (const [key, label, hint] of rows) {
+      const f = fields.get(key);
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `<label for="s-${key}">${label}<span class="hint">${hint}</span></label>`
+        + `<input type="range" id="s-${key}">`
+        + `<div class="val" id="v-${key}"></div>`;
+      sec.appendChild(row);
+      const slider = row.querySelector("input");
+      slider.min = f.min; slider.max = f.max;
+      slider.step = (f.max - f.min) / 1000;
+      slider.value = f.value;
+      slider.addEventListener("input", () => {
+        f.dragging = true;
+        f.value = parseFloat(slider.value);
+        render(key);
+        writeValue(key, f.value);
+      });
+      const release = () => { f.dragging = false; };
+      slider.addEventListener("change", release);
+      slider.addEventListener("pointerup", release);
+      slider.addEventListener("blur", release);
+      f.slider = slider;
+      f.out = row.querySelector(".val");
+      render(key);
+    }
+    container.appendChild(sec);
+  }
+}
+
+// --- rolling step-response trace -------------------------------------------------------------
+const TRACE_SECONDS = 6;
+const trace = [];   // {t, sp, mv}
+function pushTrace(sp, mv) {
+  const t = performance.now() / 1000;
+  trace.push({ t, sp, mv });
+  while (trace.length && t - trace[0].t > TRACE_SECONDS) trace.shift();
+  drawTrace();
+}
+function drawTrace() {
+  const svg = $("plot");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 600, H = 190;
+  const ns = "http://www.w3.org/2000/svg";
+  const line = (cls, d) => {
+    const p = document.createElementNS(ns, "path");
+    p.setAttribute("class", cls); p.setAttribute("d", d); svg.appendChild(p);
+  };
+  for (let g = 1; g < 4; g++) {
+    const p = document.createElementNS(ns, "line");
+    p.setAttribute("class", "grid");
+    p.setAttribute("x1", 0); p.setAttribute("x2", W);
+    p.setAttribute("y1", (g * H) / 4); p.setAttribute("y2", (g * H) / 4);
+    svg.appendChild(p);
+  }
+  if (trace.length < 2) return;
+  let lo = Infinity, hi = -Infinity;
+  for (const s of trace) {
+    lo = Math.min(lo, s.sp, s.mv); hi = Math.max(hi, s.sp, s.mv);
+  }
+  if (hi - lo < 1e-6) { hi = lo + 1; }
+  const pad = (hi - lo) * 0.15;
+  lo -= pad; hi += pad;
+  const t0 = trace[0].t, t1 = Math.max(trace[trace.length - 1].t, t0 + 1e-6);
+  const X = (t) => ((t - t0) / (t1 - t0)) * W;
+  const Y = (v) => H - ((v - lo) / (hi - lo)) * H;
+  const path = (sel) => trace.map((s, i) =>
+    `${i ? "L" : "M"}${X(s.t).toFixed(1)},${Y(sel(s)).toFixed(1)}`).join("");
+  line("sp", path((s) => s.sp));
+  line("mv", path((s) => s.mv));
+}
+
+// --- procedures -------------------------------------------------------------------------------
+// Held, not toggled: the robot runs a procedure only while the request is set, so releasing the
+// button (or closing the page) stops it.
+function wireProcedure(name) {
+  const btn = $("run-" + name);
+  const set = (v) => {
+    client.publishTopic(PROC, "string");
+    client.addSample(PROC, v);
+  };
+  const start = (e) => { e.preventDefault(); btn.classList.add("active"); set(name); };
+  const stop = () => { btn.classList.remove("active"); set(""); };
+  btn.addEventListener("pointerdown", start);
+  btn.addEventListener("pointerup", stop);
+  btn.addEventListener("pointerleave", stop);
+  btn.addEventListener("pointercancel", stop);
+}
+
+// Live detector readouts, with a peak hold -- the interesting moment in a burst is brief and
+// easy to miss on a live number.
+const peaks = { follow: 0, tilt: 0, skid: 1 };
+function detector(which, value, threshold, digits, suffix) {
+  const el = $("d-" + which);
+  el.textContent = value.toFixed(digits) + suffix;
+  el.classList.toggle("trip", value > threshold);
+  if (value > peaks[which]) {
+    peaks[which] = value;
+    $("p-" + which).textContent = value.toFixed(digits);
+  }
+}
+
+const client = new NT4_Client(
+  window.location.hostname, "tuning-dashboard",
+  () => {}, () => {},
+  (topic, _ts, value) => {
+    const name = topic.name;
+    if (name.startsWith(META)) {
+      const rest = name.slice(META.length);
+      const slash = rest.lastIndexOf("/");
+      if (slash < 0) return;
+      const f = ensureField(rest.slice(0, slash));
+      const which = rest.slice(slash + 1);
+      if (which === "min") f.min = value;
+      else if (which === "max") f.max = value;
+      else if (which === "default") f.def = value;
+      else if (which === "units") f.units = value;
+      if (META_KEYS.includes(which)) f.meta.add(which);
+      build();
+    } else if (name.startsWith(VALUES)) {
+      const key = name.slice(VALUES.length);
+      const f = ensureField(key);
+      if (!f.dragging) {
+        f.value = value;
+        if (f.slider) f.slider.value = value;
+        render(key);
+      }
+      build();
+    } else if (name === "/Tuning/status/dirty") {
+      $("dirty").textContent = value ? "unsaved changes" : "";
+    } else if (name === "/Tuning/status/message") {
+      setStatus(value);
+    } else if (name === "/Tuning/status/path") {
+      $("path").textContent = value;
+    } else if (name === OUT + "Tuning/DriveStep/Setpoint") {
+      lastSetpoint = value;
+    } else if (name === OUT + "Tuning/DriveStep/Measured") {
+      pushTrace(lastSetpoint, value);
+    } else if (name === OUT + "Tuning/DriveStep/RiseTime") {
+      $("m-rise").textContent = Number.isFinite(value) ? value.toFixed(3) + " s" : "–";
+    } else if (name === OUT + "Tuning/DriveStep/Overshoot") {
+      $("m-over").textContent = (value * 100).toFixed(1) + " %";
+    } else if (name === OUT + "Tuning/DriveStep/SteadyStateError") {
+      $("m-sse").textContent = Number.isFinite(value) ? value.toFixed(3) + " m/s" : "–";
+    } else if (name === OUT + "Sysid/FF/kS") {
+      $("c-ks").textContent = value.toFixed(4);
+    } else if (name === OUT + "Sysid/FF/kV") {
+      $("c-kv").textContent = value.toFixed(4);
+    } else if (name === OUT + "Drive/WheelRadius") {
+      $("c-radius").textContent = value.toFixed(4) + " in";
+    } else if (name === OUT + "Tuning/Detect/FollowError") {
+      detector("follow", value, 0.5, 2, " m/s");
+    } else if (name === OUT + "Tuning/Detect/TiltDegrees") {
+      detector("tilt", value, 4.0, 1, "\u00b0");
+    } else if (name === OUT + "Tuning/Detect/SkidRatio") {
+      detector("skid", value, 1.25, 2, "");
+    } else if (name === OUT + "Tuning/Ramp/Candidate") {
+      $("r-cand").textContent = value.toFixed(1);
+    } else if (name === OUT + "Tuning/Ramp/Recommended") {
+      $("r-rec").textContent = Number.isFinite(value) ? value.toFixed(1) : "\u2013";
+    }
+  },
+  () => {
+    $("conn").classList.add("on");
+    setStatus("Connected.");
+    for (const key of fields.keys()) client.publishTopic(SET + key, "double");
+    client.publishTopic(PROC, "string");
+  },
+  () => { $("conn").classList.remove("on"); setStatus("Disconnected — retrying…"); }
+);
+
+let lastSetpoint = 0;
+client.subscribe(["/Tuning/", OUT + "Tuning/", OUT + "Sysid/",
+  OUT + "Drive/WheelRadius"], true, false, 0.02);
+client.connect();
+
+["driveStep", "feedforward", "wheelRadius",
+ "forwardLimit", "tiltLimit", "skidLimit"].forEach(wireProcedure);
+
+$("det-reset").addEventListener("click", () => {
+  peaks.follow = 0; peaks.tilt = 0; peaks.skid = 1;
+  $("p-follow").textContent = "0.00";
+  $("p-tilt").textContent = "0.0";
+  $("p-skid").textContent = "1.00";
+});
+
+$("save").addEventListener("click", () => {
+  client.publishTopic("/Tuning/command/save", "boolean");
+  client.addSample("/Tuning/command/save", true);
+  setStatus("Saving…");
+});
+$("revert").addEventListener("click", () => {
+  client.publishTopic("/Tuning/command/reload", "boolean");
+  client.addSample("/Tuning/command/reload", true);
+  setStatus("Reloading from disk…");
+});
+</script>
+</body>
+</html>

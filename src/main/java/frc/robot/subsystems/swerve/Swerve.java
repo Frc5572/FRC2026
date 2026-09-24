@@ -18,6 +18,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -35,6 +36,12 @@ import frc.robot.subsystems.swerve.mod.SwerveModuleIO;
 import frc.robot.subsystems.swerve.util.MoveToPoseBuilder;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.controls.ControlsConfig;
+import frc.robot.controls.ControlsField;
+import frc.robot.tuning.DrivetrainTuning;
+import frc.robot.tuning.LimitApplier;
+import frc.robot.tuning.LimitDetectors;
+import frc.robot.tuning.LimitRampSpec;
+import frc.robot.tuning.StepResponse;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
 import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.swerve.util.TuningCommands;
@@ -84,6 +91,13 @@ public final class Swerve extends SubsystemBase {
 
     private final SwerveRateLimiter limiter;
     private final Supplier<ControlsConfig> controlsConfig;
+    private final Supplier<DrivetrainTuning> tuningConfig;
+    private DrivetrainTuning appliedTuning = DrivetrainTuning.defaults();
+    private ChassisSpeeds lastCommanded = new ChassisSpeeds();
+    private double lastFollowError = 0.0;
+    private double lastTilt = 0.0;
+    private double lastSkid = 1.0;
+    private boolean tuningApplied = false;
 
     private boolean flipTrajectories = false;
 
@@ -115,7 +129,7 @@ public final class Swerve extends SubsystemBase {
     public static Bundle create(Function<PhoenixOdometryThread, SwerveIO> swerveIo,
         Function<PhoenixOdometryThread, GyroIO> gyroIo,
         BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn,
-        Supplier<ControlsConfig> controlsConfig) {
+        Supplier<ControlsConfig> controlsConfig, Supplier<DrivetrainTuning> tuningConfig) {
         Lock localLock = new ReentrantLock();
         PhoenixOdometryThread localOdometryThread = new PhoenixOdometryThread(localLock);
 
@@ -148,7 +162,8 @@ public final class Swerve extends SubsystemBase {
         DrivetrainState instantiatedState = new DrivetrainState(initPositions, localGyroInputs.yaw);
 
         Swerve instantiatedSwerve = new Swerve(localLock, localOdometryThread, localModules,
-            localGyro, localGyroInputs, localIo, localInputs, instantiatedState, controlsConfig);
+            localGyro, localGyroInputs, localIo, localInputs, instantiatedState, controlsConfig,
+            tuningConfig);
 
         return new Bundle(instantiatedSwerve, instantiatedState);
     }
@@ -156,7 +171,8 @@ public final class Swerve extends SubsystemBase {
 
     private Swerve(Lock odometryLock, PhoenixOdometryThread odometryThread, SwerveModule[] modules,
         GyroIO gyro, GyroInputsAutoLogged gyroInputs, SwerveIO io, SwerveInputsAutoLogged inputs,
-        DrivetrainState state, Supplier<ControlsConfig> controlsConfig) {
+        DrivetrainState state, Supplier<ControlsConfig> controlsConfig,
+        Supplier<DrivetrainTuning> tuningConfig) {
         super("Swerve");
 
         this.odometryLock = odometryLock;
@@ -168,6 +184,7 @@ public final class Swerve extends SubsystemBase {
         this.inputs = inputs; // B. Assign it here to fix the error!
         this.state = state;
         this.controlsConfig = controlsConfig;
+        this.tuningConfig = tuningConfig;
         this.limiter = new SwerveRateLimiter(controlsConfig);
 
         this.autoFactory = new AutoFactory(state::getGlobalPoseEstimate, state::resetPose,
@@ -229,6 +246,8 @@ public final class Swerve extends SubsystemBase {
             this.modules[i].periodic();
         }
 
+        applyTuning();
+
         double[] sampleTimestamps = this.inputs.timestamps;
         SwerveModulePosition[] wheelPositions = new SwerveModulePosition[modules.length];
         for (int i = 0; i < sampleTimestamps.length; i++) {
@@ -246,10 +265,244 @@ public final class Swerve extends SubsystemBase {
             Constants.Swerve.swerveKinematics.toChassisSpeeds(wheelStates);
         limiter.update(currentSpeeds);
         state.updateMeasuredSpeeds(currentSpeeds);
+        publishDetectors(lastCommanded, currentSpeeds);
 
         Logger.recordOutput("Swerve/GlobalPoseEstimate", state.getGlobalPoseEstimate());
 
         // targetingState.updateTargeting();
+    }
+
+    /**
+     * A square-wave velocity step test on the drive motors.
+     *
+     * <p>
+     * Holds every module pointed straight ahead and alternates the commanded wheel speed between
+     * zero and the configured amplitude, logging setpoint against measured and reporting rise
+     * time, overshoot and steady-state error for each half-cycle. This is the measurement half of
+     * the feedforward-then-feedback procedure: with the feedback gains at zero, a good physical
+     * model shows up as a small steady-state error.
+     *
+     * <p>
+     * Deliberately bypasses {@link SwerveRateLimiter} — the chassis acceleration limits would
+     * shape the very transient being measured.
+     *
+     * @param tuning supplies the step amplitude and period
+     * @return the step-test command, which runs until cancelled
+     */
+    public Command driveVelocityStepTest(Supplier<DrivetrainTuning> tuning) {
+        Timer timer = new Timer();
+        boolean[] high = {false};
+        double[] stepStart = {0.0};
+        StepResponse[] current = {null};
+        return this.run(() -> {
+            DrivetrainTuning cfg = tuning.get();
+            double period = cfg.stepPeriod();
+            double amplitude = cfg.stepAmplitude();
+            double measured = measuredForwardSpeed();
+
+            if (timer.get() >= period) {
+                if (current[0] != null) {
+                    current[0].log("Tuning/DriveStep");
+                }
+                high[0] = !high[0];
+                stepStart[0] = measured;
+                current[0] =
+                    new StepResponse(measured, high[0] ? amplitude : 0.0, period);
+                timer.restart();
+            }
+
+            double setpoint = high[0] ? amplitude : 0.0;
+            if (current[0] != null) {
+                current[0].accept(timer.get(), measured);
+            }
+            Logger.recordOutput("Tuning/DriveStep/Setpoint", setpoint);
+            Logger.recordOutput("Tuning/DriveStep/Measured", measured);
+
+            SwerveModuleState[] states = new SwerveModuleState[modules.length];
+            for (int i = 0; i < modules.length; i++) {
+                states[i] = new SwerveModuleState(setpoint, Rotation2d.kZero);
+            }
+            for (int i = 0; i < modules.length; i++) {
+                modules[i].setDesiredState(states[i]);
+            }
+        }).beforeStarting(() -> {
+            timer.restart();
+            high[0] = false;
+            stepStart[0] = 0.0;
+            current[0] = null;
+        }).finallyDo(() -> {
+            if (current[0] != null) {
+                current[0].log("Tuning/DriveStep");
+            }
+            setModuleStates(new ChassisSpeeds());
+        });
+    }
+
+    /** Mean forward wheel speed across the modules, in meters per second. */
+    private double measuredForwardSpeed() {
+        double sum = 0.0;
+        for (SwerveModule module : modules) {
+            sum += module.getState().speedMetersPerSecond;
+        }
+        return sum / modules.length;
+    }
+
+    /** Commanded-versus-measured shortfall, the forward-limit failure condition, in m/s. */
+    public double detectorFollowError() {
+        return lastFollowError;
+    }
+
+    /** Chassis tilt from level, the tilt-limit failure condition, in degrees. */
+    public double detectorTilt() {
+        return lastTilt;
+    }
+
+    /** Module max-to-median translational ratio, the skid-limit failure condition. */
+    public double detectorSkidRatio() {
+        return lastSkid;
+    }
+
+    /** Publish the three limit-procedure detectors, so they can be watched while driving. */
+    private void publishDetectors(ChassisSpeeds commanded, ChassisSpeeds measured) {
+        SwerveModuleState[] states = new SwerveModuleState[modules.length];
+        for (int i = 0; i < modules.length; i++) {
+            states[i] = modules[i].getState();
+        }
+        double follow = LimitDetectors.followError(
+            Math.hypot(commanded.vxMetersPerSecond, commanded.vyMetersPerSecond),
+            Math.hypot(measured.vxMetersPerSecond, measured.vyMetersPerSecond));
+        double tilt = LimitDetectors.tiltDegrees(gyroInputs.pitch, gyroInputs.roll);
+        double skid = LimitDetectors.skidRatio(states, Constants.Swerve.swerveTranslations,
+            measured.omegaRadiansPerSecond);
+        Logger.recordOutput("Tuning/Detect/FollowError", follow);
+        Logger.recordOutput("Tuning/Detect/TiltDegrees", tilt);
+        Logger.recordOutput("Tuning/Detect/SkidRatio", skid);
+        lastFollowError = follow;
+        lastTilt = tilt;
+        lastSkid = skid;
+    }
+
+    /**
+     * Step an acceleration limit up or down until its failure condition appears.
+     *
+     * <p>
+     * This automates 1690's three limit procedures (software-sessions.md, lines 157&ndash;176),
+     * which are each "change the limit until X happens". The robot drives a straight burst,
+     * watches the relevant detector, then steps the limit and repeats. The limits not under test
+     * are opened right up for the duration so the one being measured is the binding constraint,
+     * and everything is restored when the command ends.
+     *
+     * <p>
+     * <strong>This drives the robot.</strong> Each burst covers roughly two to three metres, so
+     * it needs about six metres of clear floor.
+     *
+     * @param spec which limit to ramp and what counts as failure
+     * @param limits applies candidate limits to the active driver profile
+     * @return the ramp command, which runs until it trips or is cancelled
+     */
+    public Command accelerationLimitRamp(LimitRampSpec spec, LimitApplier limits) {
+        Timer phase = new Timer();
+        double[] candidate = {spec.start()};
+        double[] peak = {0.0};
+        double[] lastGood = {Double.NaN};
+        boolean[] driving = {true};
+        double[] saved = new double[ControlsField.values().length];
+        boolean[] savedEnabled = new boolean[ControlsField.values().length];
+
+        return this.run(() -> {
+            if (driving[0]) {
+                setModuleStates(limiter.limit(new ChassisSpeeds(
+                    controlsConfig.get().translationMaxSpeed(), 0.0, 0.0)));
+                peak[0] = Math.max(peak[0], spec.detector().getAsDouble());
+                if (phase.get() >= spec.burstSeconds()) {
+                    driving[0] = false;
+                    phase.restart();
+                }
+                return;
+            }
+
+            setModuleStates(new ChassisSpeeds());
+            if (phase.get() < spec.settleSeconds()) {
+                return;
+            }
+
+            boolean tripped = spec.trippedWhenAbove()
+                ? peak[0] > spec.threshold() : peak[0] <= spec.threshold();
+            Logger.recordOutput("Tuning/Ramp/Candidate", candidate[0]);
+            Logger.recordOutput("Tuning/Ramp/Peak", peak[0]);
+            Logger.recordOutput("Tuning/Ramp/Tripped", tripped);
+
+            if (tripped) {
+                // Ramping up, the answer is the last value that survived; ramping down, it is the
+                // first value that came back clean.
+                double answer = spec.step() > 0 ? lastGood[0] : candidate[0];
+                Logger.recordOutput("Tuning/Ramp/Recommended", answer);
+                Logger.recordOutput("Tuning/Ramp/Complete", true);
+                driving[0] = false;
+                return;
+            }
+
+            lastGood[0] = candidate[0];
+            candidate[0] += spec.step();
+            if (candidate[0] > spec.field().maximum() || candidate[0] < spec.field().minimum()) {
+                Logger.recordOutput("Tuning/Ramp/Recommended", lastGood[0]);
+                Logger.recordOutput("Tuning/Ramp/Complete", true);
+                return;
+            }
+            limits.setValue(spec.field(), candidate[0]);
+            peak[0] = 0.0;
+            driving[0] = true;
+            phase.restart();
+        }).beforeStarting(() -> {
+            ControlsConfig cfg = controlsConfig.get();
+            for (ControlsField f : ControlsField.values()) {
+                saved[f.ordinal()] = cfg.get(f);
+                savedEnabled[f.ordinal()] = cfg.isEnabled(f);
+            }
+            // Open the other limits so only the one under test binds.
+            for (ControlsField f : spec.othersToOpen()) {
+                limits.setValue(f, f.maximum());
+                limits.setEnabled(f, false);
+            }
+            candidate[0] = spec.start();
+            peak[0] = 0.0;
+            lastGood[0] = Double.NaN;
+            driving[0] = true;
+            // The skid and tilt limits ship switched off; a disabled limit reports the "no limit"
+            // sentinel whatever its value, so the one under test has to be switched on.
+            limits.setValue(spec.field(), candidate[0]);
+            limits.setEnabled(spec.field(), true);
+            Logger.recordOutput("Tuning/Ramp/Complete", false);
+            phase.restart();
+        }).finallyDo(() -> {
+            for (ControlsField f : ControlsField.values()) {
+                limits.setValue(f, saved[f.ordinal()]);
+                limits.setEnabled(f, savedEnabled[f.ordinal()]);
+            }
+            setModuleStates(new ChassisSpeeds());
+        });
+    }
+
+    /**
+     * Push tuning changes down to the modules.
+     *
+     * <p>
+     * Each call is a blocking CAN configuration write across eight motor controllers, so it only
+     * fires when the configuration actually changes. Gains come from the tuning config rather
+     * than {@code Constants}, so there is a single authority and it is the one the log records.
+     */
+    private void applyTuning() {
+        DrivetrainTuning tuning = tuningConfig.get();
+        if (tuningApplied && tuning.equals(appliedTuning)) {
+            return;
+        }
+        appliedTuning = tuning;
+        tuningApplied = true;
+        for (SwerveModule module : modules) {
+            module.setDriveGains(tuning);
+            module.setAngleGains(tuning);
+        }
+        Logger.recordOutput("Swerve/TuningAppliedAt", Timer.getFPGATimestamp());
     }
 
     /**
@@ -381,6 +634,18 @@ public final class Swerve extends SubsystemBase {
     public Command feedforwardCharacterization() {
         return TuningCommands.feedforwardCharacterization(this, this::runCharacterization,
             this::getFFCharacterizationVelocity);
+    }
+
+    /**
+     * Characterize the drive feedforward and hand the fitted gains to a callback, so a tuning
+     * run persists instead of ending in a copy-paste into {@code Constants}.
+     *
+     * @param onResult receives (kS, kV) in volts and volts per rad/s
+     * @return the characterization command
+     */
+    public Command feedforwardCharacterization(TuningCommands.DoubleBinaryConsumer onResult) {
+        return TuningCommands.feedforwardCharacterization(this, this::runCharacterization,
+            this::getFFCharacterizationVelocity, onResult);
     }
 
     /**
@@ -539,6 +804,7 @@ public final class Swerve extends SubsystemBase {
     }
 
     private void setModuleStates(ChassisSpeeds chassisSpeeds) {
+        this.lastCommanded = chassisSpeeds;
         ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
         SwerveModuleState[] swerveModuleStates =
             Constants.Swerve.swerveKinematics.toSwerveModuleStates(targetSpeeds);

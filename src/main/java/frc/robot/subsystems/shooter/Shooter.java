@@ -106,14 +106,14 @@ public final class Shooter extends SubsystemBase {
             // Let turret stop
             this.run(() -> {
                 io.runVolts(0.0);
-                Logger.recordOutput("Sysid/Turret/FF/appliedVoltage", 0.0);
+                Logger.recordOutput("Sysid/Shooter/FF/appliedVoltage", 0.0);
             }).withTimeout(1.5),
             // Start timer
             this.runOnce(timer::restart),
             // Accelerate and gather data
             this.run(() -> {
                 double voltage = timer.get() * 0.1;
-                Logger.recordOutput("Sysid/Turret/FF/appliedVoltage", voltage);
+                Logger.recordOutput("Sysid/Shooter/FF/appliedVoltage", voltage);
                 io.runVolts(voltage);
                 velocitySamples.add(inputs.shooterAngularVelocity1.in(RotationsPerSecond));
                 voltageSamples.add(voltage);
@@ -132,8 +132,8 @@ public final class Shooter extends SubsystemBase {
                 double kS = (sumY * sumX2 - sumX * sumXY) / (n * sumX2 - sumX * sumX);
                 double kV = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
 
-                Logger.recordOutput("Sysid/Turret/FF/kS", kS);
-                Logger.recordOutput("Sysid/Turret/FF/kV", kV);
+                Logger.recordOutput("Sysid/Shooter/FF/kS", kS);
+                Logger.recordOutput("Sysid/Shooter/FF/kV", kV);
             }));
     }
 }

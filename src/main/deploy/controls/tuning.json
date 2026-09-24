@@ -1,0 +1,13 @@
+{
+  "driveKs" : 0.251,
+  "driveKv" : 0.1515,
+  "driveKa" : 0.0,
+  "driveKp" : 0.0012,
+  "driveKd" : 0.0,
+  "angleKp" : 100.0,
+  "angleKd" : 0.0,
+  "wheelRadiusInches" : 1.906,
+  "stepAmplitude" : 2.0,
+  "stepPeriod" : 1.5,
+  "moduleOffsets" : [ 0.0, 0.0, 0.0, 0.0 ]
+}

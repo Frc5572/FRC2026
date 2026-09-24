@@ -66,6 +66,12 @@ import frc.robot.controls.ControlScheme;
 import frc.robot.controls.Controls;
 import frc.robot.controls.ControlsIOEmpty;
 import frc.robot.controls.ControlsReal;
+import frc.robot.tuning.Tuning;
+import frc.robot.tuning.LimitDetectors;
+import frc.robot.tuning.LimitRampSpec;
+import frc.robot.tuning.TuningField;
+import frc.robot.tuning.TuningIOEmpty;
+import frc.robot.tuning.TuningReal;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
@@ -101,6 +107,7 @@ public final class RobotContainer {
     private final Climber climber;
     private final Indexer indexer;
     private final Controls controls;
+    private final Tuning tuning;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     private final Field2d field = new Field2d();
@@ -120,10 +127,11 @@ public final class RobotContainer {
         switch (runtimeType) {
             case kReal:
                 controls = new Controls(new ControlsReal());
+                tuning = new Tuning(new TuningReal());
                 sim = null;
                 Swerve.Bundle realBundle =
                     Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new,
-                        controls::config);
+                        controls::config, tuning::config);
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
@@ -137,6 +145,7 @@ public final class RobotContainer {
                 break;
             case kSimulation:
                 controls = new Controls(new ControlsReal());
+                tuning = new Tuning(new TuningReal());
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
                 sim = new SimulatedRobotState(
                     new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
@@ -154,7 +163,7 @@ public final class RobotContainer {
                 FuelSim.getInstance().start();
                 Swerve.Bundle simBundle = Swerve.create(sim.swerveDrive::simProvider,
                     sim.swerveDrive::gyroProvider, sim.swerveDrive::moduleProvider,
-                    controls::config);
+                    controls::config, tuning::config);
                 this.drivetrainState = simBundle.drivetrainState();
                 this.swerve = simBundle.swerve();
 
@@ -174,10 +183,11 @@ public final class RobotContainer {
                 break;
             default:
                 controls = new Controls(new ControlsIOEmpty());
+                tuning = new Tuning(new TuningIOEmpty());
                 sim = null;
                 Swerve.Bundle defaultBundle =
                     Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new,
-                        controls::config);
+                        controls::config, tuning::config);
                 this.drivetrainState = defaultBundle.drivetrainState();
                 this.swerve = defaultBundle.swerve();
 
@@ -378,7 +388,58 @@ public final class RobotContainer {
 
     private ShotDataHelper helper = new ShotDataHelper();
 
+    /**
+     * Bind the drivetrain tuning procedures.
+     *
+     * <p>
+     * Each is reachable two ways: a tuner-controller button for someone standing next to the
+     * robot, and a request from the tuning web page. Both route through the same command. These
+     * move the robot, which is why they live on the tuner controller — it is only plugged in
+     * in the shop or the pit, and {@code maybeController} means these bindings do not exist at
+     * all when it is absent.
+     */
+    private void setupTuningProcedures() {
+        Command driveStep = swerve.driveVelocityStepTest(tuning::config);
+        Command feedforward = swerve.feedforwardCharacterization((kS, kV) -> {
+            tuning.report(TuningField.DRIVE_KS, kS);
+            tuning.report(TuningField.DRIVE_KV, kV);
+        });
+        Command wheelRadius = swerve.wheelRadiusCharacterization();
+
+        tuner.povUp().whileTrue(driveStep);
+        tuner.povRight().whileTrue(feedforward);
+        tuner.povLeft().whileTrue(wheelRadius);
+
+        tuning.requested("driveStep").whileTrue(swerve.driveVelocityStepTest(tuning::config));
+        tuning.requested("feedforward")
+            .whileTrue(swerve.feedforwardCharacterization((kS, kV) -> {
+                tuning.report(TuningField.DRIVE_KS, kS);
+                tuning.report(TuningField.DRIVE_KV, kV);
+            }));
+        tuning.requested("wheelRadius").whileTrue(swerve.wheelRadiusCharacterization());
+
+        // The three acceleration-limit procedures from software-sessions.md lines 157-176. Each
+        // drives straight-line bursts and steps its limit until the failure condition appears, so
+        // they need roughly six metres of clear floor.
+        bindLimitRamp("forwardLimit",
+            LimitRampSpec.forward(() -> swerve.detectorFollowError()));
+        bindLimitRamp("tiltLimit", LimitRampSpec.tilt(() -> swerve.detectorTilt()));
+        bindLimitRamp("skidLimit", LimitRampSpec.skid(() -> swerve.detectorSkidRatio()));
+    }
+
+    /**
+     * Bind one acceleration-limit ramp to both the web request and the tuning subsystem.
+     *
+     * @param name the procedure name the web page sends
+     * @param spec how the ramp steps and what counts as failure
+     */
+    private void bindLimitRamp(String name, LimitRampSpec spec) {
+        tuning.requested(name)
+            .whileTrue(swerve.accelerationLimitRamp(spec, controls));
+    }
+
     private void setupTuner() {
+        setupTuningProcedures();
         tuner.y().onTrue(swerve.setFieldRelativeOffset());
 
         tuner.rightTrigger()
