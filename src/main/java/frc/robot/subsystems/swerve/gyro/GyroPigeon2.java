@@ -2,7 +2,6 @@ package frc.robot.subsystems.swerve.gyro;
 
 import java.util.Queue;
 import org.jspecify.annotations.NullMarked;
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -11,6 +10,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
+import frc.robot.util.PhoenixSignals;
 
 /** Pigeon2 implementation for Gyro */
 @NullMarked
@@ -28,13 +28,14 @@ public class GyroPigeon2 implements GyroIO {
 
     /** Pigeon2 implementation for Gyro */
     public GyroPigeon2(PhoenixOdometryThread odometryThread) {
+        PhoenixSignals.registerSignals(true, gyroYaw, yawVelocity, gyroPitch, pitchVelocity,
+            gyroRoll, rollVelocity);
         this.yawQueue = odometryThread.registerSignal(gyroYaw);
     }
 
     @Override
     public void updateInputs(GyroInputs inputs) {
-        BaseStatusSignal.refreshAll(gyroYaw, yawVelocity, gyroPitch, pitchVelocity, gyroRoll,
-            rollVelocity);
+        PhoenixSignals.refreshAll();
 
         inputs.connected = gyro.isConnected();
 
