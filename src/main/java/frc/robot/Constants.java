@@ -50,6 +50,8 @@ public final class Constants {
 
     public static final boolean keepInField = true;
 
+    public static final String CANbusName = "canivore"; // needs to be changed to actual name
+
     /** Constants for driver controls */
     public static class DriverControls {
         /** Stick axis controls less than this amount are treated as 0. */
