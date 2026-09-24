@@ -18,17 +18,17 @@ import org.jspecify.annotations.NullMarked;
 public enum ControlScheme {
 
     /**
-     * Turning on the right stick, shooting on the right trigger, intaking on the left trigger.
-     * This is the long-standing layout.
+     * Turning on the right stick, shooting on the right trigger, intaking on the left trigger. This
+     * is the long-standing layout.
      */
-    STICK_TURN("Stick turning", "Turn: right stick · Shoot: RT · Intake: LT"),
+    STICK_TURN("Stick turning", "Turn: right stick - Shoot: RT - Intake: LT"),
 
     /**
      * Turning on the triggers, with the face buttons taking over the game-piece actions. The turn
      * rate is the left trigger minus the right, so left turns counterclockwise and pulling both
      * cancels out.
      */
-    TRIGGER_TURN("Trigger turning", "Turn: LT/RT · Shoot: A · Intake: B");
+    TRIGGER_TURN("Trigger turning", "Turn: LT/RT - Shoot: A - Intake: B");
 
     private final String label;
     private final String summary;
