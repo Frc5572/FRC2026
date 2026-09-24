@@ -16,7 +16,7 @@ import frc.robot.util.PhoenixSignals;
 @NullMarked
 public class GyroPigeon2 implements GyroIO {
 
-    private Pigeon2 gyro = new Pigeon2(Constants.Swerve.pigeonID, new CANBus(Constants.CANbusName));
+    private Pigeon2 gyro = new Pigeon2(Constants.Swerve.pigeonID, new CANBus("*"));
 
     private final Queue<Double> yawQueue;
     private final StatusSignal<Angle> gyroYaw = gyro.getYaw();
@@ -42,18 +42,18 @@ public class GyroPigeon2 implements GyroIO {
         double invert = Constants.Swerve.invertGyro ? -1.0 : 1.0;
 
         inputs.yaw = Rotation2d
-            .fromDegrees(invert * gyroYaw.getValue().in(edu.wpi.first.units.Units.Rotations));
+            .fromRotations(invert * gyroYaw.getValue().in(edu.wpi.first.units.Units.Rotations));
         inputs.yawVelocityRadPerSec =
-            invert * yawVelocity.getValue().in(edu.wpi.first.units.Units.RotationsPerSecond);
+            invert * yawVelocity.getValue().in(edu.wpi.first.units.Units.RadiansPerSecond);
         inputs.pitch = Rotation2d
-            .fromDegrees(invert * gyroPitch.getValue().in(edu.wpi.first.units.Units.Rotations));
+            .fromRotations(invert * gyroPitch.getValue().in(edu.wpi.first.units.Units.Rotations));
         inputs.pitchVelocityRadPerSec =
-            invert * pitchVelocity.getValue().in(edu.wpi.first.units.Units.RotationsPerSecond);
+            invert * pitchVelocity.getValue().in(edu.wpi.first.units.Units.RadiansPerSecond);
         inputs.roll = Rotation2d
-            .fromDegrees(invert * gyroRoll.getValue().in(edu.wpi.first.units.Units.Rotations));
+            .fromRotations(invert * gyroRoll.getValue().in(edu.wpi.first.units.Units.Rotations));
         inputs.rollVelocityRadPerSec =
-            invert * rollVelocity.getValue().in(edu.wpi.first.units.Units.RotationsPerSecond);
-        inputs.yawRads = yawQueue.stream().mapToDouble(x -> invert * x).toArray();
+            invert * rollVelocity.getValue().in(edu.wpi.first.units.Units.RadiansPerSecond);
+        inputs.yawRads = yawQueue.stream().mapToDouble(x -> Math.toRadians(invert * x)).toArray();
         yawQueue.clear();
     }
 
