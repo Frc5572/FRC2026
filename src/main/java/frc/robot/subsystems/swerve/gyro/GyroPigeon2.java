@@ -28,7 +28,7 @@ public class GyroPigeon2 implements GyroIO {
 
     /** Pigeon2 implementation for Gyro */
     public GyroPigeon2(PhoenixOdometryThread odometryThread) {
-        this.yawQueue = odometryThread.registerSignal(gyro.getYaw());
+        this.yawQueue = odometryThread.registerSignal(gyroYaw);
     }
 
     @Override
