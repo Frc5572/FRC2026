@@ -35,8 +35,6 @@ public class GyroPigeon2 implements GyroIO {
 
     @Override
     public void updateInputs(GyroInputs inputs) {
-        PhoenixSignals.refreshAll();
-
         inputs.connected = gyro.isConnected();
 
         double invert = Constants.Swerve.invertGyro ? -1.0 : 1.0;
