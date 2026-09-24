@@ -61,6 +61,9 @@ import frc.robot.subsystems.turret.TurretReal;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOEmpty;
 import frc.robot.subsystems.vision.VisionReal;
+import frc.robot.controls.Controls;
+import frc.robot.controls.ControlsIOEmpty;
+import frc.robot.controls.ControlsReal;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.tunable.ShotDataHelper;
 import frc.robot.viz.RobotViz;
@@ -95,6 +98,7 @@ public final class RobotContainer {
     private final Intake intake;
     private final Climber climber;
     private final Indexer indexer;
+    private final Controls controls;
     private final RobotViz viz;
     private final SimulatedRobotState sim;
     private final Field2d field = new Field2d();
@@ -113,9 +117,11 @@ public final class RobotContainer {
     public RobotContainer(RobotRunType runtimeType) {
         switch (runtimeType) {
             case kReal:
+                controls = new Controls(new ControlsReal());
                 sim = null;
                 Swerve.Bundle realBundle =
-                    Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
+                    Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new,
+                        controls::config);
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
@@ -128,6 +134,7 @@ public final class RobotContainer {
 
                 break;
             case kSimulation:
+                controls = new Controls(new ControlsReal());
                 SimulatedArena.overrideInstance(new Arena2026Rebuilt(false));
                 sim = new SimulatedRobotState(
                     new Pose2d(4.04, FieldConstants.fieldWidth - 0.7, Rotation2d.kCW_90deg));
@@ -144,7 +151,8 @@ public final class RobotContainer {
                     });
                 FuelSim.getInstance().start();
                 Swerve.Bundle simBundle = Swerve.create(sim.swerveDrive::simProvider,
-                    sim.swerveDrive::gyroProvider, sim.swerveDrive::moduleProvider);
+                    sim.swerveDrive::gyroProvider, sim.swerveDrive::moduleProvider,
+                    controls::config);
                 this.drivetrainState = simBundle.drivetrainState();
                 this.swerve = simBundle.swerve();
 
@@ -163,9 +171,11 @@ public final class RobotContainer {
 
                 break;
             default:
+                controls = new Controls(new ControlsIOEmpty());
                 sim = null;
                 Swerve.Bundle defaultBundle =
-                    Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
+                    Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new,
+                        controls::config);
                 this.drivetrainState = defaultBundle.drivetrainState();
                 this.swerve = defaultBundle.swerve();
 
@@ -235,8 +245,8 @@ public final class RobotContainer {
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
             () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
             () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
-            Constants.DriverControls.driverTranslationalMaxSpeed,
-            Constants.DriverControls.driverRotationalMaxSpeed)));
+            controls::config, () -> controls.config().translationMaxSpeed(),
+            () -> controls.config().rotationMaxSpeed())));
         shooter.setDefaultCommand(shooter.shoot(0.0));
 
         // TRIGGERS
@@ -278,8 +288,8 @@ public final class RobotContainer {
                     () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
                     () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
                     () -> -combineControllers(CommandXboxController::getRightX, driver, tuner),
-                    Constants.DriverControls.driverTranslationalShootSpeed,
-                    Constants.DriverControls.driverRotationalShootSpeed))));
+                    controls::config, () -> controls.config().shootTranslationMaxSpeed(),
+                    () -> controls.config().shootRotationMaxSpeed()))));
 
         driver.povUp().onTrue(Commands.runOnce(() -> {
             targetingState.incTrims(0.5, 0);
@@ -304,8 +314,8 @@ public final class RobotContainer {
         // .whileTrue(swerve.driveFacingSides(
         // () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
         // () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
-        // Constants.DriverControls.driverTranslationalMaxSpeed,
-        // Constants.DriverControls.driverRotationalShootSpeed));
+        // () -> controls.config().translationMaxSpeed(),
+        // () -> controls.config().shootRotationMaxSpeed()));
         driver.rightBumper().whileTrue(swerve.toggleSideLock());
         driver.leftBumper().whileTrue(swerve.toggleVerticalLock());
     }

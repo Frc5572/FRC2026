@@ -35,6 +35,7 @@ import frc.robot.subsystems.swerve.mod.SwerveModule;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIO;
 import frc.robot.subsystems.swerve.util.MoveToPoseBuilder;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
+import frc.robot.controls.ControlsConfig;
 import frc.robot.subsystems.swerve.util.SwerveRateLimiter;
 import frc.robot.subsystems.swerve.util.TuningCommands;
 import frc.robot.util.AllianceFlipUtil;
@@ -81,7 +82,8 @@ public final class Swerve extends SubsystemBase {
     private final SwerveIO io;
     private final SwerveInputsAutoLogged inputs;
 
-    private final SwerveRateLimiter limiter = new SwerveRateLimiter();
+    private final SwerveRateLimiter limiter;
+    private final Supplier<ControlsConfig> controlsConfig;
 
     private boolean flipTrajectories = false;
 
@@ -112,7 +114,8 @@ public final class Swerve extends SubsystemBase {
     /** Creates Swerve and DrivetrainState static factory */
     public static Bundle create(Function<PhoenixOdometryThread, SwerveIO> swerveIo,
         Function<PhoenixOdometryThread, GyroIO> gyroIo,
-        BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn) {
+        BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn,
+        Supplier<ControlsConfig> controlsConfig) {
         Lock localLock = new ReentrantLock();
         PhoenixOdometryThread localOdometryThread = new PhoenixOdometryThread(localLock);
 
@@ -145,7 +148,7 @@ public final class Swerve extends SubsystemBase {
         DrivetrainState instantiatedState = new DrivetrainState(initPositions, localGyroInputs.yaw);
 
         Swerve instantiatedSwerve = new Swerve(localLock, localOdometryThread, localModules,
-            localGyro, localGyroInputs, localIo, localInputs, instantiatedState);
+            localGyro, localGyroInputs, localIo, localInputs, instantiatedState, controlsConfig);
 
         return new Bundle(instantiatedSwerve, instantiatedState);
     }
@@ -153,7 +156,7 @@ public final class Swerve extends SubsystemBase {
 
     private Swerve(Lock odometryLock, PhoenixOdometryThread odometryThread, SwerveModule[] modules,
         GyroIO gyro, GyroInputsAutoLogged gyroInputs, SwerveIO io, SwerveInputsAutoLogged inputs,
-        DrivetrainState state) {
+        DrivetrainState state, Supplier<ControlsConfig> controlsConfig) {
         super("Swerve");
 
         this.odometryLock = odometryLock;
@@ -164,6 +167,8 @@ public final class Swerve extends SubsystemBase {
         this.io = io;
         this.inputs = inputs; // B. Assign it here to fix the error!
         this.state = state;
+        this.controlsConfig = controlsConfig;
+        this.limiter = new SwerveRateLimiter(controlsConfig);
 
         this.autoFactory = new AutoFactory(state::getGlobalPoseEstimate, state::resetPose,
             this::followTrajectory, true, this);
@@ -359,8 +364,7 @@ public final class Swerve extends SubsystemBase {
      */
     public MoveToPoseBuilder moveToPose() {
         var builder = new MoveToPoseBuilder(this, (speeds) -> {
-            limiter.limit(speeds);
-            setModuleStates(speeds);
+            setModuleStates(limiter.limit(speeds));
         });
         return builder;
     }
@@ -574,10 +578,12 @@ public final class Swerve extends SubsystemBase {
             double omega = 0.0;
             double xaxis = right.getAsDouble();
             double yaxis = forward.getAsDouble();
-            yaxis = MathUtil.applyDeadband(yaxis, Constants.DriverControls.stickDeadband);
-            xaxis = MathUtil.applyDeadband(xaxis, Constants.DriverControls.stickDeadband);
-            xaxis *= xaxis * Math.signum(xaxis);
-            yaxis *= yaxis * Math.signum(yaxis);
+            double deadband = controlsConfig.get().translationDeadband();
+            double exponent = controlsConfig.get().translationExponent();
+            yaxis = MathUtil.applyDeadband(yaxis, deadband);
+            xaxis = MathUtil.applyDeadband(xaxis, deadband);
+            xaxis = Math.pow(Math.abs(xaxis), exponent) * Math.signum(xaxis);
+            yaxis = Math.pow(Math.abs(yaxis), exponent) * Math.signum(yaxis);
             Rotation2d currentRotation = this.state.getGlobalPoseEstimate().getRotation();
             // normalize between (-180, 180]
             double normalizedAngle = ((currentRotation.getDegrees() + 180) % 360 + 360) % 360 - 180;

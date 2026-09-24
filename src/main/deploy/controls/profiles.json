@@ -1,0 +1,41 @@
+{
+  "active" : "default",
+  "profiles" : {
+    "default" : {
+      "translationDeadband" : 0.1,
+      "translationExponent" : 1.0,
+      "translationSaturation" : 0.95,
+      "translationMaxSpeed" : 7.0,
+      "rotationDeadband" : 0.1,
+      "rotationExponent" : 1.0,
+      "rotationMaxSpeed" : 7.0,
+      "releaseTimeConstant" : 0.33,
+      "shootTranslationMaxSpeed" : 1.0,
+      "shootRotationMaxSpeed" : 1.5,
+      "forwardAccelLimit" : 10.0,
+      "skidLimit" : 1000.0,
+      "forwardTiltLimit" : 1000.0,
+      "backTiltLimit" : 1000.0,
+      "leftTiltLimit" : 1000.0,
+      "rightTiltLimit" : 1000.0
+    },
+    "legacy" : {
+      "translationDeadband" : 0.1,
+      "translationExponent" : 2.0,
+      "translationSaturation" : 1.0,
+      "translationMaxSpeed" : 4.0,
+      "rotationDeadband" : 0.1,
+      "rotationExponent" : 1.0,
+      "rotationMaxSpeed" : 4.0,
+      "releaseTimeConstant" : 0.0,
+      "shootTranslationMaxSpeed" : 1.0,
+      "shootRotationMaxSpeed" : 1.5,
+      "forwardAccelLimit" : 10.0,
+      "skidLimit" : 1000.0,
+      "forwardTiltLimit" : 1000.0,
+      "backTiltLimit" : 1000.0,
+      "leftTiltLimit" : 1000.0,
+      "rightTiltLimit" : 1000.0
+    }
+  }
+}

@@ -6,8 +6,10 @@ import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import java.util.function.Supplier;
 import frc.robot.Constants;
-import frc.robot.util.tunable.Tunable;
+import frc.robot.controls.ControlsConfig;
+import frc.robot.controls.ControlsField;
 
 /**
  * Applies rate limiting to robot-relative swerve chassis commands to ensure physically achievable,
@@ -29,8 +31,9 @@ import frc.robot.util.tunable.Tunable;
  * calling {@link #limit(ChassisSpeeds)}.
  *
  * <p>
- * All limits are exposed via NetworkTables under {@code /SwerveRateLimiter/*} and may be tuned at
- * runtime. Diagnostic values are published to AdvantageKit logs for visualization and debugging.
+ * All limits are read from the live {@link ControlsConfig} each cycle, so they can be tuned from
+ * the driver web interface. A limit at or above {@link ControlsField#LIMIT_DISABLED} disables that
+ * stage. Diagnostic values are published to AdvantageKit logs for visualization and debugging.
  *
  * <p>
  * Rotational velocity ({@code omegaRadiansPerSecond}) is passed through unchanged and is not
@@ -50,26 +53,17 @@ import frc.robot.util.tunable.Tunable;
  * https://www.youtube.com/watch?v=vUtVXz7ebEE</a>
  */
 @NullMarked
-public class SwerveRateLimiter implements Tunable {
+public class SwerveRateLimiter {
 
-    private double forwardLimit = Constants.Swerve.forwardLimit;
-    private double forwardTiltLimit = Constants.Swerve.forwardTiltLimit;
-    private double leftTiltLimit = Constants.Swerve.leftTiltLimit;
-    private double rightTiltLimit = Constants.Swerve.rightTiltLimit;
-    private double backTiltLimit = Constants.Swerve.backTiltLimit;
-    private double skidLimit = Constants.Swerve.skidLimit;
+    private final Supplier<ControlsConfig> config;
 
     /**
-     * Creates a new {@code SwerveRateLimiter} and publishes all acceleration limits to
-     * NetworkTables for live tuning.
+     * Creates a new {@code SwerveRateLimiter} reading its limits from the supplied configuration.
      *
-     * <p>
-     * Any updates received via NetworkTables will immediately modify the corresponding limit used
-     * by the rate limiter.
+     * @param config supplier of the control configuration currently in force
      */
-    public SwerveRateLimiter() {
-        Tunable.setupTunable("/SwerveRateLimiter", this, SwerveRateLimiter.class, () -> {
-        });
+    public SwerveRateLimiter(Supplier<ControlsConfig> config) {
+        this.config = config;
     }
 
     /**
@@ -129,6 +123,13 @@ public class SwerveRateLimiter implements Tunable {
      *         robot-relative velocities for the next control step
      */
     public ChassisSpeeds limit(ChassisSpeeds wantedSpeedsRobotRelative) {
+        ControlsConfig cfg = config.get();
+        double forwardLimit = cfg.forwardAccelLimit();
+        double forwardTiltLimit = cfg.forwardTiltLimit();
+        double leftTiltLimit = cfg.leftTiltLimit();
+        double rightTiltLimit = cfg.rightTiltLimit();
+        double backTiltLimit = cfg.backTiltLimit();
+        double skidLimit = cfg.skidLimit();
         double currentSpeed = Math.hypot(currentVel.a1, currentVel.a2);
         double wantedSpeed = Math.hypot(wantedSpeedsRobotRelative.vxMetersPerSecond,
             wantedSpeedsRobotRelative.vyMetersPerSecond);
@@ -154,11 +155,19 @@ public class SwerveRateLimiter implements Tunable {
         double maxForwardAccel = forwardLimit * subphysicalAccelerationLimit;
         publish("maxForwardAccel", maxForwardAccel);
 
-        // get acceleration in direction of current velocity
-        double wantedAccMagnitude = wantedAcc.a1 * currentVel.a1 / currentSpeed
-            + wantedAcc.a2 * currentVel.a2 / currentSpeed;
+        // Acceleration in the direction of current velocity. At a standstill that direction is
+        // undefined; dividing by zero here used to yield NaN, and because every NaN comparison is
+        // false the limit below was skipped for exactly the launch it was meant to shape. From
+        // rest any acceleration is "forward", so use its magnitude instead.
+        double wantedAccMagnitude;
+        if (currentSpeed > 1e-6) {
+            wantedAccMagnitude = (wantedAcc.a1 * currentVel.a1 + wantedAcc.a2 * currentVel.a2)
+                / currentSpeed;
+        } else {
+            wantedAccMagnitude = Math.hypot(wantedAcc.a1, wantedAcc.a2);
+        }
         publish("wantedAccMagnitudeStep1", wantedAccMagnitude);
-        if (forwardLimit < 800 && wantedAccMagnitude > maxForwardAccel) {
+        if (forwardLimit < ControlsField.LIMIT_DISABLED && wantedAccMagnitude > maxForwardAccel) {
             double mul = maxForwardAccel / wantedAccMagnitude;
             wantedAcc.a1 *= mul;
             wantedAcc.a2 *= mul;
@@ -167,16 +176,16 @@ public class SwerveRateLimiter implements Tunable {
 
         // Step 2: Robot may accelerate too fast and result in tilting. Limit directional
         // acceleration to prevent this.
-        if (forwardTiltLimit < 800 && wantedAcc.a1 > forwardTiltLimit) {
-            wantedAcc.a1 = forwardLimit;
+        if (forwardTiltLimit < ControlsField.LIMIT_DISABLED && wantedAcc.a1 > forwardTiltLimit) {
+            wantedAcc.a1 = forwardTiltLimit;
         }
-        if (backTiltLimit < 800 && wantedAcc.a1 < -backTiltLimit) {
+        if (backTiltLimit < ControlsField.LIMIT_DISABLED && wantedAcc.a1 < -backTiltLimit) {
             wantedAcc.a1 = -backTiltLimit;
         }
-        if (leftTiltLimit < 800 && wantedAcc.a2 > leftTiltLimit) {
+        if (leftTiltLimit < ControlsField.LIMIT_DISABLED && wantedAcc.a2 > leftTiltLimit) {
             wantedAcc.a2 = leftTiltLimit;
         }
-        if (rightTiltLimit < 800 && wantedAcc.a2 < -rightTiltLimit) {
+        if (rightTiltLimit < ControlsField.LIMIT_DISABLED && wantedAcc.a2 < -rightTiltLimit) {
             wantedAcc.a2 = -rightTiltLimit;
         }
         publish("wantedAccStep2", wantedAcc);
@@ -185,7 +194,7 @@ public class SwerveRateLimiter implements Tunable {
         // magnitude of acceleration to prevent this.
         wantedAccMagnitude = Math.hypot(wantedAcc.a1, wantedAcc.a2);
         publish("wantedAccMagnitudeStep3", wantedAccMagnitude);
-        if (skidLimit < 800 && wantedAccMagnitude > skidLimit) {
+        if (skidLimit < ControlsField.LIMIT_DISABLED && wantedAccMagnitude > skidLimit) {
             double multiplier = skidLimit / wantedAccMagnitude;
             wantedAcc.a1 *= multiplier;
             wantedAcc.a2 *= multiplier;

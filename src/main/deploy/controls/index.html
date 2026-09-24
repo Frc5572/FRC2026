@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Driver Controls</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1d2026; --edge: #2c313a;
+    --text: #e7eaf0; --muted: #98a1b0; --accent: #4da3ff;
+    --ok: #36c48b; --warn: #e8b64c; --bad: #e8604c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px; background: var(--bg); color: var(--text);
+    font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  h1 { font-size: 19px; margin: 0 0 2px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .bar {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 14px; position: sticky; top: 8px; z-index: 5;
+  }
+  select, button, input[type=text] {
+    background: #272c35; color: var(--text); border: 1px solid var(--edge);
+    border-radius: 7px; padding: 8px 12px; font: inherit; font-size: 14px;
+  }
+  button { cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #07111d; font-weight: 600; }
+  button.danger:hover:not(:disabled) { border-color: var(--bad); color: var(--bad); }
+  .spacer { flex: 1; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); flex: none; }
+  .dot.on { background: var(--ok); }
+  .group { margin-bottom: 18px; }
+  .group > h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted); margin: 0 0 8px; font-weight: 600;
+  }
+  .row {
+    display: grid; grid-template-columns: minmax(150px, 1.1fr) 3fr 92px;
+    gap: 12px; align-items: center;
+    background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 9px; padding: 9px 12px; margin-bottom: 6px;
+  }
+  .row label { font-size: 14px; }
+  .row .hint { display: block; color: var(--muted); font-size: 11.5px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .val {
+    text-align: right; font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;
+  }
+  .val.changed { color: var(--warn); }
+  #status { color: var(--muted); font-size: 13px; min-height: 18px; }
+  #path { color: #6b7483; font-size: 11.5px; font-family: ui-monospace, monospace; }
+  @media (max-width: 620px) {
+    .row { grid-template-columns: 1fr 64px; }
+    .row input[type=range] { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Driver Controls</h1>
+<div class="sub">Changes apply live. <strong>Save</strong> writes them to the robot so
+  <code>./gradlew pullControls</code> can bring them back into git.</div>
+
+<div class="bar">
+  <span class="dot" id="conn" title="NetworkTables connection"></span>
+  <select id="profile" title="Active profile"></select>
+  <button id="create">New…</button>
+  <button id="delete" class="danger">Delete</button>
+  <span class="spacer"></span>
+  <button id="revert">Revert</button>
+  <button id="save" class="primary">Save</button>
+</div>
+
+<div id="groups"></div>
+<div id="status">Connecting…</div>
+<div id="path"></div>
+
+<script type="module">
+import { NT4_Client } from "/scripts/NT4.js";
+
+// Presentation only. Any field the robot publishes that is not listed here still appears,
+// under "Other" — so adding a ControlsField needs no change to this page.
+const GROUPS = [
+  ["Translation", [
+    ["translationDeadband",   "Deadband",        "Stick travel ignored around centre"],
+    ["translationExponent",   "Response curve",  "1.0 linear · 2.0 squared"],
+    ["translationSaturation", "Saturation",      "Stick travel that reaches full speed"],
+    ["translationMaxSpeed",   "Max speed",       "m/s"],
+    ["releaseTimeConstant",   "Coast on release","Seconds to coast down · 0 stops instantly"],
+  ]],
+  ["Rotation", [
+    ["rotationDeadband", "Deadband",       "Stick travel ignored around centre"],
+    ["rotationExponent", "Response curve", "1.0 linear · 2.0 squared"],
+    ["rotationMaxSpeed", "Max speed",      "rad/s"],
+  ]],
+  ["While shooting", [
+    ["shootTranslationMaxSpeed", "Max speed",    "m/s while the trigger is held"],
+    ["shootRotationMaxSpeed",    "Max rotation", "rad/s while the trigger is held"],
+  ]],
+  ["Acceleration limits", [
+    ["forwardAccelLimit", "Forward accel", "m/s² · lower is gentler off the line"],
+    ["skidLimit",         "Skid limit",    "m/s² · 1000 disables"],
+    ["forwardTiltLimit",  "Tilt forward",  "m/s² · 1000 disables"],
+    ["backTiltLimit",     "Tilt back",     "m/s² · 1000 disables"],
+    ["leftTiltLimit",     "Tilt left",     "m/s² · 1000 disables"],
+    ["rightTiltLimit",    "Tilt right",    "m/s² · 1000 disables"],
+  ]],
+];
+
+const VALUES = "/Controls/values/";
+const META   = "/Controls/meta/";
+
+const fields = new Map();   // key -> {min,max,def,value,row,slider,out,dragging}
+let profiles = [], active = "", dirty = false, built = false;
+
+const $ = (id) => document.getElementById(id);
+const setStatus = (t) => { $("status").textContent = t; };
+
+// Publish lazily: a field discovered after onConnect would otherwise never have its topic
+// published, and addSample throws on an unpublished topic.
+function writeValue(key, v) {
+  client.publishTopic(VALUES + key, "double");
+  client.addSample(VALUES + key, v);
+}
+
+function step(min, max) {
+  const span = max - min;
+  if (span <= 2) return 0.01;
+  if (span <= 20) return 0.05;
+  return 1;
+}
+
+function ensureField(key) {
+  let f = fields.get(key);
+  if (!f) { f = { min: 0, max: 1, def: 0, value: 0, dragging: false }; fields.set(key, f); }
+  return f;
+}
+
+// Build the UI once every field has its metadata, so sliders get correct ranges immediately.
+function build() {
+  if (built) return;
+  for (const [, rows] of GROUPS) {
+    for (const [key] of rows) if (!fields.has(key)) return;
+  }
+  built = true;
+  const container = $("groups");
+  const placed = new Set();
+  const sections = GROUPS.map(([title, rows]) => [title, rows.slice()]);
+  const others = [...fields.keys()].filter(
+    (k) => !GROUPS.some(([, rows]) => rows.some(([rk]) => rk === k)));
+  if (others.length) sections.push(["Other", others.map((k) => [k, k, ""])]);
+
+  for (const [title, rows] of sections) {
+    const sec = document.createElement("div");
+    sec.className = "group";
+    sec.innerHTML = `<h2>${title}</h2>`;
+    for (const [key, label, hint] of rows) {
+      if (!fields.has(key) || placed.has(key)) continue;
+      placed.add(key);
+      const f = fields.get(key);
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML =
+        `<label for="s-${key}">${label}<span class="hint">${hint}</span></label>` +
+        `<input type="range" id="s-${key}">` +
+        `<div class="val" id="v-${key}"></div>`;
+      sec.appendChild(row);
+      const slider = row.querySelector("input");
+      slider.min = f.min; slider.max = f.max; slider.step = step(f.min, f.max);
+      slider.value = f.value;
+      slider.addEventListener("input", () => {
+        f.dragging = true;
+        const v = parseFloat(slider.value);
+        f.value = v;
+        render(key);
+        writeValue(key, v);
+      });
+      const release = () => { f.dragging = false; };
+      slider.addEventListener("change", release);
+      slider.addEventListener("pointerup", release);
+      slider.addEventListener("blur", release);
+      f.slider = slider;
+      f.out = row.querySelector(".val");
+      render(key);
+    }
+    if (sec.children.length > 1) container.appendChild(sec);
+  }
+}
+
+function render(key) {
+  const f = fields.get(key);
+  if (!f || !f.out) return;
+  const span = f.max - f.min;
+  f.out.textContent = f.value.toFixed(span <= 2 ? 2 : span <= 20 ? 2 : 0);
+  f.out.classList.toggle("changed", Math.abs(f.value - f.def) > 1e-9);
+}
+
+function renderProfiles() {
+  const sel = $("profile");
+  sel.innerHTML = "";
+  for (const name of profiles) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name + (name === active && dirty ? " (unsaved)" : "");
+    if (name === active) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  $("delete").disabled = profiles.length <= 1;
+}
+
+const client = new NT4_Client(
+  window.location.hostname,
+  "controls-tuner",
+  () => {},
+  () => {},
+  (topic, _ts, value) => {
+    const name = topic.name;
+    if (name.startsWith(META)) {
+      const rest = name.slice(META.length);          // "<key>/<min|max|default>"
+      const slash = rest.lastIndexOf("/");
+      if (slash < 0) return;
+      const f = ensureField(rest.slice(0, slash));
+      const which = rest.slice(slash + 1);
+      if (which === "min") f.min = value;
+      else if (which === "max") f.max = value;
+      else if (which === "default") f.def = value;
+      build();
+    } else if (name.startsWith(VALUES)) {
+      const key = name.slice(VALUES.length);
+      const f = ensureField(key);
+      if (f.dragging) return;                        // don't fight an in-progress drag
+      f.value = value;
+      if (f.slider) f.slider.value = value;
+      render(key);
+      build();
+    } else if (name === "/Controls/profiles") {
+      profiles = Array.from(value); renderProfiles();
+    } else if (name === "/Controls/activeProfile") {
+      active = value; renderProfiles();
+    } else if (name === "/Controls/status/dirty") {
+      dirty = value; renderProfiles();
+    } else if (name === "/Controls/status/message") {
+      setStatus(value);
+    } else if (name === "/Controls/status/path") {
+      $("path").textContent = value;
+    }
+  },
+  () => {
+    $("conn").classList.add("on");
+    setStatus("Connected.");
+    for (const key of fields.keys()) client.publishTopic(VALUES + key, "double");
+    client.publishTopic("/Controls/activeProfile", "string");
+    client.publishTopic("/Controls/command/save", "boolean");
+    client.publishTopic("/Controls/command/reload", "boolean");
+    client.publishTopic("/Controls/command/create", "string");
+    client.publishTopic("/Controls/command/delete", "string");
+  },
+  () => { $("conn").classList.remove("on"); setStatus("Disconnected — retrying…"); }
+);
+
+client.subscribe(["/Controls/"], true, false, 0.05);
+client.connect();
+
+$("save").addEventListener("click", () => {
+  client.publishTopic("/Controls/command/save", "boolean");
+  client.addSample("/Controls/command/save", true);
+  setStatus("Saving…");
+});
+$("revert").addEventListener("click", () => {
+  client.publishTopic("/Controls/command/reload", "boolean");
+  client.addSample("/Controls/command/reload", true);
+  setStatus("Reloading from disk…");
+});
+$("create").addEventListener("click", () => {
+  const name = prompt("Name for the new profile (copies the current values):");
+  if (!name) return;
+  client.publishTopic("/Controls/command/create", "string");
+  client.addSample("/Controls/command/create", name.trim());
+});
+$("delete").addEventListener("click", () => {
+  if (!active || !confirm(`Delete profile "${active}"?`)) return;
+  client.publishTopic("/Controls/command/delete", "string");
+  client.addSample("/Controls/command/delete", active);
+});
+$("profile").addEventListener("change", (e) => {
+  client.publishTopic("/Controls/activeProfile", "string");
+  client.addSample("/Controls/activeProfile", e.target.value);
+});
+</script>
+</body>
+</html>

@@ -50,21 +50,9 @@ public final class Constants {
 
     public static final boolean keepInField = true;
 
-    /** Constants for driver controls */
-    public static class DriverControls {
-        /** Stick axis controls less than this amount are treated as 0. */
-        public static final double stickDeadband = 0.1;
-
-        /** Maximum Translational speed (in m/s) */
-        public static final double driverTranslationalMaxSpeed = 4.0;
-        /** Maximum Rotational speed (in rad/s) */
-        public static final double driverRotationalMaxSpeed = 4.0;
-
-        /** Maximum Translational speed while shooting (in m/s) */
-        public static final double driverTranslationalShootSpeed = 1.0;
-        /** Maximum Rotational speed while shooting (in rad/s) */
-        public static final double driverRotationalShootSpeed = 1.5;
-    }
+    // Driver control constants now live in frc.robot.controls.ControlsField, which defines their
+    // defaults and ranges. They are tuned live from the driver web interface and persisted to
+    // controls/profiles.json rather than being fixed at compile time.
 
     /**
      * Intake Constants
@@ -242,13 +230,8 @@ public final class Constants {
 
         public static final double odometryFrequency = 100.0;
 
-        /* Teleop limits */
-        public static final double forwardLimit = 10.0;
-        public static final double forwardTiltLimit = 1000.0;
-        public static final double leftTiltLimit = 1000.0;
-        public static final double rightTiltLimit = 1000.0;
-        public static final double backTiltLimit = 1000.0;
-        public static final double skidLimit = 1000.0;
+        // Teleop acceleration, tilt and skid limits are tunable; see
+        // frc.robot.controls.ControlsField.
 
         /* Module Specific Constants */
 

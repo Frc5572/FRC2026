@@ -204,6 +204,84 @@ task(eventDeploy) {
 }
 createVersionFile.dependsOn(eventDeploy)
 
+// Pull live-tuned driver controls off the robot before a deploy, so that whatever the drivers
+// tuned in the pit ends up in git rather than being overwritten by the checked-in copy.
+//
+// The robot serves its writable controls directory (on the USB stick, since the deploy directory
+// is read-only to lvuser) over HTTP on ControlsReal.WEB_PORT. Fetching over HTTP rather than SSH
+// keeps this working identically on every platform with no extra tooling.
+project.ext.controlsPort = 5801
+project.ext.controlsFile = file('src/main/deploy/controls/profiles.json')
+
+task(pullControls) {
+    group = 'Execution'
+    description = 'Fetch live-tuned driver controls from the roboRIO into src/main/deploy'
+    doLast {
+        if (!project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
+            println "Not running deploy task, skipping controls pull"
+            return
+        }
+
+        def team = project.frc.getTeamNumber()
+        def hosts = ["roborio-${team}-frc.local",
+                     "10.${(team / 100) as int}.${team % 100}.2",
+                     "172.22.11.2"]
+
+        def fetched = null
+        def usedHost = null
+        for (host in hosts) {
+            try {
+                def url = new URL("http://${host}:${controlsPort}/profiles.json")
+                def conn = url.openConnection()
+                conn.connectTimeout = 2000
+                conn.readTimeout = 3000
+                fetched = conn.inputStream.getText('UTF-8')
+                usedHost = host
+                break
+            } catch (Exception e) {
+                logger.info("controls pull: ${host} unreachable (${e.message})")
+            }
+        }
+
+        def branch = 'git branch --show-current'.execute().text.trim()
+        def onEventBranch = branch.startsWith('event')
+
+        if (fetched == null) {
+            def msg = "Could not reach the roboRIO on port ${controlsPort} (tried ${hosts.join(', ')})."
+            if (onEventBranch) {
+                // At an event, committing stale controls is the dangerous failure, so stop.
+                throw new GradleException("${msg}\nRefusing to deploy from event branch " +
+                    "'${branch}' without confirming the robot's live controls. " +
+                    "Power on the robot, or run with -PskipControlsPull to override.")
+            }
+            println "WARNING: ${msg} Keeping the checked-in controls profiles."
+            return
+        }
+
+        // Reject anything that is not parseable, rather than committing a corrupt file.
+        try {
+            new groovy.json.JsonSlurper().parseText(fetched)
+        } catch (Exception e) {
+            throw new GradleException("Controls pulled from ${usedHost} are not valid JSON: ${e.message}")
+        }
+
+        if (controlsFile.exists() && controlsFile.getText('UTF-8') == fetched) {
+            println "Controls already up to date with ${usedHost}"
+        } else {
+            controlsFile.parentFile.mkdirs()
+            controlsFile.write(fetched, 'UTF-8')
+            println "Pulled controls from ${usedHost} -> ${controlsFile}"
+        }
+    }
+    onlyIf {
+        !project.hasProperty('skipControlsPull')
+    }
+}
+
+// Ordering matters: pullControls must land before eventDeploy's "git add -A", so that controls
+// tuned in the pit are part of the event commit.
+eventDeploy.dependsOn(pullControls)
+
 tasks.register('generateLUTs', JavaExec) {
     group = 'Execution'
     description = 'Generate LUTs'
