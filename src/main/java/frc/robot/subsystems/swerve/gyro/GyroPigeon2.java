@@ -42,17 +42,17 @@ public class GyroPigeon2 implements GyroIO {
         double invert = Constants.Swerve.invertGyro ? -1.0 : 1.0;
 
         inputs.yaw = Rotation2d
-            .fromDegrees(invert * gyroYaw.getValue().in(edu.wpi.first.units.Units.Degrees));
+            .fromDegrees(invert * gyroYaw.getValue().in(edu.wpi.first.units.Units.Rotations));
         inputs.yawVelocityRadPerSec =
-            invert * yawVelocity.getValue().in(edu.wpi.first.units.Units.RadiansPerSecond);
+            invert * yawVelocity.getValue().in(edu.wpi.first.units.Units.RotationsPerSecond);
         inputs.pitch = Rotation2d
-            .fromDegrees(invert * gyroPitch.getValue().in(edu.wpi.first.units.Units.Degrees));
+            .fromDegrees(invert * gyroPitch.getValue().in(edu.wpi.first.units.Units.Rotations));
         inputs.pitchVelocityRadPerSec =
-            invert * pitchVelocity.getValue().in(edu.wpi.first.units.Units.RadiansPerSecond);
+            invert * pitchVelocity.getValue().in(edu.wpi.first.units.Units.RotationsPerSecond);
         inputs.roll = Rotation2d
-            .fromDegrees(invert * gyroRoll.getValue().in(edu.wpi.first.units.Units.Degrees));
+            .fromDegrees(invert * gyroRoll.getValue().in(edu.wpi.first.units.Units.Rotations));
         inputs.rollVelocityRadPerSec =
-            invert * rollVelocity.getValue().in(edu.wpi.first.units.Units.RadiansPerSecond);
+            invert * rollVelocity.getValue().in(edu.wpi.first.units.Units.RotationsPerSecond);
         inputs.yawRads = yawQueue.stream().mapToDouble(x -> invert * x).toArray();
         yawQueue.clear();
     }
