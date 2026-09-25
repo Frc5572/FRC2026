@@ -139,6 +139,7 @@ public final class Constants {
         public static final boolean isCanviore = true;
 
         public static final NavXComType navXID = NavXComType.kMXP_SPI;
+        public static final int pigeonID = 0; // needs to be changed
         public static final boolean invertGyro = true;
 
         /* Drivetrain Constants */
