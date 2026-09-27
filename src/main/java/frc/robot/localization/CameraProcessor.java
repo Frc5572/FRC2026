@@ -132,7 +132,7 @@ public class CameraProcessor {
             }
 
             return Result.ok(new VisionObservation(cameraPose, robotToCamera_, translationStdDev,
-                rotationStdDev, result.getTimestampSeconds()));
+                rotationStdDev, result.getTimestampSeconds(), adapter != null));
         }
 
         return Result.err(RejectionReason.SINGLE_TAG_ONLY);

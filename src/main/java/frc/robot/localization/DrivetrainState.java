@@ -28,7 +28,6 @@ import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.math.geometry.Rectangle;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 
 /** Total state of the robot */
 public class DrivetrainState {
@@ -56,7 +55,7 @@ public class DrivetrainState {
     public DrivetrainState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
         prevGyroReading = gyroYaw;
         SwerveDriveOdometry swerveOdometry =
-            new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
+            new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
             swerveOdometry, VecBuilder.fill(0.1, 0.1, 0.1), VecBuilder.fill(0.9, 0.9, 0.9));
     }
@@ -198,15 +197,33 @@ public class DrivetrainState {
     public void addVisionObservation(VisionObservation observations) {
         Pose2d robotPose =
             observations.cameraPose().plus(observations.robotToCamera().inverse()).toPose2d();
+        double rotationStdDev = observations.rotationStdDev();
+        if (observations.isTurret()) {
+            boolean isStationary = this.lastTimeMoved + 0.5 < observations.timestamp();
+            Logger.recordOutput("State/Camera/turret/isStationary", isStationary);
+            // Odometry is unreliable on the bump and the estimator's history is reset there every
+            // loop (see addOdometryObservation), so snap directly to the vision translation.
+            if (isStationary
+                || (RobotBase.isReal() && FieldConstants.isOnBump(getGlobalPoseEstimate()))) {
+                if (robotPose.getTranslation().getSquaredDistance(getGlobalPoseEstimate()
+                    .getTranslation()) > Math.pow(Units.inchesToMeters(3), 2)) {
+                    visionAdjustedOdometry.resetTranslation(robotPose.getTranslation());
+                }
+            }
+            // Turret angle timing is not good enough to trust heading while anything is moving.
+            if (!isStationary) {
+                rotationStdDev = 10000.0;
+            }
+        }
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
         visionAdjustedOdometry.addVisionMeasurement(robotPose, observations.timestamp(),
-            observations.getStdDev());
+            VecBuilder.fill(observations.translationStdDev(), observations.translationStdDev(),
+                rotationStdDev));
         Pose2d after = visionAdjustedOdometry.getEstimatedPosition();
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);
         Logger.recordOutput("State/VisionRobotPose", robotPose);
     }
-
 
     private static double stdDevMultiplier(List<PhotonTrackedTarget> targets, Pose3d cameraPose) {
         double totalDistance = 0.0;
