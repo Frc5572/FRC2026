@@ -6,6 +6,7 @@ import java.util.stream.IntStream;
 import org.jspecify.annotations.NullMarked;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
+import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -13,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.localization.CameraProcessor;
 import frc.robot.localization.CameraProcessor.Result;
 import frc.robot.localization.DrivetrainState;
@@ -49,6 +51,7 @@ public class Vision extends SubsystemBase {
     private final DrivetrainState state;
     private final Translation3d[][] cameraViz;
     private final String[] cameraVizKeys;
+    private final TurretCameraAdapter adapter;
     private final boolean[] cameraContributed;
     private final String[] cameraContributedKeys;
     private boolean seesMultitag;
@@ -62,11 +65,13 @@ public class Vision extends SubsystemBase {
      *
      * @param state shared swerve pose estimator to receive vision updates
      * @param io vision IO implementation responsible for acquiring camera results
+     * @param adapter turret camera adapter, which also records when hub tags are seen
      */
     public Vision(DrivetrainState state, VisionIO io, TurretCameraAdapter adapter) {
         super("Vision");
         this.io = io;
         this.state = state;
+        this.adapter = adapter;
         this.cameraInputs = IntStream.range(0, Constants.Vision.cameraConstants.length)
             .mapToObj((_x) -> new VisionIO.CameraInputs()).toArray(VisionIO.CameraInputs[]::new);
         this.cameraInputKeys = IntStream.range(0, Constants.Vision.cameraConstants.length)
@@ -112,6 +117,11 @@ public class Vision extends SubsystemBase {
             cameraViz[i] = new Translation3d[0];
         }
         for (var result : results) {
+            if (Constants.Vision.cameraConstants[result._0()].isTurret) {
+                boolean sawHubTag = result._1().targets.stream()
+                    .anyMatch(target -> FieldConstants.isHubTag(target.fiducialId));
+                adapter.recordFrame(MathSharedStore.getTimestamp(), sawHubTag);
+            }
             processorResults[result._0()] =
                 cameraProcessors[result._0()].process(result._1(), state.getFieldRelativeSpeeds());
             if (processorResults[result._0()] instanceof CameraProcessor.Err<?, ?> err) {

@@ -1,6 +1,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
@@ -582,6 +583,34 @@ public final class Constants {
         public static final double motorToTurretGearing = 3.0 * 3.0 * 4.04;
         public static final double cancoderToTurretGearing = 4.04;
         public static final double motorToCancoder = 3.0 * 3.0;
+
+        /**
+         * Seconds without a turret-camera frame containing a hub tag, while the estimate says hub
+         * tags should be in view at the current aim, before the turret searches for them.
+         */
+        public static final double searchDelay = 1.0;
+        /** Hub tags this many visible at the aim angle count as "should see tags". */
+        public static final int searchExpectedTags = 2;
+        /**
+         * Furthest tag distance counted as visible. Event logs have almost no accepted turret frames
+         * beyond ~5 m from the hub.
+         */
+        public static final double searchTagMaxDistance = 4.5;
+        /** Steepest tag viewing angle counted as visible. */
+        public static final Angle searchTagMaxIncidence = Degrees.of(60);
+        /** The indexer only feeds when the turret is within this of its setpoint. */
+        public static final Angle aimTolerance = Degrees.of(5);
+        /**
+         * Search sweep rate. Slow enough that turret-camera heading stays trustworthy (see
+         * {@code Vision.turretHeadingTimingStdDev}) so the first frames found can pull a drifted
+         * estimate back.
+         */
+        public static final AngularVelocity searchRate = RadiansPerSecond.of(1.0);
+        /** First sweep half-width around the normal aim, about one camera half-FOV. */
+        public static final Angle searchStartAmplitude = Degrees.of(45);
+        /** Half-width added at each sweep reversal. */
+        public static final Angle searchAmplitudeStep = Degrees.of(45);
+        public static final Angle searchMaxAmplitude = Degrees.of(135);
 
         public static final int TurretMotorID = 19;
         public static final int TurretCANcoderID1 = 5;

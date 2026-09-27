@@ -216,10 +216,11 @@ public class DrivetrainState {
                     visionAdjustedOdometry.resetTranslation(robotPose.getTranslation());
                 }
             }
-            // Turret angle timing error grows with turret speed; see turretHeadingTimingStdDev.
-            if (!stationaryReset) {
-                rotationStdDev = observations.turretHeadingStdDev();
-            }
+            // Turret angle timing error grows with turret speed (turretHeadingTimingStdDev). When
+            // stationary, use whichever of the two std-devs is tighter.
+            rotationStdDev = stationaryReset
+                ? Math.min(rotationStdDev, observations.turretHeadingStdDev())
+                : observations.turretHeadingStdDev();
         }
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
         visionAdjustedOdometry.addVisionMeasurement(robotPose, observations.timestamp(),

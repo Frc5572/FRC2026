@@ -19,6 +19,9 @@ public class TurretCameraAdapter {
         TimeInterpolatableBuffer.createBuffer((a, b, t) -> a || b, BUFFER_SECONDS);
 
 
+    private double lastFrameTime = Double.NEGATIVE_INFINITY;
+    private double lastHubTagTime = Double.NEGATIVE_INFINITY;
+
     public TurretCameraAdapter(Translation3d turretCenter) {
         this.turretCenter = turretCenter;
     }
@@ -33,6 +36,29 @@ public class TurretCameraAdapter {
     public void recordTurretAngle(double timestamp, Rotation2d angle, boolean whipping) {
         angleBuffer.addSample(timestamp, angle);
         whippingBuffer.addSample(timestamp, whipping);
+    }
+
+    /**
+     * Records that a turret-camera frame arrived, whether or not it was accepted for fusion.
+     *
+     * @param arrivalTime loop time the frame was received, in seconds
+     * @param sawHubTag whether the frame contained any hub tag
+     */
+    public void recordFrame(double arrivalTime, boolean sawHubTag) {
+        lastFrameTime = Math.max(lastFrameTime, arrivalTime);
+        if (sawHubTag) {
+            lastHubTagTime = Math.max(lastHubTagTime, arrivalTime);
+        }
+    }
+
+    /** Loop time the last turret-camera frame arrived. */
+    public double getLastFrameTime() {
+        return lastFrameTime;
+    }
+
+    /** Loop time the last turret-camera frame containing a hub tag arrived. */
+    public double getLastHubTagTime() {
+        return lastHubTagTime;
     }
 
     /** Whether the turret was whipping around at {@code timestamp}. */

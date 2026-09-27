@@ -54,12 +54,17 @@ public class CommandFactory {
         }, shooter, turret);
     }
 
-    /** Shoot at a given target. */
+    /**
+     * Shoot at a given target. Does not command the turret, but stops any turret search and only
+     * feeds while the turret is on its setpoint.
+     */
     public static Command shoot(TargetingState state, Shooter shooter, Indexer indexer,
-        AdjustableHood hood) {
+        AdjustableHood hood, Turret turret) {
         return Commands.parallel(shooter.shoot(() -> state.getDesiredFlywheelSpeed()),
             hood.setGoal(() -> Degrees.of(state.getDesiredHoodAngle())),
-            indexer.runSpindexer(() -> state.isOkayToShoot()));
+            indexer.runSpindexer(() -> state.isOkayToShoot() && turret.isAimed()))
+            .beforeStarting(() -> turret.setShooting(true))
+            .finallyDo(() -> turret.setShooting(false));
     }
 
     /** Point turret at hub. */
