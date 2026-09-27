@@ -76,7 +76,17 @@ public class CameraProcessor {
             Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
         double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
 
+        double turretHeadingStdDev = 0.0;
         if (adapter != null) {
+            if (adapter.isWhippingAt(result.getTimestampSeconds())) {
+                return Result.err(RejectionReason.TURRET_WHIPPING);
+            }
+            double turretRate = adapter.getRateAt(result.getTimestampSeconds());
+            turretHeadingStdDev = Math.hypot(Constants.Vision.turretHeadingStdDevFloor,
+                Constants.Vision.turretHeadingTimingStdDev * turretRate);
+            Logger.recordOutput("State/Camera/" + cameraConstants.name + "/turretRate", turretRate);
+            Logger.recordOutput("State/Camera/" + cameraConstants.name + "/turretHeadingStdDev",
+                turretHeadingStdDev);
             var maybeRobotToCamera =
                 adapter.getRobotToCameraAt(robotToCamera_, result.getTimestampSeconds());
             if (maybeRobotToCamera.isEmpty()) {
@@ -132,7 +142,8 @@ public class CameraProcessor {
             }
 
             return Result.ok(new VisionObservation(cameraPose, robotToCamera_, translationStdDev,
-                rotationStdDev, result.getTimestampSeconds(), adapter != null));
+                rotationStdDev, result.getTimestampSeconds(), adapter != null,
+                turretHeadingStdDev));
         }
 
         return Result.err(RejectionReason.SINGLE_TAG_ONLY);

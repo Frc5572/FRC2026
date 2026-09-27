@@ -322,6 +322,20 @@ public final class Constants {
         public static final Pose3d turretCenter =
             new Pose3d(new Translation3d(-0.155575, -0.13335, 0), Rotation3d.kZero);
 
+        /**
+         * While the robot and turret are stationary, fuse turret-camera heading at the camera's
+         * configured {@code rotationError} and snap translation to vision, instead of using the
+         * motion-dependent heading model below.
+         */
+        public static final boolean turretStationaryReset = true;
+        /** Turret-camera heading std-dev (radians) with the turret still. */
+        public static final double turretHeadingStdDevFloor = Units.degreesToRadians(1.0);
+        /**
+         * Effective timing uncertainty (seconds) of the turret angle at a frame's capture time.
+         * Heading std-dev grows by this times the turret's angular rate.
+         */
+        public static final double turretHeadingTimingStdDev = 0.010;
+
         public static final Pose3d turretRight = new Pose3d(-0.18097, -0.27012, 0.51406,
             new Rotation3d(0, Units.degreesToRadians(-22.115), 0.0))
                 .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));

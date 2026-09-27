@@ -201,18 +201,19 @@ public class DrivetrainState {
         if (observations.isTurret()) {
             boolean isStationary = this.lastTimeMoved + 0.5 < observations.timestamp();
             Logger.recordOutput("State/Camera/turret/isStationary", isStationary);
+            boolean stationaryReset = Constants.Vision.turretStationaryReset && isStationary;
             // Odometry is unreliable on the bump and the estimator's history is reset there every
             // loop (see addOdometryObservation), so snap directly to the vision translation.
-            if (isStationary
+            if (stationaryReset
                 || (RobotBase.isReal() && FieldConstants.isOnBump(getGlobalPoseEstimate()))) {
                 if (robotPose.getTranslation().getSquaredDistance(getGlobalPoseEstimate()
                     .getTranslation()) > Math.pow(Units.inchesToMeters(3), 2)) {
                     visionAdjustedOdometry.resetTranslation(robotPose.getTranslation());
                 }
             }
-            // Turret angle timing is not good enough to trust heading while anything is moving.
-            if (!isStationary) {
-                rotationStdDev = 10000.0;
+            // Turret angle timing error grows with turret speed; see turretHeadingTimingStdDev.
+            if (!stationaryReset) {
+                rotationStdDev = observations.turretHeadingStdDev();
             }
         }
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();

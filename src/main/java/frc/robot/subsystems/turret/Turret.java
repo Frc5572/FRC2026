@@ -1,6 +1,7 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -11,7 +12,9 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathSharedStore;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,6 +35,14 @@ public class Turret extends SubsystemBase {
         new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
     private final DrivetrainState state;
 
+    /** Last commanded robot-relative setpoint in rotations, or NaN if not position-controlled. */
+    private double lastSetpoint = Double.NaN;
+    private boolean whipping = false;
+    private double whipStart = 0.0;
+    private double prevAngle = Double.NaN;
+    private double prevAngleTime = 0.0;
+    private final LinearFilter rateFilter = LinearFilter.movingAverage(5);
+
     /**
      * Creates a new Turret subsystem.
      *
@@ -51,8 +62,39 @@ public class Turret extends SubsystemBase {
         Constants.Turret.pid.ifDirty(io::setPID);
 
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
+        double now = MathSharedStore.getTimestamp();
+        double rate = 0.0;
+        if (!Double.isNaN(prevAngle) && now > prevAngleTime) {
+            rate = rateFilter
+                .calculate(Math.abs(inputs.relativeAngle - prevAngle) / (now - prevAngleTime));
+        }
+        prevAngle = inputs.relativeAngle;
+        prevAngleTime = now;
+        // The whip ends when the turret reaches its setpoint, stops moving (it may never reach an
+        // unreachable or stale setpoint), or runs out of time.
+        if (whipping && (Double.isNaN(lastSetpoint)
+            || Math.abs(lastSetpoint - inputs.relativeAngle) < WHIP_SETTLED.in(Rotations)
+            || (now - whipStart > WHIP_GRACE && rate < WHIP_STOPPED.in(RotationsPerSecond))
+            || now - whipStart > WHIP_TIMEOUT)) {
+            whipping = false;
+        }
+        Logger.recordOutput("Turret/isWhipping", whipping);
         adapter.recordTurretAngle(MathSharedStore.getTimestamp(),
-            new Rotation2d(Rotations.of(inputs.relativeAngle)));
+            new Rotation2d(Rotations.of(inputs.relativeAngle)), whipping);
+    }
+
+    private static final Angle WHIP_SETTLED = Degrees.of(10);
+    private static final AngularVelocity WHIP_STOPPED = DegreesPerSecond.of(45);
+    /** Seconds after a setpoint wrap before a stopped turret ends the whip. */
+    private static final double WHIP_GRACE = 0.2;
+    private static final double WHIP_TIMEOUT = 1.5;
+
+    /**
+     * Whether the turret is swinging the long way around because its setpoint wrapped past a travel
+     * limit. Shooting and turret-camera vision should be paused while this is true.
+     */
+    public boolean isWhipping() {
+        return whipping;
     }
 
     public Rotation2d getTurretHeading() {
@@ -77,6 +119,7 @@ public class Turret extends SubsystemBase {
     }
 
     public void setVoltageIO(DoubleSupplier voltage) {
+        lastSetpoint = Double.NaN;
         io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
     }
 
@@ -93,6 +136,12 @@ public class Turret extends SubsystemBase {
         if (normalized.gt(Constants.Turret.maxAngle)) {
             normalized = normalized.minus(Rotations.of(1));
         }
+        double setpoint = normalized.in(Rotations);
+        if (!Double.isNaN(lastSetpoint) && Math.abs(setpoint - lastSetpoint) > 0.5) {
+            whipping = true;
+            whipStart = MathSharedStore.getTimestamp();
+        }
+        lastSetpoint = setpoint;
         io.setTargetAngle(normalized, velocity);
         return true;
     }
@@ -129,6 +178,7 @@ public class Turret extends SubsystemBase {
         return Commands.sequence(
             // Reset data
             this.runOnce(() -> {
+                lastSetpoint = Double.NaN;
                 velocitySamples.clear();
                 voltageSamples.clear();
             }),

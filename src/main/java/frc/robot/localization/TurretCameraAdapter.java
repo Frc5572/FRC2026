@@ -10,17 +10,47 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 /** Turret Camera Adapter */
 public class TurretCameraAdapter {
     private static final double BUFFER_SECONDS = 1.5;
+    private static final double RATE_HALF_WINDOW = 0.04;
     private final Translation3d turretCenter;
     private final TimeInterpolatableBuffer<Rotation2d> angleBuffer =
         TimeInterpolatableBuffer.createBuffer(BUFFER_SECONDS);
+    /** Between two samples, a frame counts as whipping if either neighbor was. */
+    private final TimeInterpolatableBuffer<Boolean> whippingBuffer =
+        TimeInterpolatableBuffer.createBuffer((a, b, t) -> a || b, BUFFER_SECONDS);
 
 
     public TurretCameraAdapter(Translation3d turretCenter) {
         this.turretCenter = turretCenter;
     }
 
-    public void recordTurretAngle(double timestamp, Rotation2d angle) {
+    /**
+     * Records a turret sample.
+     *
+     * @param timestamp sample time in seconds
+     * @param angle robot-relative turret angle
+     * @param whipping whether the turret is swinging the long way around to unwrap
+     */
+    public void recordTurretAngle(double timestamp, Rotation2d angle, boolean whipping) {
         angleBuffer.addSample(timestamp, angle);
+        whippingBuffer.addSample(timestamp, whipping);
+    }
+
+    /** Whether the turret was whipping around at {@code timestamp}. */
+    boolean isWhippingAt(double timestamp) {
+        return whippingBuffer.getSample(timestamp).orElse(false);
+    }
+
+    /**
+     * Turret angular rate (rad/s) around {@code timestamp}. Vision latency means samples after the
+     * frame are normally available, so this is a central difference.
+     */
+    double getRateAt(double timestamp) {
+        var before = angleBuffer.getSample(timestamp - RATE_HALF_WINDOW);
+        var after = angleBuffer.getSample(timestamp + RATE_HALF_WINDOW);
+        if (before.isEmpty() || after.isEmpty()) {
+            return 0.0;
+        }
+        return after.get().minus(before.get()).getRadians() / (2 * RATE_HALF_WINDOW);
     }
 
     Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {

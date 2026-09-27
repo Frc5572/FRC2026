@@ -9,11 +9,13 @@ import edu.wpi.first.math.numbers.N3;
 /**
  * Vision Observation Record
  *
- * @param isTurret whether the observation came from a turret-mounted camera, whose rotation is only
- *        trustworthy while the robot and turret are stationary
+ * @param isTurret whether the observation came from a turret-mounted camera
+ * @param turretHeadingStdDev heading std-dev (radians) from the turret motion model; only
+ *        meaningful when {@code isTurret} is true
  */
 public record VisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
-    double translationStdDev, double rotationStdDev, double timestamp, boolean isTurret) {
+    double translationStdDev, double rotationStdDev, double timestamp, boolean isTurret,
+    double turretHeadingStdDev) {
 
     public Vector<N3> getStdDev() {
         return VecBuilder.fill(translationStdDev, translationStdDev, rotationStdDev);
