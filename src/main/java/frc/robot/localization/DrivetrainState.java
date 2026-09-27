@@ -26,7 +26,9 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.math.geometry.Penetration;
 import frc.robot.math.geometry.Rectangle;
+import frc.robot.math.geometry.SeparatingAxis;
 import frc.robot.subsystems.swerve.Swerve;
 
 /** Total state of the robot */
@@ -120,7 +122,7 @@ public class DrivetrainState {
             Logger.recordOutput("State/isOnBump", false);
         }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
-        if (Constants.keepInField) {
+        if (Constants.keepInField || Constants.keepOutOfHubs) {
             limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
         }
     }
@@ -203,9 +205,12 @@ public class DrivetrainState {
             Logger.recordOutput("State/Camera/turret/isStationary", isStationary);
             boolean stationaryReset = Constants.Vision.turretStationaryReset && isStationary;
             // Odometry is unreliable on the bump and the estimator's history is reset there every
-            // loop (see addOdometryObservation), so snap directly to the vision translation.
-            if (stationaryReset
-                || (RobotBase.isReal() && FieldConstants.isOnBump(getGlobalPoseEstimate()))) {
+            // loop (see addOdometryObservation), so snap directly to the vision translation. Check
+            // the vision pose too: slipping wheels can carry the estimate out of the bump area
+            // while the robot is still on it.
+            boolean onBump = FieldConstants.isOnBump(getGlobalPoseEstimate())
+                || FieldConstants.isOnBump(robotPose);
+            if (stationaryReset || (RobotBase.isReal() && onBump)) {
                 if (robotPose.getTranslation().getSquaredDistance(getGlobalPoseEstimate()
                     .getTranslation()) > Math.pow(Units.inchesToMeters(3), 2)) {
                     visionAdjustedOdometry.resetTranslation(robotPose.getTranslation());
@@ -263,8 +268,17 @@ public class DrivetrainState {
     private final Rectangle robotRect = new Rectangle("pose", Pose2d.kZero,
         Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);
 
+    private final Rectangle[] hubRects = new Rectangle[] {
+        new Rectangle("hub", new Pose2d(FieldConstants.Hub.centerHub, Rotation2d.kZero),
+            FieldConstants.Hub.width, FieldConstants.Hub.width),
+        new Rectangle("oppHub",
+            new Pose2d(FieldConstants.fieldLength - FieldConstants.Hub.centerHub.getX(),
+                FieldConstants.Hub.centerHub.getY(), Rotation2d.kZero),
+            FieldConstants.Hub.width, FieldConstants.Hub.width)};
+    private final Penetration hubPenetration = new Penetration("HubPen");
+
     /**
-     * limits position of a given pose
+     * Limits the pose so the robot's bumpers stay inside the field walls and outside the hubs.
      *
      * @param pose new pose of robot reactangle
      * @param resetPose reset pose
@@ -273,21 +287,37 @@ public class DrivetrainState {
         robotRect.setPose(pose);
         double offsetX = 0.0;
         double offsetY = 0.0;
-        var corners = robotRect.getCorners();
+        if (Constants.keepOutOfHubs) {
+            for (var hub : hubRects) {
+                if (SeparatingAxis.solve(robotRect, hub, hubPenetration)) {
+                    // The normal points from the hub toward the robot.
+                    offsetX += hubPenetration.getXDir() * hubPenetration.getDepth();
+                    offsetY += hubPenetration.getYDir() * hubPenetration.getDepth();
+                    Logger.recordOutput("State/hubPushout", hubPenetration.getDepth());
+                }
+            }
+            robotRect.setPose(new Pose2d(pose.getX() + offsetX, pose.getY() + offsetY,
+                pose.getRotation()));
+        }
+        double wallOffsetX = 0.0;
+        double wallOffsetY = 0.0;
+        var corners = Constants.keepInField ? robotRect.getCorners() : new Translation2d[0];
         for (var corner : corners) {
             if (corner.getX() < 0) {
-                offsetX = Math.max(offsetX, -corner.getX());
+                wallOffsetX = Math.max(wallOffsetX, -corner.getX());
             }
             if (corner.getX() > FieldConstants.fieldLength) {
-                offsetX = Math.min(offsetX, FieldConstants.fieldLength - corner.getX());
+                wallOffsetX = Math.min(wallOffsetX, FieldConstants.fieldLength - corner.getX());
             }
             if (corner.getY() < 0) {
-                offsetY = Math.max(offsetY, -corner.getY());
+                wallOffsetY = Math.max(wallOffsetY, -corner.getY());
             }
             if (corner.getY() > FieldConstants.fieldWidth) {
-                offsetY = Math.min(offsetY, FieldConstants.fieldWidth - corner.getY());
+                wallOffsetY = Math.min(wallOffsetY, FieldConstants.fieldWidth - corner.getY());
             }
         }
+        offsetX += wallOffsetX;
+        offsetY += wallOffsetY;
 
         if (Math.abs(offsetX) > 1e-3 || Math.abs(offsetY) > 1e-3) {
             resetPose.accept(

@@ -305,6 +305,21 @@ public class FieldConstants {
             || oppBumpArea.contains(pose.getTranslation());
     }
 
+    /** Return true if the point is inside either hub's footprint, where the robot cannot be. */
+    public static boolean isInsideHub(Translation2d point) {
+        AABB hub = new AABB(Hub.centerHub, Hub.width, Hub.width);
+        AABB oppHub =
+            new AABB(new Translation2d(fieldLength - Hub.centerHub.getX(), Hub.centerHub.getY()),
+                Hub.width, Hub.width);
+        return hub.contains(point) || oppHub.contains(point);
+    }
+
+    /** Return true if the point is within the field perimeter. */
+    public static boolean isInField(Translation2d point) {
+        return point.getX() >= 0 && point.getX() <= fieldLength && point.getY() >= 0
+            && point.getY() <= fieldWidth;
+    }
+
     /**
      * Geometry for the left bump and common reference points.
      *

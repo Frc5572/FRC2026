@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -123,6 +124,15 @@ public class CameraProcessor {
             Pose3d estRobotPose = cameraPose.plus(robotToCamera_.inverse());
             Logger.recordOutput("State/Camera/" + cameraConstants.name + "/estRobotPose",
                 estRobotPose);
+
+            // Physically impossible poses; these show up when the robot is tilted on the bump.
+            var estTranslation = estRobotPose.toPose2d().getTranslation();
+            if (!FieldConstants.isInField(estTranslation)) {
+                return Result.err(RejectionReason.OUTSIDE_FIELD);
+            }
+            if (FieldConstants.isInsideHub(estTranslation)) {
+                return Result.err(RejectionReason.INSIDE_HUB);
+            }
 
             double stdDevMultiplier = stdDevMultiplier(result.targets, cameraPose);
             double translationStdDev =

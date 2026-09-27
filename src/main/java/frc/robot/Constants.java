@@ -50,6 +50,9 @@ public final class Constants {
 
     public static final boolean keepInField = true;
 
+    /** Push the pose estimate out of the hubs, which the robot cannot drive through. */
+    public static final boolean keepOutOfHubs = true;
+
     /** Constants for driver controls */
     public static class DriverControls {
         /** Stick axis controls less than this amount are treated as 0. */
