@@ -142,10 +142,15 @@ wpi.java.configureTestTasks(test)
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
+    // JDK 17 otherwise reads sources in the locale's charset (US-ASCII in CI's container)
+    options.encoding = 'UTF-8'
 }
 
 javadoc {
     configure(options) {
+        options.encoding = 'UTF-8'
+        options.docEncoding = 'UTF-8'
+        options.charSet = 'UTF-8'
         options.addBooleanOption("-allow-script-in-comments",true)
         options.addStringOption("link", "https://github.wpilib.org/allwpilib/docs/release/java/")
         options.header = "<script type=\"text/javascript\" async" +
