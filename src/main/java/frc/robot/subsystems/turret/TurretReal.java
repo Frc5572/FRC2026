@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Rotations;
+import java.util.Queue;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -18,11 +19,14 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.util.PhoenixSignals;
 import frc.robot.util.tunable.PIDConstants;
 
 /** turret hardware */
 public class TurretReal implements TurretIO {
+    private Queue<Double> timestampQueue;
+    private Queue<Double> angleRotations;
     private TalonFX turretMotor = new TalonFX(Constants.Turret.TurretMotorID);
     private TalonFXConfiguration turretConfig = new TalonFXConfiguration();
 
@@ -38,7 +42,7 @@ public class TurretReal implements TurretIO {
     private final VoltageOut voltage = new VoltageOut(0.0);
 
     /** Real Turret Implementation */
-    public TurretReal() {
+    public TurretReal(PhoenixOdometryThread odometryThread) {
         // PID and feedforward
 
         Constants.Turret.pid.apply(turretConfig.Slot0);
@@ -58,12 +62,15 @@ public class TurretReal implements TurretIO {
         turretMotor.setNeutralMode(NeutralModeValue.Brake);
         resetPosition(Degree.of(0));
 
-        BaseStatusSignal.setUpdateFrequencyForAll(50, turretPosition, turretVoltage, turretCurrent,
-            canCoder2Pos);
+        BaseStatusSignal.setUpdateFrequencyForAll(Constants.Swerve.odometryFrequency,
+            turretPosition, turretVoltage, turretCurrent, canCoder2Pos);
         PhoenixSignals.registerSignals(false, turretPosition, turretVoltage, turretCurrent,
             canCoder2Pos);
         ParentDevice.optimizeBusUtilizationForAll(turretCANcoder2, turretMotor);
-    }
+
+        this.angleRotations = odometryThread.registerSignal(turretPosition.clone());
+        this.timestampQueue = odometryThread.makeTimestampQueue();
+    };
 
     @Override
     public void setTurretVoltage(Voltage volts) {
@@ -73,13 +80,13 @@ public class TurretReal implements TurretIO {
     @Override
     public void updateInputs(TurretInputs inputs) {
         inputs.gear2AbsoluteAngle = canCoder2Pos.getValue().unaryMinus();
-
         inputs.relativeAngle = turretPosition.getValue().unaryMinus().in(Rotations);
         inputs.voltage = turretVoltage.getValue();
         inputs.current = turretCurrent.getValue();
         inputs.velocity = turretVelocity.getValue();
-
         inputs.positionValue = turretPosition.getValueAsDouble();
+        inputs.odometryTimestamps = this.timestampQueue.stream().mapToDouble(x -> x).toArray();
+        inputs.odometryAngleRotations = this.angleRotations.stream().mapToDouble(x -> x).toArray();
     }
 
     @Override

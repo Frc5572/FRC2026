@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
-import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
@@ -51,8 +50,10 @@ public class Turret extends SubsystemBase {
         Constants.Turret.pid.ifDirty(io::setPID);
 
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
-        adapter.recordTurretAngle(MathSharedStore.getTimestamp(),
-            new Rotation2d(Rotations.of(inputs.relativeAngle)));
+        for (Double timestamp : inputs.odometryTimestamps) {
+            adapter.recordTurretAngle(timestamp,
+                new Rotation2d(Rotations.of(inputs.relativeAngle)));
+        }
     }
 
     public Rotation2d getTurretHeading() {

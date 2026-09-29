@@ -107,7 +107,7 @@ public class PhoenixOdometryThread extends Thread {
      * @return queue containing sampled signal values
      */
     public Queue<Double> registerSignal(StatusSignal<?> signal) {
-        Queue<Double> queue = new ArrayBlockingQueue<>(20);
+        Queue<Double> queue = new ArrayBlockingQueue<>(100);
         signalsLock.lock();
         odometryLock.lock();
         try {
@@ -133,7 +133,7 @@ public class PhoenixOdometryThread extends Thread {
      * @return queue containing sampled values
      */
     public Queue<Double> registerSignal(DoubleSupplier signal) {
-        Queue<Double> queue = new ArrayBlockingQueue<>(20);
+        Queue<Double> queue = new ArrayBlockingQueue<>(100);
         signalsLock.lock();
         odometryLock.lock();
         try {
@@ -156,7 +156,7 @@ public class PhoenixOdometryThread extends Thread {
      * @return queue of sample timestamps (seconds)
      */
     public Queue<Double> makeTimestampQueue() {
-        Queue<Double> queue = new ArrayBlockingQueue<>(20);
+        Queue<Double> queue = new ArrayBlockingQueue<>(100);
         odometryLock.lock();
         try {
             timestampQueues.add(queue);

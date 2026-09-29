@@ -106,15 +106,15 @@ public final class Swerve extends SubsystemBase {
      * @param swerve the swerve drive subsystem instance
      * @param drivetrainState the drivetrain state estimator associated with the swerve subsystem
      */
+
     public static record Bundle(Swerve swerve, DrivetrainState drivetrainState) {
     }
 
     /** Creates Swerve and DrivetrainState static factory */
     public static Bundle create(Function<PhoenixOdometryThread, SwerveIO> swerveIo,
         Function<PhoenixOdometryThread, GyroIO> gyroIo,
-        BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn) {
-        Lock localLock = new ReentrantLock();
-        PhoenixOdometryThread localOdometryThread = new PhoenixOdometryThread(localLock);
+        BiFunction<Integer, PhoenixOdometryThread, SwerveModuleIO> moduleIoFn,
+        ReentrantLock localLock, PhoenixOdometryThread localOdometryThread) {
 
         GyroIO localGyro = gyroIo.apply(localOdometryThread);
         GyroInputsAutoLogged localGyroInputs = new GyroInputsAutoLogged();
@@ -125,8 +125,6 @@ public final class Swerve extends SubsystemBase {
         SwerveModule[] localModules = IntStream.range(0, Constants.Swerve.modulesConstants.length)
             .mapToObj(i -> new SwerveModule(i, moduleIoFn.apply(i, localOdometryThread)))
             .toArray(SwerveModule[]::new);
-
-        localOdometryThread.start();
 
         localLock.lock();
         SwerveModulePosition[] initPositions = new SwerveModulePosition[localModules.length];

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
@@ -54,6 +55,7 @@ import frc.robot.subsystems.swerve.gyro.GyroIOEmpty;
 import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
+import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
@@ -105,21 +107,26 @@ public final class RobotContainer {
     // new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
     // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
 
+    /* Odometry Thread and Locks */
+    private ReentrantLock odometryLock = new ReentrantLock();
+    private PhoenixOdometryThread odometryThread = new PhoenixOdometryThread(odometryLock);
+
     /**
      * Robot Container
      *
      * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
+        odometryThread.start();
         switch (runtimeType) {
             case kReal:
                 sim = null;
-                Swerve.Bundle realBundle =
-                    Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
+                Swerve.Bundle realBundle = Swerve.create(SwerveReal::new, GyroNavX2::new,
+                    SwerveModuleReal::new, odometryLock, odometryThread);
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
-                turret = new Turret(new TurretReal(), swerve.state);
+                turret = new Turret(new TurretReal(odometryThread), swerve.state);
                 vision = new Vision(swerve.state, new VisionReal(), turret.adapter);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
@@ -143,8 +150,9 @@ public final class RobotContainer {
                         sim.indexer.addFuel();
                     });
                 FuelSim.getInstance().start();
-                Swerve.Bundle simBundle = Swerve.create(sim.swerveDrive::simProvider,
-                    sim.swerveDrive::gyroProvider, sim.swerveDrive::moduleProvider);
+                Swerve.Bundle simBundle =
+                    Swerve.create(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
+                        sim.swerveDrive::moduleProvider, odometryLock, odometryThread);
                 this.drivetrainState = simBundle.drivetrainState();
                 this.swerve = simBundle.swerve();
 
@@ -164,8 +172,8 @@ public final class RobotContainer {
                 break;
             default:
                 sim = null;
-                Swerve.Bundle defaultBundle =
-                    Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
+                Swerve.Bundle defaultBundle = Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new,
+                    SwerveModuleIOEmpty::new, odometryLock, odometryThread);
                 this.drivetrainState = defaultBundle.drivetrainState();
                 this.swerve = defaultBundle.swerve();
 

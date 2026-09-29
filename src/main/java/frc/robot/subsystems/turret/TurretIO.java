@@ -30,6 +30,8 @@ public interface TurretIO {
         public Voltage voltage = Volts.of(0);
         public Current current = Amps.of(0);
         public AngularVelocity velocity = RadiansPerSecond.of(0);
+        public double[] odometryTimestamps = new double[0];
+        public double[] odometryAngleRotations = new double[0];
     }
 
     public void setTurretVoltage(Voltage volts);
