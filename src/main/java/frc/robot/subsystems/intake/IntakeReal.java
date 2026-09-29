@@ -10,6 +10,8 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 import frc.robot.util.PhoenixSignals;
@@ -26,6 +28,12 @@ public class IntakeReal implements IntakeIO {
     private DigitalInput limitSwitchMin = new DigitalInput(Constants.IntakeConstants.limitSwitchID);
     private final StatusSignal<Angle> rightMotorPosition = hopperRightMotor.getPosition();
     private final StatusSignal<Angle> leftMotorPosition = hopperLeftMotor.getPosition();
+    private final StatusSignal<Voltage> leftMotorVoltage = hopperLeftMotor.getMotorVoltage();
+    private final StatusSignal<Voltage> rightMotorVoltage = hopperRightMotor.getMotorVoltage();
+    private final StatusSignal<Current> leftMotorCurrent = hopperLeftMotor.getStatorCurrent();
+    private final StatusSignal<Current> rightMotorCurrent = hopperRightMotor.getStatorCurrent();
+    private final StatusSignal<Integer> leftMotorFaults = hopperLeftMotor.getFaultField();
+    private final StatusSignal<Integer> rightMotorFaults = hopperRightMotor.getFaultField();
 
     private boolean intakeConnected = false;
 
@@ -69,7 +77,9 @@ public class IntakeReal implements IntakeIO {
         intakeMotor2
             .setControl(new Follower(intakeMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
-        PhoenixSignals.registerSignals(false, rightMotorPosition, leftMotorPosition);
+        PhoenixSignals.registerSignals(false, rightMotorPosition, leftMotorPosition,
+            leftMotorVoltage, rightMotorVoltage, leftMotorCurrent, rightMotorCurrent,
+            leftMotorFaults, rightMotorFaults);
     }
 
 
@@ -83,6 +93,16 @@ public class IntakeReal implements IntakeIO {
         inputs.rightHopperPositionRotations = rightMotorPosition.getValue().in(Rotations);
         inputs.leftHopperPositionRotations = leftMotorPosition.getValue().in(Rotations);
         inputs.limitSwitch = limitSwitchMin.get();
+        inputs.leftHopperAppliedVolts = leftMotorVoltage.getValueAsDouble();
+        inputs.rightHopperAppliedVolts = rightMotorVoltage.getValueAsDouble();
+        inputs.leftHopperStatorCurrent = leftMotorCurrent.getValueAsDouble();
+        inputs.rightHopperStatorCurrent = rightMotorCurrent.getValueAsDouble();
+        inputs.leftHopperFaults = leftMotorFaults.getValue();
+        inputs.rightHopperFaults = rightMotorFaults.getValue();
+        inputs.leftHopperConnected = hopperLeftMotor.isConnected();
+        inputs.rightHopperConnected = hopperRightMotor.isConnected();
+        inputs.leftHopperReset = hopperLeftMotor.hasResetOccurred();
+        inputs.rightHopperReset = hopperRightMotor.hasResetOccurred();
 
         inputs.intakeMotorConnected = intakeConnected;
         if (intakeConnected && intakeMotor != null) {

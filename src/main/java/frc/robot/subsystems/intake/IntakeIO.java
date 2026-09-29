@@ -21,6 +21,20 @@ public interface IntakeIO {
         public Distance leftHopperPosition = Meters.of(leftHopperPositionRotations);
         public Distance rightHopperPosition = Meters.of(rightHopperPositionRotations);
 
+        /** Voltage the hopper motors are actually applying. */
+        public double leftHopperAppliedVolts = 0;
+        public double rightHopperAppliedVolts = 0;
+        public double leftHopperStatorCurrent = 0;
+        public double rightHopperStatorCurrent = 0;
+        /** Raw fault bitfields; nonzero means the motor may be refusing to drive. */
+        public int leftHopperFaults = 0;
+        public int rightHopperFaults = 0;
+        public boolean leftHopperConnected = false;
+        public boolean rightHopperConnected = false;
+        /** True on the tick a hopper motor controller is seen to have rebooted. */
+        public boolean leftHopperReset = false;
+        public boolean rightHopperReset = false;
+
         public double intakeDutyCycle = 0;
         public boolean limitSwitch = false;
         public boolean intakeMotorConnected = false;
