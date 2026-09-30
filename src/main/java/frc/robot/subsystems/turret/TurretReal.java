@@ -70,7 +70,7 @@ public class TurretReal implements TurretIO {
 
         this.angleRotations = odometryThread.registerSignal(turretPosition.clone());
         this.timestampQueue = odometryThread.makeTimestampQueue();
-    };
+    }
 
     @Override
     public void setTurretVoltage(Voltage volts) {
