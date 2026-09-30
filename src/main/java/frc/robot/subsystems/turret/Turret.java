@@ -52,7 +52,7 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
         for (Double timestamp : inputs.odometryTimestamps) {
             adapter.recordTurretAngle(timestamp,
-                new Rotation2d(Rotations.of(inputs.relativeAngle)));
+                new Rotation2d(Rotations.of(inputs.odometryAngleRotations)));
         }
     }
 

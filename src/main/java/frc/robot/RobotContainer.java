@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
@@ -108,8 +109,8 @@ public final class RobotContainer {
     // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
 
     /* Odometry Thread and Locks */
-    private ReentrantLock odometryLock = new ReentrantLock();
-    private PhoenixOdometryThread odometryThread = new PhoenixOdometryThread(odometryLock);
+    private final Lock odometryLock = new ReentrantLock();
+    private final PhoenixOdometryThread odometryThread = new PhoenixOdometryThread(odometryLock);
 
     /**
      * Robot Container
@@ -117,7 +118,6 @@ public final class RobotContainer {
      * @param runtimeType Run type
      */
     public RobotContainer(RobotRunType runtimeType) {
-        odometryThread.start();
         switch (runtimeType) {
             case kReal:
                 sim = null;
@@ -187,8 +187,10 @@ public final class RobotContainer {
 
                 break;
 
-
+                odometryThread.start();
         }
+
+        odometryThread.start();
 
         targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
             () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());

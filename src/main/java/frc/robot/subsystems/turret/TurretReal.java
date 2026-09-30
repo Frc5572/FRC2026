@@ -63,7 +63,7 @@ public class TurretReal implements TurretIO {
         resetPosition(Degree.of(0));
 
         BaseStatusSignal.setUpdateFrequencyForAll(Constants.Swerve.odometryFrequency,
-            turretPosition, turretVoltage, turretCurrent, canCoder2Pos);
+            turretPosition);
         PhoenixSignals.registerSignals(false, turretPosition, turretVoltage, turretCurrent,
             canCoder2Pos);
         ParentDevice.optimizeBusUtilizationForAll(turretCANcoder2, turretMotor);
@@ -86,7 +86,9 @@ public class TurretReal implements TurretIO {
         inputs.velocity = turretVelocity.getValue();
         inputs.positionValue = turretPosition.getValueAsDouble();
         inputs.odometryTimestamps = this.timestampQueue.stream().mapToDouble(x -> x).toArray();
-        inputs.odometryAngleRotations = this.angleRotations.stream().mapToDouble(x -> x).toArray();
+        inputs.odometryAngleRotations = this.angleRotations.stream().mapToDouble(x -> -x).toArray();
+        timestampQueue.clear();
+        angleRotations.clear();
     }
 
     @Override
