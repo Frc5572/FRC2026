@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.LinkedList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -17,9 +16,6 @@ import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -28,12 +24,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.FieldConstants;
 import frc.robot.localization.DrivetrainState;
 import frc.robot.localization.TurretCameraAdapter;
-import frc.robot.subsystems.vision.CameraConstants;
-import frc.robot.util.AllianceFlipUtil;
-import frc.robot.localization.TagVisibility;
 
 /**
  * Subsystem representing the robot turret.
@@ -90,6 +82,7 @@ public class Turret extends SubsystemBase {
             whipping = false;
         }
         Logger.recordOutput("Turret/isWhipping", whipping);
+        Logger.recordOutput("Turret/searching", searching);
         adapter.recordTurretAngle(MathSharedStore.getTimestamp(),
             new Rotation2d(Rotations.of(inputs.relativeAngle)), whipping);
         // Marks the robot as moving for DrivetrainState's stationary check.
@@ -167,14 +160,6 @@ public class Turret extends SubsystemBase {
     }
 
     private static final Angle SEARCH_LIMIT_MARGIN = Degrees.of(5);
-    private static final CameraConstants TURRET_CAMERA = Arrays
-        .stream(Constants.Vision.cameraConstants).filter(c -> c.isTurret).findFirst().orElseThrow();
-    private double searchOffset = 0.0;
-    private double searchDirection = 1.0;
-    private double searchAmplitude = 0.0;
-    private double lastSearchTime = Double.NaN;
-    /** Capture-time cutoff: the search ends once a vision frame newer than this is fused. */
-    private double searchStart = Double.NaN;
     private boolean searching = false;
     private boolean shooting = false;
 
@@ -184,17 +169,12 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * Mark whether a shot is in progress. Shooting stops any search and returns to aiming.
+     * Mark whether a shot is in progress. Shooting ends any search.
      *
      * @param shooting whether the robot is shooting
      */
     public void setShooting(boolean shooting) {
         this.shooting = shooting;
-    }
-
-    /** Start a search now, e.g. from an operator button. It ends once tags are found. */
-    public void requestSearch() {
-        searchStart = MathSharedStore.getTimestamp();
     }
 
     /**
@@ -208,97 +188,43 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * Whether the estimated pose says the turret camera should see hub tags at this aim. Past half
-     * field the hub is too far away to expect tags, so the turret just aims where the estimate says
-     * the hub is.
+     * Sweep the turret's full travel in the robot frame to look for hub tags, for when the pose
+     * estimate has drifted far enough that normal aiming never points the camera at them. The sweep
+     * ignores the pose estimate, since anything anchored to a wrong heading would miss the tags.
+     * Ends as soon as a hub tag is seen (even one too poor to fuse) or a shot starts.
      */
-    private boolean expectsTags(Rotation2d aimFieldRelative) {
-        Pose2d robot = state.getGlobalPoseEstimate();
-        if (AllianceFlipUtil.applyX(robot.getX()) > FieldConstants.fieldLength / 2) {
-            return false;
-        }
-        Rotation2d turretAngle = aimFieldRelative.minus(robot.getRotation());
-        Transform3d robotToCamera = new Transform3d(Constants.Vision.turretCenter.getTranslation(),
-            new Rotation3d(0.0, 0.0, turretAngle.getRadians())).plus(TURRET_CAMERA.robotToCamera);
-        int visible = TagVisibility.countVisible(robot, robotToCamera,
-            TURRET_CAMERA.horizontalFieldOfView, Constants.Turret.searchTagMaxDistance,
-            new Rotation2d(Constants.Turret.searchTagMaxIncidence), FieldConstants::isHubTag);
-        return visible >= Constants.Turret.searchExpectedTags;
-    }
-
-    /**
-     * Aim the turret in the field frame, sweeping around that aim to look for hub tags. A search
-     * starts when the estimated pose says hub tags should be in view and the turret camera is
-     * sending frames, but none has contained a hub tag for {@link Constants.Turret#searchDelay} (a
-     * drifted estimate aims the camera away from the tags, so it would never be corrected
-     * otherwise), or on {@link #requestSearch()}. It ends as soon as a hub tag is seen, even one
-     * too poor to fuse, and never runs while shooting.
-     *
-     * @param rotations field-relative aim
-     */
-    public Command aimOrSearch(Supplier<Rotation2d> rotations) {
-        return run(() -> {
-            Rotation2d aim = rotations.get();
+    public Command search() {
+        double[] target = new double[1];
+        double[] direction = new double[1];
+        double[] lastTime = new double[1];
+        double[] start = new double[1];
+        double rate = Constants.Turret.searchRate.in(RadiansPerSecond);
+        // Stay inside the limits: -180 deg normalizes to +180 deg, which is itself a wrap.
+        double maxTarget = Constants.Turret.maxAngle.minus(SEARCH_LIMIT_MARGIN).in(Radians);
+        double minTarget = Constants.Turret.minAngle.plus(SEARCH_LIMIT_MARGIN).in(Radians);
+        return runOnce(() -> {
+            searching = true;
+            start[0] = MathSharedStore.getTimestamp();
+            lastTime[0] = start[0];
+            // Start from where the turret is, heading toward the limit with more travel left.
+            target[0] = MathUtil.clamp(getTurretHeading().getRadians(), minTarget, maxTarget);
+            direction[0] = maxTarget - target[0] >= target[0] - minTarget ? 1.0 : -1.0;
+        }).andThen(run(() -> {
             double now = MathSharedStore.getTimestamp();
-            double lastHubTag = adapter.getLastHubTagTime();
-            // A dead camera is not a lost pose; searching would not help.
-            boolean cameraAlive =
-                now - adapter.getLastFrameTime() < Constants.Turret.searchDelay;
-            boolean expectsTags = expectsTags(aim);
-            Logger.recordOutput("Turret/expectsTags", expectsTags);
-            Logger.recordOutput("Turret/cameraAlive", cameraAlive);
-            if (Double.isNaN(searchStart) && expectsTags && cameraAlive
-                && now - lastHubTag > Constants.Turret.searchDelay) {
-                searchStart = now;
+            target[0] += direction[0] * rate * Math.min(now - lastTime[0], 0.1);
+            lastTime[0] = now;
+            if (target[0] >= maxTarget) {
+                target[0] = maxTarget;
+                direction[0] = -1.0;
+            } else if (target[0] <= minTarget) {
+                target[0] = minTarget;
+                direction[0] = 1.0;
             }
-            if (shooting || lastHubTag > searchStart) {
-                searchStart = Double.NaN;
-            }
-            searching = !Double.isNaN(searchStart);
-            Logger.recordOutput("Turret/searching", searching);
-            if (!searching) {
-                resetSearch();
-                setGoalFieldRelative(aim);
-                return;
-            }
-            double rate = Constants.Turret.searchRate.in(RadiansPerSecond);
-            if (Double.isNaN(lastSearchTime)) {
-                searchAmplitude = Constants.Turret.searchStartAmplitude.in(Radians);
-            } else {
-                searchOffset += searchDirection * rate * Math.min(now - lastSearchTime, 0.1);
-            }
-            lastSearchTime = now;
-            Rotation2d robotRotation = state.getGlobalPoseEstimate().getRotation();
-            double center = normalize(aim.minus(robotRotation)).getRadians();
-            double target = center + searchOffset;
-            // Reverse at the sweep edge, or before crossing a travel limit (which would whip).
-            boolean pastEdge = Math.abs(searchOffset) >= searchAmplitude;
-            // Stay inside the limits: -180 deg normalizes to +180 deg, which is itself a wrap.
-            double maxTarget = Constants.Turret.maxAngle.minus(SEARCH_LIMIT_MARGIN).in(Radians);
-            double minTarget = Constants.Turret.minAngle.plus(SEARCH_LIMIT_MARGIN).in(Radians);
-            boolean pastLimit = target > maxTarget || target < minTarget;
-            if ((pastEdge || pastLimit) && Math.signum(searchOffset) == searchDirection) {
-                searchDirection = -searchDirection;
-                searchAmplitude = Math.min(
-                    searchAmplitude + Constants.Turret.searchAmplitudeStep.in(Radians),
-                    Constants.Turret.searchMaxAmplitude.in(Radians));
-            }
-            // Robot rotation can also carry the target past a limit; never let it wrap.
-            target = MathUtil.clamp(target, minTarget, maxTarget);
-            searchOffset = target - center;
-            Logger.recordOutput("Turret/searchOffsetDeg", Units.radiansToDegrees(searchOffset));
-            setGoalRobotRelative(new Rotation2d(target), RadiansPerSecond
-                .of(searchDirection * rate - state.getFieldRelativeSpeeds().omegaRadiansPerSecond));
-        }).finallyDo(() -> {
-            resetSearch();
-            searching = false;
-        });
-    }
-
-    private void resetSearch() {
-        searchOffset = 0.0;
-        searchDirection = 1.0;
-        lastSearchTime = Double.NaN;
+            Logger.recordOutput("Turret/searchTargetDeg", Units.radiansToDegrees(target[0]));
+            setGoalRobotRelative(new Rotation2d(target[0]),
+                RadiansPerSecond.of(direction[0] * rate));
+        })).until(() -> shooting || adapter.getLastHubTagTime() > start[0])
+            .finallyDo(() -> searching = false);
     }
 
     /** Aim turret in robot frame */

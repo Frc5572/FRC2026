@@ -228,8 +228,8 @@ public final class RobotContainer {
 
         // DEFAULT COMMANDS
         adjustableHood.setDefaultCommand(adjustableHood.setGoal(Degrees.of(0)));
-        turret.setDefaultCommand(
-            turret.aimOrSearch(() -> targetingState.getDesiredTurretHeadingFieldRelative()));
+        turret.setDefaultCommand(turret
+            .goToAngleFieldRelative(() -> targetingState.getDesiredTurretHeadingFieldRelative()));
         leds.setDefaultCommand(leds.blinkLEDs(Color.kRed));
         swerve.setDefaultCommand(swerve.driveUserRelative(TeleopControls.teleopControls(
             () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
@@ -315,7 +315,7 @@ public final class RobotContainer {
             .onTrue(CommandFactory.resetInit(swerve, turret));
         operator.b().whileTrue(turret.setVoltage(() -> 0));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
-        operator.rightBumper().onTrue(Commands.runOnce(turret::requestSearch));
+        operator.rightBumper().whileTrue(turret.search());
         operator.y().onTrue(Commands.runOnce(() -> targetingState.setTrims(0.0, 0.0)));
         operator.povUp().onTrue(Commands.runOnce(() -> {
             targetingState.incTrims(0.5, 0);
