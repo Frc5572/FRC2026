@@ -602,6 +602,9 @@ public final class Constants {
         /** ID for Shooter Motor 2 */
         public static final int motor2ID = 12;
 
+        /** Flywheel speed constant */
+        public static final double k = 0.0; // figure out
+
         /** Motor Invert for Shooter Motors */
         public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;
         /** Motor Alignment for Shooter Motors */
