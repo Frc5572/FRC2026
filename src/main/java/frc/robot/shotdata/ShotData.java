@@ -198,6 +198,14 @@ public class ShotData {
         public Angle hoodAngle() {
             return Degrees.of(90 - 12.695 - exitAngle.in(Degrees));
         }
+
+        public Angle pitchAngle(Angle currentAngle) {
+            return Degrees.of(90 - 12.695 - currentAngle.in(Degrees));
+        }
+
+        public LinearVelocity exitVelocity() {
+            return MetersPerSecond.of(flywheelSpeed().in(RadiansPerSecond) * Constants.Shooter.k);
+        }
     }
 
     /**
@@ -273,6 +281,9 @@ public class ShotData {
         double timeOfFlight, boolean isOkayToShoot) {
     }
 
+    public static record ShotParams(Angle pitch, LinearVelocity exitSpeed) {
+    }
+
     /**
      * Computes shooter parameters for a hub shot given the current robot state.
      *
@@ -301,6 +312,14 @@ public class ShotData {
             Logger.recordOutput("ShotParameters/isOkay", isOkay);
         }
         return new ShotParameters(desiredSpeed, hoodAngleDeg, tof, isOkay);
+    }
+
+    public static ShotParams staticShotParameters(double distance, double flywheelSpeed) {
+        var res = shotMap.get(distance);
+        LinearVelocity exitSpeed = MetersPerSecond.of(flywheelSpeed * Constants.Shooter.k);
+        double hoodAngle = res.hoodAngle().in(Degrees);
+        Angle pitch = Degrees.of(90 - 13 - hoodAngle);
+        return new ShotParams(pitch, exitSpeed);
     }
 
     /**
