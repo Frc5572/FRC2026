@@ -126,7 +126,7 @@ public final class RobotContainer {
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
-                turret = new Turret(new TurretReal(odometryThread), swerve.state);
+                turret = new Turret(new TurretReal(odometryThread), swerve.state, odometryLock);
                 vision = new Vision(swerve.state, new VisionReal(), turret.adapter);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
@@ -157,7 +157,7 @@ public final class RobotContainer {
                 this.swerve = simBundle.swerve();
 
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
-                turret = new Turret(sim.turret, swerve.state);
+                turret = new Turret(sim.turret, swerve.state, odometryLock);
                 vision = new Vision(swerve.state, sim.visionSim, turret.adapter);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
@@ -177,7 +177,7 @@ public final class RobotContainer {
                 this.drivetrainState = defaultBundle.drivetrainState();
                 this.swerve = defaultBundle.swerve();
 
-                turret = new Turret(new TurretIOEmpty(), swerve.state);
+                turret = new Turret(new TurretIOEmpty(), swerve.state, odometryLock);
                 vision = new Vision(swerve.state, new VisionIOEmpty(), turret.adapter);
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
