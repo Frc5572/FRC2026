@@ -2,12 +2,14 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import java.util.Queue;
 import java.util.Random;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.util.tunable.PIDConstants;
 
 /**
@@ -33,12 +35,14 @@ import frc.robot.util.tunable.PIDConstants;
 public class TurretSim implements TurretIO {
 
     private final Random random;
+    private final Queue<Double> angleRotations;
 
     private static final double start = 0.0;
     public double turretTarget = start;
 
     public TurretSim(Random random) {
         this.random = random;
+        angleRotations = PhoenixOdometryThread.registerSignal
     }
 
     @Override
@@ -46,6 +50,7 @@ public class TurretSim implements TurretIO {
         inputs.relativeAngle = Units.radiansToRotations(turretTarget - start);
         inputs.velocity = RadiansPerSecond.of(0.0);
         inputs.odometryTimestamps = new double[] {Timer.getTimestamp()};
+        inputs.odometryAngleRotations = new double[] {};
     }
 
     @Override
