@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -26,6 +27,7 @@ import frc.robot.localization.TurretCameraAdapter;
 public class Turret extends SubsystemBase {
 
     private final TurretIO io;
+    private final Lock odometryLock;
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     public final TurretCameraAdapter adapter =
         new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
@@ -36,14 +38,16 @@ public class Turret extends SubsystemBase {
      *
      * @param io Hardware abstraction used to read sensors and control actuators
      */
-    public Turret(TurretIO io, DrivetrainState state) {
+    public Turret(TurretIO io, DrivetrainState state, Lock odometryLock) {
         super("Turret");
         this.io = io;
         this.state = state;
+        this.odometryLock = odometryLock;
     }
 
     @Override
     public void periodic() {
+        odometryLock.lock();
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
 
@@ -54,6 +58,7 @@ public class Turret extends SubsystemBase {
             adapter.recordTurretAngle(inputs.timestamps[i],
                 new Rotation2d(Rotations.of(inputs.angleRotations[i])));
         }
+        odometryLock.unlock();
     }
 
     public Rotation2d getTurretHeading() {
