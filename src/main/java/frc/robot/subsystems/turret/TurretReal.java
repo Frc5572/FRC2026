@@ -85,8 +85,8 @@ public class TurretReal implements TurretIO {
         inputs.current = turretCurrent.getValue();
         inputs.velocity = turretVelocity.getValue();
         inputs.positionValue = turretPosition.getValueAsDouble();
-        inputs.odometryTimestamps = this.timestampQueue.stream().mapToDouble(x -> x).toArray();
-        inputs.odometryAngleRotations = this.angleRotations.stream().mapToDouble(x -> -x).toArray();
+        inputs.timestamps = this.timestampQueue.stream().mapToDouble(x -> x).toArray();
+        inputs.angleRotations = this.angleRotations.stream().mapToDouble(x -> -x).toArray();
         timestampQueue.clear();
         angleRotations.clear();
     }

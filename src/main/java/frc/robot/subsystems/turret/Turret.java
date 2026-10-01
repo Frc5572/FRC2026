@@ -50,9 +50,9 @@ public class Turret extends SubsystemBase {
         Constants.Turret.pid.ifDirty(io::setPID);
 
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
-        for (Double timestamp : inputs.odometryTimestamps) {
-            adapter.recordTurretAngle(timestamp,
-                new Rotation2d(Rotations.of(inputs.odometryAngleRotations)));
+        for (int i = 0; i < Constants.odometryQueueSize; i++) {
+            adapter.recordTurretAngle(inputs.timestamps[i],
+                new Rotation2d(Rotations.of(inputs.angleRotations[i])));
         }
     }
 
