@@ -108,7 +108,7 @@ public final class RobotContainer {
     // new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
     // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
 
-    /* Odometry Thread and Locks */
+    // Odometry Thread and Locks
     private final Lock odometryLock = new ReentrantLock();
     private final PhoenixOdometryThread odometryThread = new PhoenixOdometryThread(odometryLock);
 
