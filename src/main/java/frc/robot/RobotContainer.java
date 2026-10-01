@@ -186,8 +186,6 @@ public final class RobotContainer {
                 indexer = new Indexer(new IndexerIOEmpty());
 
                 break;
-
-                odometryThread.start();
         }
 
         odometryThread.start();
