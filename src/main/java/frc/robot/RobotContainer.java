@@ -108,9 +108,13 @@ public final class RobotContainer {
     // new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
     // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
 
-    // Odometry Thread and Locks
-    private final Lock odometryLock = new ReentrantLock();
-    private final PhoenixOdometryThread odometryThread = new PhoenixOdometryThread(odometryLock);
+    // CANivore Odometry Thread and Locks
+    private final Lock canOdomLock = new ReentrantLock();
+    private final PhoenixOdometryThread canOdomThread = new PhoenixOdometryThread(canOdomLock);
+
+    // RoboRIO Odometry Thread and Locks
+    private final Lock rioOdomLock = new ReentrantLock();
+    private final PhoenixOdometryThread rioOdomThread = new PhoenixOdometryThread(rioOdomLock);
 
     /**
      * Robot Container
@@ -122,11 +126,14 @@ public final class RobotContainer {
             case kReal:
                 sim = null;
                 Swerve.Bundle realBundle = Swerve.create(SwerveReal::new, GyroNavX2::new,
-                    SwerveModuleReal::new, odometryLock, odometryThread);
+                    SwerveModuleReal::new, canOdomLock, canOdomThread);
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
-                turret = new Turret(new TurretReal(odometryThread), swerve.state, odometryLock);
+
+                // Until turret is added to CANivore, it'll be on a separate thread and lock.
+                turret = new Turret(new TurretReal(rioOdomThread), swerve.state, rioOdomLock);
+
                 vision = new Vision(swerve.state, new VisionReal(), turret.adapter);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
@@ -152,12 +159,15 @@ public final class RobotContainer {
                 FuelSim.getInstance().start();
                 Swerve.Bundle simBundle =
                     Swerve.create(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
-                        sim.swerveDrive::moduleProvider, odometryLock, odometryThread);
+                        sim.swerveDrive::moduleProvider, canOdomLock, canOdomThread);
                 this.drivetrainState = simBundle.drivetrainState();
                 this.swerve = simBundle.swerve();
 
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
-                turret = new Turret(sim.turret, swerve.state, odometryLock);
+
+                // Until turret is added to CANivore, it'll be on a separate thread and lock.
+                turret = new Turret(sim.turret, swerve.state, rioOdomLock);
+
                 vision = new Vision(swerve.state, sim.visionSim, turret.adapter);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
@@ -173,11 +183,11 @@ public final class RobotContainer {
             default:
                 sim = null;
                 Swerve.Bundle defaultBundle = Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new,
-                    SwerveModuleIOEmpty::new, odometryLock, odometryThread);
+                    SwerveModuleIOEmpty::new, canOdomLock, canOdomThread);
                 this.drivetrainState = defaultBundle.drivetrainState();
                 this.swerve = defaultBundle.swerve();
 
-                turret = new Turret(new TurretIOEmpty(), swerve.state, odometryLock);
+                turret = new Turret(new TurretIOEmpty(), swerve.state, rioOdomLock);
                 vision = new Vision(swerve.state, new VisionIOEmpty(), turret.adapter);
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
@@ -188,7 +198,8 @@ public final class RobotContainer {
                 break;
         }
 
-        odometryThread.start();
+        canOdomThread.start();
+        rioOdomThread.start();
 
         targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
             () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
