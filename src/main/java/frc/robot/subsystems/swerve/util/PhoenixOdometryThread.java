@@ -107,7 +107,7 @@ public class PhoenixOdometryThread extends Thread {
      * @return queue containing sampled signal values
      */
     public Queue<Double> registerSignal(StatusSignal<?> signal) {
-        Queue<Double> queue = new ArrayBlockingQueue<>(100);
+        Queue<Double> queue = new ArrayBlockingQueue<>(Constants.odometryQueueSize);
         signalsLock.lock();
         odometryLock.lock();
         try {
