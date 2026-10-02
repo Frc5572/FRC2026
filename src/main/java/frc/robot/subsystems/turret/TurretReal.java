@@ -64,6 +64,7 @@ public class TurretReal implements TurretIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(Constants.Swerve.odometryFrequency,
             turretPosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(50, turretVoltage, turretCurrent, canCoder2Pos);
         PhoenixSignals.registerSignals(false, turretPosition, turretVoltage, turretCurrent,
             canCoder2Pos);
         ParentDevice.optimizeBusUtilizationForAll(turretCANcoder2, turretMotor);

@@ -49,6 +49,7 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         odometryLock.lock();
         io.updateInputs(inputs);
+        odometryLock.unlock();
         Logger.processInputs("Turret", inputs);
 
         Constants.Turret.pid.ifDirty(io::setPID);
@@ -58,7 +59,6 @@ public class Turret extends SubsystemBase {
             adapter.recordTurretAngle(inputs.timestamps[i],
                 new Rotation2d(Rotations.of(inputs.angleRotations[i])));
         }
-        odometryLock.unlock();
     }
 
     public Rotation2d getTurretHeading() {
