@@ -181,7 +181,7 @@ public class DrivetrainState {
             Logger.recordOutput("State/Camera/" + camName + "/lastMoved", this.lastTimeMoved);
             Logger.recordOutput("State/Camera/" + camName + "/timestamp", observations.timestamp());
 
-            boolean onBump = RobotBase.isReal()
+            boolean onBump = observations.isReal()
                 && (FieldConstants.isOnBump(getGlobalPoseEstimate())
                     || FieldConstants.isOnBump(robotPose));
 
@@ -206,6 +206,10 @@ public class DrivetrainState {
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);
         Logger.recordOutput("State/VisionRobotPose", robotPose);
+    }
+
+    public double getLastTimeMoved() {
+        return lastTimeMoved;
     }
 
     /**

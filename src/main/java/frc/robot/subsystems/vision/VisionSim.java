@@ -62,4 +62,11 @@ public class VisionSim extends VisionReal {
                 new Rotation3d(new Rotation2d(turretAngle)))));
     }
 
+    @Override
+    public void updateInputs(CameraInputs[] inputs) {
+        super.updateInputs(inputs);
+        for (int i = 0; i < inputs.length; i++) {
+            inputs[i].isReal = false;
+        }
+    }
 }

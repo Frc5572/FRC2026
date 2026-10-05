@@ -23,11 +23,13 @@ public interface VisionIO {
         public PhotonPipelineResult[] results = new PhotonPipelineResult[0];
         public Optional<Matrix<N3, N3>> cameraMatrix = Optional.empty();
         public Optional<Matrix<N8, N1>> distCoeffs = Optional.empty();
+        public boolean isReal = true;
 
         private static final PhotonPipelineResultSerde serde = new PhotonPipelineResultSerde();
 
         @Override
         public void toLog(LogTable table) {
+            table.put("isReal", isReal);
             table.put("length", results.length);
             for (int i = 0; i < results.length; i++) {
                 LogTable subtable = table.getSubtable("[" + i + "]");
@@ -56,6 +58,7 @@ public interface VisionIO {
 
         @Override
         public void fromLog(LogTable table) {
+            isReal = table.get("isReal", true);
             int length = table.get("length", 0);
             results = new PhotonPipelineResult[length];
             for (int i = 0; i < length; i++) {

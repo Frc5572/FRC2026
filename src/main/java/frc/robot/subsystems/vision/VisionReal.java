@@ -46,6 +46,7 @@ public class VisionReal implements VisionIO {
                 cameras[i].getAllUnreadResults().toArray(PhotonPipelineResult[]::new);
             inputs[i].cameraMatrix = cameras[i].getCameraMatrix();
             inputs[i].distCoeffs = cameras[i].getDistCoeffs();
+            inputs[i].isReal = true;
         }
     }
 

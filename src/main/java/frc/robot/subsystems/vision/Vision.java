@@ -114,8 +114,8 @@ public class Vision extends SubsystemBase {
             cameraViz[i] = new Translation3d[0];
         }
         for (var result : results) {
-            processorResults[result._0()] =
-                cameraProcessors[result._0()].process(result._1(), state.getFieldRelativeSpeeds());
+            processorResults[result._0()] = cameraProcessors[result._0()].process(
+                result._1(), state.getFieldRelativeSpeeds(), cameraInputs[result._0()].isReal);
             if (processorResults[result._0()] instanceof CameraProcessor.Err<?, ?> err) {
                 cameraContributed[result._0()] = false;
                 Logger.recordOutput(cameraContributedKeys[result._0()] + "/rejection",
