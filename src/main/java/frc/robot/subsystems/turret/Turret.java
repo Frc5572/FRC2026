@@ -53,6 +53,7 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
         adapter.recordTurretAngle(MathSharedStore.getTimestamp(),
             new Rotation2d(Rotations.of(inputs.relativeAngle)));
+        state.setTurretRawAngle(MathSharedStore.getTimestamp(), Rotations.of(inputs.relativeAngle));
     }
 
     public Rotation2d getTurretHeading() {

@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -114,6 +115,12 @@ public class CameraProcessor {
             Logger.recordOutput("State/Camera/" + cameraConstants.name + "/estRobotPose",
                 estRobotPose);
 
+            var estRobotPose2d = estRobotPose.toPose2d();
+            if (!FieldConstants.isInField(estRobotPose2d.getTranslation())
+                || FieldConstants.isInsideHub(estRobotPose2d.getTranslation())) {
+                return Result.err(RejectionReason.OUTSIDE_FIELD);
+            }
+
             double stdDevMultiplier = stdDevMultiplier(result.targets, cameraPose);
             double translationStdDev =
                 stdDevMultiplier * velocityTranslationError + cameraConstants.translationError;
@@ -132,7 +139,8 @@ public class CameraProcessor {
             }
 
             return Result.ok(new VisionObservation(cameraPose, robotToCamera_, translationStdDev,
-                rotationStdDev, result.getTimestampSeconds()));
+                rotationStdDev, result.getTimestampSeconds(), cameraConstants.isTurret,
+                cameraConstants.name));
         }
 
         return Result.err(RejectionReason.SINGLE_TAG_ONLY);
