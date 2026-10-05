@@ -1,6 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -40,65 +39,62 @@ public class Intake extends SubsystemBase {
 
     private Command runHopperToStop(double voltage, double intakeSpeed, boolean isExtended,
         double timeoutSeconds) {
-        return Commands.defer(() -> {
-            final double[] prev = new double[] {0.0, 0.0};
-            final int[] stallCounts = new int[] {0, 0};
-            final boolean[] sideStopped = new boolean[] {false, false};
-            final int[] loopCounter = new int[] {0};
-            final int minRunTicks = 5;
-            final int stallThresholdTicks = 5;
-            final double minDeltaRotations = 0.01;
-            return Commands.runEnd(() -> {
-                loopCounter[0]++;
-                double left = inputs.leftHopperPositionRotations;
-                double right = inputs.rightHopperPositionRotations;
-                if (loopCounter[0] > minRunTicks) {
-
-                    double leftDelta = (voltage > 0) ? (left - prev[0]) : (prev[0] - left);
-                    double rightDelta = (voltage > 0) ? (right - prev[1]) : (prev[1] - right);
-                    if (!sideStopped[0]) {
-                        if (leftDelta < minDeltaRotations) {
-                            stallCounts[0]++;
-                            if (stallCounts[0] >= stallThresholdTicks) {
-                                sideStopped[0] = true;
-                                io.setLeftHopperVoltage(0);
-                            }
-                        } else {
-                            stallCounts[0] = 0;
+        final double[] prev = new double[] {0.0, 0.0};
+        final int[] stallCounts = new int[] {0, 0};
+        final boolean[] sideStopped = new boolean[] {false, false};
+        final int[] loopCounter = new int[] {0};
+        final int minRunTicks = 5;
+        final int stallThresholdTicks = 5;
+        final double minDeltaRotations = 0.01;
+        return Commands.runEnd(() -> {
+            loopCounter[0]++;
+            double left = inputs.leftHopperPositionRotations;
+            double right = inputs.rightHopperPositionRotations;
+            if (loopCounter[0] > minRunTicks) {
+                double leftDelta = (voltage > 0) ? (left - prev[0]) : (prev[0] - left);
+                double rightDelta = (voltage > 0) ? (right - prev[1]) : (prev[1] - right);
+                if (!sideStopped[0]) {
+                    if (leftDelta < minDeltaRotations) {
+                        stallCounts[0]++;
+                        if (stallCounts[0] >= stallThresholdTicks) {
+                            sideStopped[0] = true;
+                            io.setLeftHopperVoltage(0);
                         }
-                    }
-                    if (!sideStopped[1]) {
-                        if (rightDelta < minDeltaRotations) {
-                            stallCounts[1]++;
-                            if (stallCounts[1] >= stallThresholdTicks) {
-                                sideStopped[1] = true;
-                                io.setRightHopperVoltage(0);
-                            }
-                        } else {
-                            stallCounts[1] = 0;
-                        }
+                    } else {
+                        stallCounts[0] = 0;
                     }
                 }
-                prev[0] = left;
-                prev[1] = right;
-            }, () -> {
-                io.setLeftHopperVoltage(0);
-                io.setRightHopperVoltage(0);
-                runIntakeOnly(0);
-            }, this).beforeStarting(() -> {
-                prev[0] = inputs.leftHopperPositionRotations;
-                prev[1] = inputs.rightHopperPositionRotations;
-                stallCounts[0] = 0;
-                stallCounts[1] = 0;
-                sideStopped[0] = false;
-                sideStopped[1] = false;
-                loopCounter[0] = 0;
-                io.setLeftHopperVoltage(voltage);
-                io.setRightHopperVoltage(voltage);
-                runIntakeOnly(intakeSpeed);
-                SmartDashboard.putBoolean("Intake/HopperExtended", isExtended);
-            }).until(() -> sideStopped[0] && sideStopped[1]).withTimeout(timeoutSeconds);
-        }, Set.of(this));
+                if (!sideStopped[1]) {
+                    if (rightDelta < minDeltaRotations) {
+                        stallCounts[1]++;
+                        if (stallCounts[1] >= stallThresholdTicks) {
+                            sideStopped[1] = true;
+                            io.setRightHopperVoltage(0);
+                        }
+                    } else {
+                        stallCounts[1] = 0;
+                    }
+                }
+            }
+            prev[0] = left;
+            prev[1] = right;
+        }, () -> {
+            io.setLeftHopperVoltage(0);
+            io.setRightHopperVoltage(0);
+            runIntakeOnly(0);
+        }, this).beforeStarting(() -> {
+            prev[0] = inputs.leftHopperPositionRotations;
+            prev[1] = inputs.rightHopperPositionRotations;
+            stallCounts[0] = 0;
+            stallCounts[1] = 0;
+            sideStopped[0] = false;
+            sideStopped[1] = false;
+            loopCounter[0] = 0;
+            io.setLeftHopperVoltage(voltage);
+            io.setRightHopperVoltage(voltage);
+            runIntakeOnly(intakeSpeed);
+            SmartDashboard.putBoolean("Intake/HopperExtended", isExtended);
+        }).until(() -> sideStopped[0] && sideStopped[1]).withTimeout(timeoutSeconds);
     }
 
     /** Extends hopper */
