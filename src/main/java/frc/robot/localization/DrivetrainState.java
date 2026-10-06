@@ -2,22 +2,15 @@ package frc.robot.localization;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.littletonrobotics.junction.Logger;
-import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -37,9 +30,6 @@ public class DrivetrainState {
     private boolean initted = false;
 
     private final PoseEstimator<SwerveModulePosition[]> visionAdjustedOdometry;
-
-    private final TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
-        TimeInterpolatableBuffer.createBuffer(1.5);
 
     private Rotation2d gyroOffset = Rotation2d.kZero;
     private Rotation2d prevGyroReading = Rotation2d.kZero;
@@ -155,24 +145,6 @@ public class DrivetrainState {
         initted = true;
     }
 
-    /** Get robot to camera for camera mounted on the turret */
-    public Optional<Transform3d> getTurretRobotToCamera(Transform3d turretToCamera,
-        double timestamp) {
-        var maybeRotation = currentTurretAngle.getSample(timestamp);
-        if (maybeRotation.isEmpty()) {
-            return Optional.empty();
-        }
-        var turretRotation = maybeRotation.get();
-        Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
-
-        Transform3d robotToTurret =
-            new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
-
-        Transform3d robotToCamera = robotToTurret.plus(turretToCamera);
-
-        return Optional.of(robotToCamera);
-    }
-
     private double prevAngle;
 
     /** Set the current turret angle */
@@ -185,7 +157,6 @@ public class DrivetrainState {
             Logger.recordOutput("State/stationary/turret", false);
         }
         prevAngle = angleDeg;
-        currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
         Translation2d[] turretDirection = new Translation2d[2];
         turretDirection[0] = getTurretCenterFieldFrame().getTranslation();
         turretDirection[1] =
@@ -198,30 +169,47 @@ public class DrivetrainState {
     public void addVisionObservation(VisionObservation observations) {
         Pose2d robotPose =
             observations.cameraPose().plus(observations.robotToCamera().inverse()).toPose2d();
+        double rotationStdDev = observations.rotationStdDev();
+
+        if (observations.isTurret()) {
+            boolean isStationary = this.lastTimeMoved + 0.5 < observations.timestamp();
+            String camName =
+                observations.cameraName().isEmpty() ? "turret" : observations.cameraName();
+            Logger.recordOutput("State/Camera/" + camName + "/isStationary", isStationary);
+            Logger.recordOutput("State/Camera/" + camName + "/stationaryValue",
+                this.lastTimeMoved - observations.timestamp());
+            Logger.recordOutput("State/Camera/" + camName + "/lastMoved", this.lastTimeMoved);
+            Logger.recordOutput("State/Camera/" + camName + "/timestamp", observations.timestamp());
+
+            boolean onBump = observations.isReal()
+                && (FieldConstants.isOnBump(getGlobalPoseEstimate())
+                    || FieldConstants.isOnBump(robotPose));
+
+            if (isStationary || onBump) {
+                if (robotPose.getTranslation()
+                    .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
+                        .pow(Units.inchesToMeters(3), 2)) {
+                    visionAdjustedOdometry.resetTranslation(robotPose.getTranslation());
+                }
+            }
+
+            if (!isStationary) {
+                rotationStdDev = 10000.0;
+            }
+        }
+
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
         visionAdjustedOdometry.addVisionMeasurement(robotPose, observations.timestamp(),
-            observations.getStdDev());
+            VecBuilder.fill(observations.translationStdDev(), observations.translationStdDev(),
+                rotationStdDev));
         Pose2d after = visionAdjustedOdometry.getEstimatedPosition();
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);
         Logger.recordOutput("State/VisionRobotPose", robotPose);
     }
 
-
-    private static double stdDevMultiplier(List<PhotonTrackedTarget> targets, Pose3d cameraPose) {
-        double totalDistance = 0.0;
-        int count = 0;
-        for (var tag : targets) {
-            var maybeTagPose = Constants.Vision.fieldLayout.getTagPose(tag.getFiducialId());
-            if (maybeTagPose.isPresent()) {
-                var tagPose = maybeTagPose.get();
-                totalDistance += tagPose.getTranslation().getDistance(cameraPose.getTranslation());
-                count++;
-            }
-        }
-        double avgDistance = totalDistance / count;
-        double stddev = Math.pow(avgDistance, 2.0) / count;
-        return stddev;
+    public double getLastTimeMoved() {
+        return lastTimeMoved;
     }
 
     /**

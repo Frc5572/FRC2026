@@ -23,7 +23,7 @@ public class TurretCameraAdapter {
         angleBuffer.addSample(timestamp, angle);
     }
 
-    Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {
+    public Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {
         var maybeTurretRotation = angleBuffer.getSample(timestamp);
         if (maybeTurretRotation.isEmpty()) {
             return Optional.empty();

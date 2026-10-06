@@ -56,6 +56,7 @@ public class Vision extends SubsystemBase {
         new Trigger(() -> twoAprilTags()).debounce(.3, Debouncer.DebounceType.kBoth);
     private final CameraProcessor[] cameraProcessors;
     private final Result[] processorResults;
+    private final TurretCameraAdapter adapter;
 
     /**
      * Creates the vision subsystem.
@@ -67,6 +68,7 @@ public class Vision extends SubsystemBase {
         super("Vision");
         this.io = io;
         this.state = state;
+        this.adapter = adapter;
         this.cameraInputs = IntStream.range(0, Constants.Vision.cameraConstants.length)
             .mapToObj((_x) -> new VisionIO.CameraInputs()).toArray(VisionIO.CameraInputs[]::new);
         this.cameraInputKeys = IntStream.range(0, Constants.Vision.cameraConstants.length)
@@ -112,10 +114,10 @@ public class Vision extends SubsystemBase {
             cameraViz[i] = new Translation3d[0];
         }
         for (var result : results) {
-            processorResults[result._0()] =
-                cameraProcessors[result._0()].process(result._1(), state.getFieldRelativeSpeeds());
+            processorResults[result._0()] = cameraProcessors[result._0()].process(
+                result._1(), state.getFieldRelativeSpeeds(), cameraInputs[result._0()].isReal);
             if (processorResults[result._0()] instanceof CameraProcessor.Err<?, ?> err) {
-                cameraContributed[result._0()] = err != null;
+                cameraContributed[result._0()] = false;
                 Logger.recordOutput(cameraContributedKeys[result._0()] + "/rejection",
                     err.toString());
             } else if (processorResults[result._0()] instanceof CameraProcessor.Ok<?, ?> ok) {
@@ -129,7 +131,7 @@ public class Vision extends SubsystemBase {
             for (int i = 0; i < result._1().targets.size(); i++) {
                 var robotToCamera = Constants.Vision.cameraConstants[result._0()].robotToCamera;
                 if (Constants.Vision.cameraConstants[result._0()].isTurret) {
-                    var maybeRobotToCamera = state.getTurretRobotToCamera(robotToCamera,
+                    var maybeRobotToCamera = adapter.getRobotToCameraAt(robotToCamera,
                         result._1().getTimestampSeconds());
                     if (maybeRobotToCamera.isEmpty()) {
                         continue;

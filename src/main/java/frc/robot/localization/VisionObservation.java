@@ -8,7 +8,8 @@ import edu.wpi.first.math.numbers.N3;
 
 /** Vision Observation Record */
 public record VisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
-    double translationStdDev, double rotationStdDev, double timestamp) {
+    double translationStdDev, double rotationStdDev, double timestamp, boolean isTurret,
+    String cameraName, boolean isReal) {
 
     public Vector<N3> getStdDev() {
         return VecBuilder.fill(translationStdDev, translationStdDev, rotationStdDev);

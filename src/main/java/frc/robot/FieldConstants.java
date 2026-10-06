@@ -305,6 +305,21 @@ public class FieldConstants {
             || oppBumpArea.contains(pose.getTranslation());
     }
 
+    /** Return true if translation is within the field boundaries. */
+    public static boolean isInField(Translation2d point) {
+        return point.getX() >= 0.0 && point.getX() <= fieldLength
+            && point.getY() >= 0.0 && point.getY() <= fieldWidth;
+    }
+
+    /** Return true if translation is inside either the blue or red hub. */
+    public static boolean isInsideHub(Translation2d point) {
+        AABB hubArea = new AABB(Hub.centerHub, Hub.width, Hub.width);
+        AABB oppHubArea =
+            new AABB(new Translation2d(fieldLength - Hub.centerHub.getX(), Hub.centerHub.getY()),
+                Hub.width, Hub.width);
+        return hubArea.contains(point) || oppHubArea.contains(point);
+    }
+
     /**
      * Geometry for the left bump and common reference points.
      *
