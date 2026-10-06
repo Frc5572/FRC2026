@@ -16,7 +16,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.math.geometry.Rectangle;
@@ -95,16 +94,30 @@ public class DrivetrainState {
      */
     public void addOdometryObservation(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw,
         double timestamp) {
+        addOdometryObservation(wheelPositions, gyroYaw, timestamp, true);
+    }
+
+    /**
+     * Updates odometry and pose estimates using swerve module encoders and an optional gyro
+     * measurement.
+     *
+     * @param wheelPositions current swerve module positions
+     * @param gyroYaw current robot yaw, if available
+     * @param timestamp measurement timestamp in seconds
+     * @param isReal whether this observation comes from real hardware (or replay) vs sim
+     */
+    public void addOdometryObservation(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw,
+        double timestamp, boolean isReal) {
         prevGyroReading = gyroYaw;
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
         var before = getGlobalPoseEstimate();
-        visionAdjustedOdometry.update(gyroYaw.minus(gyroOffset), wheelPositions);
+        visionAdjustedOdometry.updateWithTime(timestamp, gyroYaw.minus(gyroOffset), wheelPositions);
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
             Logger.recordOutput("State/isOnBump", true);
             var diff = after.minus(before);
             diff = new Transform2d(diff.getX() * 0.6, diff.getY(), diff.getRotation());
-            if (RobotBase.isReal()) {
+            if (isReal) {
                 visionAdjustedOdometry.resetPose(before.plus(diff));
             }
         } else {
@@ -152,7 +165,7 @@ public class DrivetrainState {
         var angleDeg = angle.in(Degrees);
         if (Math.abs(angleDeg - prevAngle) > 2) {
             Logger.recordOutput("State/stationary/turret", true);
-            this.lastTimeMoved = MathSharedStore.getTimestamp();
+            this.lastTimeMoved = timestamp;
         } else {
             Logger.recordOutput("State/stationary/turret", false);
         }

@@ -231,7 +231,8 @@ public final class Swerve extends SubsystemBase {
                 wheelPositions[j] = modules[j].getOdometryPosition(i);
             }
             state.addOdometryObservation(wheelPositions,
-                Rotation2d.fromRadians(gyroInputs.yawRads[i]), sampleTimestamps[i]);
+                Rotation2d.fromRadians(gyroInputs.yawRads[i]), sampleTimestamps[i],
+                this.inputs.isReal);
         }
         SwerveModuleState[] wheelStates = new SwerveModuleState[modules.length];
         for (int j = 0; j < modules.length; j++) {

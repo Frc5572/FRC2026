@@ -149,10 +149,12 @@ public class CameraProcessor {
             robotRect.setPose(estRobotPose2d);
 
             // Reject if whole robot (including bumpers) extends outside field perimeter
-            for (var corner : robotRect.getCorners()) {
-                if (corner.getX() < 0.0 || corner.getX() > FieldConstants.fieldLength
-                    || corner.getY() < 0.0 || corner.getY() > FieldConstants.fieldWidth) {
-                    return Result.err(RejectionReason.OUTSIDE_FIELD);
+            if (Constants.keepInField) {
+                for (var corner : robotRect.getCorners()) {
+                    if (corner.getX() < 0.0 || corner.getX() > FieldConstants.fieldLength
+                        || corner.getY() < 0.0 || corner.getY() > FieldConstants.fieldWidth) {
+                        return Result.err(RejectionReason.OUTSIDE_FIELD);
+                    }
                 }
             }
 

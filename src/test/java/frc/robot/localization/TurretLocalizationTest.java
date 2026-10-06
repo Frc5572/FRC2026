@@ -17,7 +17,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
-import edu.wpi.first.wpilibj.simulation.SimHooks;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -32,6 +31,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 import frc.robot.math.geometry.Penetration;
 import frc.robot.math.geometry.Rectangle;
 import frc.robot.math.geometry.SeparatingAxis;
@@ -165,17 +165,17 @@ public class TurretLocalizationTest {
 
         // Motion over threshold (> 2 degrees) should count as moving
         state.setTurretRawAngle(1.10, Degrees.of(5.0));
-        assertTrue(state.getLastTimeMoved() > 0.0, "Change of > 2 deg must update lastTimeMoved");
+        assertEquals(1.10, state.getLastTimeMoved(), 1e-6,
+            "Change of > 2 deg must update lastTimeMoved to the provided timestamp");
     }
 
     @Test
     public void testStationaryAndMovingRotationStdDev() {
-        SimHooks.restartTiming();
         DrivetrainState state = new DrivetrainState(getZeroModulePositions(), Rotation2d.kZero);
-        state.resetPose(new Pose2d(5.0, 5.0, Rotation2d.kZero));
-        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, MathSharedStore.getTimestamp());
+        state.resetPose(new Pose2d(2.0, 2.0, Rotation2d.kZero));
 
-        double t0 = MathSharedStore.getTimestamp();
+        double t0 = 1.0;
+        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t0);
 
         // Mark turret moving at t0
         state.setTurretRawAngle(t0, Degrees.of(0));
@@ -183,7 +183,7 @@ public class TurretLocalizationTest {
 
         // Turret frame at t0 (< 0.5s since moved -> NOT stationary)
         // Camera indicates a 45 degree heading offset
-        Pose3d cameraPose = new Pose3d(5.0, 5.0, 0.5, new Rotation3d(0, 0, Math.toRadians(45)));
+        Pose3d cameraPose = new Pose3d(2.0, 2.0, 0.5, new Rotation3d(0, 0, Math.toRadians(45)));
         Transform3d robotToCamera = new Transform3d();
         VisionObservation movingTurretObs = new VisionObservation(
             cameraPose, robotToCamera, 0.1, 0.05, t0, true, "turret", true);
@@ -195,9 +195,8 @@ public class TurretLocalizationTest {
         assertTrue(Math.abs(headingAfterMoving) < 0.1,
             "Turret camera should not touch heading while moving (got: " + headingAfterMoving + " deg)");
 
-        // Step sim timing forward by 1.0s (> 0.5s since moved -> now stationary)
-        SimHooks.stepTiming(1.0);
-        double t1 = MathSharedStore.getTimestamp();
+        // 1.0s later (> 0.5s since moved -> now stationary)
+        double t1 = 2.0;
         state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t1);
 
         VisionObservation stationaryTurretObs = new VisionObservation(
@@ -211,19 +210,21 @@ public class TurretLocalizationTest {
             "Stationary turret camera should adjust heading (got: " + headingAfterStationary + " deg)");
 
         // Reset pose back to 0 heading to test non-turret camera while moving
-        state.resetPose(new Pose2d(5.0, 5.0, Rotation2d.kZero));
-        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t1);
-        state.setTurretRawAngle(t1, Degrees.of(30.0)); // mark moving again
+        state.resetPose(new Pose2d(2.0, 2.0, Rotation2d.kZero));
+        double t2 = 3.0;
+        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t2);
+        state.setTurretRawAngle(t2, Degrees.of(30.0)); // mark moving again
 
         // Non-turret camera (moving) should NOT have rotation std dev forced to 10000.0
         VisionObservation nonTurretObs = new VisionObservation(
-            cameraPose, robotToCamera, 0.1, 0.05, t1, false, "back", true);
+            cameraPose, robotToCamera, 0.1, 0.05, t2, false, "back", true);
         state.addVisionObservation(nonTurretObs);
 
         double headingAfterNonTurret = state.getGlobalPoseEstimate().getRotation().getDegrees();
         assertTrue(Math.abs(headingAfterNonTurret) > 1.0,
             "Non-turret camera should fuse heading even when moving (got: " + headingAfterNonTurret + " deg)");
     }
+
 
     @Test
     public void testBumpTranslationSnap() {
