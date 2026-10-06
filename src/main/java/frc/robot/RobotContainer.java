@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.ToDoubleFunction;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt;
@@ -51,9 +53,10 @@ import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
 import frc.robot.subsystems.swerve.gyro.GyroIOEmpty;
-import frc.robot.subsystems.swerve.gyro.GyroPigeon2;
+import frc.robot.subsystems.swerve.gyro.GyroNavX2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
+import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
 import frc.robot.subsystems.swerve.util.TeleopControls;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOEmpty;
@@ -105,6 +108,14 @@ public final class RobotContainer {
     // new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
     // () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());;
 
+    // CANivore Odometry Thread and Locks
+    private final Lock canOdomLock = new ReentrantLock();
+    private final PhoenixOdometryThread canOdomThread = new PhoenixOdometryThread(canOdomLock);
+
+    // RoboRIO Odometry Thread and Locks
+    private final Lock rioOdomLock = new ReentrantLock();
+    private final PhoenixOdometryThread rioOdomThread = new PhoenixOdometryThread(rioOdomLock);
+
     /**
      * Robot Container
      *
@@ -114,12 +125,15 @@ public final class RobotContainer {
         switch (runtimeType) {
             case kReal:
                 sim = null;
-                Swerve.Bundle realBundle =
-                    Swerve.create(SwerveReal::new, GyroPigeon2::new, SwerveModuleReal::new);
+                Swerve.Bundle realBundle = Swerve.create(SwerveReal::new, GyroNavX2::new,
+                    SwerveModuleReal::new, canOdomLock, canOdomThread);
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
-                turret = new Turret(new TurretReal(), swerve.state);
+
+                // Until turret is added to CANivore, it'll be on a separate thread and lock.
+                turret = new Turret(new TurretReal(rioOdomThread), swerve.state, rioOdomLock);
+
                 vision = new Vision(swerve.state, new VisionReal(), turret.adapter);
                 shooter = new Shooter(new ShooterReal());
                 intake = new Intake(new IntakeReal());
@@ -143,13 +157,17 @@ public final class RobotContainer {
                         sim.indexer.addFuel();
                     });
                 FuelSim.getInstance().start();
-                Swerve.Bundle simBundle = Swerve.create(sim.swerveDrive::simProvider,
-                    sim.swerveDrive::gyroProvider, sim.swerveDrive::moduleProvider);
+                Swerve.Bundle simBundle =
+                    Swerve.create(sim.swerveDrive::simProvider, sim.swerveDrive::gyroProvider,
+                        sim.swerveDrive::moduleProvider, canOdomLock, canOdomThread);
                 this.drivetrainState = simBundle.drivetrainState();
                 this.swerve = simBundle.swerve();
 
                 adjustableHood = new AdjustableHood(sim.adjustableHood);
-                turret = new Turret(sim.turret, swerve.state);
+
+                // Until turret is added to CANivore, it'll be on a separate thread and lock.
+                turret = new Turret(sim.turret, swerve.state, rioOdomLock);
+
                 vision = new Vision(swerve.state, sim.visionSim, turret.adapter);
                 shooter = new Shooter(sim.shooter);
                 intake = new Intake(sim.intake);
@@ -164,12 +182,12 @@ public final class RobotContainer {
                 break;
             default:
                 sim = null;
-                Swerve.Bundle defaultBundle =
-                    Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new, SwerveModuleIOEmpty::new);
+                Swerve.Bundle defaultBundle = Swerve.create(SwerveIOEmpty::new, GyroIOEmpty::new,
+                    SwerveModuleIOEmpty::new, canOdomLock, canOdomThread);
                 this.drivetrainState = defaultBundle.drivetrainState();
                 this.swerve = defaultBundle.swerve();
 
-                turret = new Turret(new TurretIOEmpty(), swerve.state);
+                turret = new Turret(new TurretIOEmpty(), swerve.state, rioOdomLock);
                 vision = new Vision(swerve.state, new VisionIOEmpty(), turret.adapter);
                 adjustableHood = new AdjustableHood(new AdjustableHoodIOEmpty());
                 shooter = new Shooter(new ShooterIOEmpty());
@@ -178,9 +196,10 @@ public final class RobotContainer {
                 indexer = new Indexer(new IndexerIOEmpty());
 
                 break;
-
-
         }
+
+        canOdomThread.start();
+        rioOdomThread.start();
 
         targetingState = new TargetingState(() -> swerve.state.getGlobalPoseEstimate(),
             () -> swerve.state.getFieldRelativeSpeeds(), shooter.getFlyWheelVeloRPS());
