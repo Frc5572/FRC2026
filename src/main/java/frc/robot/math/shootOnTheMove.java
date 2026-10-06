@@ -13,12 +13,9 @@ import frc.robot.Constants;
 import frc.robot.shotdata.ShotData;
 import frc.robot.shotdata.ShotData.ShotParams;
 
-public class shootOnTheMove {
-    // What stationaryShot(d) returns
-    // record ShotParams(Angle pitch, LinearVelocity exitSpeed) {
-    // }
+/** Be able to shoot while moving */
+public class ShootOnTheMove {
 
-    // Output: what the shooter actually needs to do
     record MovingShot(Rotation2d turretAngleRobotRelative, Angle pitch, LinearVelocity exitSpeed,
         boolean feasible) {
     }
@@ -54,7 +51,8 @@ public class shootOnTheMove {
         Translation2d toHub = hub.minus(shooterPos);
         double d = toHub.getNorm();
         Rotation2d rHat = toHub.getAngle();
-        double cosR = rHat.getCos(), sinR = rHat.getSin();
+        double cosR = rHat.getCos()
+        double sinR = rHat.getSin();
 
         double vrRobot = svx * cosR + svy * sinR; // + toward hub
         double vtRobot = -svx * sinR + svy * cosR; // + is CCW (r-hat rotated +90°)

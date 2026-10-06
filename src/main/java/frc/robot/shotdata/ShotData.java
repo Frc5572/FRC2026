@@ -281,6 +281,12 @@ public class ShotData {
         double timeOfFlight, boolean isOkayToShoot) {
     }
 
+    /**
+     * Encapsolates the computed shooter parameters for a single shot
+     * 
+     * @param pitch the angle of the shot
+     * @param exitSpeed the speed in meters per second that the ball is exiting the hoot.
+     */
     public static record ShotParams(Angle pitch, LinearVelocity exitSpeed) {
     }
 
@@ -314,6 +320,7 @@ public class ShotData {
         return new ShotParameters(desiredSpeed, hoodAngleDeg, tof, isOkay);
     }
 
+    /** computes shooter parameters for a hub shot */
     public static ShotParams staticShotParameters(double distance, double flywheelSpeed) {
         var res = shotMap.get(distance);
         LinearVelocity exitSpeed = MetersPerSecond.of(flywheelSpeed * Constants.Shooter.k);
