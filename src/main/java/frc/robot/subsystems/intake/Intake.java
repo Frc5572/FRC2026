@@ -37,81 +37,76 @@ public class Intake extends SubsystemBase {
         });
     }
 
-    /** Extends hopper */
-    public Command extendHopper(double intakeSpeed) {
-        int[] counts = new int[] {0, 0};
-        double[] prev = new double[] {0.0, 0.0};
-        double power = 5.0;
-        Command extendAndIntake = startEnd(() -> {
-            counts[0] = 0;
-            counts[1] = 0;
-            io.setLeftHopperVoltage(power);
-            io.setRightHopperVoltage(power);
-            runIntakeOnly(intakeSpeed);
-            SmartDashboard.putBoolean("Intake/HopperExtended", true);
+    private Command runHopperToStop(double voltage, double intakeSpeed, boolean isExtended,
+        double timeoutSeconds) {
+        final double[] prev = new double[] {0.0, 0.0};
+        final int[] stallCounts = new int[] {0, 0};
+        final boolean[] sideStopped = new boolean[] {false, false};
+        final int[] loopCounter = new int[] {0};
+        final int minRunTicks = 5;
+        final int stallThresholdTicks = 5;
+        final double minDeltaRotations = 0.01;
+        return Commands.runEnd(() -> {
+            loopCounter[0]++;
+            double left = inputs.leftHopperPositionRotations;
+            double right = inputs.rightHopperPositionRotations;
+            if (loopCounter[0] > minRunTicks) {
+                double leftDelta = (voltage > 0) ? (left - prev[0]) : (prev[0] - left);
+                double rightDelta = (voltage > 0) ? (right - prev[1]) : (prev[1] - right);
+                if (!sideStopped[0]) {
+                    if (leftDelta < minDeltaRotations) {
+                        stallCounts[0]++;
+                        if (stallCounts[0] >= stallThresholdTicks) {
+                            sideStopped[0] = true;
+                            io.setLeftHopperVoltage(0);
+                        }
+                    } else {
+                        stallCounts[0] = 0;
+                    }
+                }
+                if (!sideStopped[1]) {
+                    if (rightDelta < minDeltaRotations) {
+                        stallCounts[1]++;
+                        if (stallCounts[1] >= stallThresholdTicks) {
+                            sideStopped[1] = true;
+                            io.setRightHopperVoltage(0);
+                        }
+                    } else {
+                        stallCounts[1] = 0;
+                    }
+                }
+            }
+            prev[0] = left;
+            prev[1] = right;
         }, () -> {
             io.setLeftHopperVoltage(0);
             io.setRightHopperVoltage(0);
             runIntakeOnly(0);
-        }).until(() -> {
-            double left = inputs.leftHopperPositionRotations;
-            double right = inputs.leftHopperPositionRotations;
-            boolean leftStopped = left < prev[0] + 0.01;
-            boolean rightStopped = right < prev[1] + 0.01;
-            prev[0] = left;
-            prev[1] = right;
-            if (leftStopped) {
-                counts[0]++;
-            } else {
-                counts[0] = 0;
-            }
-            if (rightStopped) {
-                counts[1]++;
-            } else {
-                counts[1] = 0;
-            }
-            return counts[0] > 5 && counts[1] > 5;
+        }, this).beforeStarting(() -> {
+            prev[0] = inputs.leftHopperPositionRotations;
+            prev[1] = inputs.rightHopperPositionRotations;
+            stallCounts[0] = 0;
+            stallCounts[1] = 0;
+            sideStopped[0] = false;
+            sideStopped[1] = false;
+            loopCounter[0] = 0;
+            io.setLeftHopperVoltage(voltage);
+            io.setRightHopperVoltage(voltage);
+            runIntakeOnly(intakeSpeed);
+            SmartDashboard.putBoolean("Intake/HopperExtended", isExtended);
+        }).until(() -> sideStopped[0] && sideStopped[1]).withTimeout(timeoutSeconds);
+    }
 
-        });
-        return extendAndIntake;
+    /** Extends hopper */
+    public Command extendHopper(double intakeSpeed) {
+        return runHopperToStop(5.0, intakeSpeed, true, 1.0);
     }
 
     /** Retracts hopper */
     public Command retractHopper(double intakeSpeed) {
-        int[] counts = new int[] {0, 0};
-        double[] prev = new double[] {0.0, 0.0};
-        double power = -3.0;
-        return startEnd(() -> {
-            counts[0] = 0;
-            counts[1] = 0;
-            io.setLeftHopperVoltage(power);
-            io.setRightHopperVoltage(power);
-            runIntakeOnly(intakeSpeed);
-            SmartDashboard.putBoolean("Intake/HopperExtended", false);
-        }, () -> {
-            io.setLeftHopperVoltage(0);
-            io.setRightHopperVoltage(0);
-            runIntakeOnly(0);
-        }).until(() -> {
-            double left = inputs.leftHopperPositionRotations;
-            double right = inputs.leftHopperPositionRotations;
-            boolean leftStopped = left > prev[0] - 0.01;
-            boolean rightStopped = right > prev[1] - 0.01;
-            prev[0] = left;
-            prev[1] = right;
-            if (leftStopped) {
-                counts[0]++;
-            } else {
-                counts[0] = 0;
-            }
-            if (rightStopped) {
-                counts[1]++;
-            } else {
-                counts[1] = 0;
-            }
-            return counts[0] > 5 && counts[1] > 5;
-        }).withTimeout(1.0);
+        return runHopperToStop(-3.0, intakeSpeed, false, 1.0);
     }
+
 
     /** Run intake wheels */
     public Command intakeBalls(double speed) {
