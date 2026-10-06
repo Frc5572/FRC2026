@@ -53,7 +53,7 @@ import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
 import frc.robot.subsystems.swerve.gyro.GyroIOEmpty;
-import frc.robot.subsystems.swerve.gyro.GyroNavX2;
+import frc.robot.subsystems.swerve.gyro.GyroPigeon2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.PhoenixOdometryThread;
