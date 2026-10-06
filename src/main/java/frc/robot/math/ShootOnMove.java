@@ -14,7 +14,7 @@ import frc.robot.shotdata.ShotData;
 import frc.robot.shotdata.ShotData.ShotParams;
 
 /** Shoot while moving */
-public class ShootOnTheMove {
+public class ShootOnMove {
 
     record MovingShot(Rotation2d turretAngleRobotRelative, Angle pitch, LinearVelocity exitSpeed,
         boolean feasible) {
