@@ -28,7 +28,6 @@ import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.math.geometry.Rectangle;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 
 /** Total state of the robot */
 public class DrivetrainState {
@@ -41,7 +40,6 @@ public class DrivetrainState {
     private final TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
         TimeInterpolatableBuffer.createBuffer(1.5);
 
-    private Rotation2d gyroOffset = Rotation2d.kZero;
     private Rotation2d prevGyroReading = Rotation2d.kZero;
 
     private ChassisSpeeds currentSpeeds;
@@ -56,7 +54,7 @@ public class DrivetrainState {
     public DrivetrainState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
         prevGyroReading = gyroYaw;
         SwerveDriveOdometry swerveOdometry =
-            new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
+            new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
             swerveOdometry, VecBuilder.fill(0.1, 0.1, 0.1), VecBuilder.fill(0.9, 0.9, 0.9));
     }
@@ -108,7 +106,6 @@ public class DrivetrainState {
         prevGyroReading = gyroYaw;
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
         var before = getGlobalPoseEstimate();
-        visionAdjustedOdometry.update(gyroYaw.minus(gyroOffset), wheelPositions);
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
             Logger.recordOutput("State/isOnBump", true);
