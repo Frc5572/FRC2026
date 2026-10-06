@@ -13,7 +13,7 @@ import frc.robot.Constants;
 import frc.robot.shotdata.ShotData;
 import frc.robot.shotdata.ShotData.ShotParams;
 
-/** Shoot while moving */
+/** Be able to shoot while moving */
 public class ShootOnTheMove {
 
     record MovingShot(Rotation2d turretAngleRobotRelative, Angle pitch, LinearVelocity exitSpeed,
