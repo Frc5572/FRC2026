@@ -51,7 +51,7 @@ import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIOEmpty;
 import frc.robot.subsystems.swerve.SwerveReal;
 import frc.robot.subsystems.swerve.gyro.GyroIOEmpty;
-import frc.robot.subsystems.swerve.gyro.GyroNavX2;
+import frc.robot.subsystems.swerve.gyro.GyroPigeon2;
 import frc.robot.subsystems.swerve.mod.SwerveModuleIOEmpty;
 import frc.robot.subsystems.swerve.mod.SwerveModuleReal;
 import frc.robot.subsystems.swerve.util.TeleopControls;
@@ -115,7 +115,7 @@ public final class RobotContainer {
             case kReal:
                 sim = null;
                 Swerve.Bundle realBundle =
-                    Swerve.create(SwerveReal::new, GyroNavX2::new, SwerveModuleReal::new);
+                    Swerve.create(SwerveReal::new, GyroPigeon2::new, SwerveModuleReal::new);
                 this.drivetrainState = realBundle.drivetrainState();
                 this.swerve = realBundle.swerve();
                 adjustableHood = new AdjustableHood(new AdjustableHoodReal());
