@@ -51,7 +51,7 @@ public class ShootOnTheMove {
         Translation2d toHub = hub.minus(shooterPos);
         double d = toHub.getNorm();
         Rotation2d rHat = toHub.getAngle();
-        double cosR = rHat.getCos()
+        double cosR = rHat.getCos();
         double sinR = rHat.getSin();
 
         double vrRobot = svx * cosR + svy * sinR; // + toward hub
