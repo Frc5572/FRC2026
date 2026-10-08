@@ -16,8 +16,8 @@ import frc.robot.shotdata.ShotData.ShotParams;
 /** Shoot while moving */
 public class ShootOnMove {
 
-    record MovingShot(Rotation2d turretAngleRobotRelative, Angle pitch, LinearVelocity exitSpeed,
-        boolean feasible) {
+    public static record MovingShot(Rotation2d turretAngleFieldRelative, Angle pitch,
+        LinearVelocity exitSpeed, boolean feasible) {
     }
 
     static final Translation2d SHOOTER_OFFSET = new Translation2d(-0.155575, -0.13335);
@@ -28,8 +28,8 @@ public class ShootOnMove {
     static final LinearVelocity MAX_EXIT_SPEED =
         MetersPerSecond.of(Constants.Shooter.atSpeedThreshold);
 
-    MovingShot solveMovingShot(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation2d hub,
-        double flywheelSpeed) {
+    public static MovingShot solveMovingShot(Pose2d robotPose, ChassisSpeeds fieldSpeeds,
+        Translation2d hub, double flywheelSpeed) {
         double vx = fieldSpeeds.vxMetersPerSecond;
         double vy = fieldSpeeds.vyMetersPerSecond;
         double omega = fieldSpeeds.omegaRadiansPerSecond;
@@ -77,13 +77,12 @@ public class ShootOnMove {
         LinearVelocity exitSpeed = MetersPerSecond.of(Math.sqrt(h * h + c * c));
 
         // 7. Turret angle: field heading, then robot-relative
-        Rotation2d turretField = rHat.plus(new Rotation2d(deltaYaw));
-        Rotation2d turretRobot = turretField.minus(pose.getRotation());
+        Rotation2d turretField = rHat.plus(Rotation2d.fromRadians(deltaYaw));
 
         // 8. Feasibility against mechanism limits
         boolean feasible =
             pitch.gte(MIN_PITCH) && pitch.lte(MAX_PITCH) && exitSpeed.lte(MAX_EXIT_SPEED);
 
-        return new MovingShot(turretRobot, pitch, exitSpeed, feasible);
+        return new MovingShot(turretField, pitch, exitSpeed, feasible);
     }
 }

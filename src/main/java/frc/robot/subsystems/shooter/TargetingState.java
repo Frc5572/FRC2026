@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Degree;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -8,7 +10,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.math.ShootOnMove;
+import frc.robot.math.ShootOnMove.MovingShot;
 import frc.robot.shotdata.ShotData;
 import frc.robot.util.AllianceFlipUtil;
 
@@ -117,6 +122,20 @@ public class TargetingState {
         Translation2d adjustedTarget = shootingTarget;
 
         if (currentFlywheelSpeed > 10.0) {
+            Pose2d robotPosition = poseSource.get();
+            ChassisSpeeds robotSpeed = speedSource.get(); // Field relative
+            Translation2d hub = shootingTarget;
+
+            MovingShot movingShot =
+                ShootOnMove.solveMovingShot(robotPosition, robotSpeed, hub, currentFlywheelSpeed);
+
+            desiredFlywheelSpeed = movingShot.exitSpeed().in(MetersPerSecond) / Constants.Shooter.k;
+            desiredHoodAngleDeg =
+                targetIsGround ? 30.0 : 90 - 12.695 - movingShot.pitch().in(Degree);
+            okayToShoot = movingShot.feasible();
+
+            desiredTurretHeadingFieldRelative = movingShot.turretAngleFieldRelative();
+
 
             /*
              * for (int i = 0; i < 5; i++) { double distance =
@@ -135,37 +154,39 @@ public class TargetingState {
              */
         } else {
             adjustedTarget = AllianceFlipUtil.apply(FieldConstants.Hub.centerHub);
+
+            Logger.recordOutput("State/AdjustedShootingTarget", adjustedTarget);
+
+            double distance = adjustedTarget.getDistance(turretCenter) + Units.feetToMeters(trimUp);
+
+            Logger.recordOutput("State/distance", distance);
+
+            var parameters =
+                targetIsGround ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
+                    : ShotData.getShotParameters(distance, currentFlywheelSpeed, true);
+
+            desiredFlywheelSpeed = parameters.desiredSpeed();
+            desiredHoodAngleDeg = targetIsGround ? 30.0 : parameters.hoodAngleDeg();
+            okayToShoot = parameters.isOkayToShoot();
+
+            desiredTurretHeadingFieldRelative = adjustedTarget.minus(turretCenter).getAngle()
+                .plus(Rotation2d.fromDegrees(trimLeft));
+
+            Logger.recordOutput("State/desiredTurretHeading", desiredTurretHeadingFieldRelative);
+
+            Logger.recordOutput("State/Trim/TrimUp", trimUp);
+            Logger.recordOutput("State/Trim/TrimLeft", trimLeft);
+
+            Translation2d[] turretDirection = new Translation2d[2];
+
+            turretDirection[0] = turretCenter;
+            turretDirection[1] =
+                turretCenter.plus(new Translation2d(2.0, desiredTurretHeadingFieldRelative));
+
+            Logger.recordOutput("State/DesiredTurretDirection", turretDirection);
         }
 
-        Logger.recordOutput("State/AdjustedShootingTarget", adjustedTarget);
 
-        double distance = adjustedTarget.getDistance(turretCenter) + Units.feetToMeters(trimUp);
-
-        Logger.recordOutput("State/distance", distance);
-
-        var parameters =
-            targetIsGround ? ShotData.getPassParameters(distance, currentFlywheelSpeed, false)
-                : ShotData.getShotParameters(distance, currentFlywheelSpeed, true);
-
-        desiredFlywheelSpeed = parameters.desiredSpeed();
-        desiredHoodAngleDeg = targetIsGround ? 30.0 : parameters.hoodAngleDeg();
-        okayToShoot = parameters.isOkayToShoot();
-
-        desiredTurretHeadingFieldRelative =
-            adjustedTarget.minus(turretCenter).getAngle().plus(Rotation2d.fromDegrees(trimLeft));
-
-        Logger.recordOutput("State/desiredTurretHeading", desiredTurretHeadingFieldRelative);
-
-        Logger.recordOutput("State/Trim/TrimUp", trimUp);
-        Logger.recordOutput("State/Trim/TrimLeft", trimLeft);
-
-        Translation2d[] turretDirection = new Translation2d[2];
-
-        turretDirection[0] = turretCenter;
-        turretDirection[1] =
-            turretCenter.plus(new Translation2d(2.0, desiredTurretHeadingFieldRelative));
-
-        Logger.recordOutput("State/DesiredTurretDirection", turretDirection);
     }
 
     public double getDesiredFlywheelSpeed() {
