@@ -32,6 +32,8 @@ public class Turret extends SubsystemBase {
     public final TurretCameraAdapter adapter =
         new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
     private final DrivetrainState state;
+    private boolean currentlyWhipping = false;
+    private double rotationGoal;
 
     /**
      * Creates a new Turret subsystem.
@@ -54,10 +56,21 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
+        Logger.recordOutput("Turret/isWhipping", isWhipping());
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
+
+        if (currentlyWhipping) {
+            Logger.recordOutput("Turret/goalAngle", rotationGoal);
+            if (Math.abs(rotationGoal - inputs.relativeAngle) <= 0.01) {
+                currentlyWhipping = false;
+            }
+        }
+
         for (int i = 0; i < inputs.timestamps.length; i++) {
             adapter.recordTurretAngle(inputs.timestamps[i],
                 new Rotation2d(Rotations.of(inputs.angleRotations[i])));
+
+            adapter.recordTurretWhipping(inputs.timestamps[i], isWhipping());
         }
     }
 
@@ -95,9 +108,13 @@ public class Turret extends SubsystemBase {
         var normalized = normalize(targetAngle).getMeasure();
         if (normalized.lt(Constants.Turret.minAngle)) {
             normalized = normalized.plus(Rotations.of(1));
+            rotationGoal = normalized.in(Rotations);
+            currentlyWhipping = true;
         }
         if (normalized.gt(Constants.Turret.maxAngle)) {
             normalized = normalized.minus(Rotations.of(1));
+            rotationGoal = normalized.in(Rotations);
+            currentlyWhipping = true;
         }
         io.setTargetAngle(normalized, velocity);
         return true;
@@ -108,6 +125,11 @@ public class Turret extends SubsystemBase {
         return this.setGoalRobotRelative(
             targetAngle.minus(state.getGlobalPoseEstimate().getRotation()),
             RadiansPerSecond.of(-state.getFieldRelativeSpeeds().omegaRadiansPerSecond));
+    }
+
+    /** Tracks if turret is currently whipping */
+    public boolean isWhipping() {
+        return currentlyWhipping;
     }
 
     /** Aim turret in robot frame */
