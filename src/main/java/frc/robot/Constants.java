@@ -609,8 +609,7 @@ public final class Constants {
 
         /** Flywheel speed constant */
         public static final double transferCoeff = .43;
-        public static final double k = transferCoeff * 2 * Math.PI * Units.inchesToMeters(2); // figure
-                                                                                              // out
+        public static final double k = transferCoeff * 2 * Math.PI * Units.inchesToMeters(2);
 
         /** Motor Invert for Shooter Motors */
         public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;

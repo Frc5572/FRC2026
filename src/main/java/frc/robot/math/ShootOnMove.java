@@ -17,6 +17,7 @@ import frc.robot.shotdata.ShotData.ShotParams;
 /** Shoot while moving */
 public class ShootOnMove {
 
+    /** Records moving shot */
     public static record MovingShot(Rotation2d turretAngleFieldRelative, Angle pitch,
         LinearVelocity exitSpeed, boolean feasible) {
     }
@@ -30,6 +31,7 @@ public class ShootOnMove {
     static final LinearVelocity MAX_EXIT_SPEED = MetersPerSecond
         .of(Constants.Shooter.maxFlywheelSpeed.in(RotationsPerSecond) * Constants.Shooter.k);
 
+    /** solve moving shot */
     public static MovingShot solveMovingShot(Pose2d robotPose, ChassisSpeeds fieldSpeeds,
         Translation2d hub, double flywheelSpeed, double trimUp, double trimLeft) {
         double vx = fieldSpeeds.vxMetersPerSecond;

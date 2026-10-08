@@ -136,6 +136,8 @@ public class TargetingState {
 
             desiredTurretHeadingFieldRelative = movingShot.turretAngleFieldRelative();
 
+            Logger.recordOutput("State/Trim/TrimUp", trimUp);
+            Logger.recordOutput("State/Trim/TrimLeft", trimLeft);
 
             /*
              * for (int i = 0; i < 5; i++) { double distance =
