@@ -3,6 +3,7 @@ package frc.robot.math;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -23,13 +24,14 @@ public class ShootOnMove {
     static final Translation2d SHOOTER_OFFSET = new Translation2d(-0.155575, -0.13335);
     static final double LATENCY_SEC = 0.0; // tune: vision + feed + spin-up latency
 
-    static final Angle MIN_PITCH = Degrees.of(90 - 13 - Constants.AdjustableHood.maxHoodAngleDeg);
-    static final Angle MAX_PITCH = Degrees.of(90 - 13);
-    static final LinearVelocity MAX_EXIT_SPEED =
-        MetersPerSecond.of(Constants.Shooter.atSpeedThreshold);
+    static final Angle MIN_PITCH = Degrees
+        .of(90 - Constants.AdjustableHood.HoodOffset - Constants.AdjustableHood.maxHoodAngleDeg);
+    static final Angle MAX_PITCH = Degrees.of(90 - Constants.AdjustableHood.HoodOffset);
+    static final LinearVelocity MAX_EXIT_SPEED = MetersPerSecond
+        .of(Constants.Shooter.maxFlywheelSpeed.in(RotationsPerSecond) * Constants.Shooter.k);
 
     public static MovingShot solveMovingShot(Pose2d robotPose, ChassisSpeeds fieldSpeeds,
-        Translation2d hub, double flywheelSpeed) {
+        Translation2d hub, double flywheelSpeed, double trimUp, double trimLeft) {
         double vx = fieldSpeeds.vxMetersPerSecond;
         double vy = fieldSpeeds.vyMetersPerSecond;
         double omega = fieldSpeeds.omegaRadiansPerSecond;
@@ -49,7 +51,7 @@ public class ShootOnMove {
 
         // 3. Radial/tangential frame about the hub
         Translation2d toHub = hub.minus(shooterPos);
-        double d = toHub.getNorm();
+        double d = toHub.getNorm() + trimUp;
         Rotation2d rHat = toHub.getAngle();
         double cosR = rHat.getCos();
         double sinR = rHat.getSin();
@@ -59,7 +61,7 @@ public class ShootOnMove {
         double vzRobot = 0.0; // assume flat field
 
         // 4. Stationary solution -> required field-relative ball velocity
-        ShotParams s = ShotData.staticShotParameters(d, currentFlywheelSpeed);
+        ShotParams s = ShotData.staticShotParameters(d, currentFlywheelSpeed, true);
         double stationaryPitch = s.pitch().in(Radians);
         double stationarySpeed = s.exitSpeed().in(MetersPerSecond);
         double vrTarget = stationarySpeed * Math.cos(stationaryPitch);
@@ -77,7 +79,8 @@ public class ShootOnMove {
         LinearVelocity exitSpeed = MetersPerSecond.of(Math.sqrt(h * h + c * c));
 
         // 7. Turret angle: field heading, then robot-relative
-        Rotation2d turretField = rHat.plus(Rotation2d.fromRadians(deltaYaw));
+        Rotation2d turretField =
+            rHat.plus(Rotation2d.fromRadians(deltaYaw)).plus(Rotation2d.fromDegrees(trimLeft));
 
         // 8. Feasibility against mechanism limits
         boolean feasible =

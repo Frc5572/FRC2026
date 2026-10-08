@@ -120,7 +120,8 @@ public class ShotData {
         public ShotEntry(double distanceFeet, double flywheelSpeed, double hoodAngleDeg,
             double tof) {
             this(Feet.of(distanceFeet), RotationsPerSecond.of(flywheelSpeed),
-                Degrees.of(90 - 12.695 - hoodAngleDeg), MetersPerSecond.of(0.0), Seconds.of(tof));
+                Degrees.of(90 - Constants.AdjustableHood.HoodOffset - hoodAngleDeg),
+                MetersPerSecond.of(0.0), Seconds.of(tof));
         }
 
         /**
@@ -196,15 +197,15 @@ public class ShotData {
          * @return hood angle in degrees
          */
         public Angle hoodAngle() {
-            return Degrees.of(90 - 12.695 - exitAngle.in(Degrees));
+            return Degrees.of(90 - Constants.AdjustableHood.HoodOffset - exitAngle.in(Degrees));
         }
 
         public Angle pitchAngle(Angle currentAngle) {
-            return Degrees.of(90 - 12.695 - currentAngle.in(Degrees));
+            return Degrees.of(90 - Constants.AdjustableHood.HoodOffset - currentAngle.in(Degrees));
         }
 
         public LinearVelocity exitVelocity() {
-            return MetersPerSecond.of(flywheelSpeed().in(RadiansPerSecond) * Constants.Shooter.k);
+            return MetersPerSecond.of(flywheelSpeed().in(RotationsPerSecond) * Constants.Shooter.k);
         }
     }
 
@@ -287,7 +288,7 @@ public class ShotData {
      * @param pitch the angle of the shot
      * @param exitSpeed the speed in meters per second that the ball is exiting the hoot.
      */
-    public static record ShotParams(Angle pitch, LinearVelocity exitSpeed) {
+    public static record ShotParams(Angle pitch, LinearVelocity exitSpeed, boolean isOkayToShoot) {
     }
 
     /**
@@ -321,12 +322,16 @@ public class ShotData {
     }
 
     /** computes shooter parameters for a hub shot */
-    public static ShotParams staticShotParameters(double distance, double flywheelSpeed) {
+    public static ShotParams staticShotParameters(double distance, double flywheelSpeed,
+        boolean log) {
         var res = shotMap.get(distance);
-        LinearVelocity exitSpeed = MetersPerSecond.of(flywheelSpeed * Constants.Shooter.k);
+        double desiredSpeed = res.flywheelSpeed().in(RotationsPerSecond) + 1;
+        LinearVelocity exitSpeed =
+            MetersPerSecond.of(res.flywheelSpeed().in(RotationsPerSecond) * Constants.Shooter.k);
         double hoodAngle = res.hoodAngle().in(Degrees);
-        Angle pitch = Degrees.of(90 - 13 - hoodAngle);
-        return new ShotParams(pitch, exitSpeed);
+        Angle pitch = Degrees.of(90 - Constants.AdjustableHood.HoodOffset - hoodAngle);
+        boolean isOkay = flywheelSpeed > desiredSpeed - 6;
+        return new ShotParams(pitch, exitSpeed, isOkay);
     }
 
     /**

@@ -126,12 +126,12 @@ public class TargetingState {
             ChassisSpeeds robotSpeed = speedSource.get(); // Field relative
             Translation2d hub = shootingTarget;
 
-            MovingShot movingShot =
-                ShootOnMove.solveMovingShot(robotPosition, robotSpeed, hub, currentFlywheelSpeed);
+            MovingShot movingShot = ShootOnMove.solveMovingShot(robotPosition, robotSpeed, hub,
+                currentFlywheelSpeed, trimUp, trimLeft);
 
             desiredFlywheelSpeed = movingShot.exitSpeed().in(MetersPerSecond) / Constants.Shooter.k;
-            desiredHoodAngleDeg =
-                targetIsGround ? 30.0 : 90 - 12.695 - movingShot.pitch().in(Degree);
+            desiredHoodAngleDeg = targetIsGround ? 30.0
+                : 90 - Constants.AdjustableHood.HoodOffset - movingShot.pitch().in(Degree);
             okayToShoot = movingShot.feasible();
 
             desiredTurretHeadingFieldRelative = movingShot.turretAngleFieldRelative();

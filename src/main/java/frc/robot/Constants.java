@@ -382,6 +382,7 @@ public final class Constants {
     public static final class AdjustableHood {
         public static final int HoodMotorID = 11;
 
+        public static final double HoodOffset = 12.695;
         /* PID Values */
         /** Proportional PID Value for hood position control. */
         public static final double KP = 200.0;
@@ -599,13 +600,17 @@ public final class Constants {
         /** Height at which the ball leaves the shooter. */
         public static final Distance shooterHeight = Inches.of(20);
 
+        public static final AngularVelocity maxFlywheelSpeed = RotationsPerSecond.of(90);
+
         /** ID for Shooter Motor 1 */
         public static final int motor1ID = 10;
         /** ID for Shooter Motor 2 */
         public static final int motor2ID = 12;
 
         /** Flywheel speed constant */
-        public static final double k = 0.0; // figure out
+        public static final double transferCoeff = .43;
+        public static final double k = transferCoeff * 2 * Math.PI * Units.inchesToMeters(2); // figure
+                                                                                              // out
 
         /** Motor Invert for Shooter Motors */
         public static final InvertedValue shooterMotorInvert = InvertedValue.Clockwise_Positive;

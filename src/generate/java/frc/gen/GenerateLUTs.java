@@ -175,7 +175,7 @@ public class GenerateLUTs {
 
         double maxGroundDistance = 0.0;
         for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
-            var hoodAngle = Degrees.of(90 - 12.695 - 25);
+            var hoodAngle = Degrees.of(90 - Constants.AdjustableHood.HoodOffset - 25);
             var exitVelocity =
                 MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
                     RotationsPerSecond.of(flywheel), null)));
@@ -204,7 +204,7 @@ public class GenerateLUTs {
         }
 
         for (double flywheel = maxFlywheelSpeed + 2.0; flywheel < 90.0; flywheel += 2.0) {
-            var hoodAngle = Degrees.of(90 - 12.695 - 35);
+            var hoodAngle = Degrees.of(90 - Constants.AdjustableHood.HoodOffset - 35);
             var exitVelocity =
                 MetersPerSecond.of(olsRes.evaluate(new Tuple2<AngularVelocity, LinearVelocity>(
                     RotationsPerSecond.of(flywheel), null)));
