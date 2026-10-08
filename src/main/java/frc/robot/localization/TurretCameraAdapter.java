@@ -14,6 +14,8 @@ public class TurretCameraAdapter {
     private final TimeInterpolatableBuffer<Rotation2d> angleBuffer =
         TimeInterpolatableBuffer.createBuffer(BUFFER_SECONDS);
 
+    private final TimeInterpolatableBuffer<Boolean> whippingBuffer =
+        TimeInterpolatableBuffer.createBuffer((a, b, t) -> a || b, BUFFER_SECONDS);
 
     public TurretCameraAdapter(Translation3d turretCenter) {
         this.turretCenter = turretCenter;
@@ -21,6 +23,14 @@ public class TurretCameraAdapter {
 
     public void recordTurretAngle(double timestamp, Rotation2d angle) {
         angleBuffer.addSample(timestamp, angle);
+    }
+
+    public void recordTurretWhipping(double timestamp, boolean isWhipping) {
+        whippingBuffer.addSample(timestamp, isWhipping);
+    }
+
+    public boolean getTurretWhipping(double timestamp) {
+        return whippingBuffer.getSample(timestamp).get();
     }
 
     Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {
