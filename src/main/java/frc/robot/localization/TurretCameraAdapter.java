@@ -29,8 +29,8 @@ public class TurretCameraAdapter {
         whippingBuffer.addSample(timestamp, isWhipping);
     }
 
-    public boolean getTurretWhipping(double timestamp) {
-        return whippingBuffer.getSample(timestamp).get();
+    public Optional<Boolean> getTurretWhipping(double timestamp) {
+        return whippingBuffer.getSample(timestamp);
     }
 
     Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {
