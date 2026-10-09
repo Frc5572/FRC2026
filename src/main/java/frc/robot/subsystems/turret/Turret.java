@@ -12,6 +12,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -55,6 +56,9 @@ public class Turret extends SubsystemBase {
         Logger.processInputs("Turret", inputs);
 
         Constants.Turret.pid.ifDirty(io::setPID);
+
+        currentlyWhipping =
+            Math.abs(rotationGoal - inputs.relativeAngle) >= Units.degreesToRotations(180);
 
         Logger.recordOutput("Turret/isWhipping", isWhipping());
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
@@ -109,12 +113,10 @@ public class Turret extends SubsystemBase {
         if (normalized.lt(Constants.Turret.minAngle)) {
             normalized = normalized.plus(Rotations.of(1));
             rotationGoal = normalized.in(Rotations);
-            currentlyWhipping = true;
         }
         if (normalized.gt(Constants.Turret.maxAngle)) {
             normalized = normalized.minus(Rotations.of(1));
             rotationGoal = normalized.in(Rotations);
-            currentlyWhipping = true;
         }
         io.setTargetAngle(normalized, velocity);
         return true;
