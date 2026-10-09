@@ -31,6 +31,7 @@ public class Turret extends SubsystemBase {
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     public final TurretCameraAdapter adapter =
         new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
+    private final Timer timer = new Timer();
     private final DrivetrainState state;
     private boolean currentlyWhipping = false;
     private double rotationGoal;
@@ -63,6 +64,13 @@ public class Turret extends SubsystemBase {
         if (currentlyWhipping) {
             if (Math.abs(rotationGoal - inputs.relativeAngle) <= 0.01) {
                 currentlyWhipping = false;
+                Logger.recordOutput("Turret/whipFailed", false);
+            }
+
+            if (timer.hasElapsed(Constants.Turret.maxWhipTime)) {
+                currentlyWhipping = false;
+                Logger.recordOutput("Turret/whipFailed",
+                    !(Math.abs(rotationGoal - inputs.relativeAngle) <= 0.01));
             }
         }
 
@@ -97,6 +105,10 @@ public class Turret extends SubsystemBase {
 
     public void setVoltageIO(DoubleSupplier voltage) {
         io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
+        if (currentlyWhipping) {
+            Logger.recordOutput("Turret/whipFailed", true);
+        }
+        currentlyWhipping = false;
     }
 
     /**
@@ -109,10 +121,12 @@ public class Turret extends SubsystemBase {
         if (normalized.lt(Constants.Turret.minAngle)) {
             normalized = normalized.plus(Rotations.of(1));
             currentlyWhipping = true;
+            timer.restart();
         }
         if (normalized.gt(Constants.Turret.maxAngle)) {
             normalized = normalized.minus(Rotations.of(1));
             currentlyWhipping = true;
+            timer.restart();
         }
         rotationGoal = normalized.in(Rotations);
         io.setTargetAngle(normalized, velocity);
