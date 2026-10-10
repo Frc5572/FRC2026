@@ -593,6 +593,8 @@ public final class Constants {
 
         public static final Angle maxAngle = Degrees.of(180);
         public static final Angle minAngle = Degrees.of(-180);
+
+        public static final double maxWhipTime = 2.0;
     }
 
     /** Shooter Constants */
