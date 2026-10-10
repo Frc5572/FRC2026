@@ -103,6 +103,7 @@ public class Turret extends SubsystemBase {
         });
     }
 
+    /** Set turret motor's output voltage, automatically whip ends. */
     public void setVoltageIO(DoubleSupplier voltage) {
         io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
         if (currentlyWhipping) {
