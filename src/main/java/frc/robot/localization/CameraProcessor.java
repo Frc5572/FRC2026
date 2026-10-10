@@ -82,9 +82,10 @@ public class CameraProcessor {
             if (maybeRobotToCamera.isEmpty()) {
                 return Result.err(RejectionReason.MISSING_TURRET_ANGLE);
             }
-            if (adapter.getTurretWhipping(result.getTimestampSeconds()).isEmpty()) {
+            var turretWhipState = adapter.getTurretWhipping(result.getTimestampSeconds());
+            if (turretWhipState.isEmpty()) {
                 return Result.err(RejectionReason.MISSING_WHIP_STATE);
-            } else if (adapter.getTurretWhipping(result.getTimestampSeconds()).get()) {
+            } else if (turretWhipState.get()) {
                 return Result.err(RejectionReason.TURRET_WHIPPING);
             }
             robotToCamera_ = maybeRobotToCamera.get();
