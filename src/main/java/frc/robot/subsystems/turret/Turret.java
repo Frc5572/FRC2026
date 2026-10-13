@@ -12,6 +12,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,7 +32,10 @@ public class Turret extends SubsystemBase {
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     public final TurretCameraAdapter adapter =
         new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
+    private final Timer timer = new Timer();
     private final DrivetrainState state;
+    private boolean currentlyWhipping = false;
+    private double rotationGoal;
 
     /**
      * Creates a new Turret subsystem.
@@ -54,10 +58,29 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
+        Logger.recordOutput("Turret/isWhipping", isWhipping());
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
+        Logger.recordOutput("Turret/targetAngle", rotationGoal);
+
+        if (currentlyWhipping) {
+            if (Units.rotationsToDegrees(Math
+                .abs(rotationGoal - inputs.relativeAngle)) <= Constants.Turret.degreeTolerance) {
+                currentlyWhipping = false;
+                Logger.recordOutput("Turret/whipFailed", false);
+            }
+
+            if (timer.hasElapsed(Constants.Turret.maxWhipTime)) {
+                currentlyWhipping = false;
+                Logger.recordOutput("Turret/whipFailed", !(Units.rotationsToDegrees(Math.abs(
+                    rotationGoal - inputs.relativeAngle)) <= Constants.Turret.degreeTolerance));
+            }
+        }
+
         for (int i = 0; i < inputs.timestamps.length; i++) {
             adapter.recordTurretAngle(inputs.timestamps[i],
                 new Rotation2d(Rotations.of(inputs.angleRotations[i])));
+
+            adapter.recordTurretWhipping(inputs.timestamps[i], isWhipping());
         }
     }
 
@@ -82,8 +105,13 @@ public class Turret extends SubsystemBase {
         });
     }
 
+    /** Set turret motor's output voltage, automatically whip ends. */
     public void setVoltageIO(DoubleSupplier voltage) {
         io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
+        if (currentlyWhipping) {
+            Logger.recordOutput("Turret/whipFailed", true);
+        }
+        currentlyWhipping = false;
     }
 
     /**
@@ -99,6 +127,11 @@ public class Turret extends SubsystemBase {
         if (normalized.gt(Constants.Turret.maxAngle)) {
             normalized = normalized.minus(Rotations.of(1));
         }
+        if (Math.abs(rotationGoal - normalized.in(Rotations)) >= Units.degreesToRotations(180)) {
+            currentlyWhipping = true;
+            timer.restart();
+        }
+        rotationGoal = normalized.in(Rotations);
         io.setTargetAngle(normalized, velocity);
         return true;
     }
@@ -108,6 +141,11 @@ public class Turret extends SubsystemBase {
         return this.setGoalRobotRelative(
             targetAngle.minus(state.getGlobalPoseEstimate().getRotation()),
             RadiansPerSecond.of(-state.getFieldRelativeSpeeds().omegaRadiansPerSecond));
+    }
+
+    /** Tracks if turret is currently whipping */
+    public boolean isWhipping() {
+        return currentlyWhipping;
     }
 
     /** Aim turret in robot frame */
