@@ -148,6 +148,10 @@ public class Turret extends SubsystemBase {
         return currentlyWhipping;
     }
 
+    public boolean isAimed() {
+        return !currentlyWhipping;
+    }
+
     /** Aim turret in robot frame */
     public Command goToAngleRobotRelative(Supplier<Rotation2d> rotations) {
         return run(() -> this.setGoalRobotRelative(rotations.get(), RotationsPerSecond.of(0)));

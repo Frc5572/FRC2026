@@ -56,10 +56,10 @@ public class CommandFactory {
 
     /** Shoot at a given target. */
     public static Command shoot(TargetingState state, Shooter shooter, Indexer indexer,
-        AdjustableHood hood) {
+        AdjustableHood hood, Turret turret) {
         return Commands.parallel(shooter.shoot(() -> state.getDesiredFlywheelSpeed()),
             hood.setGoal(() -> Degrees.of(state.getDesiredHoodAngle())),
-            indexer.runSpindexer(() -> state.isOkayToShoot()));
+            indexer.runSpindexer(() -> state.isOkayToShoot() && turret.isAimed()));
     }
 
     /** Point turret at hub. */
