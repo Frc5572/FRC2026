@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Set;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -293,8 +294,20 @@ public class FieldConstants {
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(21).get().toPose2d();
     }
 
+    /** AprilTag IDs mounted on the blue and red hubs. */
+    private static final Set<Integer> hubTagIds =
+        Set.of(18, 19, 20, 21, 24, 25, 26, 27, 2, 3, 4, 5, 8, 9, 10, 11);
+
+    /** Return true if the AprilTag is mounted on either hub. */
+    public static boolean isHubTag(int id) {
+        return hubTagIds.contains(id);
+    }
+
     /** Return true if pose is in the area of the bump. */
     public static boolean isOnBump(Pose2d pose) {
+        if (isInsideHub(pose.getTranslation())) {
+            return false;
+        }
         AABB bumpArea = new AABB(Hub.centerHub, LeftBump.depth,
             LeftBump.width * 2 + Units.inchesToMeters(47.0));
         AABB oppBumpArea =

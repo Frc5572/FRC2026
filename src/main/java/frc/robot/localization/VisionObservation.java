@@ -6,10 +6,22 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N3;
 
-/** Vision Observation Record */
+/**
+ * Vision Observation Record
+ *
+ * @param isTurret whether the observation came from a turret-mounted camera
+ * @param turretHeadingStdDev heading std-dev (radians) from the turret motion model
+ */
 public record VisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
     double translationStdDev, double rotationStdDev, double timestamp, boolean isTurret,
-    String cameraName, boolean isReal) {
+    String cameraName, boolean isReal, double turretHeadingStdDev) {
+
+    public VisionObservation(Pose3d cameraPose, Transform3d robotToCamera,
+        double translationStdDev, double rotationStdDev, double timestamp, boolean isTurret,
+        String cameraName, boolean isReal) {
+        this(cameraPose, robotToCamera, translationStdDev, rotationStdDev, timestamp, isTurret,
+            cameraName, isReal, rotationStdDev);
+    }
 
     public Vector<N3> getStdDev() {
         return VecBuilder.fill(translationStdDev, translationStdDev, rotationStdDev);

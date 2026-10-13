@@ -1,22 +1,16 @@
 package frc.robot.localization;
 
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
-import frc.robot.math.geometry.Penetration;
-import frc.robot.math.geometry.Rectangle;
-import frc.robot.math.geometry.SeparatingAxis;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -38,16 +32,6 @@ public class CameraProcessor {
 
     private final CameraConstants cameraConstants;
 
-    private final Rectangle robotRect = new Rectangle("pose", Pose2d.kZero,
-        Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);
-    private final Rectangle[] hubRects = new Rectangle[] {
-        new Rectangle("hub", new Pose2d(FieldConstants.Hub.centerHub, Rotation2d.kZero),
-            FieldConstants.Hub.width, FieldConstants.Hub.width),
-        new Rectangle("oppHub",
-            new Pose2d(FieldConstants.fieldLength - FieldConstants.Hub.centerHub.getX(),
-                FieldConstants.Hub.centerHub.getY(), Rotation2d.kZero),
-            FieldConstants.Hub.width, FieldConstants.Hub.width)};
-    private final Penetration hubPenetration = new Penetration("HubPen");
 
     /**
      * Adapter that resolves the time-varying robot-to-camera transform for a turreted camera.
@@ -96,7 +80,17 @@ public class CameraProcessor {
             Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
         double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
 
+        double turretHeadingStdDev = 0.0;
         if (adapter != null) {
+            if (adapter.isWhippingAt(result.getTimestampSeconds())) {
+                return Result.err(RejectionReason.TURRET_WHIPPING);
+            }
+            double turretRate = adapter.getRateAt(result.getTimestampSeconds());
+            turretHeadingStdDev = Math.hypot(Constants.Vision.turretHeadingStdDevFloor,
+                Constants.Vision.turretHeadingTimingStdDev * turretRate);
+            Logger.recordOutput("State/Camera/" + cameraConstants.name + "/turretRate", turretRate);
+            Logger.recordOutput("State/Camera/" + cameraConstants.name + "/turretHeadingStdDev",
+                turretHeadingStdDev);
             var maybeRobotToCamera =
                 adapter.getRobotToCameraAt(robotToCamera_, result.getTimestampSeconds());
             if (maybeRobotToCamera.isEmpty()) {
@@ -134,24 +128,13 @@ public class CameraProcessor {
             Logger.recordOutput("State/Camera/" + cameraConstants.name + "/estRobotPose",
                 estRobotPose);
 
-            var estRobotPose2d = estRobotPose.toPose2d();
-            robotRect.setPose(estRobotPose2d);
-
-            // Reject if whole robot (including bumpers) extends outside field perimeter
-            if (Constants.keepInField) {
-                for (var corner : robotRect.getCorners()) {
-                    if (corner.getX() < 0.0 || corner.getX() > FieldConstants.fieldLength
-                        || corner.getY() < 0.0 || corner.getY() > FieldConstants.fieldWidth) {
-                        return Result.err(RejectionReason.OUTSIDE_FIELD);
-                    }
-                }
+            // Physically impossible poses; these show up when the robot is tilted on the bump.
+            var estTranslation = estRobotPose.toPose2d().getTranslation();
+            if (Constants.keepInField && !FieldConstants.isInField(estTranslation)) {
+                return Result.err(RejectionReason.OUTSIDE_FIELD);
             }
-
-            // Reject if robot penetrates either hub
-            for (var hub : hubRects) {
-                if (SeparatingAxis.solve(robotRect, hub, hubPenetration)) {
-                    return Result.err(RejectionReason.INSIDE_HUB);
-                }
+            if (FieldConstants.isInsideHub(estTranslation)) {
+                return Result.err(RejectionReason.INSIDE_HUB);
             }
 
             double stdDevMultiplier = stdDevMultiplier(result.targets, cameraPose);
@@ -173,7 +156,7 @@ public class CameraProcessor {
 
             return Result.ok(new VisionObservation(cameraPose, robotToCamera_, translationStdDev,
                 rotationStdDev, result.getTimestampSeconds(), cameraConstants.isTurret,
-                cameraConstants.name, isReal));
+                cameraConstants.name, isReal, turretHeadingStdDev));
         }
 
         return Result.err(RejectionReason.SINGLE_TAG_ONLY);

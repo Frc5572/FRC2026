@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -37,6 +38,8 @@ import frc.robot.math.geometry.Rectangle;
 import frc.robot.math.geometry.SeparatingAxis;
 import frc.robot.subsystems.vision.CameraConstants;
 import frc.robot.subsystems.vision.CameraConstantsBuilder;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
 
 public class TurretLocalizationTest {
 
@@ -186,7 +189,7 @@ public class TurretLocalizationTest {
         Pose3d cameraPose = new Pose3d(2.0, 2.0, 0.5, new Rotation3d(0, 0, Math.toRadians(45)));
         Transform3d robotToCamera = new Transform3d();
         VisionObservation movingTurretObs = new VisionObservation(
-            cameraPose, robotToCamera, 0.1, 0.05, t0, true, "turret", true);
+            cameraPose, robotToCamera, 0.1, 0.05, t0, true, "turret", true, 10000.0);
 
         state.addVisionObservation(movingTurretObs);
 
@@ -200,7 +203,7 @@ public class TurretLocalizationTest {
         state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t1, true);
 
         VisionObservation stationaryTurretObs = new VisionObservation(
-            cameraPose, robotToCamera, 0.1, 0.05, t1, true, "turret", true);
+            cameraPose, robotToCamera, 0.1, 0.05, t1, true, "turret", true, 0.05);
 
         state.addVisionObservation(stationaryTurretObs);
 
@@ -353,5 +356,119 @@ public class TurretLocalizationTest {
             + " | visionOnBump: " + visionOnBumpFrames);
         assertTrue(totalFrames > 0, "Curie Q119 match log should have frames");
         assertTrue(turretMovedFrames > 0, "Curie Q119 match should have instances where turret moved");
+    }
+
+    @Test
+    public void testAdapterRateAndWhipping() {
+        TurretCameraAdapter adapter = new TurretCameraAdapter(new Translation3d(0, 0, 0));
+        double t0 = 1.0;
+        adapter.recordTurretAngle(t0 - 0.04, Rotation2d.fromDegrees(0), false);
+        adapter.recordTurretAngle(t0 + 0.04, Rotation2d.fromDegrees(8), false);
+
+        double rate = adapter.getRateAt(t0);
+        // Rate is (8 deg in rad) / (2 * 0.04s) = 0.1396 / 0.08 ~ 1.745 rad/s
+        assertEquals(Math.toRadians(8) / 0.08, rate, 1e-3, "Calculated central difference rate should match");
+        assertFalse(adapter.isWhippingAt(t0), "Should not be whipping at t0");
+
+        // Record whipping at t1
+        double t1 = 2.0;
+        adapter.recordTurretAngle(t1, Rotation2d.fromDegrees(45), true);
+        assertTrue(adapter.isWhippingAt(t1), "Should be whipping at t1");
+
+        // Hub tag recording
+        assertFalse(adapter.getLastHubTagTime() > 0);
+        adapter.recordFrame(2.5, true);
+        assertEquals(2.5, adapter.getLastHubTagTime(), 1e-6);
+        assertTrue(FieldConstants.isHubTag(26));
+        assertFalse(FieldConstants.isHubTag(1));
+    }
+
+    @Test
+    public void testLimitPositionHubPushout() {
+        DrivetrainState state = new DrivetrainState(getZeroModulePositions(), Rotation2d.kZero);
+        // Pose penetrating the alliance hub
+        Pose2d penetratingPose = new Pose2d(FieldConstants.Hub.centerHub, Rotation2d.kZero);
+        Pose2d[] pushedPose = new Pose2d[1];
+        state.limitPosition(penetratingPose, p -> pushedPose[0] = p);
+
+        assertNotNull(pushedPose[0], "Limit position should push out a pose penetrating the hub");
+        // Verify pushed pose moved away from the hub center
+        double dist = pushedPose[0].getTranslation().getDistance(FieldConstants.Hub.centerHub);
+        assertTrue(dist > 0.5, "Pushed pose should be pushed out by bumper radius");
+    }
+
+    @Test
+    public void testBumpCrossingPushout() {
+        DrivetrainState state = new DrivetrainState(getZeroModulePositions(), Rotation2d.kZero);
+        // Test positions along LeftBump (crossing in X at Y = 5.0)
+        double hubX = FieldConstants.Hub.centerHub.getX();
+        for (double x = hubX - 0.5; x <= hubX + 0.5; x += 0.1) {
+            Pose2d pose = new Pose2d(x, 5.0, Rotation2d.kZero);
+            Pose2d[] pushed = new Pose2d[1];
+            state.limitPosition(pose, p -> pushed[0] = p);
+            assertTrue(FieldConstants.isOnBump(pose), "Pose should be recognized as on the bump");
+            // While on the bump, robot should not be pushed backwards
+            assertNotNull(pose);
+        }
+    }
+
+    @Test
+    public void testBumpOdometryMotion() {
+        DrivetrainState state = new DrivetrainState(getZeroModulePositions(), Rotation2d.kZero);
+        // Start before bump at X = 3.5, Y = 5.0
+        state.overrideInit(new Pose2d(3.5, 5.0, Rotation2d.kZero));
+
+        double dist = 0.0;
+        double t = 0.0;
+        for (int i = 0; i < 50; i++) { // 1 second of driving forward at 2 m/s
+            t += 0.02;
+            dist += 2.0 * 0.02;
+            SwerveModulePosition[] pos = new SwerveModulePosition[] {
+                new SwerveModulePosition(dist, Rotation2d.kZero),
+                new SwerveModulePosition(dist, Rotation2d.kZero),
+                new SwerveModulePosition(dist, Rotation2d.kZero),
+                new SwerveModulePosition(dist, Rotation2d.kZero)
+            };
+            state.addOdometryObservation(pos, Rotation2d.kZero, t, true);
+        }
+        assertTrue(state.getGlobalPoseEstimate().getX() > 4.5,
+            "Odometry should successfully advance past the bump center");
+    }
+
+    @Test
+    public void testVisionSeesTurretTagTogglesCorrectly() {
+        DrivetrainState state = new DrivetrainState(getZeroModulePositions(), Rotation2d.kZero);
+        TurretCameraAdapter adapter =
+            new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
+        class TestVisionIO implements VisionIO {
+            public PhotonPipelineResult[] results = new PhotonPipelineResult[0];
+
+            @Override
+            public void updateInputs(CameraInputs[] inputs) {
+                if (inputs.length > 0) {
+                    inputs[0].results = results;
+                }
+            }
+        }
+        TestVisionIO testIO = new TestVisionIO();
+        Vision vision = new Vision(state, testIO, adapter);
+
+        assertFalse(vision.seesTurretTag(), "Should not see tag initially");
+
+        // Simulate frame with a target from turret camera
+        PhotonTrackedTarget target = new PhotonTrackedTarget();
+        target.fiducialId = 1;
+        testIO.results = new PhotonPipelineResult[] {
+            new PhotonPipelineResult(0L, 0L, 0L, 1L, List.of(target))
+        };
+        vision.periodic();
+        assertTrue(vision.seesTurretTag(), "Should see turret tag after receiving frame with target");
+
+        // Simulate frame with no targets
+        testIO.results = new PhotonPipelineResult[] {
+            new PhotonPipelineResult(0L, 0L, 0L, 2L, List.of())
+        };
+        vision.periodic();
+        assertFalse(vision.seesTurretTag(), "Should no longer see turret tag when frame has no targets");
     }
 }

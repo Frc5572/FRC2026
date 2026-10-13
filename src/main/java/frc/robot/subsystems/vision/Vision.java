@@ -9,10 +9,12 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.localization.CameraProcessor;
 import frc.robot.localization.CameraProcessor.Result;
 import frc.robot.localization.DrivetrainState;
@@ -51,9 +53,14 @@ public class Vision extends SubsystemBase {
     private final String[] cameraVizKeys;
     private final boolean[] cameraContributed;
     private final String[] cameraContributedKeys;
-    private boolean seesMultitag;
-    public Trigger seesTwoAprilTags =
-        new Trigger(() -> twoAprilTags()).debounce(.3, Debouncer.DebounceType.kBoth);
+    private long turretFrameCount = 0;
+    private long lastTurretTagFrame = -1;
+    private long lastTurretMultitagFrame = -1;
+    private double lastTurretFrameTimestamp = Double.NEGATIVE_INFINITY;
+    public final Trigger seesTurretTag =
+        new Trigger(this::seesTurretTag).debounce(.3, Debouncer.DebounceType.kBoth);
+    public final Trigger seesTwoAprilTags =
+        new Trigger(this::twoAprilTags).debounce(.3, Debouncer.DebounceType.kBoth);
     private final CameraProcessor[] cameraProcessors;
     private final Result[] processorResults;
     private final TurretCameraAdapter adapter;
@@ -114,6 +121,19 @@ public class Vision extends SubsystemBase {
             cameraViz[i] = new Translation3d[0];
         }
         for (var result : results) {
+            if (Constants.Vision.cameraConstants[result._0()].isTurret) {
+                turretFrameCount++;
+                lastTurretFrameTimestamp = Timer.getTimestamp();
+                boolean sawHubTag = result._1().targets.stream()
+                    .anyMatch(target -> FieldConstants.isHubTag(target.fiducialId));
+                adapter.recordFrame(result._1().getTimestampSeconds(), sawHubTag);
+                if (!result._1().targets.isEmpty()) {
+                    lastTurretTagFrame = turretFrameCount;
+                }
+                if (result._1().multitagResult.isPresent()) {
+                    lastTurretMultitagFrame = turretFrameCount;
+                }
+            }
             processorResults[result._0()] = cameraProcessors[result._0()].process(
                 result._1(), state.getFieldRelativeSpeeds(), cameraInputs[result._0()].isReal);
             if (processorResults[result._0()] instanceof CameraProcessor.Err<?, ?> err) {
@@ -124,9 +144,6 @@ public class Vision extends SubsystemBase {
                 cameraContributed[result._0()] = true;
                 var obs = (VisionObservation) ok.value();
                 state.addVisionObservation(obs);
-            }
-            if (result._0() == 0 && result._1().multitagResult.isPresent()) {
-                seesMultitag = true;
             }
             for (int i = 0; i < result._1().targets.size(); i++) {
                 var robotToCamera = Constants.Vision.cameraConstants[result._0()].robotToCamera;
@@ -163,6 +180,8 @@ public class Vision extends SubsystemBase {
             }
         }
         SmartDashboard.putBoolean("Vision/seesAprilTag", seesAprilTag);
+        Logger.recordOutput("Vision/seesTurretTag", seesTurretTag());
+        Logger.recordOutput("Vision/seesMultitag", seesMultitag());
     }
 
     private Translation3d[] addTwo(Translation3d[] translations, Translation3d newTranslation1,
@@ -174,8 +193,18 @@ public class Vision extends SubsystemBase {
         return res;
     }
 
+    public boolean seesTurretTag() {
+        double now = Timer.getTimestamp();
+        return lastTurretTagFrame == turretFrameCount && (now - lastTurretFrameTimestamp) < 0.25;
+    }
+
+    public boolean seesMultitag() {
+        double now = Timer.getTimestamp();
+        return lastTurretMultitagFrame == turretFrameCount && (now - lastTurretFrameTimestamp) < 0.25;
+    }
+
     public boolean twoAprilTags() {
-        return seesMultitag;
+        return seesMultitag();
     }
 
 }
