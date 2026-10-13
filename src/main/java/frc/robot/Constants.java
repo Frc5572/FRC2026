@@ -620,6 +620,9 @@ public final class Constants {
          * estimate back.
          */
         public static final AngularVelocity searchRate = RadiansPerSecond.of(1.0);
+
+        public static final double maxWhipTime = 2.0;
+        public static final double degreeTolerance = 5.0;
     }
 
     /** Shooter Constants */

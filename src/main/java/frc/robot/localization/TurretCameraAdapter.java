@@ -40,6 +40,14 @@ public class TurretCameraAdapter {
         recordTurretAngle(timestamp, angle, false);
     }
 
+    public void recordTurretWhipping(double timestamp, boolean isWhipping) {
+        whippingBuffer.addSample(timestamp, isWhipping);
+    }
+
+    public Optional<Boolean> getTurretWhipping(double timestamp) {
+        return whippingBuffer.getSample(timestamp);
+    }
+
     /**
      * Records that a turret-camera frame arrived, whether or not it was accepted for fusion. Ends a
      * turret search once a hub tag is seen.
@@ -59,7 +67,7 @@ public class TurretCameraAdapter {
     }
 
     /** Whether the turret was whipping around at {@code timestamp}. */
-    boolean isWhippingAt(double timestamp) {
+    public boolean isWhippingAt(double timestamp) {
         return whippingBuffer.getSample(timestamp).orElse(false);
     }
 
@@ -67,7 +75,7 @@ public class TurretCameraAdapter {
      * Turret angular rate (rad/s) around {@code timestamp}. Vision latency means samples after the
      * frame are normally available, so this is a central difference.
      */
-    double getRateAt(double timestamp) {
+    public double getRateAt(double timestamp) {
         var before = angleBuffer.getSample(timestamp - RATE_HALF_WINDOW);
         var after = angleBuffer.getSample(timestamp + RATE_HALF_WINDOW);
         if (before.isEmpty() || after.isEmpty()) {

@@ -37,15 +37,13 @@ public class Turret extends SubsystemBase {
     private final TurretInputsAutoLogged inputs = new TurretInputsAutoLogged();
     public final TurretCameraAdapter adapter =
         new TurretCameraAdapter(Constants.Vision.turretCenter.getTranslation());
+    private final Timer timer = new Timer();
     private final DrivetrainState state;
+    private boolean currentlyWhipping = false;
+    private double rotationGoal;
 
     /** Last commanded robot-relative setpoint in rotations, or NaN if not position-controlled. */
     private double lastSetpoint = Double.NaN;
-    private boolean whipping = false;
-    private double whipStart = 0.0;
-    private double prevAngle = Double.NaN;
-    private double prevAngleTime = 0.0;
-    private final LinearFilter rateFilter = LinearFilter.movingAverage(5);
 
     /**
      * Creates a new Turret subsystem.
@@ -68,44 +66,30 @@ public class Turret extends SubsystemBase {
 
         Constants.Turret.pid.ifDirty(io::setPID);
 
+        Logger.recordOutput("Turret/isWhipping", isWhipping());
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
-        double now = Timer.getTimestamp();
-        double rate = 0.0;
-        if (!Double.isNaN(prevAngle) && now > prevAngleTime) {
-            rate = rateFilter
-                .calculate(Math.abs(inputs.relativeAngle - prevAngle) / (now - prevAngleTime));
-        }
-        prevAngle = inputs.relativeAngle;
-        prevAngleTime = now;
-        // The whip ends when the turret reaches its setpoint, stops moving (it may never reach an
-        // unreachable or stale setpoint), or runs out of time.
-        if (whipping && (Double.isNaN(lastSetpoint)
-            || Math.abs(lastSetpoint - inputs.relativeAngle) < WHIP_SETTLED.in(Rotations)
-            || (now - whipStart > WHIP_GRACE && rate < WHIP_STOPPED.in(RotationsPerSecond))
-            || now - whipStart > WHIP_TIMEOUT)) {
-            whipping = false;
-        }
-        Logger.recordOutput("Turret/isWhipping", whipping);
+        Logger.recordOutput("Turret/targetAngle", rotationGoal);
         Logger.recordOutput("Turret/searching", searching);
+
+        if (currentlyWhipping) {
+            if (Units.rotationsToDegrees(Math
+                .abs(rotationGoal - inputs.relativeAngle)) <= Constants.Turret.degreeTolerance) {
+                currentlyWhipping = false;
+                Logger.recordOutput("Turret/whipFailed", false);
+            }
+
+            if (timer.hasElapsed(Constants.Turret.maxWhipTime)) {
+                currentlyWhipping = false;
+                Logger.recordOutput("Turret/whipFailed", !(Units.rotationsToDegrees(Math.abs(
+                    rotationGoal - inputs.relativeAngle)) <= Constants.Turret.degreeTolerance));
+            }
+        }
+
         for (int i = 0; i < inputs.timestamps.length; i++) {
             adapter.recordTurretAngle(inputs.timestamps[i],
-                new Rotation2d(Rotations.of(inputs.angleRotations[i])), whipping);
+                new Rotation2d(Rotations.of(inputs.angleRotations[i])), isWhipping());
             state.setTurretRawAngle(inputs.timestamps[i], Rotations.of(inputs.angleRotations[i]));
         }
-    }
-
-    private static final Angle WHIP_SETTLED = Degrees.of(10);
-    private static final AngularVelocity WHIP_STOPPED = DegreesPerSecond.of(45);
-    /** Seconds after a setpoint wrap before a stopped turret ends the whip. */
-    private static final double WHIP_GRACE = 0.2;
-    private static final double WHIP_TIMEOUT = 1.5;
-
-    /**
-     * Whether the turret is swinging the long way around because its setpoint wrapped past a travel
-     * limit. Shooting and turret-camera vision should be paused while this is true.
-     */
-    public boolean isWhipping() {
-        return whipping;
     }
 
     public Rotation2d getTurretHeading() {
@@ -129,9 +113,14 @@ public class Turret extends SubsystemBase {
         });
     }
 
+    /** Set turret motor's output voltage, automatically whip ends. */
     public void setVoltageIO(DoubleSupplier voltage) {
         lastSetpoint = Double.NaN;
         io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
+        if (currentlyWhipping) {
+            Logger.recordOutput("Turret/whipFailed", true);
+        }
+        currentlyWhipping = false;
     }
 
     /**
@@ -160,12 +149,11 @@ public class Turret extends SubsystemBase {
                 normalized = Rotations.of(-0.5);
             }
         }
-        if (!Double.isNaN(lastSetpoint) && Math.abs(setpoint - lastSetpoint) > 0.5) {
-            if (!whipping) {
-                whipping = true;
-                whipStart = Timer.getTimestamp();
-            }
+        if (Math.abs(rotationGoal - normalized.in(Rotations)) >= Units.degreesToRotations(180)) {
+            currentlyWhipping = true;
+            timer.restart();
         }
+        rotationGoal = normalized.in(Rotations);
         lastSetpoint = setpoint;
         io.setTargetAngle(normalized, velocity);
         return true;
@@ -201,7 +189,7 @@ public class Turret extends SubsystemBase {
      * {@link Constants.Turret#aimTolerance} of its setpoint.
      */
     public boolean isAimed() {
-        return !whipping && !searching && !Double.isNaN(lastSetpoint)
+        return !isWhipping() && !searching && !Double.isNaN(lastSetpoint)
             && Math.abs(lastSetpoint - inputs.relativeAngle) < Constants.Turret.aimTolerance
                 .in(Rotations);
     }
@@ -244,6 +232,11 @@ public class Turret extends SubsystemBase {
                 RadiansPerSecond.of(direction[0] * rate));
         })).until(() -> shooting || adapter.getLastHubTagTime() > start[0])
             .finallyDo(() -> searching = false);
+    }
+
+    /** Tracks if turret is currently whipping */
+    public boolean isWhipping() {
+        return currentlyWhipping;
     }
 
     /** Aim turret in robot frame */

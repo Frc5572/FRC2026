@@ -82,9 +82,6 @@ public class CameraProcessor {
 
         double turretHeadingStdDev = 0.0;
         if (adapter != null) {
-            if (adapter.isWhippingAt(result.getTimestampSeconds())) {
-                return Result.err(RejectionReason.TURRET_WHIPPING);
-            }
             double turretRate = adapter.getRateAt(result.getTimestampSeconds());
             turretHeadingStdDev = Math.hypot(Constants.Vision.turretHeadingStdDevFloor,
                 Constants.Vision.turretHeadingTimingStdDev * turretRate);
@@ -95,6 +92,12 @@ public class CameraProcessor {
                 adapter.getRobotToCameraAt(robotToCamera_, result.getTimestampSeconds());
             if (maybeRobotToCamera.isEmpty()) {
                 return Result.err(RejectionReason.MISSING_TURRET_ANGLE);
+            }
+            var turretWhipState = adapter.getTurretWhipping(result.getTimestampSeconds());
+            if (turretWhipState.isEmpty()) {
+                return Result.err(RejectionReason.MISSING_WHIP_STATE);
+            } else if (turretWhipState.get()) {
+                return Result.err(RejectionReason.TURRET_WHIPPING);
             }
             robotToCamera_ = maybeRobotToCamera.get();
         }
