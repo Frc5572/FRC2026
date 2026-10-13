@@ -20,6 +20,11 @@ public class TurretCameraAdapter {
 
     private double lastHubTagTime = Double.NEGATIVE_INFINITY;
 
+    /**
+     * Creates a new adapter for resolving camera transforms on the moving turret.
+     *
+     * @param turretCenter robot-relative translation to the turret's center of rotation
+     */
     public TurretCameraAdapter(Translation3d turretCenter) {
         this.turretCenter = turretCenter;
     }
@@ -36,14 +41,32 @@ public class TurretCameraAdapter {
         whippingBuffer.addSample(timestamp, whipping);
     }
 
+    /**
+     * Records a turret sample assuming the turret is not whipping.
+     *
+     * @param timestamp sample time in seconds
+     * @param angle robot-relative turret angle
+     */
     public void recordTurretAngle(double timestamp, Rotation2d angle) {
         recordTurretAngle(timestamp, angle, false);
     }
 
+    /**
+     * Records the whipping state of the turret.
+     *
+     * @param timestamp sample time in seconds
+     * @param isWhipping whether the turret is swinging the long way around to unwrap
+     */
     public void recordTurretWhipping(double timestamp, boolean isWhipping) {
         whippingBuffer.addSample(timestamp, isWhipping);
     }
 
+    /**
+     * Gets the whipping state of the turret at a given timestamp.
+     *
+     * @param timestamp time in seconds
+     * @return optional containing whether the turret was whipping, or empty if no data
+     */
     public Optional<Boolean> getTurretWhipping(double timestamp) {
         return whippingBuffer.getSample(timestamp);
     }
@@ -84,6 +107,13 @@ public class TurretCameraAdapter {
         return after.get().minus(before.get()).getRadians() / (2 * RATE_HALF_WINDOW);
     }
 
+    /**
+     * Computes the robot-to-camera transform at the specified timestamp.
+     *
+     * @param turretToCamera fixed transform from the turret frame to the camera
+     * @param timestamp capture time in seconds
+     * @return optional containing the robot-to-camera transform, or empty if angle data unavailable
+     */
     public Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {
         var maybeTurretRotation = angleBuffer.getSample(timestamp);
         if (maybeTurretRotation.isEmpty()) {

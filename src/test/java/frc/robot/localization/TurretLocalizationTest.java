@@ -41,17 +41,26 @@ import frc.robot.subsystems.vision.CameraConstantsBuilder;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 
+/**
+ * Unit tests verifying turret localization, geometry constraints, and vision tracking behavior.
+ */
 public class TurretLocalizationTest {
 
     private CameraConstants turretCameraConstants;
     private CameraConstants backCameraConstants;
     private TurretCameraAdapter turretAdapter;
 
+    /**
+     * Initializes the Hardware Abstraction Layer prior to running test suite.
+     */
     @BeforeAll
     public static void initializeHal() {
         HAL.initialize(500, 0);
     }
 
+    /**
+     * Sets up test fixtures before each test execution.
+     */
     @BeforeEach
     public void setUp() {
         turretCameraConstants = new CameraConstantsBuilder()
@@ -450,6 +459,7 @@ public class TurretLocalizationTest {
                 }
             }
         }
+
         TestVisionIO testIO = new TestVisionIO();
         Vision vision = new Vision(state, testIO, adapter);
 
