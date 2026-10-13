@@ -292,7 +292,7 @@ public final class RobotContainer {
 
         driver.rightTrigger()
             .whileTrue(Commands.parallel(
-                CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood),
+                CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood, turret),
                 swerve.driveUserRelative(TeleopControls.teleopControls(
                     () -> -combineControllers(CommandXboxController::getLeftY, driver, tuner),
                     () -> -combineControllers(CommandXboxController::getLeftX, driver, tuner),
