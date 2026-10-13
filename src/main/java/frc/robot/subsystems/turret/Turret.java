@@ -147,6 +147,7 @@ public class Turret extends SubsystemBase {
         return currentlyWhipping;
     }
 
+    /** Checks if turret is aimed based off if it is currently whipping */
     public boolean isAimed() {
         return !currentlyWhipping;
     }
