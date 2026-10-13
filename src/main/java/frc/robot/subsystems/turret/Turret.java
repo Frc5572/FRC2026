@@ -1,6 +1,8 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -11,8 +13,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -37,6 +42,9 @@ public class Turret extends SubsystemBase {
     private boolean currentlyWhipping = false;
     private double rotationGoal;
 
+    /** Last commanded robot-relative setpoint in rotations, or NaN if not position-controlled. */
+    private double lastSetpoint = Double.NaN;
+
     /**
      * Creates a new Turret subsystem.
      *
@@ -60,6 +68,8 @@ public class Turret extends SubsystemBase {
 
         Logger.recordOutput("Turret/isWhipping", isWhipping());
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
+        Logger.recordOutput("Turret/targetAngle", rotationGoal);
+        Logger.recordOutput("Turret/searching", searching);
 
         if (currentlyWhipping) {
             if (Units.rotationsToDegrees(Math
@@ -77,9 +87,8 @@ public class Turret extends SubsystemBase {
 
         for (int i = 0; i < inputs.timestamps.length; i++) {
             adapter.recordTurretAngle(inputs.timestamps[i],
-                new Rotation2d(Rotations.of(inputs.angleRotations[i])));
-
-            adapter.recordTurretWhipping(inputs.timestamps[i], isWhipping());
+                new Rotation2d(Rotations.of(inputs.angleRotations[i])), isWhipping());
+            state.setTurretRawAngle(inputs.timestamps[i], Rotations.of(inputs.angleRotations[i]));
         }
     }
 
@@ -106,6 +115,7 @@ public class Turret extends SubsystemBase {
 
     /** Set turret motor's output voltage, automatically whip ends. */
     public void setVoltageIO(DoubleSupplier voltage) {
+        lastSetpoint = Double.NaN;
         io.setTurretVoltage(Volts.of(voltage.getAsDouble()));
         if (currentlyWhipping) {
             Logger.recordOutput("Turret/whipFailed", true);
@@ -126,11 +136,25 @@ public class Turret extends SubsystemBase {
         if (normalized.gt(Constants.Turret.maxAngle)) {
             normalized = normalized.minus(Rotations.of(1));
         }
+        double setpoint = normalized.in(Rotations);
+        // Prevent wrap chatter at +/- 180 degrees: if the target is hovering near the rear limit,
+        // stay on the side of the limit matching the turret's current position to avoid whipping back and forth.
+        if (Math.abs(setpoint) > 0.48) {
+            double current = inputs.relativeAngle;
+            if (current > 0 && setpoint < 0) {
+                setpoint = 0.5;
+                normalized = Rotations.of(0.5);
+            } else if (current < 0 && setpoint > 0) {
+                setpoint = -0.5;
+                normalized = Rotations.of(-0.5);
+            }
+        }
         if (Math.abs(rotationGoal - normalized.in(Rotations)) >= Units.degreesToRotations(180)) {
             currentlyWhipping = true;
             timer.restart();
         }
         rotationGoal = normalized.in(Rotations);
+        lastSetpoint = setpoint;
         io.setTargetAngle(normalized, velocity);
         return true;
     }
@@ -140,6 +164,74 @@ public class Turret extends SubsystemBase {
         return this.setGoalRobotRelative(
             targetAngle.minus(state.getGlobalPoseEstimate().getRotation()),
             RadiansPerSecond.of(-state.getFieldRelativeSpeeds().omegaRadiansPerSecond));
+    }
+
+    private static final Angle SEARCH_LIMIT_MARGIN = Degrees.of(5);
+    private boolean searching = false;
+    private boolean shooting = false;
+
+    /** Whether the turret is sweeping to look for tags. */
+    public boolean isSearching() {
+        return searching;
+    }
+
+    /**
+     * Mark whether a shot is in progress. Shooting ends any search.
+     *
+     * @param shooting whether the robot is shooting
+     */
+    public void setShooting(boolean shooting) {
+        this.shooting = shooting;
+    }
+
+    /**
+     * Whether the turret is where it was told to go: not whipping around, not searching, and within
+     * {@link Constants.Turret#aimTolerance} of its setpoint.
+     */
+    public boolean isAimed() {
+        return !isWhipping() && !searching && !Double.isNaN(lastSetpoint)
+            && Math.abs(lastSetpoint - inputs.relativeAngle) < Constants.Turret.aimTolerance
+                .in(Rotations);
+    }
+
+    /**
+     * Sweep the turret's full travel in the robot frame to look for hub tags, for when the pose
+     * estimate has drifted far enough that normal aiming never points the camera at them. The sweep
+     * ignores the pose estimate, since anything anchored to a wrong heading would miss the tags.
+     * Ends as soon as a hub tag is seen (even one too poor to fuse) or a shot starts.
+     */
+    public Command search() {
+        double[] target = new double[1];
+        double[] direction = new double[1];
+        double[] lastTime = new double[1];
+        double[] start = new double[1];
+        double rate = Constants.Turret.searchRate.in(RadiansPerSecond);
+        // Stay inside the limits: -180 deg normalizes to +180 deg, which is itself a wrap.
+        double maxTarget = Constants.Turret.maxAngle.minus(SEARCH_LIMIT_MARGIN).in(Radians);
+        double minTarget = Constants.Turret.minAngle.plus(SEARCH_LIMIT_MARGIN).in(Radians);
+        return runOnce(() -> {
+            searching = true;
+            start[0] = Timer.getTimestamp();
+            lastTime[0] = start[0];
+            // Start from where the turret is, heading toward the limit with more travel left.
+            target[0] = MathUtil.clamp(getTurretHeading().getRadians(), minTarget, maxTarget);
+            direction[0] = maxTarget - target[0] >= target[0] - minTarget ? 1.0 : -1.0;
+        }).andThen(run(() -> {
+            double now = Timer.getTimestamp();
+            target[0] += direction[0] * rate * Math.min(now - lastTime[0], 0.1);
+            lastTime[0] = now;
+            if (target[0] >= maxTarget) {
+                target[0] = maxTarget;
+                direction[0] = -1.0;
+            } else if (target[0] <= minTarget) {
+                target[0] = minTarget;
+                direction[0] = 1.0;
+            }
+            Logger.recordOutput("Turret/searchTargetDeg", Units.radiansToDegrees(target[0]));
+            setGoalRobotRelative(new Rotation2d(target[0]),
+                RadiansPerSecond.of(direction[0] * rate));
+        })).until(() -> shooting || adapter.getLastHubTagTime() > start[0])
+            .finallyDo(() -> searching = false);
     }
 
     /** Tracks if turret is currently whipping */
@@ -177,6 +269,7 @@ public class Turret extends SubsystemBase {
         return Commands.sequence(
             // Reset data
             this.runOnce(() -> {
+                lastSetpoint = Double.NaN;
                 velocitySamples.clear();
                 voltageSamples.clear();
             }),

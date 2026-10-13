@@ -201,8 +201,7 @@ public class AutoCommandFactory {
                             .deadlineFor(intake.extendHopper(1.0).andThen(
                                 intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
                         crossRampIntoZone(routine), swerve.emergencyStop(),
-                        CommandFactory
-                            .shoot(targetingState, shooter, indexer, adjustableHood, turret)
+                        CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood, turret)
                             .alongWith(
                                 Commands.waitSeconds(2.0).andThen(intake.retractHopper(1.0)))));
         return routine;

@@ -259,13 +259,13 @@ public final class RobotContainer {
         shooter.setDefaultCommand(shooter.shoot(0.0));
 
         // TRIGGERS
-        RobotModeTriggers.disabled().and(vision.seesTwoAprilTags.negate())
+        RobotModeTriggers.disabled().and(vision.seesTurretTag.negate())
             .whileTrue(leds.setLEDsBreathe(Color.kBlue));
         RobotModeTriggers.teleop().onTrue(swerve.resetFieldRelativeOffsetBasedOnPose());
         // RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
         // swerve.state.setTrims(0.0, swerve.state.getTrimLeft());
         // }));
-        vision.seesTwoAprilTags.whileTrue(leds.setRainbow());
+        vision.seesTurretTag.whileTrue(leds.setRainbow());
 
         // BUTTON BINDINGS
         maybeController("Driver", driver, this::setupDriver);
@@ -334,6 +334,7 @@ public final class RobotContainer {
             .onTrue(CommandFactory.resetInit(swerve, turret));
         operator.b().whileTrue(turret.setVoltage(() -> 0));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
+        operator.rightBumper().whileTrue(turret.search());
         operator.y().onTrue(Commands.runOnce(() -> targetingState.setTrims(0.0, 0.0)));
         operator.povUp().onTrue(Commands.runOnce(() -> {
             targetingState.incTrims(0.5, 0);

@@ -15,6 +15,7 @@ public interface SwerveIO {
     @AutoLog
     public static class SwerveInputs {
         public double[] timestamps = new double[0];
+        public boolean isReal = true;
     }
 
     /** Update inputs */
