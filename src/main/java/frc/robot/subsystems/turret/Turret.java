@@ -63,7 +63,8 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/targetAngle", rotationGoal);
 
         if (currentlyWhipping) {
-            if (Units.rotationsToDegrees(Math.abs(rotationGoal - inputs.relativeAngle)) <= 5.0) {
+            if (Units.rotationsToDegrees(Math
+                .abs(rotationGoal - inputs.relativeAngle)) <= Constants.Turret.degreeTolerance) {
                 currentlyWhipping = false;
                 Logger.recordOutput("Turret/whipFailed", false);
             }
