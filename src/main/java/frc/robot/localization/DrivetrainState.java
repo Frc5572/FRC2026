@@ -2,31 +2,25 @@ package frc.robot.localization;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.littletonrobotics.junction.Logger;
-import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
+import frc.robot.math.geometry.Penetration;
 import frc.robot.math.geometry.Rectangle;
+import frc.robot.math.geometry.SeparatingAxis;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 
@@ -38,13 +32,10 @@ public class DrivetrainState {
 
     private final PoseEstimator<SwerveModulePosition[]> visionAdjustedOdometry;
 
-    private final TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
-        TimeInterpolatableBuffer.createBuffer(1.5);
-
     private Rotation2d gyroOffset = Rotation2d.kZero;
     private Rotation2d prevGyroReading = Rotation2d.kZero;
 
-    private ChassisSpeeds currentSpeeds;
+    private ChassisSpeeds currentSpeeds = new ChassisSpeeds();
     private double lastTimeMoved = 0.0;
 
     /**
@@ -56,7 +47,7 @@ public class DrivetrainState {
     public DrivetrainState(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw) {
         prevGyroReading = gyroYaw;
         SwerveDriveOdometry swerveOdometry =
-            new SwerveArcOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
+            new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, gyroYaw, wheelPositions);
         visionAdjustedOdometry = new PoseEstimator<>(Constants.Swerve.swerveKinematics,
             swerveOdometry, VecBuilder.fill(0.1, 0.1, 0.1), VecBuilder.fill(0.9, 0.9, 0.9));
     }
@@ -95,6 +86,7 @@ public class DrivetrainState {
         this.initted = false;
     }
 
+
     /**
      * Updates odometry and pose estimates using swerve module encoders and an optional gyro
      * measurement.
@@ -102,26 +94,27 @@ public class DrivetrainState {
      * @param wheelPositions current swerve module positions
      * @param gyroYaw current robot yaw, if available
      * @param timestamp measurement timestamp in seconds
+     * @param isReal whether this observation comes from real hardware (or replay) vs sim
      */
     public void addOdometryObservation(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw,
-        double timestamp) {
+        double timestamp, boolean isReal) {
         prevGyroReading = gyroYaw;
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
         var before = getGlobalPoseEstimate();
-        visionAdjustedOdometry.update(gyroYaw.minus(gyroOffset), wheelPositions);
+        visionAdjustedOdometry.updateWithTime(timestamp, gyroYaw.minus(gyroOffset), wheelPositions);
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
             Logger.recordOutput("State/isOnBump", true);
             var diff = after.minus(before);
             diff = new Transform2d(diff.getX() * 0.6, diff.getY(), diff.getRotation());
-            if (RobotBase.isReal()) {
+            if (isReal) {
                 visionAdjustedOdometry.resetPose(before.plus(diff));
             }
         } else {
             Logger.recordOutput("State/isOnBump", false);
         }
         Logger.recordOutput("State/nextRot", getGlobalPoseEstimate().getRotation());
-        if (Constants.keepInField) {
+        if (Constants.keepInField || Constants.keepOutOfHubs) {
             limitPosition(getGlobalPoseEstimate(), visionAdjustedOdometry::resetPose);
         }
     }
@@ -155,24 +148,6 @@ public class DrivetrainState {
         initted = true;
     }
 
-    /** Get robot to camera for camera mounted on the turret */
-    public Optional<Transform3d> getTurretRobotToCamera(Transform3d turretToCamera,
-        double timestamp) {
-        var maybeRotation = currentTurretAngle.getSample(timestamp);
-        if (maybeRotation.isEmpty()) {
-            return Optional.empty();
-        }
-        var turretRotation = maybeRotation.get();
-        Rotation3d rotate = new Rotation3d(0.0, 0.0, turretRotation.getRadians());
-
-        Transform3d robotToTurret =
-            new Transform3d(Constants.Vision.turretCenter.getTranslation(), rotate);
-
-        Transform3d robotToCamera = robotToTurret.plus(turretToCamera);
-
-        return Optional.of(robotToCamera);
-    }
-
     private double prevAngle;
 
     /** Set the current turret angle */
@@ -180,12 +155,11 @@ public class DrivetrainState {
         var angleDeg = angle.in(Degrees);
         if (Math.abs(angleDeg - prevAngle) > 2) {
             Logger.recordOutput("State/stationary/turret", true);
-            this.lastTimeMoved = MathSharedStore.getTimestamp();
+            this.lastTimeMoved = timestamp;
         } else {
             Logger.recordOutput("State/stationary/turret", false);
         }
         prevAngle = angleDeg;
-        currentTurretAngle.addSample(timestamp, new Rotation2d(angle));
         Translation2d[] turretDirection = new Translation2d[2];
         turretDirection[0] = getTurretCenterFieldFrame().getTranslation();
         turretDirection[1] =
@@ -198,30 +172,56 @@ public class DrivetrainState {
     public void addVisionObservation(VisionObservation observations) {
         Pose2d robotPose =
             observations.cameraPose().plus(observations.robotToCamera().inverse()).toPose2d();
+        double rotationStdDev = observations.rotationStdDev();
+
+        if (observations.isTurret()) {
+            boolean isStationary = this.lastTimeMoved + 0.5 < observations.timestamp();
+            String camName =
+                observations.cameraName().isEmpty() ? "turret" : observations.cameraName();
+            Logger.recordOutput("State/Camera/" + camName + "/isStationary", isStationary);
+            Logger.recordOutput("State/Camera/" + camName + "/stationaryValue",
+                this.lastTimeMoved - observations.timestamp());
+            Logger.recordOutput("State/Camera/" + camName + "/lastMoved", this.lastTimeMoved);
+            Logger.recordOutput("State/Camera/" + camName + "/timestamp", observations.timestamp());
+
+            boolean stationaryReset = Constants.Vision.turretStationaryReset && isStationary;
+            // Odometry is unreliable on the bump and the estimator's history is reset there every
+            // loop (see addOdometryObservation), so snap directly to the vision translation. Check
+            // the vision pose too: slipping wheels can carry the estimate out of the bump area
+            // while the robot is still on it.
+            boolean onBump = FieldConstants.isOnBump(getGlobalPoseEstimate())
+                || FieldConstants.isOnBump(robotPose);
+
+            if (stationaryReset || (observations.isReal() && onBump)) {
+                if (robotPose.getTranslation()
+                    .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
+                        .pow(Units.inchesToMeters(3), 2)) {
+                    visionAdjustedOdometry.resetTranslation(robotPose.getTranslation());
+                }
+            }
+
+            // Turret angle timing is not good enough to trust heading while anything is moving.
+            if (!isStationary) {
+                rotationStdDev = 10000.0;
+            } else if (stationaryReset) {
+                rotationStdDev = Math.min(rotationStdDev, observations.turretHeadingStdDev());
+            } else {
+                rotationStdDev = observations.turretHeadingStdDev();
+            }
+        }
+
         Pose2d before = visionAdjustedOdometry.getEstimatedPosition();
         visionAdjustedOdometry.addVisionMeasurement(robotPose, observations.timestamp(),
-            observations.getStdDev());
+            VecBuilder.fill(observations.translationStdDev(), observations.translationStdDev(),
+                rotationStdDev));
         Pose2d after = visionAdjustedOdometry.getEstimatedPosition();
         double correction = after.getTranslation().getDistance(before.getTranslation());
         Logger.recordOutput("State/Correction", correction);
         Logger.recordOutput("State/VisionRobotPose", robotPose);
     }
 
-
-    private static double stdDevMultiplier(List<PhotonTrackedTarget> targets, Pose3d cameraPose) {
-        double totalDistance = 0.0;
-        int count = 0;
-        for (var tag : targets) {
-            var maybeTagPose = Constants.Vision.fieldLayout.getTagPose(tag.getFiducialId());
-            if (maybeTagPose.isPresent()) {
-                var tagPose = maybeTagPose.get();
-                totalDistance += tagPose.getTranslation().getDistance(cameraPose.getTranslation());
-                count++;
-            }
-        }
-        double avgDistance = totalDistance / count;
-        double stddev = Math.pow(avgDistance, 2.0) / count;
-        return stddev;
+    public double getLastTimeMoved() {
+        return lastTimeMoved;
     }
 
     /**
@@ -245,8 +245,17 @@ public class DrivetrainState {
     private final Rectangle robotRect = new Rectangle("pose", Pose2d.kZero,
         Constants.Swerve.bumperFront.in(Meters) * 2, Constants.Swerve.bumperRight.in(Meters) * 2);
 
+    private final Rectangle[] hubRects = new Rectangle[] {
+        new Rectangle("hub", new Pose2d(FieldConstants.Hub.centerHub, Rotation2d.kZero),
+            FieldConstants.Hub.width, FieldConstants.Hub.width),
+        new Rectangle("oppHub",
+            new Pose2d(FieldConstants.fieldLength - FieldConstants.Hub.centerHub.getX(),
+                FieldConstants.Hub.centerHub.getY(), Rotation2d.kZero),
+            FieldConstants.Hub.width, FieldConstants.Hub.width)};
+    private final Penetration hubPenetration = new Penetration("HubPen");
+
     /**
-     * limits position of a given pose
+     * Limits the pose so the robot's bumpers stay inside the field walls and outside the hubs.
      *
      * @param pose new pose of robot reactangle
      * @param resetPose reset pose
@@ -255,21 +264,37 @@ public class DrivetrainState {
         robotRect.setPose(pose);
         double offsetX = 0.0;
         double offsetY = 0.0;
-        var corners = robotRect.getCorners();
+        if (Constants.keepOutOfHubs && !FieldConstants.isOnBump(pose)) {
+            for (var hub : hubRects) {
+                if (SeparatingAxis.solve(robotRect, hub, hubPenetration)) {
+                    // The normal points from the hub toward the robot.
+                    offsetX += hubPenetration.getXDir() * hubPenetration.getDepth();
+                    offsetY += hubPenetration.getYDir() * hubPenetration.getDepth();
+                    Logger.recordOutput("State/hubPushout", hubPenetration.getDepth());
+                }
+            }
+            robotRect.setPose(new Pose2d(pose.getX() + offsetX, pose.getY() + offsetY,
+                pose.getRotation()));
+        }
+        double wallOffsetX = 0.0;
+        double wallOffsetY = 0.0;
+        var corners = Constants.keepInField ? robotRect.getCorners() : new Translation2d[0];
         for (var corner : corners) {
             if (corner.getX() < 0) {
-                offsetX = Math.max(offsetX, -corner.getX());
+                wallOffsetX = Math.max(wallOffsetX, -corner.getX());
             }
             if (corner.getX() > FieldConstants.fieldLength) {
-                offsetX = Math.min(offsetX, FieldConstants.fieldLength - corner.getX());
+                wallOffsetX = Math.min(wallOffsetX, FieldConstants.fieldLength - corner.getX());
             }
             if (corner.getY() < 0) {
-                offsetY = Math.max(offsetY, -corner.getY());
+                wallOffsetY = Math.max(wallOffsetY, -corner.getY());
             }
             if (corner.getY() > FieldConstants.fieldWidth) {
-                offsetY = Math.min(offsetY, FieldConstants.fieldWidth - corner.getY());
+                wallOffsetY = Math.min(wallOffsetY, FieldConstants.fieldWidth - corner.getY());
             }
         }
+        offsetX += wallOffsetX;
+        offsetY += wallOffsetY;
 
         if (Math.abs(offsetX) > 1e-3 || Math.abs(offsetY) > 1e-3) {
             resetPose.accept(

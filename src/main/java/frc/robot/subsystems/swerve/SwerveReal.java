@@ -20,6 +20,7 @@ public final class SwerveReal implements SwerveIO {
     public void updateInputs(SwerveInputs inputs) {
         inputs.timestamps = this.timestampQueue.stream().mapToDouble(x -> x).toArray();
         this.timestampQueue.clear();
+        inputs.isReal = true;
     }
 
     @Override

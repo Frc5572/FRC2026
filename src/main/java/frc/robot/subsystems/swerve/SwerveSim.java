@@ -61,6 +61,7 @@ public final class SwerveSim implements SwerveIO {
     @Override
     public void updateInputs(SwerveInputs inputs) {
         inputs.timestamps = new double[] {Timer.getTimestamp()};
+        inputs.isReal = false;
     }
 
 
