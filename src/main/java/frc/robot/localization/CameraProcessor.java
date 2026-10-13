@@ -78,17 +78,6 @@ public class CameraProcessor {
     }
 
 
-    /**
-     * processes photon results to get robots pose
-     *
-     * @param result photon results
-     * @param currentSpeeds robot speeds
-     * @return position data
-     */
-    public Result<VisionObservation, RejectionReason> process(PhotonPipelineResult result,
-        ChassisSpeeds currentSpeeds) {
-        return process(result, currentSpeeds, true);
-    }
 
     /**
      * processes photon results to get robots pose

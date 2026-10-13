@@ -175,7 +175,7 @@ public class TurretLocalizationTest {
         state.resetPose(new Pose2d(2.0, 2.0, Rotation2d.kZero));
 
         double t0 = 1.0;
-        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t0);
+        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t0, true);
 
         // Mark turret moving at t0
         state.setTurretRawAngle(t0, Degrees.of(0));
@@ -197,7 +197,7 @@ public class TurretLocalizationTest {
 
         // 1.0s later (> 0.5s since moved -> now stationary)
         double t1 = 2.0;
-        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t1);
+        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t1, true);
 
         VisionObservation stationaryTurretObs = new VisionObservation(
             cameraPose, robotToCamera, 0.1, 0.05, t1, true, "turret", true);
@@ -212,7 +212,7 @@ public class TurretLocalizationTest {
         // Reset pose back to 0 heading to test non-turret camera while moving
         state.resetPose(new Pose2d(2.0, 2.0, Rotation2d.kZero));
         double t2 = 3.0;
-        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t2);
+        state.addOdometryObservation(getZeroModulePositions(), Rotation2d.kZero, t2, true);
         state.setTurretRawAngle(t2, Degrees.of(30.0)); // mark moving again
 
         // Non-turret camera (moving) should NOT have rotation std dev forced to 10000.0

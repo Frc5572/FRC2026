@@ -84,18 +84,6 @@ public class DrivetrainState {
         this.initted = false;
     }
 
-    /**
-     * Updates odometry and pose estimates using swerve module encoders and an optional gyro
-     * measurement.
-     *
-     * @param wheelPositions current swerve module positions
-     * @param gyroYaw current robot yaw, if available
-     * @param timestamp measurement timestamp in seconds
-     */
-    public void addOdometryObservation(SwerveModulePosition[] wheelPositions, Rotation2d gyroYaw,
-        double timestamp) {
-        addOdometryObservation(wheelPositions, gyroYaw, timestamp, true);
-    }
 
     /**
      * Updates odometry and pose estimates using swerve module encoders and an optional gyro

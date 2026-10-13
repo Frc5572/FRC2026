@@ -7,6 +7,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.util.tunable.PIDConstants;
 
 /**
@@ -44,6 +45,8 @@ public class TurretSim implements TurretIO {
     public void updateInputs(TurretInputs inputs) {
         inputs.relativeAngle = Units.radiansToRotations(turretTarget - start);
         inputs.velocity = RadiansPerSecond.of(0.0);
+        inputs.timestamps = new double[] {Timer.getTimestamp()};
+        inputs.angleRotations = new double[] {Units.radiansToRotations(turretTarget - start)};
     }
 
     @Override
