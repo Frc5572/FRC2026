@@ -60,7 +60,6 @@ public class Turret extends SubsystemBase {
 
         Logger.recordOutput("Turret/isWhipping", isWhipping());
         Logger.recordOutput("Turret/currentAngle", inputs.relativeAngle);
-        Logger.recordOutput("Turret/targetAngle", rotationGoal);
 
         if (currentlyWhipping) {
             if (Units.rotationsToDegrees(Math
