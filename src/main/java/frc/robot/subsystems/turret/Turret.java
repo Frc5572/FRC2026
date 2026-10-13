@@ -126,10 +126,11 @@ public class Turret extends SubsystemBase {
         if (normalized.gt(Constants.Turret.maxAngle)) {
             normalized = normalized.minus(Rotations.of(1));
         }
-        if (Math.abs(rotationGoal - normalized.in(Rotations)) >= 180) {
+        if (Math.abs(rotationGoal - normalized.in(Rotations)) >= Units.degreesToRotations(180)) {
             currentlyWhipping = true;
             timer.restart();
         }
+        rotationGoal = normalized.in(Rotations);
         io.setTargetAngle(normalized, velocity);
         return true;
     }
