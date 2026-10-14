@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -22,7 +23,6 @@ import frc.robot.math.geometry.Penetration;
 import frc.robot.math.geometry.Rectangle;
 import frc.robot.math.geometry.SeparatingAxis;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.swerve.util.SwerveArcOdometry;
 
 /** Total state of the robot */
 public class DrivetrainState {
@@ -32,7 +32,9 @@ public class DrivetrainState {
 
     private final PoseEstimator<SwerveModulePosition[]> visionAdjustedOdometry;
 
-    private Rotation2d gyroOffset = Rotation2d.kZero;
+    private final TimeInterpolatableBuffer<Rotation2d> currentTurretAngle =
+        TimeInterpolatableBuffer.createBuffer(1.5);
+
     private Rotation2d prevGyroReading = Rotation2d.kZero;
 
     private ChassisSpeeds currentSpeeds = new ChassisSpeeds();
@@ -101,7 +103,7 @@ public class DrivetrainState {
         prevGyroReading = gyroYaw;
         Logger.recordOutput("State/prevRot", getGlobalPoseEstimate().getRotation());
         var before = getGlobalPoseEstimate();
-        visionAdjustedOdometry.updateWithTime(timestamp, gyroYaw.minus(gyroOffset), wheelPositions);
+        visionAdjustedOdometry.updateWithTime(timestamp, gyroYaw, wheelPositions);
         var after = getGlobalPoseEstimate();
         if (FieldConstants.isOnBump(before)) {
             Logger.recordOutput("State/isOnBump", true);
@@ -193,9 +195,8 @@ public class DrivetrainState {
                 || FieldConstants.isOnBump(robotPose);
 
             if (stationaryReset || (observations.isReal() && onBump)) {
-                if (robotPose.getTranslation()
-                    .getSquaredDistance(getGlobalPoseEstimate().getTranslation()) > Math
-                        .pow(Units.inchesToMeters(3), 2)) {
+                if (robotPose.getTranslation().getSquaredDistance(getGlobalPoseEstimate()
+                    .getTranslation()) > Math.pow(Units.inchesToMeters(3), 2)) {
                     visionAdjustedOdometry.resetTranslation(robotPose.getTranslation());
                 }
             }
@@ -273,8 +274,8 @@ public class DrivetrainState {
                     Logger.recordOutput("State/hubPushout", hubPenetration.getDepth());
                 }
             }
-            robotRect.setPose(new Pose2d(pose.getX() + offsetX, pose.getY() + offsetY,
-                pose.getRotation()));
+            robotRect.setPose(
+                new Pose2d(pose.getX() + offsetX, pose.getY() + offsetY, pose.getRotation()));
         }
         double wallOffsetX = 0.0;
         double wallOffsetY = 0.0;
