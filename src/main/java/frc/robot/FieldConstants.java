@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Set;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -293,8 +294,20 @@ public class FieldConstants {
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(21).get().toPose2d();
     }
 
+    /** AprilTag IDs mounted on the blue and red hubs. */
+    private static final Set<Integer> hubTagIds =
+        Set.of(18, 19, 20, 21, 24, 25, 26, 27, 2, 3, 4, 5, 8, 9, 10, 11);
+
+    /** Return true if the AprilTag is mounted on either hub. */
+    public static boolean isHubTag(int id) {
+        return hubTagIds.contains(id);
+    }
+
     /** Return true if pose is in the area of the bump. */
     public static boolean isOnBump(Pose2d pose) {
+        if (isInsideHub(pose.getTranslation())) {
+            return false;
+        }
         AABB bumpArea = new AABB(Hub.centerHub, LeftBump.depth,
             LeftBump.width * 2 + Units.inchesToMeters(47.0));
         AABB oppBumpArea =
@@ -303,6 +316,21 @@ public class FieldConstants {
 
         return bumpArea.contains(pose.getTranslation())
             || oppBumpArea.contains(pose.getTranslation());
+    }
+
+    /** Return true if translation is within the field boundaries. */
+    public static boolean isInField(Translation2d point) {
+        return point.getX() >= 0.0 && point.getX() <= fieldLength
+            && point.getY() >= 0.0 && point.getY() <= fieldWidth;
+    }
+
+    /** Return true if translation is inside either the blue or red hub. */
+    public static boolean isInsideHub(Translation2d point) {
+        AABB hubArea = new AABB(Hub.centerHub, Hub.width, Hub.width);
+        AABB oppHubArea =
+            new AABB(new Translation2d(fieldLength - Hub.centerHub.getX(), Hub.centerHub.getY()),
+                Hub.width, Hub.width);
+        return hubArea.contains(point) || oppHubArea.contains(point);
     }
 
     /**

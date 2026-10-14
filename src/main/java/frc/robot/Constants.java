@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.List;
@@ -49,6 +50,9 @@ public final class Constants {
     public static final boolean tunable = true;
 
     public static final boolean keepInField = false;
+
+    /** Push the pose estimate out of the hubs, which the robot cannot drive through. */
+    public static final boolean keepOutOfHubs = true;
 
     public static final int odometryQueueSize = 100;
 
@@ -325,6 +329,20 @@ public final class Constants {
         public static final Pose3d turretCenter =
             new Pose3d(new Translation3d(-0.155575, -0.13335, 0), Rotation3d.kZero);
 
+        /**
+         * While the robot and turret are stationary, fuse turret-camera heading at the camera's
+         * configured {@code rotationError} and snap translation to vision, instead of using the
+         * motion-dependent heading model below.
+         */
+        public static final boolean turretStationaryReset = true;
+        /** Turret-camera heading std-dev (radians) with the turret still. */
+        public static final double turretHeadingStdDevFloor = Units.degreesToRadians(1.0);
+        /**
+         * Effective timing uncertainty (seconds) of the turret angle at a frame's capture time.
+         * Heading std-dev grows by this times the turret's angular rate.
+         */
+        public static final double turretHeadingTimingStdDev = 0.010;
+
         public static final Pose3d turretRight = new Pose3d(-0.18097, -0.27012, 0.51406,
             new Rotation3d(0, Units.degreesToRadians(-22.115), 0.0))
                 .rotateAround(turretCenter.getTranslation(), new Rotation3d(Rotation2d.kZero));
@@ -593,6 +611,18 @@ public final class Constants {
 
         public static final Angle maxAngle = Degrees.of(180);
         public static final Angle minAngle = Degrees.of(-180);
+
+        /** The indexer only feeds when the turret is within this of its setpoint. */
+        public static final Angle aimTolerance = Degrees.of(5);
+        /**
+         * Search sweep rate. Slow enough that turret-camera heading stays trustworthy (see
+         * {@code Vision.turretHeadingTimingStdDev}) so the first frames found can pull a drifted
+         * estimate back.
+         */
+        public static final AngularVelocity searchRate = RadiansPerSecond.of(1.0);
+
+        public static final double maxWhipTime = 2.0;
+        public static final double degreeTolerance = 5.0;
     }
 
     /** Shooter Constants */

@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.subsystems.vision.CameraConstants;
 
 /**
@@ -30,6 +31,7 @@ import frc.robot.subsystems.vision.CameraConstants;
 public class CameraProcessor {
 
     private final CameraConstants cameraConstants;
+
 
     /**
      * Adapter that resolves the time-varying robot-to-camera transform for a turreted camera.
@@ -60,15 +62,17 @@ public class CameraProcessor {
     }
 
 
+
     /**
      * processes photon results to get robots pose
      *
      * @param result photon results
      * @param currentSpeeds robot speeds
+     * @param isReal whether the vision observation is from real hardware or replay
      * @return position data
      */
     public Result<VisionObservation, RejectionReason> process(PhotonPipelineResult result,
-        ChassisSpeeds currentSpeeds) {
+        ChassisSpeeds currentSpeeds, boolean isReal) {
         var multiTag = result.getMultiTagResult();
         Transform3d robotToCamera_ = cameraConstants.robotToCamera;
 
@@ -76,11 +80,24 @@ public class CameraProcessor {
             Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
         double rotationSpeed = Math.abs(currentSpeeds.omegaRadiansPerSecond);
 
+        double turretHeadingStdDev = 0.0;
         if (adapter != null) {
+            double turretRate = adapter.getRateAt(result.getTimestampSeconds());
+            turretHeadingStdDev = Math.hypot(Constants.Vision.turretHeadingStdDevFloor,
+                Constants.Vision.turretHeadingTimingStdDev * turretRate);
+            Logger.recordOutput("State/Camera/" + cameraConstants.name + "/turretRate", turretRate);
+            Logger.recordOutput("State/Camera/" + cameraConstants.name + "/turretHeadingStdDev",
+                turretHeadingStdDev);
             var maybeRobotToCamera =
                 adapter.getRobotToCameraAt(robotToCamera_, result.getTimestampSeconds());
             if (maybeRobotToCamera.isEmpty()) {
                 return Result.err(RejectionReason.MISSING_TURRET_ANGLE);
+            }
+            var turretWhipState = adapter.getTurretWhipping(result.getTimestampSeconds());
+            if (turretWhipState.isEmpty()) {
+                return Result.err(RejectionReason.MISSING_WHIP_STATE);
+            } else if (turretWhipState.get()) {
+                return Result.err(RejectionReason.TURRET_WHIPPING);
             }
             robotToCamera_ = maybeRobotToCamera.get();
         }
@@ -114,6 +131,15 @@ public class CameraProcessor {
             Logger.recordOutput("State/Camera/" + cameraConstants.name + "/estRobotPose",
                 estRobotPose);
 
+            // Physically impossible poses; these show up when the robot is tilted on the bump.
+            var estTranslation = estRobotPose.toPose2d().getTranslation();
+            if (Constants.keepInField && !FieldConstants.isInField(estTranslation)) {
+                return Result.err(RejectionReason.OUTSIDE_FIELD);
+            }
+            if (FieldConstants.isInsideHub(estTranslation)) {
+                return Result.err(RejectionReason.INSIDE_HUB);
+            }
+
             double stdDevMultiplier = stdDevMultiplier(result.targets, cameraPose);
             double translationStdDev =
                 stdDevMultiplier * velocityTranslationError + cameraConstants.translationError;
@@ -132,7 +158,8 @@ public class CameraProcessor {
             }
 
             return Result.ok(new VisionObservation(cameraPose, robotToCamera_, translationStdDev,
-                rotationStdDev, result.getTimestampSeconds()));
+                rotationStdDev, result.getTimestampSeconds(), cameraConstants.isTurret,
+                cameraConstants.name, isReal, turretHeadingStdDev));
         }
 
         return Result.err(RejectionReason.SINGLE_TAG_ONLY);

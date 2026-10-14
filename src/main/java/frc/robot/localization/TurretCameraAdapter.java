@@ -10,20 +10,111 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 /** Turret Camera Adapter */
 public class TurretCameraAdapter {
     private static final double BUFFER_SECONDS = 1.5;
+    private static final double RATE_HALF_WINDOW = 0.04;
     private final Translation3d turretCenter;
     private final TimeInterpolatableBuffer<Rotation2d> angleBuffer =
         TimeInterpolatableBuffer.createBuffer(BUFFER_SECONDS);
+    /** Between two samples, a frame counts as whipping if either neighbor was. */
+    private final TimeInterpolatableBuffer<Boolean> whippingBuffer =
+        TimeInterpolatableBuffer.createBuffer((a, b, t) -> a || b, BUFFER_SECONDS);
 
+    private double lastHubTagTime = Double.NEGATIVE_INFINITY;
 
+    /**
+     * Creates a new adapter for resolving camera transforms on the moving turret.
+     *
+     * @param turretCenter robot-relative translation to the turret's center of rotation
+     */
     public TurretCameraAdapter(Translation3d turretCenter) {
         this.turretCenter = turretCenter;
     }
 
-    public void recordTurretAngle(double timestamp, Rotation2d angle) {
+    /**
+     * Records a turret sample.
+     *
+     * @param timestamp sample time in seconds
+     * @param angle robot-relative turret angle
+     * @param whipping whether the turret is swinging the long way around to unwrap
+     */
+    public void recordTurretAngle(double timestamp, Rotation2d angle, boolean whipping) {
         angleBuffer.addSample(timestamp, angle);
+        whippingBuffer.addSample(timestamp, whipping);
     }
 
-    Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {
+    /**
+     * Records a turret sample assuming the turret is not whipping.
+     *
+     * @param timestamp sample time in seconds
+     * @param angle robot-relative turret angle
+     */
+    public void recordTurretAngle(double timestamp, Rotation2d angle) {
+        recordTurretAngle(timestamp, angle, false);
+    }
+
+    /**
+     * Records the whipping state of the turret.
+     *
+     * @param timestamp sample time in seconds
+     * @param isWhipping whether the turret is swinging the long way around to unwrap
+     */
+    public void recordTurretWhipping(double timestamp, boolean isWhipping) {
+        whippingBuffer.addSample(timestamp, isWhipping);
+    }
+
+    /**
+     * Gets the whipping state of the turret at a given timestamp.
+     *
+     * @param timestamp time in seconds
+     * @return optional containing whether the turret was whipping, or empty if no data
+     */
+    public Optional<Boolean> getTurretWhipping(double timestamp) {
+        return whippingBuffer.getSample(timestamp);
+    }
+
+    /**
+     * Records that a turret-camera frame arrived, whether or not it was accepted for fusion. Ends a
+     * turret search once a hub tag is seen.
+     *
+     * @param arrivalTime loop time the frame was received, in seconds
+     * @param sawHubTag whether the frame contained any hub tag
+     */
+    public void recordFrame(double arrivalTime, boolean sawHubTag) {
+        if (sawHubTag) {
+            lastHubTagTime = Math.max(lastHubTagTime, arrivalTime);
+        }
+    }
+
+    /** Loop time the last turret-camera frame containing a hub tag arrived. */
+    public double getLastHubTagTime() {
+        return lastHubTagTime;
+    }
+
+    /** Whether the turret was whipping around at {@code timestamp}. */
+    public boolean isWhippingAt(double timestamp) {
+        return whippingBuffer.getSample(timestamp).orElse(false);
+    }
+
+    /**
+     * Turret angular rate (rad/s) around {@code timestamp}. Vision latency means samples after the
+     * frame are normally available, so this is a central difference.
+     */
+    public double getRateAt(double timestamp) {
+        var before = angleBuffer.getSample(timestamp - RATE_HALF_WINDOW);
+        var after = angleBuffer.getSample(timestamp + RATE_HALF_WINDOW);
+        if (before.isEmpty() || after.isEmpty()) {
+            return 0.0;
+        }
+        return after.get().minus(before.get()).getRadians() / (2 * RATE_HALF_WINDOW);
+    }
+
+    /**
+     * Computes the robot-to-camera transform at the specified timestamp.
+     *
+     * @param turretToCamera fixed transform from the turret frame to the camera
+     * @param timestamp capture time in seconds
+     * @return optional containing the robot-to-camera transform, or empty if angle data unavailable
+     */
+    public Optional<Transform3d> getRobotToCameraAt(Transform3d turretToCamera, double timestamp) {
         var maybeTurretRotation = angleBuffer.getSample(timestamp);
         if (maybeTurretRotation.isEmpty()) {
             return Optional.empty();
