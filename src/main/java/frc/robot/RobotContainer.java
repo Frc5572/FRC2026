@@ -334,7 +334,6 @@ public final class RobotContainer {
             .onTrue(CommandFactory.resetInit(swerve, turret));
         operator.b().whileTrue(turret.setVoltage(() -> 0));
         operator.x().whileTrue(turret.setVoltage(() -> operator.getLeftY() * 3.0));
-        operator.rightBumper().whileTrue(turret.search());
         operator.y().onTrue(Commands.runOnce(() -> targetingState.setTrims(0.0, 0.0)));
         operator.povUp().onTrue(Commands.runOnce(() -> {
             targetingState.incTrims(0.5, 0);
