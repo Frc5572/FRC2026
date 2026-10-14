@@ -128,7 +128,7 @@ public class AutoCommandFactory {
     }
 
     public Command shootFirst() {
-        return autoShooting(2).andThen(adjustableHood.setGoal(Degree.of(0)),
+        return autoShooting(2).andThen(adjustableHood.setGoal(Degree.of(0)).withTimeout(0.5),
             Commands.waitSeconds(0.25));
     }
 
@@ -201,7 +201,8 @@ public class AutoCommandFactory {
                             .deadlineFor(intake.extendHopper(1.0).andThen(
                                 intake.intakeBalls().alongWith(indexer.spinWhileIntake()))),
                         crossRampIntoZone(routine), swerve.emergencyStop(),
-                        CommandFactory.shoot(targetingState, shooter, indexer, adjustableHood, turret)
+                        CommandFactory
+                            .shoot(targetingState, shooter, indexer, adjustableHood, turret)
                             .alongWith(
                                 Commands.waitSeconds(2.0).andThen(intake.retractHopper(1.0)))));
         return routine;
@@ -308,12 +309,13 @@ public class AutoCommandFactory {
         double turretFudge2 = 0;
         return Commands
             .sequence(wilsonTestSweep(left, true, x1, driveSpeed).alongWith(Commands.runOnce(() -> {
-                targetingState.setTrims(-0.5, left ? turretFudge1 : -turretFudge1);
+                targetingState.setTrims(0.0, left ? turretFudge1 : -turretFudge1);
             })), autoShooting(shootingTime),
-                Commands.sequence(adjustableHood.setGoal(Rotations.of(0)),
+                Commands.sequence(adjustableHood.setGoal(Rotations.of(0)).withTimeout(0.5),
                     wilsonTestSweep(left, false, x2, driveSpeed), Commands.runOnce(() -> {
-                        targetingState.setTrims(-0.5, left ? turretFudge2 : -turretFudge2);
-                    }), autoShooting(shootingTime), adjustableHood.setGoal(Rotations.of(0)),
+                        targetingState.setTrims(0.0, left ? turretFudge2 : -turretFudge2);
+                    }), autoShooting(shootingTime),
+                    adjustableHood.setGoal(Rotations.of(0)).withTimeout(0.5),
                     wilsonTestSweep(left, false, x1, driveSpeed), autoShooting(shootingTime * 2))
                     .repeatedly());
     }
@@ -379,7 +381,7 @@ public class AutoCommandFactory {
         Command shootOrNot = Commands.either(shootFirst(), Commands.none(), shootFirst);
         Command runPath = Commands.either(halfSweepTrenchRampPath(routine, left, x1).andThen(
 
-            adjustableHood.setGoal(Degree.of(0)), Commands.waitSeconds(0.25),
+            adjustableHood.setGoal(Degree.of(0)).withTimeout(0.5), Commands.waitSeconds(0.25),
             swerve.moveToPose().target(new Pose2d(2.8, 0.622, Rotation2d.kZero))
                 .maxSpeed(driveSpeed).translationTolerance(0.2).rotationTolerance(15).flipY(left)
                 .finish(),
